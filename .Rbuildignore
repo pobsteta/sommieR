@@ -5,3 +5,10 @@
 ^README\.md$
 ^\.git$
 ^LICENSE\.md$
+^\.github$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^codecov\.yml$
+^CITATION\.cff$
+^CLAUDE\.md$

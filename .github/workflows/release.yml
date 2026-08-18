@@ -1,0 +1,78 @@
+name: release
+
+# Auto-tag + GitHub release piloté par la version de DESCRIPTION.
+# Porté depuis nemeton (parité des dépôts).
+#
+# Quand un commit arrive sur `main` (typiquement un merge de la branche
+# de dev contenant un bump `Version:` dans DESCRIPTION), ce workflow :
+#   1. lit `Version:` dans DESCRIPTION ;
+#   2. ne procède QUE pour une version STABLE `X.Y.Z` (un éventuel cycle
+#      dev `X.Y.Z.9000+` est ignoré) ;
+#   3. ne procède QUE si le tag `vX.Y.Z` n'existe pas déjà
+#      (idempotent : un re-push de main sans bump ne recrée rien) ;
+#   4. crée le tag annoté + la release GitHub (`--generate-notes`).
+#
+# Utilise le `GITHUB_TOKEN` intégré (permission `contents: write`) : plus
+# besoin de poser tag/release à la main. Le garde-fou
+# `version-consistency` (r.yml) garantit en amont DESCRIPTION = NEWS =
+# CITATION avant que ce workflow ne taggue.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history + tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version from DESCRIPTION
+        id: ver
+        run: |
+          version="$(grep '^Version:' DESCRIPTION | sed 's/^Version:[[:space:]]*//')"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "Version lue : ${version}"
+
+      - name: Gate — stable X.Y.Z only (skip dev cycle .9000+)
+        id: gate
+        run: |
+          v="${{ steps.ver.outputs.version }}"
+          if [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "Version de cycle dev ($v) — pas de release."
+          fi
+
+      - name: Gate — tag vX.Y.Z must not already exist
+        id: tag
+        if: steps.gate.outputs.release == 'true'
+        run: |
+          git fetch --tags --quiet
+          if git rev-parse "v${{ steps.ver.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Tag v${{ steps.ver.outputs.version }} déjà présent — rien à faire."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create annotated tag + GitHub release
+        if: steps.gate.outputs.release == 'true' && steps.tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="v${{ steps.ver.outputs.version }}"
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$v" -m "Release ${{ steps.ver.outputs.version }}"
+          git push origin "$v"
+          gh release create "$v" --generate-notes --title "$v"
+          echo "Release $v créée."
