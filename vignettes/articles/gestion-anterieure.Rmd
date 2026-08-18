@@ -1,0 +1,398 @@
+---
+title: "Gestion antérieure : du registre au document"
+description: >
+  Le rapport Quarto de gestion antérieure, déroulé pas à pas sur le sommier
+  de démonstration de la forêt communale de Couchey.
+---
+
+```{r réglages, include = FALSE}
+knitr::opts_chunk$set(
+  collapse   = TRUE,
+  comment    = "#>",
+  message    = FALSE,
+  fig.align  = "center",
+  fig.width  = 7,
+  fig.height = 3.4,
+  dpi        = 150
+)
+```
+
+Le sommier n'est pas un document, c'est un registre. Ce que réclament le plan
+simple de gestion, le document d'aménagement ou l'évaluation de fin de contrat
+CT88, ce sont des *documents* — une section « gestion antérieure », un bilan de
+l'aménagement précédent, une étape 5. `sommier_rapport_quarto()` les engendre
+depuis les écritures, plutôt que de les faire recopier à la main depuis des
+registres qu'on tient déjà.
+
+Cet article déroule ce rapport section par section, sur le jeu de
+démonstration de la **forêt communale de Couchey** : dix exercices, les neuf
+registres, trois parcelles cadastrales. Chaque bloc de code est celui que le
+modèle Quarto exécute — l'article montre les données qui alimentent le
+document, le modèle en fixe la mise en page.
+
+::: {.alert .alert-warning}
+**Les écritures sont fictives.** Couchey est une commune réelle et la
+géométrie vient de la fixture cadastrale de `nemetonshiny`, mais aucun volume,
+montant, date, coupe ou visa de ce jeu ne provient de registres authentiques.
+Le nom de la forêt porte la mention, et le rapport engendré l'affiche en tête.
+:::
+
+```{r connexion, include = FALSE}
+library(sommieR)
+
+# Meme convention que la suite de tests : l'article se batit contre une base
+# PostGIS jetable, decrite par des variables d'environnement. A defaut, il se
+# rend sans sortie plutot que d'echouer - le site doit pouvoir se construire
+# sur une machine sans base.
+env <- function(article, test, defaut = "") {
+  Sys.getenv(article, Sys.getenv(test, defaut))
+}
+
+connexion_article <- function() {
+  base <- env("SOMMIER_ARTICLE_DB", "SOMMIER_TEST_DB")
+  if (!nzchar(base) || !requireNamespace("RPostgres", quietly = TRUE)) {
+    return(NULL)
+  }
+  con <- try(DBI::dbConnect(
+    RPostgres::Postgres(),
+    dbname   = base,
+    host     = env("SOMMIER_ARTICLE_HOST", "SOMMIER_TEST_HOST", "localhost"),
+    port     = as.integer(env("SOMMIER_ARTICLE_PORT", "SOMMIER_TEST_PORT", "5432")),
+    user     = env("SOMMIER_ARTICLE_USER", "SOMMIER_TEST_USER", "postgres"),
+    password = env("SOMMIER_ARTICLE_PASSWORD", "SOMMIER_TEST_PASSWORD")
+  ), silent = TRUE)
+  if (inherits(con, "try-error")) NULL else con
+}
+
+con <- connexion_article()
+avec_base <- !is.null(con)
+knitr::opts_chunk$set(eval = avec_base)
+```
+
+```{r sans-base, eval = !avec_base, echo = FALSE, results = "asis"}
+cat(
+  "::: {.alert .alert-danger}\n",
+  "**Article rendu sans base.** Aucune base PostGIS n'était joignable au ",
+  "moment de la construction : le code ci-dessous est affiché mais n'a pas ",
+  "été exécuté, et les tableaux sont absents. Voir « Rejouer cet article » ",
+  "en fin de page.\n:::\n",
+  sep = ""
+)
+```
+
+## Poser le jeu de démonstration
+
+Le schéma se déploie sur une base vierge, puis `sommier_demo_couchey()`
+l'emplit. Le registre étant strictement *append-only*, la fonction refuse de
+s'exécuter sur une base où le jeu figure déjà : on le retrouve alors plutôt
+que de tenter de le recréer.
+
+```{r mise-en-place}
+sommier_init_schema(con)
+
+deja <- DBI::dbGetQuery(
+  con, "SELECT id FROM foret WHERE nom = $1", params = list(NOM_FORET_DEMO)
+)
+foret <- if (nrow(deja) > 0L) {
+  deja$id[[1L]]
+} else {
+  sommier_demo_couchey(con)$foret_id
+}
+```
+
+```{r outils, include = FALSE}
+tableau <- function(x, legende = NULL) {
+  if (is.null(x) || nrow(x) == 0L) {
+    return(knitr::asis_output("*Aucun enregistrement sur la période.*\n\n"))
+  }
+  # Un millesime n'est pas une quantite : le separateur de milliers en ferait
+  # « 2 016 ».
+  for (colonne in intersect(c("exercice", "annee"), names(x))) {
+    x[[colonne]] <- as.character(x[[colonne]])
+  }
+  knitr::kable(x, caption = legende, format.args = list(big.mark = " "))
+}
+```
+
+Les trois parcelles ancrent le sommier sur un terrain réel :
+
+```{r parcelles}
+tableau(
+  SOMMIER_PARCELLES_COUCHEY[, c("numero", "geo_parcelle", "surface_ha")],
+  "Les trois parcelles de la fixture Couchey"
+)
+```
+
+## Un assemblage, trois présentations
+
+`sommier_gestion_anterieure()` rassemble sur une période ce que les trois
+référentiels réclament sous des noms différents. Il n'y a **pas** trois
+extractions parallèles — elles divergeraient à la première évolution — mais un
+seul assemblage dont chaque référentiel ne reçoit que ce qu'il demande.
+
+```{r referentiels}
+sections_de <- function(referentiel) {
+  names(sommier_gestion_anterieure(
+    con, foret, debut = "2016-01-01", fin = "2025-12-31",
+    referentiel = referentiel
+  )$sections)
+}
+
+toutes <- unique(unlist(lapply(SOMMIER_REFERENTIELS, sections_de)))
+presence <- data.frame(section = toutes, stringsAsFactors = FALSE)
+for (r in SOMMIER_REFERENTIELS) {
+  presence[[r]] <- ifelse(toutes %in% sections_de(r), "oui", "—")
+}
+tableau(presence, "Ce que chaque référentiel retient de l'assemblage")
+```
+
+Le PSG n'emporte pas le détail financier, que le propriétaire n'a pas à
+produire au CRPF ; le CT88, tourné vers l'évaluation d'un contrat, n'emporte
+pas l'inventaire du patrimoine. Les registres 3 et 7 portant des données
+personnelles, restreindre la sortie évite d'en diffuser plus que nécessaire.
+
+La suite de l'article prend le référentiel `amenagement`, le plus complet.
+
+```{r assemblage}
+ga <- sommier_gestion_anterieure(
+  con, foret,
+  debut = "2016-01-01", fin = "2025-12-31",
+  referentiel = "amenagement"
+)
+ga
+```
+
+## Identification
+
+```{r identification}
+tableau(data.frame(
+  champ = c("Forêt", "Régime", "Surface", "Période", "Référentiel"),
+  valeur = c(
+    ga$foret, ga$regime,
+    if (is.na(ga$surface_ha)) "non renseignée" else paste(ga$surface_ha, "ha"),
+    paste(ga$debut, "au", ga$fin), ga$referentiel
+  ),
+  stringsAsFactors = FALSE
+))
+```
+
+## Intégrité du registre
+
+Le sommier est un journal à chaînage de hachages : chaque entrée scelle la
+précédente. Le rapport porte l'état constaté à l'édition, empreinte de tête
+comprise — c'est elle qui permet, plus tard, de dire si le registre a bougé.
+
+```{r verification}
+verif <- sommier_verifier(con, foret)
+verif
+```
+
+## Coupes et récoltes
+
+Imprimés A50E, A50F et A50I.
+
+```{r coupes}
+tableau(ga$sections$coupes, "Coupes de la période, par exercice et nature")
+```
+
+### Balance de possibilité
+
+La balance confronte les volumes **martelés** à la possibilité de
+l'aménagement. Une balance positive signale un excès de prélèvement, une
+négative un déficit ; c'est le cumul qui compte sur la durée du plan.
+
+```{r balance}
+tableau(ga$sections$balance, "Balance de possibilité (imprimé A50E)")
+```
+
+```{r balance-cumul, fig.cap = "Balance cumulée — la ligne pointillée marque l'équilibre."}
+b <- ga$sections$balance
+cumul <- as.numeric(b$balance_cumulee_m3)
+op <- par(mar = c(4, 4.5, 1, 1), cex = 0.85)
+# L'axe embrasse zero, sans quoi la ligne d'equilibre sortirait du cadre et la
+# lecture perdrait son repere.
+plot(b$exercice, cumul, type = "n", ylim = range(c(0, cumul), na.rm = TRUE),
+     xlab = "Exercice", ylab = expression("Balance cumulée ("*m^3*")"),
+     panel.first = grid(col = "grey90", lty = 1))
+abline(h = 0, lty = 2, col = "grey40")
+lines(b$exercice, cumul, lwd = 2, col = "#2E7D32")
+points(b$exercice, cumul, pch = 19, col = "#2E7D32")
+par(op)
+```
+
+## Travaux
+
+Imprimés A50J, A50J bis et A50H. Le taux de reprise est celui relevé au
+contrôle des plantations.
+
+```{r travaux}
+tableau(ga$sections$travaux, "Travaux réalisés sur la période")
+```
+
+## Évènements marquants
+
+Imprimé A50K. Le niveau de précision (NDP) vaut 0 pour un constat de terrain ;
+une valeur supérieure signale une observation issue de la télédétection, non
+encore validée sur place.
+
+```{r evenements}
+tableau(ga$sections$evenements, "Phénomènes intéressant la vie de la forêt")
+```
+
+## Bilan financier
+
+Imprimé A50G. Le solde est la différence entre recettes et dépenses de
+l'exercice ; le cumul en donne la tendance.
+
+```{r finances}
+tableau(ga$sections$finances, "Recettes, dépenses et solde par exercice")
+```
+
+Le registre 7 porte aussi le budget prévisionnel, que le rapport de gestion
+antérieure ne reprend pas mais qui se lit en regard — un poste budgété et
+jamais exécuté est un écart, pas une absence.
+
+```{r execution}
+tableau(
+  sommier_execution_budgetaire(con, foret, exercice = 2025),
+  "Exécution budgétaire de l'exercice 2025"
+)
+```
+
+## Équilibre forêt-gibier
+
+Obligatoire dans les plans simples de gestion depuis la loi d'avenir pour
+l'agriculture, l'alimentation et la forêt du 13 octobre 2014.
+
+```{r gibier}
+tableau(ga$sections$equilibre_gibier, "Constats d'équilibre forêt-gibier")
+```
+
+## Patrimoine remarquable
+
+Série A50 r/*. Le patrimoine est un **état courant** : il n'est pas borné par
+la période du rapport, sans quoi un arbre inventorié plus tôt disparaîtrait de
+l'inventaire que le document veut voir tel qu'il est. Seul le dernier relevé
+de chaque sujet est retenu — le Chêne de la Justice, revisité en 2024, figure
+avec son état sanitaire d'alors.
+
+```{r patrimoine}
+tableau(ga$sections$patrimoine, "Arbres, peuplements, vestiges, espèces, habitats")
+```
+
+### Éléments utiles à l'IBP
+
+Ce que le registre 9 apporte à l'Indice de Biodiversité Potentielle.
+**Ce n'est pas une cotation** : un facteur IBP se cote sur placette selon son
+protocole de terrain, par densité à l'hectare, pas par comptage d'un registre
+qui n'inventorie que le remarquable.
+
+```{r ibp}
+tableau(sommier_elements_ibp(con, foret), "Éléments mobilisables pour l'IBP")
+```
+
+## Desserte
+
+Imprimé A50D. Seule la voirie privée forestière entre dans la densité : une
+route publique traversant la forêt ne dit rien de sa desserte.
+
+```{r desserte}
+tableau(sommier_densite_voirie(con, foret), "Longueurs et densités de voirie")
+```
+
+## Les unités de gestion sur le terrain
+
+Le même sommier s'exporte en couche SIG : les unités de gestion en vigueur à
+une date, enrichies du nombre d'entrées qui s'y rattachent. Le GeoJSON n'exige
+rien de plus que PostGIS et s'ouvre sans rien installer ; le GeoPackage passe
+par `sf`.
+
+```{r sig}
+couche <- tempfile(fileext = ".geojson")
+export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
+str(export)
+```
+
+```{r carte, eval = avec_base && requireNamespace("sf", quietly = TRUE), fig.height = 3.2, fig.cap = "Les trois parcelles du jeu de démonstration, teintées par nombre d'entrées."}
+ug <- sf::read_sf(couche)
+teintes <- grDevices::colorRampPalette(c("#E8F5E9", "#2E7D32"))(5)
+op <- par(mar = c(0, 0, 0, 0))
+plot(sf::st_geometry(ug),
+     col = teintes[cut(ug$n_entrees, breaks = 5, labels = FALSE)],
+     border = "grey30")
+text(sf::st_coordinates(sf::st_centroid(sf::st_geometry(ug))),
+     labels = paste0("A ", ug$numero_affichage, "\n", ug$n_entrees, " entrées"),
+     cex = 0.75)
+par(op)
+```
+
+Le GeoJSON sort en WGS84, comme l'exige la RFC 7946 : le format ne déclare
+pas sa projection, et tout lecteur la suppose. Le GeoPackage, lui, écrit son
+système dans le fichier et reste en Lambert-93, où les longueurs et les
+surfaces se mesurent en mètres.
+
+Une unité sans géométrie connue est omise de la couche mais **signalée** dans
+`unites_sans_geometrie` : la faire figurer sans contour créerait une entité
+fantôme, l'omettre en silence laisserait croire la forêt entièrement
+cartographiée.
+
+## Le document Quarto
+
+Tout ce qui précède, `sommier_rapport_quarto()` le rassemble et le rend en un
+document autoportant, HTML ou PDF :
+
+```{r quarto, eval = FALSE}
+sommier_rapport_quarto(
+  con, foret, "gestion-anterieure.html",
+  debut = "2016-01-01", fin = "2025-12-31", referentiel = "amenagement"
+)
+```
+
+Les données sont extraites de la base **avant** le rendu et déposées dans un
+RDS que le document lit. Deux conséquences voulues : aucun identifiant de
+connexion ne circule dans le document ou ses paramètres, et le rendu est
+reproductible à l'identique sans accès à la base — on rejoue un rapport des
+mois plus tard sur le même instantané.
+
+## Vérifier ce document
+
+Le rapport est une **mise en forme, pas la preuve**. La valeur probante tient
+au registre : l'empreinte de tête donnée plus haut scelle toutes les entrées de
+la chaîne. Ce qui se transporte, c'est le manifeste — chaîne, visas et
+horodatages — vérifiable hors ligne, sans base et sans le paquet qui l'a
+produit.
+
+```{r manifeste}
+chemin <- tempfile(fileext = ".json")
+sommier_exporter_manifeste(con, foret, chemin)
+sommier_verifier_manifeste(chemin)
+```
+
+Toute entrée modifiée, retirée ou insérée après coup invalide l'empreinte de
+tête, et la vérification le dit — y compris chez le destinataire, qui n'a
+besoin ni de la base ni de la confiance de l'émetteur.
+
+```{r fermeture, include = FALSE}
+if (avec_base) DBI::dbDisconnect(con)
+```
+
+## Rejouer cet article
+
+L'article se construit contre une base PostGIS jetable, décrite par les mêmes
+variables d'environnement que la suite de tests (`SOMMIER_ARTICLE_*` d'abord,
+`SOMMIER_TEST_*` en repli) :
+
+```sh
+docker run -d --name sommier-pg -p 5432:5432 \
+  -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=sommier_article \
+  postgis/postgis:16-3.4
+
+SOMMIER_ARTICLE_DB=sommier_article \
+SOMMIER_ARTICLE_USER=postgres \
+SOMMIER_ARTICLE_PASSWORD=postgres \
+  Rscript -e 'pkgdown::build_article("gestion-anterieure")'
+```
+
+Sans base joignable, l'article se rend quand même : le code reste lisible, les
+tableaux manquent, et l'avertissement en tête le dit. Un site qui se construit
+n'est pas la preuve que les chiffres ont été calculés.
