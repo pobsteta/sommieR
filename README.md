@@ -1,5 +1,13 @@
 # sommieR
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/pobsteta/sommieR/actions/workflows/r.yml/badge.svg)](https://github.com/pobsteta/sommieR/actions/workflows/r.yml)
+[![Version](https://img.shields.io/github/v/release/pobsteta/sommieR?sort=semver&logo=github&label=version&color=blue)](https://github.com/pobsteta/sommieR/releases/latest)
+[![pkgdown](https://github.com/pobsteta/sommieR/actions/workflows/pkgdown.yaml/badge.svg)](https://pobsteta.github.io/sommieR/)
+[![codecov](https://codecov.io/gh/pobsteta/sommieR/graph/badge.svg)](https://codecov.io/gh/pobsteta/sommieR)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?logo=gnu)](https://www.gnu.org/licenses/gpl-3.0)
+<!-- badges: end -->
+
 > Le sommier des forêts unifié, à valeur probante.
 
 Le sommier n'est pas un document, c'est un **système de registres permanents**,
