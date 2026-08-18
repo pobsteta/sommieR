@@ -12,4 +12,4 @@ SOMMIER_SCHEMA_VERSIONS
 
 ## Format
 
-An object of class `character` of length 4.
+An object of class `character` of length 9.

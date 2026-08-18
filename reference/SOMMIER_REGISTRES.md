@@ -32,12 +32,12 @@ certification PEFC et le bilan du document de gestion precedent.
 SOMMIER_REGISTRES
 #>   registre                    nom  source_a50 echelle implemente
 #> 1        1            Validations         A10   foret       TRUE
-#> 2        2      Foncier & limites         A40   foret      FALSE
-#> 3        3   Droits & concessions        A50C   foret      FALSE
-#> 4        4        Infrastructures   A50D/Dbis   foret      FALSE
+#> 2        2      Foncier & limites         A40   mixte       TRUE
+#> 3        3   Droits & concessions        A50C   mixte       TRUE
+#> 4        4        Infrastructures   A50D/Dbis   foret       TRUE
 #> 5        5      Coupes & recoltes    A50E/F/I   mixte       TRUE
 #> 6        6                Travaux A50J/Jbis/H   mixte       TRUE
-#> 7        7           Comptabilite        A50G   foret      FALSE
+#> 7        7           Comptabilite        A50G   foret       TRUE
 #> 8        8     Evenements & faune      A50K/L   mixte       TRUE
-#> 9        9 Patrimoine remarquable     A50 r/*      ug      FALSE
+#> 9        9 Patrimoine remarquable     A50 r/*   mixte       TRUE
 ```

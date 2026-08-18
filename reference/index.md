@@ -41,6 +41,44 @@ Imprimé A10 : visas annuels, arrêtés, délibérations, agréments.
 - [`SOMMIER_AUTORITES`](https://pobsteta.github.io/sommieR/reference/SOMMIER_AUTORITES.md)
   : Autorites de validation
 
+## Registre 2 — foncier et limites
+
+Imprimé A40 : délimitation, bornage, acquisitions, servitudes.
+
+- [`registre2_foncier()`](https://pobsteta.github.io/sommieR/reference/registre2_foncier.md)
+  : Payload du registre 2 - foncier et limites (imprime A40)
+- [`SOMMIER_TYPES_FONCIER`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_FONCIER.md)
+  : Types d'entree du registre 2 (foncier et limites)
+
+## Registre 3 — droits et concessions
+
+Imprimé A50C, et l’affouage propre à la forêt communale.
+
+- [`registre3_droit()`](https://pobsteta.github.io/sommieR/reference/registre3_droit.md)
+  : Payload du registre 3 - droits et concessions (imprime A50C)
+- [`registre3_affouage()`](https://pobsteta.github.io/sommieR/reference/registre3_affouage.md)
+  : Payload du registre 3 - affouage
+- [`SOMMIER_TYPES_DROIT`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_DROIT.md)
+  : Types d'entree du registre 3 (droits et concessions)
+
+## Registre 4 — infrastructures
+
+Imprimés A50D et A50D bis, ouvrages DFCI compris.
+
+- [`registre4_voirie()`](https://pobsteta.github.io/sommieR/reference/registre4_voirie.md)
+  : Payload du registre 4 - voirie forestiere (imprimes A50D et A50D
+  bis)
+- [`registre4_equipement()`](https://pobsteta.github.io/sommieR/reference/registre4_equipement.md)
+  : Payload du registre 4 - equipement ou ouvrage DFCI
+- [`sommier_densite_voirie()`](https://pobsteta.github.io/sommieR/reference/sommier_densite_voirie.md)
+  : Densite de la voirie forestiere (imprime A50D)
+- [`SOMMIER_TYPES_INFRASTRUCTURE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_INFRASTRUCTURE.md)
+  : Types d'entree du registre 4 (infrastructures)
+- [`SOMMIER_REVETEMENTS`](https://pobsteta.github.io/sommieR/reference/SOMMIER_REVETEMENTS.md)
+  : Natures de revetement de la voirie forestiere (imprime A50D)
+- [`SOMMIER_USAGES_VOIRIE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_USAGES_VOIRIE.md)
+  : Usages de la voirie forestiere (imprime A50D bis)
+
 ## Registre 5 — coupes et récoltes
 
 Imprimés A50E, A50F et A50I.
@@ -58,6 +96,23 @@ Imprimés A50J, A50J bis et A50H.
 
 - [`registre6_travaux()`](https://pobsteta.github.io/sommieR/reference/registre6_travaux.md)
   : Payload du registre 6 - travaux
+
+## Registre 7 — comptabilité
+
+Imprimé A50G, budget prévisionnel et bilan financier.
+
+- [`registre7_ecriture()`](https://pobsteta.github.io/sommieR/reference/registre7_ecriture.md)
+  : Payload du registre 7 - comptabilite
+- [`SOMMIER_POSTES_COMPTABLES`](https://pobsteta.github.io/sommieR/reference/SOMMIER_POSTES_COMPTABLES.md)
+  : Postes comptables du registre 7 (imprime A50G)
+- [`SOMMIER_DISPOSITIFS_FISCAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_DISPOSITIFS_FISCAUX.md)
+  : Dispositifs fiscaux de la foret privee
+- [`budget_definir()`](https://pobsteta.github.io/sommieR/reference/budget_definir.md)
+  : Fixation du budget previsionnel
+- [`sommier_bilan_financier()`](https://pobsteta.github.io/sommieR/reference/sommier_bilan_financier.md)
+  : Bilan financier (imprime A50G)
+- [`sommier_execution_budgetaire()`](https://pobsteta.github.io/sommieR/reference/sommier_execution_budgetaire.md)
+  : Execution budgetaire
 
 ## Registre 8 — évènements et faune
 
@@ -82,6 +137,47 @@ la télédétection.
   : Import de detections par teledetection
 - [`sommier_valider_detection()`](https://pobsteta.github.io/sommieR/reference/sommier_valider_detection.md)
   : Suite donnee a une detection apres passage sur le terrain
+
+## Registre 9 — patrimoine remarquable
+
+Série A50 r/\* : arbres, peuplements, vestiges, espèces protégées,
+habitats — et ce qu’ils apportent à l’IBP.
+
+- [`registre9_arbre()`](https://pobsteta.github.io/sommieR/reference/registre9_arbre.md)
+  : Payload du registre 9 - arbre remarquable (imprime A50 r/a)
+- [`registre9_peuplement()`](https://pobsteta.github.io/sommieR/reference/registre9_peuplement.md)
+  : Payload du registre 9 - peuplement remarquable (imprime A50 r/p)
+- [`registre9_vestige()`](https://pobsteta.github.io/sommieR/reference/registre9_vestige.md)
+  : Payload du registre 9 - vestige ou element culturel (imprime A50
+  r/c)
+- [`registre9_espece()`](https://pobsteta.github.io/sommieR/reference/registre9_espece.md)
+  : Payload du registre 9 - espece protegee (imprimes A50 r/e et r/s)
+- [`registre9_habitat()`](https://pobsteta.github.io/sommieR/reference/registre9_habitat.md)
+  : Payload du registre 9 - habitat remarquable (imprime A50 r/h)
+- [`sommier_elements_ibp()`](https://pobsteta.github.io/sommieR/reference/sommier_elements_ibp.md)
+  : Elements du sommier utiles a l'IBP
+- [`SOMMIER_TYPES_REMARQUABLE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_REMARQUABLE.md)
+  : Types de fiche du patrimoine remarquable (serie A50 r/\*)
+- [`SOMMIER_ETATS_SANITAIRES`](https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_SANITAIRES.md)
+  : Etats sanitaires releves sur un sujet remarquable
+- [`SOMMIER_SEUIL_TGB_CM`](https://pobsteta.github.io/sommieR/reference/SOMMIER_SEUIL_TGB_CM.md)
+  : Seuil de circonference des tres gros bois
+
+## Exports réglementaires et cartographiques
+
+Le sommier comme source des documents de gestion, et le partage
+vérifiable.
+
+- [`sommier_gestion_anterieure()`](https://pobsteta.github.io/sommieR/reference/sommier_gestion_anterieure.md)
+  : Gestion anterieure : coupes, travaux, evenements et comptes
+- [`sommier_rapport_markdown()`](https://pobsteta.github.io/sommieR/reference/sommier_rapport_markdown.md)
+  : Rendu Markdown de la gestion anterieure
+- [`SOMMIER_REFERENTIELS`](https://pobsteta.github.io/sommieR/reference/SOMMIER_REFERENTIELS.md)
+  : Referentiels d'export de la gestion anterieure
+- [`sommier_exporter_sig()`](https://pobsteta.github.io/sommieR/reference/sommier_exporter_sig.md)
+  : Export cartographique des unites de gestion
+- [`SOMMIER_FORMATS_SIG`](https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_SIG.md)
+  : Formats d'export cartographique
 
 ## Visa signé et horodatage
 

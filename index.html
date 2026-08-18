@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -199,7 +199,7 @@
 <th>Registre</th>
 <th>Imprimé A50</th>
 <th>Échelle</th>
-<th align="center">v0.2.0</th>
+<th align="center">v0.5.0</th>
 </tr></thead>
 <tbody>
 <tr>
@@ -211,24 +211,24 @@
 </tr>
 <tr>
 <td>2</td>
-<td>Foncier &amp; limites</td>
+<td><strong>Foncier &amp; limites</strong></td>
 <td>A40</td>
-<td>forêt</td>
-<td align="center"></td>
+<td>mixte</td>
+<td align="center">✅</td>
 </tr>
 <tr>
 <td>3</td>
-<td>Droits &amp; concessions</td>
+<td><strong>Droits &amp; concessions</strong></td>
 <td>A50C</td>
-<td>forêt</td>
-<td align="center"></td>
+<td>mixte</td>
+<td align="center">✅</td>
 </tr>
 <tr>
 <td>4</td>
-<td>Infrastructures</td>
+<td><strong>Infrastructures</strong></td>
 <td>A50D/D bis</td>
 <td>forêt</td>
-<td align="center"></td>
+<td align="center">✅</td>
 </tr>
 <tr>
 <td>5</td>
@@ -246,10 +246,10 @@
 </tr>
 <tr>
 <td>7</td>
-<td>Comptabilité</td>
+<td><strong>Comptabilité</strong></td>
 <td>A50G</td>
 <td>forêt</td>
-<td align="center"></td>
+<td align="center">✅</td>
 </tr>
 <tr>
 <td>8</td>
@@ -260,20 +260,64 @@
 </tr>
 <tr>
 <td>9</td>
-<td>Patrimoine remarquable</td>
+<td><strong>Patrimoine remarquable</strong></td>
 <td>A50 r/*</td>
-<td>UG</td>
-<td align="center"></td>
+<td>mixte</td>
+<td align="center">✅</td>
 </tr>
 </tbody>
 </table>
-<p>Les registres fermés à l’écriture sont déclarés dans <code>SOMMIER_REGISTRES</code> et refusés avec un message explicite, jamais silencieusement acceptés.</p>
+<p><strong>Les neuf registres sont ouverts.</strong> Les échelles marquées <code>mixte</code> le sont d’après les imprimés eux-mêmes : l’A50C porte une colonne « unités de gestion / séries », une servitude vise des parcelles identifiées, une liste d’espèces protégées peut couvrir la forêt entière. Le registre 4 reste à l’échelle de la forêt — une route traverse plusieurs unités, l’y rattacher serait arbitraire.</p>
+</div>
+<div class="section level2">
+<h2 id="générer-les-documents-de-gestion">Générer les documents de gestion<a class="anchor" aria-label="anchor" href="#g%C3%A9n%C3%A9rer-les-documents-de-gestion"></a>
+</h2>
+<p>Le brief note que la section « gestion antérieure » du PSG, le bilan de l’aménagement précédent et l’évaluation CT88 <em>« se génèrent depuis les mêmes registres »</em>. Il y a donc un seul assemblage et trois présentations.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ga</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sommier_gestion_anterieure.html">sommier_gestion_anterieure</a></span><span class="op">(</span></span>
+<span>  <span class="va">con</span>, <span class="va">foret</span>, debut <span class="op">=</span> <span class="st">"2016-01-01"</span>, fin <span class="op">=</span> <span class="st">"2025-12-31"</span>,</span>
+<span>  referentiel <span class="op">=</span> <span class="st">"psg"</span>        <span class="co"># ou "amenagement", ou "ct88"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/sommier_rapport_markdown.html">sommier_rapport_markdown</a></span><span class="op">(</span><span class="va">ga</span>, <span class="st">"gestion-anterieure-chaux.md"</span><span class="op">)</span></span></code></pre></div>
+<p>Chaque référentiel ne reçoit que ce qu’il demande : le PSG n’emporte pas le détail financier, que le propriétaire n’a pas à produire au CRPF ; le CT88, tourné vers l’évaluation d’un contrat, n’emporte pas l’inventaire du patrimoine. Restreindre la sortie évite de diffuser plus que nécessaire — les registres 3 et 7 portent des données personnelles.</p>
+<p>Le patrimoine remarquable n’est délibérément <strong>pas</strong> borné par la période : c’est un état courant, et le borner écarterait un arbre inventorié plus tôt alors que le document veut l’inventaire tel qu’il est aujourd’hui.</p>
+</div>
+<div class="section level2">
+<h2 id="partager-la-cartographie">Partager la cartographie<a class="anchor" aria-label="anchor" href="#partager-la-cartographie"></a>
+</h2>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/sommier_exporter_sig.html">sommier_exporter_sig</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="st">"ug-chaux.geojson"</span><span class="op">)</span>            <span class="co"># sans dépendance</span></span>
+<span><span class="fu"><a href="reference/sommier_exporter_sig.html">sommier_exporter_sig</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="st">"ug-chaux.gpkg"</span>, format <span class="op">=</span> <span class="st">"gpkg"</span><span class="op">)</span>   <span class="co"># via sf</span></span></code></pre></div>
+<p>Une unité sans géométrie connue est <strong>omise de la couche mais signalée</strong> dans le retour : la faire figurer sans contour créerait une entité fantôme dans le SIG, l’omettre en silence laisserait croire la forêt entièrement cartographiée.</p>
+<p>L’export cartographique ne remplace pas le manifeste : la valeur probante est dans la chaîne, et c’est <code><a href="reference/sommier_exporter_manifeste.html">sommier_exporter_manifeste()</a></code> qui la transporte.</p>
+</div>
+<div class="section level2">
+<h2 id="comptabilité-et-bilan-financier">Comptabilité et bilan financier<a class="anchor" aria-label="anchor" href="#comptabilit%C3%A9-et-bilan-financier"></a>
+</h2>
+<p>Le registre 7 enregistre le réalisé ; le budget prévisionnel vit à côté, parce que le brief l’exige — <em>le programme prévisionnel appartient à l’aménagement, le sommier n’enregistre que le réalisé et le constaté</em>. Le prévisionnel est donc mutable, le registre ne l’est pas.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/budget_definir.html">budget_definir</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, annee <span class="op">=</span> <span class="fl">2026</span>, poste <span class="op">=</span> <span class="st">"reboisement"</span>, montant_eur <span class="op">=</span> <span class="fl">5000</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/sommier_ajouter.html">sommier_ajouter</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="reference/sommier_entree.html">sommier_entree</a></span><span class="op">(</span></span>
+<span>  foret_id <span class="op">=</span> <span class="va">foret</span>, registre <span class="op">=</span> <span class="fl">7L</span>,</span>
+<span>  date_evenement <span class="op">=</span> <span class="st">"2026-06-30"</span>, auteur <span class="op">=</span> <span class="st">"compta-01"</span>,</span>
+<span>  payload <span class="op">=</span> <span class="fu"><a href="reference/registre7_ecriture.html">registre7_ecriture</a></span><span class="op">(</span></span>
+<span>    poste <span class="op">=</span> <span class="st">"bois_sur_pied"</span>, exercice <span class="op">=</span> <span class="fl">2026</span>, montant_eur <span class="op">=</span> <span class="fl">18400</span>,</span>
+<span>    quantite <span class="op">=</span> <span class="fl">320</span>, unite <span class="op">=</span> <span class="st">"m3"</span>, reference <span class="op">=</span> <span class="st">"TR-2026-014"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/sommier_bilan_financier.html">sommier_bilan_financier</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span>        <span class="co"># imprimé A50G</span></span>
+<span><span class="fu"><a href="reference/sommier_execution_budgetaire.html">sommier_execution_budgetaire</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span>   <span class="co"># réalisé contre prévisionnel</span></span></code></pre></div>
+<p>Le <strong>sens de l’écriture se déduit du poste</strong> — il ne se saisit pas — et <code>montant_eur</code> est toujours positif. Porter le sens dans le signe est la source classique des doubles négations, où une dépense saisie à <code>-500</code> sur un poste débiteur redevient silencieusement une recette.</p>
+<p>Dans <code>v_execution_budgetaire</code>, un poste budgété mais jamais exécuté reste visible avec un réalisé nul, et un poste exécuté hors budget avec un prévu nul : les deux sont des faits de gestion, aucun ne doit disparaître du tableau.</p>
 </div>
 <div class="section level2">
 <h2 id="le-visa--ce-qui-rend-le-sommier-opposable">Le visa : ce qui rend le sommier opposable<a class="anchor" aria-label="anchor" href="#le-visa--ce-qui-rend-le-sommier-opposable"></a>
 </h2>
 <p>Clôturer un exercice signe la tête de chaîne. L’acte est d’abord inscrit au registre 1, <em>puis</em> la tête est lue et signée — de sorte que le visa atteste un sommier qui contient déjà la trace de sa propre délivrance.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># L'identité vient du fournisseur OIDC, la signature d'une clé (ou d'un</span></span>
 <span><span class="co"># service eIDAS) : Keycloak atteste qui signe, il ne signe pas un contenu</span></span>
 <span><span class="co"># qu'on lui soumet.</span></span>
@@ -296,7 +340,7 @@
 <h2 id="détections-de-télédétection">Détections de télédétection<a class="anchor" aria-label="anchor" href="#d%C3%A9tections-de-t%C3%A9l%C3%A9d%C3%A9tection"></a>
 </h2>
 <p>Une détection FORDEAD ou FAST est une <strong>proposition</strong>, pas un constat : elle entre au registre 8 avec le NDP de sa source, jamais NDP 0.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/sommier_importer_detections.html">sommier_importer_detections</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>, <span class="va">foret</span>, <span class="va">detections</span>, source <span class="op">=</span> <span class="st">"fordead"</span>, ndp <span class="op">=</span> <span class="fl">3L</span>, auteur <span class="op">=</span> <span class="st">"chaine-fordead"</span></span>
 <span><span class="op">)</span></span>
@@ -328,14 +372,14 @@
 <div class="section level2">
 <h2 id="développement">Développement<a class="anchor" aria-label="anchor" href="#d%C3%A9veloppement"></a>
 </h2>
-<div class="sourceCode" id="cb8"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL .</span>
-<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co"># Tests hors base (le noyau se teste entièrement sans serveur)</span></span>
-<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local()'</span></span>
-<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a></span>
-<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co"># Tests complets, base comprise</span></span>
-<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="ex">createdb</span> sommier_test</span>
-<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="va">SOMMIER_TEST_DB</span><span class="op">=</span>sommier_test <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local()'</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL .</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="co"># Tests hors base (le noyau se teste entièrement sans serveur)</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local()'</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="co"># Tests complets, base comprise</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="ex">createdb</span> sommier_test</span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="va">SOMMIER_TEST_DB</span><span class="op">=</span>sommier_test <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local()'</span></span></code></pre></div>
 <p>Sans <code>SOMMIER_TEST_DB</code>, les tests de la couche d’accès sont ignorés plutôt qu’échoués.</p>
 </div>
 <div class="section level2">
@@ -356,7 +400,7 @@
 <td>Noyau append-only vérifiable, registres 5 et 6, balance A50E</td>
 </tr>
 <tr>
-<td><strong>0.2.0</strong></td>
+<td>0.2.0</td>
 <td>Registres 1 et 8 ; visa signé JWS, ancrage RFC 3161 ; import FORDEAD/FAST comme propositions à valider</td>
 </tr>
 <tr>
@@ -365,14 +409,15 @@
 </tr>
 <tr>
 <td>0.4.0</td>
-<td>Registres 2, 3, 4, 9 ; export IBP</td>
+<td>Registres 2, 3, 4, 9 ; densité de voirie et éléments d’IBP</td>
 </tr>
 <tr>
-<td>0.5.0</td>
-<td>Exports réglementaires (gestion antérieure du PSG, bilan d’aménagement, CT88) et export GeoPackage</td>
+<td><strong>0.5.0</strong></td>
+<td>Exports réglementaires (PSG, aménagement, CT88) et export cartographique</td>
 </tr>
 </tbody>
 </table>
+<p>La feuille de route du brief est couverte. Restent hors périmètre, et signalés comme tels : la validation cryptographique de la chaîne de certification des jetons d’horodatage (elle demande un magasin de confiance et une validation CMS), et <code>ES256</code> pour les signatures — JOSE veut l’ECDSA en <code>R||S</code> brut, OpenSSL la produit en DER, et signer sans convertir produirait des jetons invérifiables ailleurs.</p>
 <p><code>ES256</code> n’est pas encore accepté pour les signatures, et ce n’est pas un oubli : JOSE exige la signature ECDSA au format brut <code>R||S</code> alors qu’OpenSSL la produit en DER. L’accepter sans faire la conversion produirait des signatures que rien d’autre ne saurait vérifier.</p>
 </div>
 <div class="section level2">

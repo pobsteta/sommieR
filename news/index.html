@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,84 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.5.0" id="sommier-050">sommieR 0.5.0<a class="anchor" aria-label="anchor" href="#sommier-050"></a></h2>
+<p>Priorité 5 du brief : les exports. Le sommier devient la source des documents réglementaires plutôt qu’un registre à recopier.</p>
+<div class="section level3">
+<h3 id="gestion-antérieure-trois-référentiels-un-seul-assemblage-0-5-0">Gestion antérieure, trois référentiels, un seul assemblage<a class="anchor" aria-label="anchor" href="#gestion-ant%C3%A9rieure-trois-r%C3%A9f%C3%A9rentiels-un-seul-assemblage-0-5-0"></a></h3>
+<ul><li>
+<code><a href="../reference/sommier_gestion_anterieure.html">sommier_gestion_anterieure()</a></code> rassemble sur une période les coupes, la balance de possibilité, les travaux, les évènements, et selon le référentiel le bilan financier, l’équilibre forêt-gibier et le patrimoine remarquable.</li>
+<li>Le brief le pose : <em>« les trois se génèrent depuis les mêmes registres »</em>. Il y a donc <strong>un assemblage et trois présentations</strong> — <code>psg</code> (bloc 3 de l’arrêté de 2012), <code>amenagement</code> (partie 2 du document ONF) et <code>ct88</code> (étape 5) — plutôt que trois extractions parallèles qui divergeraient à la première évolution.</li>
+<li>Chaque référentiel ne reçoit que ce qu’il demande. Le PSG n’emporte pas le détail financier, que le propriétaire n’a pas à produire au CRPF ; le CT88, tourné vers l’évaluation d’un contrat, n’emporte pas l’inventaire du patrimoine. Restreindre la sortie évite de diffuser plus que nécessaire — les registres 3 et 7 portent des données personnelles.</li>
+<li>Le patrimoine remarquable n’est <strong>pas</strong> borné par la période : c’est un état courant, et le borner écarterait un arbre inventorié plus tôt alors que le document veut l’inventaire tel qu’il est.</li>
+<li>
+<code><a href="../reference/sommier_rapport_markdown.html">sommier_rapport_markdown()</a></code> met le tout en forme. Du Markdown, pas un formulaire officiel : la mise en page réglementaire appartient à l’outil de rédaction, et la reproduire ici la figerait sur une version des textes.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="export-cartographique-0-5-0">Export cartographique<a class="anchor" aria-label="anchor" href="#export-cartographique-0-5-0"></a></h3>
+<ul><li>
+<code><a href="../reference/sommier_exporter_sig.html">sommier_exporter_sig()</a></code> exporte les unités de gestion et leur géométrie en vigueur à une date, enrichies du nombre d’entrées qui s’y rattachent.</li>
+<li>Deux formats : <code>geojson</code>, qui n’exige rien de plus que PostGIS et que le destinataire ouvre sans rien installer, et <code>gpkg</code> via <code>sf</code>.</li>
+<li>Une unité sans géométrie connue est <strong>omise de la couche mais signalée</strong> : la faire figurer sans contour créerait une entité fantôme, l’omettre en silence laisserait croire la forêt entièrement cartographiée. Un GeoPackage qui ne contiendrait aucune unité est refusé plutôt qu’écrit vide — un fichier SIG sans couche est plus difficile à diagnostiquer qu’une erreur.</li>
+<li>La conversion vers <code>sf</code> passe par le WKT et non par le GeoJSON : <code>st_as_sfc()</code> a une méthode caractère pour le WKT, là où lire une géométrie GeoJSON nue dépendrait du pilote GDAL et de sa tolérance aux fragments sans enveloppe <code>Feature</code>.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.0" id="sommier-040">sommieR 0.4.0<a class="anchor" aria-label="anchor" href="#sommier-040"></a></h2>
+<p>Priorité 4 du brief : les quatre registres restants. <strong>Les neuf registres du sommier unifié sont désormais ouverts à l’écriture.</strong></p>
+<div class="section level3">
+<h3 id="registres-et-0-4-0">Registres 2, 3, 4 et 9<a class="anchor" aria-label="anchor" href="#registres-et-0-4-0"></a></h3>
+<ul><li>Registre 2 — foncier et limites (<code><a href="../reference/registre2_foncier.html">registre2_foncier()</a></code>, imprimé A40) : délimitation, bornage, application ou distraction du régime forestier, acquisitions, servitudes. La répartition du coût entre propriétaire et riverains est vérifiée quand les trois montants sont donnés — une répartition qui ne totalise pas le coût est une erreur de saisie.</li>
+<li>Registre 3 — droits et concessions (<code><a href="../reference/registre3_droit.html">registre3_droit()</a></code>, imprimé A50C) et l’affouage, propre à la forêt communale (<code><a href="../reference/registre3_affouage.html">registre3_affouage()</a></code> : rôle, garants, taxe, mode de partage). Une expiration antérieure au départ est refusée : le droit n’aurait jamais existé.</li>
+<li>Registre 4 — infrastructures (<code><a href="../reference/registre4_voirie.html">registre4_voirie()</a></code>, <code><a href="../reference/registre4_equipement.html">registre4_equipement()</a></code>, imprimés A50D et A50D bis), ouvrages DFCI compris.</li>
+<li>Registre 9 — patrimoine remarquable, les cinq types de fiche de la série A50 r/* : arbre, peuplement, vestige, espèce protégée, habitat. La composition d’un peuplement doit sommer à 10, l’imprimé l’exprimant en dixièmes.</li>
+<li>Un sujet revisité donne une entrée de plus portant la même appellation : la série de mesures se reconstitue par requête, rien n’est écrasé.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="échelles-dancrage-révisées-0-4-0">Échelles d’ancrage révisées<a class="anchor" aria-label="anchor" href="#%C3%A9chelles-dancrage-r%C3%A9vis%C3%A9es-0-4-0"></a></h3>
+<p>Les registres 2, 3 et 9 passent de <code>foret</code> ou <code>ug</code> à <code>mixte</code>, d’après les imprimés eux-mêmes : l’A50C porte une colonne « unités de gestion / séries », une servitude vise des parcelles identifiées, et une liste d’espèces protégées peut couvrir la forêt entière. Le registre 4 reste à l’échelle de la forêt — une route traverse plusieurs unités, l’y rattacher serait arbitraire.</p>
+</div>
+<div class="section level3">
+<h3 id="vues-et-analyses-0-4-0">Vues et analyses<a class="anchor" aria-label="anchor" href="#vues-et-analyses-0-4-0"></a></h3>
+<ul><li>
+<code><a href="../reference/sommier_densite_voirie.html">sommier_densite_voirie()</a></code> / <code>v_densite_voirie</code> : longueurs et densités en km pour 100 ha (imprimé A50D). Seule la voirie <strong>privée</strong> compte — une départementale traversant la forêt ne dit rien de sa desserte. La densité vaut <code>NA</code> sans surface connue plutôt que d’être inventée.</li>
+<li>
+<code><a href="../reference/sommier_elements_ibp.html">sommier_elements_ibp()</a></code> rassemble ce que le registre 9 fournit à l’Indice de Biodiversité Potentielle : arbres à microhabitats, bois mort sur pied, très gros bois, milieux ouverts, espèces protégées. <strong>La fonction ne cote pas l’IBP et ne le prétend pas</strong> — un facteur se cote sur placette selon un protocole de terrain, pas par comptage d’un registre qui n’inventorie que le remarquable. Rendre une note serait plus vendeur et faux.</li>
+<li>
+<code>v_droit_en_vigueur</code> écarte les droits expirés sans les sortir du registre.</li>
+<li>
+<code>v_droit</code> n’expose ni <code>titulaire</code> ni <code>garants</code>, <code>v_foncier</code> ni <code>v_remarquable</code> aucune donnée nominative superflue : même règle qu’au registre 7.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.0" id="sommier-030">sommieR 0.3.0<a class="anchor" aria-label="anchor" href="#sommier-030"></a></h2>
+<p>Priorité 3 du brief : comptabilité et bilan financier.</p>
+<div class="section level3">
+<h3 id="registre--comptabilité-imprimé-a50g-0-3-0">Registre 7 — comptabilité (imprimé A50G)<a class="anchor" aria-label="anchor" href="#registre--comptabilit%C3%A9-imprim%C3%A9-a50g-0-3-0"></a></h3>
+<ul><li>
+<code><a href="../reference/registre7_ecriture.html">registre7_ecriture()</a></code> enregistre une recette ou une dépense. <code>SOMMIER_POSTES_COMPTABLES</code> porte la nomenclature des 19 postes, répartis dans les quatre blocs de l’imprimé : produits, travaux d’entretien, travaux neufs, autres frais.</li>
+<li>
+<strong>Le sens et la rubrique se déduisent du poste</strong>, ils ne se saisissent pas : ils ne peuvent donc pas le contredire. Et <code>montant_eur</code> est toujours positif — porter le sens dans le signe est la source classique des doubles négations, où une dépense saisie à <code>-500</code> sur un poste débiteur redevient silencieusement une recette.</li>
+<li>
+<code>dispositif_fiscal</code> rattache une écriture à un dispositif de la forêt privée (DEFI, Monichon, IFI).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="budget-prévisionnel-0-3-0">Budget prévisionnel<a class="anchor" aria-label="anchor" href="#budget-pr%C3%A9visionnel-0-3-0"></a></h3>
+<ul><li>
+<code><a href="../reference/budget_definir.html">budget_definir()</a></code> fixe ou révise le montant prévu d’un poste.</li>
+<li>
+<strong>Le prévisionnel n’est pas une entrée de sommier.</strong> Le brief l’interdit : « le programme prévisionnel appartient à l’aménagement ou au PSG ; le sommier n’enregistre que le réalisé et le constaté ». Il vit donc dans sa propre table, à côté de la possibilité annuelle, et il est <strong>mutable</strong> — un budget se révise, et cette révision n’a pas à être opposable. Ce qui doit l’être, c’est le réalisé, qui lui est dans la chaîne.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="vues-calculées-0-3-0">Vues calculées<a class="anchor" aria-label="anchor" href="#vues-calcul%C3%A9es-0-3-0"></a></h3>
+<ul><li>
+<code><a href="../reference/sommier_bilan_financier.html">sommier_bilan_financier()</a></code> / <code>v_bilan_financier</code> : recettes, dépenses, solde et cumul par exercice, avec les trois rubriques de dépense détaillées. <code>bois_delivres_eur</code> isole l’affouage, auquel l’imprimé A50G réserve sa colonne.</li>
+<li>
+<code><a href="../reference/sommier_execution_budgetaire.html">sommier_execution_budgetaire()</a></code> / <code>v_execution_budgetaire</code> : réalisé confronté au prévisionnel, poste par poste. La jointure est complète et non gauche — un poste budgété mais jamais exécuté est une information de gestion au moins aussi utile qu’un dépassement, et un poste exécuté hors budget doit apparaître plutôt que disparaître. <code>execution_pct</code> vaut <code>NA</code> sur une base budgétaire nulle, un taux n’ayant alors pas de sens ; l’écart en euros le dit déjà.</li>
+<li>
+<code>v_comptabilite</code> n’expose pas <code>tiers</code> : c’est une donnée à caractère personnel, qui reste lisible dans le payload pour qui en a besoin mais ne se diffuse pas par la vue de consultation courante.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="sommier-020">sommieR 0.2.0<a class="anchor" aria-label="anchor" href="#sommier-020"></a></h2>
 <p>Priorité 2 du brief : évènements, visas signés et ancrage.</p>

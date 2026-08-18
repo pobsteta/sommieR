@@ -10,4 +10,4 @@ SOMMIER_REGISTRES_OUVERTS
 
 ## Format
 
-An object of class `integer` of length 4.
+An object of class `integer` of length 9.
