@@ -1,0 +1,194 @@
+---
+title: "Gestion antérieure"
+lang: fr
+params:
+  donnees: "donnees.rds"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    theme: cosmo
+    embed-resources: true
+    tbl-cap-location: top
+  pdf:
+    toc: true
+    number-sections: true
+    documentclass: scrartcl
+    papersize: a4
+knitr:
+  opts_chunk:
+    echo: false
+    warning: false
+    message: false
+---
+
+```{r préparation}
+rapport <- readRDS(params$donnees)
+ga <- rapport$gestion_anterieure
+sections <- ga$sections
+
+tableau <- function(nom, legende = NULL) {
+  df <- sections[[nom]]
+  if (is.null(df) || nrow(df) == 0L) {
+    cat("*Aucun enregistrement sur la période.*\n\n")
+    return(invisible(NULL))
+  }
+  print(knitr::kable(df, caption = legende, format.args = list(big.mark = " ")))
+  cat("\n\n")
+}
+
+euros <- function(x) formatC(x, format = "f", digits = 0, big.mark = " ")
+```
+
+::: {.callout-important}
+## Données de démonstration
+
+`r if (grepl("démonstration|demonstration", ga$foret, fixed = FALSE)) "Ce document est engendré à partir d'un **jeu de démonstration**. La commune et la géométrie cadastrale sont réelles, mais **aucune écriture — volume, montant, date, coupe ou visa — ne provient de registres authentiques**. Il illustre la mise en forme, pas la gestion d'une forêt existante." else "Document engendré depuis le sommier de la forêt nommée ci-dessous."`
+:::
+
+## Identification
+
+| | |
+|---|---|
+| **Forêt** | `r ga$foret` |
+| **Régime** | `r ga$regime` |
+| **Surface** | `r if (is.na(ga$surface_ha)) "non renseignée" else paste(ga$surface_ha, "ha")` |
+| **Période couverte** | `r ga$debut` au `r ga$fin` |
+| **Référentiel** | `r ga$referentiel` |
+| **Édité le** | `r rapport$edite_le` |
+
+### Intégrité du registre
+
+Le sommier est un journal à chaînage de hachages : chaque entrée scelle la
+précédente. L'état ci-dessous est celui constaté à l'édition de ce document.
+
+| | |
+|---|---|
+| **État de la chaîne** | `r if (isTRUE(rapport$verification$valide)) "intacte" else paste(nrow(rapport$verification$anomalies), "anomalie(s) — voir ci-dessous")` |
+| **Entrées** | `r rapport$verification$n_entrees` |
+| **Séquence de tête** | `r rapport$verification$seq_tete` |
+| **Empreinte de tête** | `` `r rapport$verification$hash_tete` `` |
+
+```{r anomalies, results='asis'}
+if (!isTRUE(rapport$verification$valide)) {
+  cat("::: {.callout-warning}\n## Chaîne altérée\n\n")
+  print(knitr::kable(rapport$verification$anomalies))
+  cat("\n:::\n")
+}
+```
+
+## Coupes et récoltes {#sec-coupes}
+
+Imprimés A50E, A50F et A50I.
+
+```{r coupes, results='asis'}
+tableau("coupes", "Coupes enregistrées sur la période, par exercice et nature")
+```
+
+### Balance de possibilité
+
+La balance confronte les volumes **martelés** à la possibilité de
+l'aménagement. Une balance positive signale un excès de prélèvement, une
+balance négative un déficit ; c'est le cumul qui compte sur la durée du plan.
+
+```{r balance, results='asis'}
+tableau("balance", "Balance de possibilité (imprimé A50E)")
+```
+
+```{r balance-cumul, fig.height=3.2, fig.width=7, fig.cap="Balance cumulée sur la période — la ligne pointillée marque l'équilibre."}
+b <- sections$balance
+if (!is.null(b) && nrow(b) > 1L) {
+  cumul <- as.numeric(b$balance_cumulee_m3)
+  op <- par(mar = c(4, 4.5, 1, 1), cex = 0.85)
+  plot(b$exercice, cumul, type = "n",
+       xlab = "Exercice", ylab = expression("Balance cumulée ("*m^3*")"),
+       panel.first = grid(col = "grey90", lty = 1))
+  abline(h = 0, lty = 2, col = "grey40")
+  lines(b$exercice, cumul, lwd = 2, col = "#2E7D32")
+  points(b$exercice, cumul, pch = 19, col = "#2E7D32")
+  par(op)
+}
+```
+
+## Travaux {#sec-travaux}
+
+Imprimés A50J, A50J bis et A50H. Le taux de reprise est celui relevé au
+contrôle des plantations.
+
+```{r travaux, results='asis'}
+tableau("travaux", "Travaux réalisés sur la période")
+```
+
+## Évènements marquants {#sec-evenements}
+
+Imprimé A50K. Le niveau de précision (NDP) vaut 0 pour un constat de terrain ;
+une valeur supérieure signale une observation issue de la télédétection.
+
+```{r evenements, results='asis'}
+tableau("evenements", "Phénomènes intéressant la vie de la forêt")
+```
+
+```{r finances, results='asis', eval=!is.null(sections$finances)}
+cat("## Bilan financier {#sec-finances}\n\n")
+cat("Imprimé A50G. Le solde est la différence entre recettes et dépenses ",
+    "de l'exercice ; le cumul en donne la tendance.\n\n", sep = "")
+tableau("finances", "Recettes, dépenses et solde par exercice")
+```
+
+```{r gibier, results='asis', eval=!is.null(sections$equilibre_gibier)}
+cat("## Équilibre forêt-gibier {#sec-gibier}\n\n")
+cat("Obligatoire dans les plans simples de gestion depuis la loi d'avenir ",
+    "pour l'agriculture, l'alimentation et la forêt du 13 octobre 2014.\n\n",
+    sep = "")
+tableau("equilibre_gibier", "Constats d'équilibre forêt-gibier")
+```
+
+```{r patrimoine, results='asis', eval=!is.null(sections$patrimoine)}
+cat("## Patrimoine remarquable {#sec-patrimoine}\n\n")
+cat("Série A50 r/*. Dernier relevé connu de chaque sujet : le patrimoine est ",
+    "un état courant, il n'est pas borné par la période du rapport.\n\n",
+    sep = "")
+tableau("patrimoine", "Arbres, peuplements, vestiges, espèces et habitats")
+```
+
+```{r ibp, results='asis', eval=!is.null(rapport$ibp)}
+cat("### Éléments utiles à l'IBP\n\n")
+cat("Ce que le registre 9 apporte à l'Indice de Biodiversité Potentielle. ",
+    "**Ce n'est pas une cotation** : un facteur IBP se cote sur placette selon ",
+    "son protocole de terrain, pas par comptage d'un registre qui n'inventorie ",
+    "que le remarquable.\n\n", sep = "")
+print(knitr::kable(rapport$ibp, caption = "Éléments mobilisables pour l'IBP"))
+cat("\n\n")
+```
+
+```{r desserte, results='asis', eval=!is.null(rapport$densite_voirie)}
+cat("## Desserte {#sec-desserte}\n\n")
+cat("Imprimé A50D. Seule la voirie privée forestière entre dans la densité : ",
+    "une route publique traversant la forêt ne dit rien de sa desserte.\n\n",
+    sep = "")
+print(knitr::kable(rapport$densite_voirie,
+                   caption = "Longueurs et densités de voirie"))
+cat("\n\n")
+```
+
+## Vérifier ce document
+
+Ce rapport est une **mise en forme**, pas la preuve. La valeur probante tient
+au registre lui-même : l'empreinte de tête donnée plus haut scelle les
+`r rapport$verification$n_entrees` entrées de la chaîne.
+
+Pour contrôler ces chiffres sans accès à la base, demander l'export manifeste
+et le vérifier hors ligne :
+
+```r
+sommier_verifier_manifeste("sommier-export.json")
+```
+
+Toute entrée modifiée, retirée ou insérée après coup invalide l'empreinte de
+tête, et la vérification le dit.
+
+---
+
+*Engendré par [sommieR](https://github.com/pobsteta/sommieR)
+`r rapport$version_sommier` le `r rapport$edite_le`.*
