@@ -51,6 +51,26 @@ reference:
     - registre1_validation
     - SOMMIER_TYPES_VALIDATION
     - SOMMIER_AUTORITES
+  - title: "Registre 2 — foncier et limites"
+    desc: "Imprimé A40 : délimitation, bornage, acquisitions, servitudes."
+    contents:
+    - registre2_foncier
+    - SOMMIER_TYPES_FONCIER
+  - title: "Registre 3 — droits et concessions"
+    desc: "Imprimé A50C, et l'affouage propre à la forêt communale."
+    contents:
+    - registre3_droit
+    - registre3_affouage
+    - SOMMIER_TYPES_DROIT
+  - title: "Registre 4 — infrastructures"
+    desc: "Imprimés A50D et A50D bis, ouvrages DFCI compris."
+    contents:
+    - registre4_voirie
+    - registre4_equipement
+    - sommier_densite_voirie
+    - SOMMIER_TYPES_INFRASTRUCTURE
+    - SOMMIER_REVETEMENTS
+    - SOMMIER_USAGES_VOIRIE
   - title: "Registre 5 — coupes et récoltes"
     desc: "Imprimés A50E, A50F et A50I."
     contents:
@@ -85,6 +105,30 @@ reference:
     - SOMMIER_NATURES_PHENOMENE
     - sommier_importer_detections
     - sommier_valider_detection
+  - title: "Registre 9 — patrimoine remarquable"
+    desc: >
+      Série A50 r/* : arbres, peuplements, vestiges, espèces protégées,
+      habitats — et ce qu'ils apportent à l'IBP.
+    contents:
+    - registre9_arbre
+    - registre9_peuplement
+    - registre9_vestige
+    - registre9_espece
+    - registre9_habitat
+    - sommier_elements_ibp
+    - SOMMIER_TYPES_REMARQUABLE
+    - SOMMIER_ETATS_SANITAIRES
+    - SOMMIER_SEUIL_TGB_CM
+  - title: "Exports réglementaires et cartographiques"
+    desc: >
+      Le sommier comme source des documents de gestion, et le partage
+      vérifiable.
+    contents:
+    - sommier_gestion_anterieure
+    - sommier_rapport_markdown
+    - SOMMIER_REFERENTIELS
+    - sommier_exporter_sig
+    - SOMMIER_FORMATS_SIG
   - title: "Visa signé et horodatage"
     desc: >
       Ce qui rend le sommier opposable : la signature détachée de la tête de

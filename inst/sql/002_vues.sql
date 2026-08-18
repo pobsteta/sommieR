@@ -372,3 +372,136 @@ COMMENT ON VIEW v_execution_budgetaire IS
   'Realise confronte au previsionnel. execution_pct vaut NULL lorsque rien '
   'n''etait budgete : un taux d''execution sur une base nulle n''a pas de sens, '
   'et l''ecart en euros le dit deja.';
+
+-- ---------------------------------------------------------------------
+-- Registres 2, 3, 4 et 9 (v0.4.0)
+-- ---------------------------------------------------------------------
+
+CREATE OR REPLACE VIEW v_foncier AS
+SELECT
+  e.id, e.foret_id, e.ug_uuid, e.seq, e.date_evenement, e.auteur,
+  (e.payload ->> 'type_entree')::TEXT              AS type_entree,
+  (e.payload ->> 'description')::TEXT              AS description,
+  (e.payload ->> 'cout_total_eur')::NUMERIC        AS cout_total_eur,
+  (e.payload ->> 'charge_proprietaire_eur')::NUMERIC AS charge_proprietaire_eur,
+  (e.payload ->> 'charge_riverains_eur')::NUMERIC  AS charge_riverains_eur,
+  (e.payload ->> 'nb_bornes')::INTEGER             AS nb_bornes,
+  (e.payload ->> 'surface_ha')::NUMERIC            AS surface_ha,
+  (e.payload ->> 'reference_acte')::TEXT           AS reference_acte,
+  (e.payload ->> 'beneficiaire')::TEXT             AS beneficiaire
+FROM v_entree_courante e
+WHERE e.registre = 2;
+
+COMMENT ON VIEW v_foncier IS 'Imprime A40 et actes fonciers.';
+
+-- `titulaire` et `garants` ne sont pas exposes : donnees a caractere
+-- personnel, comme `tiers` au registre 7.
+CREATE OR REPLACE VIEW v_droit AS
+SELECT
+  e.id, e.foret_id, e.ug_uuid, e.seq, e.date_evenement, e.auteur,
+  (e.payload ->> 'type_entree')::TEXT     AS type_entree,
+  (e.payload ->> 'numero')::TEXT          AS numero,
+  (e.payload ->> 'nature')::TEXT          AS nature,
+  (e.payload ->> 'date_debut')::DATE      AS date_debut,
+  (e.payload ->> 'date_expiration')::DATE AS date_expiration,
+  (e.payload ->> 'redevance_eur')::NUMERIC AS redevance_eur,
+  (e.payload ->> 'surface_ha')::NUMERIC   AS surface_ha,
+  (e.payload ->> 'campagne')::TEXT        AS campagne,
+  (e.payload ->> 'nb_affouagistes')::INTEGER AS nb_affouagistes,
+  (e.payload ->> 'volume_m3')::NUMERIC    AS volume_m3,
+  (e.payload ->> 'taxe_eur')::NUMERIC     AS taxe_eur,
+  (e.payload ->> 'mode_partage')::TEXT    AS mode_partage
+FROM v_entree_courante e
+WHERE e.registre = 3;
+
+COMMENT ON VIEW v_droit IS
+  'Imprime A50C, affouage compris. `titulaire` et `garants` sont volontairement '
+  'absents : donnees a caractere personnel, lisibles dans le payload pour qui '
+  'en a besoin mais non diffusees par la vue courante.';
+
+-- Droits en vigueur a une date donnee. Une concession expiree sort de la
+-- liste sans sortir du registre : c'est bien la meme logique que la
+-- rectification, appliquee au temps plutot qu'a l'erreur.
+CREATE OR REPLACE VIEW v_droit_en_vigueur AS
+SELECT d.*
+FROM v_droit d
+WHERE d.date_debut <= CURRENT_DATE
+  AND (d.date_expiration IS NULL OR d.date_expiration >= CURRENT_DATE);
+
+CREATE OR REPLACE VIEW v_infrastructure AS
+SELECT
+  e.id, e.foret_id, e.seq, e.date_evenement, e.auteur,
+  (e.payload ->> 'type_entree')::TEXT        AS type_entree,
+  (e.payload ->> 'nom')::TEXT                AS nom,
+  (e.payload ->> 'nature')::TEXT             AS nature,
+  (e.payload ->> 'revetement')::TEXT         AS revetement,
+  (e.payload ->> 'longueur_m')::NUMERIC      AS longueur_m,
+  (e.payload ->> 'largeur_chaussee_m')::NUMERIC AS largeur_chaussee_m,
+  (e.payload ->> 'usage')::TEXT              AS usage,
+  (e.payload ->> 'ouverte_public')::BOOLEAN  AS ouverte_public,
+  (e.payload ->> 'voirie_publique')::BOOLEAN AS voirie_publique,
+  (e.payload ->> 'capacite')::NUMERIC        AS capacite,
+  (e.payload ->> 'unite')::TEXT              AS unite,
+  (e.payload ->> 'etat')::TEXT               AS etat
+FROM v_entree_courante e
+WHERE e.registre = 4;
+
+-- Densites de l'imprime A50D, en km pour 100 hectares. Seule la voirie
+-- PRIVEE forestiere entre au numerateur : l'imprime distingue les deux, et
+-- une route departementale traversant la foret ne dit rien de sa desserte.
+CREATE OR REPLACE VIEW v_densite_voirie AS
+SELECT
+  f.id                                    AS foret_id,
+  f.surface_ha,
+  i.revetement,
+  SUM(i.longueur_m) / 1000.0              AS longueur_km,
+  CASE
+    WHEN f.surface_ha IS NULL OR f.surface_ha = 0 THEN NULL
+    ELSE ROUND((SUM(i.longueur_m) / 1000.0) / (f.surface_ha / 100.0), 2)
+  END                                     AS densite_km_100ha
+FROM foret f
+JOIN v_infrastructure i ON i.foret_id = f.id
+WHERE i.type_entree = 'voirie'
+  AND COALESCE(i.voirie_publique, FALSE) = FALSE
+GROUP BY f.id, f.surface_ha, i.revetement
+ORDER BY f.id, i.revetement;
+
+COMMENT ON VIEW v_densite_voirie IS
+  'Imprime A50D. densite_km_100ha vaut NULL si la surface de la foret est '
+  'inconnue : une densite sans denominateur serait inventee.';
+
+CREATE OR REPLACE VIEW v_remarquable AS
+SELECT
+  e.id, e.foret_id, e.ug_uuid, e.seq, e.date_evenement, e.auteur,
+  (e.payload ->> 'type_fiche')::TEXT        AS type_fiche,
+  (e.payload ->> 'appellation')::TEXT       AS appellation,
+  (e.payload ->> 'essence')::TEXT           AS essence,
+  (e.payload ->> 'interet')::TEXT           AS interet,
+  (e.payload ->> 'age_ans')::INTEGER        AS age_ans,
+  (e.payload ->> 'circonference_cm')::NUMERIC AS circonference_cm,
+  (e.payload ->> 'hauteur_m')::NUMERIC      AS hauteur_m,
+  (e.payload ->> 'etat_sanitaire')::TEXT    AS etat_sanitaire,
+  (e.payload ->> 'surface_ha')::NUMERIC     AS surface_ha,
+  (e.payload ->> 'nom_francais')::TEXT      AS nom_francais,
+  (e.payload ->> 'nom_latin')::TEXT         AS nom_latin,
+  (e.payload ->> 'statut_protection')::TEXT AS statut_protection,
+  (e.payload ->> 'effectif')::INTEGER       AS effectif,
+  (e.payload ->> 'type_habitat')::TEXT      AS type_habitat,
+  (e.payload ->> 'code_natura2000')::TEXT   AS code_natura2000,
+  (e.payload ->> 'etat_conservation')::TEXT AS etat_conservation
+FROM v_entree_courante e
+WHERE e.registre = 9;
+
+COMMENT ON VIEW v_remarquable IS
+  'Serie A50 r/*. Un sujet revisite donne une entree de plus portant la meme '
+  'appellation : la serie de mesures se reconstitue par requete, rien n''est '
+  'ecrase.';
+
+-- Dernier releve connu de chaque sujet remarquable nomme.
+CREATE OR REPLACE VIEW v_remarquable_dernier_releve AS
+SELECT DISTINCT ON (r.foret_id, r.type_fiche, COALESCE(r.appellation, r.nom_latin, r.type_habitat))
+  r.*
+FROM v_remarquable r
+ORDER BY r.foret_id, r.type_fiche,
+         COALESCE(r.appellation, r.nom_latin, r.type_habitat),
+         r.date_evenement DESC, r.seq DESC;

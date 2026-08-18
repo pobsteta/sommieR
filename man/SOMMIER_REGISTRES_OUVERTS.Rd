@@ -5,7 +5,7 @@
 \alias{SOMMIER_REGISTRES_OUVERTS}
 \title{Registres ouverts a l'ecriture dans cette version}
 \format{
-An object of class \code{integer} of length 5.
+An object of class \code{integer} of length 9.
 }
 \usage{
 SOMMIER_REGISTRES_OUVERTS

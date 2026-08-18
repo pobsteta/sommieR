@@ -1,3 +1,89 @@
+# sommieR 0.5.0
+
+Priorité 5 du brief : les exports. Le sommier devient la source des documents
+réglementaires plutôt qu'un registre à recopier.
+
+## Gestion antérieure, trois référentiels, un seul assemblage
+
+* `sommier_gestion_anterieure()` rassemble sur une période les coupes, la
+  balance de possibilité, les travaux, les évènements, et selon le référentiel
+  le bilan financier, l'équilibre forêt-gibier et le patrimoine remarquable.
+* Le brief le pose : *« les trois se génèrent depuis les mêmes registres »*.
+  Il y a donc **un assemblage et trois présentations** — `psg` (bloc 3 de
+  l'arrêté de 2012), `amenagement` (partie 2 du document ONF) et `ct88`
+  (étape 5) — plutôt que trois extractions parallèles qui divergeraient à la
+  première évolution.
+* Chaque référentiel ne reçoit que ce qu'il demande. Le PSG n'emporte pas le
+  détail financier, que le propriétaire n'a pas à produire au CRPF ; le CT88,
+  tourné vers l'évaluation d'un contrat, n'emporte pas l'inventaire du
+  patrimoine. Restreindre la sortie évite de diffuser plus que nécessaire —
+  les registres 3 et 7 portent des données personnelles.
+* Le patrimoine remarquable n'est **pas** borné par la période : c'est un état
+  courant, et le borner écarterait un arbre inventorié plus tôt alors que le
+  document veut l'inventaire tel qu'il est.
+* `sommier_rapport_markdown()` met le tout en forme. Du Markdown, pas un
+  formulaire officiel : la mise en page réglementaire appartient à l'outil de
+  rédaction, et la reproduire ici la figerait sur une version des textes.
+
+## Export cartographique
+
+* `sommier_exporter_sig()` exporte les unités de gestion et leur géométrie en
+  vigueur à une date, enrichies du nombre d'entrées qui s'y rattachent.
+* Deux formats : `geojson`, qui n'exige rien de plus que PostGIS et que le
+  destinataire ouvre sans rien installer, et `gpkg` via `sf`.
+* Une unité sans géométrie connue est **omise de la couche mais signalée** :
+  la faire figurer sans contour créerait une entité fantôme, l'omettre en
+  silence laisserait croire la forêt entièrement cartographiée.
+
+# sommieR 0.4.0
+
+Priorité 4 du brief : les quatre registres restants. **Les neuf registres du
+sommier unifié sont désormais ouverts à l'écriture.**
+
+## Registres 2, 3, 4 et 9
+
+* Registre 2 — foncier et limites (`registre2_foncier()`, imprimé A40) :
+  délimitation, bornage, application ou distraction du régime forestier,
+  acquisitions, servitudes. La répartition du coût entre propriétaire et
+  riverains est vérifiée quand les trois montants sont donnés — une
+  répartition qui ne totalise pas le coût est une erreur de saisie.
+* Registre 3 — droits et concessions (`registre3_droit()`, imprimé A50C) et
+  l'affouage, propre à la forêt communale (`registre3_affouage()` : rôle,
+  garants, taxe, mode de partage). Une expiration antérieure au départ est
+  refusée : le droit n'aurait jamais existé.
+* Registre 4 — infrastructures (`registre4_voirie()`, `registre4_equipement()`,
+  imprimés A50D et A50D bis), ouvrages DFCI compris.
+* Registre 9 — patrimoine remarquable, les cinq types de fiche de la série
+  A50 r/* : arbre, peuplement, vestige, espèce protégée, habitat. La
+  composition d'un peuplement doit sommer à 10, l'imprimé l'exprimant en
+  dixièmes.
+* Un sujet revisité donne une entrée de plus portant la même appellation : la
+  série de mesures se reconstitue par requête, rien n'est écrasé.
+
+## Échelles d'ancrage révisées
+
+Les registres 2, 3 et 9 passent de `foret` ou `ug` à `mixte`, d'après les
+imprimés eux-mêmes : l'A50C porte une colonne « unités de gestion / séries »,
+une servitude vise des parcelles identifiées, et une liste d'espèces protégées
+peut couvrir la forêt entière. Le registre 4 reste à l'échelle de la forêt —
+une route traverse plusieurs unités, l'y rattacher serait arbitraire.
+
+## Vues et analyses
+
+* `sommier_densite_voirie()` / `v_densite_voirie` : longueurs et densités en
+  km pour 100 ha (imprimé A50D). Seule la voirie **privée** compte — une
+  départementale traversant la forêt ne dit rien de sa desserte. La densité
+  vaut `NA` sans surface connue plutôt que d'être inventée.
+* `sommier_elements_ibp()` rassemble ce que le registre 9 fournit à l'Indice
+  de Biodiversité Potentielle : arbres à microhabitats, bois mort sur pied,
+  très gros bois, milieux ouverts, espèces protégées. **La fonction ne cote pas
+  l'IBP et ne le prétend pas** — un facteur se cote sur placette selon un
+  protocole de terrain, pas par comptage d'un registre qui n'inventorie que le
+  remarquable. Rendre une note serait plus vendeur et faux.
+* `v_droit_en_vigueur` écarte les droits expirés sans les sortir du registre.
+* `v_droit` n'expose ni `titulaire` ni `garants`, `v_foncier` ni `v_remarquable`
+  aucune donnée nominative superflue : même règle qu'au registre 7.
+
 # sommieR 0.3.0
 
 Priorité 3 du brief : comptabilité et bilan financier.

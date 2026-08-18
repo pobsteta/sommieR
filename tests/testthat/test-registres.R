@@ -57,9 +57,41 @@ test_that("une quantite sans unite est refusee", {
   expect_silent(registre6_travaux(2026, "degagement", quantite = 4, unite = "ha"))
 })
 
-test_that("les registres non ouverts sont refuses avec un message utile", {
-  for (r in setdiff(1:9, SOMMIER_REGISTRES_OUVERTS)) {
-    expect_error(valider_payload(r, list()), "non ouvert a l'ecriture")
+test_that("les neuf registres sont ouverts a l'ecriture", {
+  # Le brief decrit neuf registres ; la v0.4.0 les couvre tous.
+  expect_equal(SOMMIER_REGISTRES_OUVERTS, 1:9)
+  expect_true(all(SOMMIER_REGISTRES$implemente))
+  # Chacun doit avoir sa version de schema, sans quoi une entree serait ecrite
+  # sans indiquer la forme de son payload.
+  for (r in SOMMIER_REGISTRES_OUVERTS) {
+    expect_true(as.character(r) %in% names(SOMMIER_SCHEMA_VERSIONS))
+  }
+})
+
+test_that("un registre hors 1-9 reste refuse", {
+  expect_error(valider_payload(0L, list()), "registre")
+  expect_error(valider_payload(10L, list()), "registre")
+})
+
+test_that("chaque registre ouvert revalide un payload construit", {
+  # Garde-fou de l'aller-retour : ce que le constructeur produit doit etre
+  # relisible par valider_payload(), sans quoi un export ne se reverifierait
+  # pas.
+  payloads <- list(
+    "1" = registre1_validation("visa_annuel", "commune", "Maire", exercice = 2026),
+    "2" = registre2_foncier("bornage", "Limite nord"),
+    "3" = registre3_droit("bail_chasse", "Location", "2024-04-01"),
+    "4" = registre4_voirie("Route du Haut-Bois", "empierree", 2400),
+    "5" = registre5_coupe("martelage", 2026, "amelioration", 120),
+    "6" = registre6_travaux(2026, "plantation"),
+    "7" = registre7_ecriture("bois_sur_pied", 2026, 100),
+    "8" = registre8_phenomene("tempete", "Coup de vent"),
+    "9" = registre9_arbre("Chene", "CHS", "Age remarquable")
+  )
+  for (registre in names(payloads)) {
+    expect_equal(valider_payload(as.integer(registre), payloads[[registre]]),
+                 payloads[[registre]],
+                 label = paste("registre", registre))
   }
 })
 
