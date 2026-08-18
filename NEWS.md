@@ -1,3 +1,48 @@
+# sommieR 0.3.0
+
+Priorité 3 du brief : comptabilité et bilan financier.
+
+## Registre 7 — comptabilité (imprimé A50G)
+
+* `registre7_ecriture()` enregistre une recette ou une dépense.
+  `SOMMIER_POSTES_COMPTABLES` porte la nomenclature des 19 postes, répartis
+  dans les quatre blocs de l'imprimé : produits, travaux d'entretien, travaux
+  neufs, autres frais.
+* **Le sens et la rubrique se déduisent du poste**, ils ne se saisissent pas :
+  ils ne peuvent donc pas le contredire. Et `montant_eur` est toujours positif
+  — porter le sens dans le signe est la source classique des doubles
+  négations, où une dépense saisie à `-500` sur un poste débiteur redevient
+  silencieusement une recette.
+* `dispositif_fiscal` rattache une écriture à un dispositif de la forêt privée
+  (DEFI, Monichon, IFI).
+
+## Budget prévisionnel
+
+* `budget_definir()` fixe ou révise le montant prévu d'un poste.
+* **Le prévisionnel n'est pas une entrée de sommier.** Le brief l'interdit :
+  « le programme prévisionnel appartient à l'aménagement ou au PSG ; le
+  sommier n'enregistre que le réalisé et le constaté ». Il vit donc dans sa
+  propre table, à côté de la possibilité annuelle, et il est **mutable** — un
+  budget se révise, et cette révision n'a pas à être opposable. Ce qui doit
+  l'être, c'est le réalisé, qui lui est dans la chaîne.
+
+## Vues calculées
+
+* `sommier_bilan_financier()` / `v_bilan_financier` : recettes, dépenses,
+  solde et cumul par exercice, avec les trois rubriques de dépense détaillées.
+  `bois_delivres_eur` isole l'affouage, auquel l'imprimé A50G réserve sa
+  colonne.
+* `sommier_execution_budgetaire()` / `v_execution_budgetaire` : réalisé
+  confronté au prévisionnel, poste par poste. La jointure est complète et non
+  gauche — un poste budgété mais jamais exécuté est une information de gestion
+  au moins aussi utile qu'un dépassement, et un poste exécuté hors budget doit
+  apparaître plutôt que disparaître. `execution_pct` vaut `NA` sur une base
+  budgétaire nulle, un taux n'ayant alors pas de sens ; l'écart en euros le dit
+  déjà.
+* `v_comptabilite` n'expose pas `tiers` : c'est une donnée à caractère
+  personnel, qui reste lisible dans le payload pour qui en a besoin mais ne se
+  diffuse pas par la vue de consultation courante.
+
 # sommieR 0.2.0
 
 Priorité 2 du brief : évènements, visas signés et ancrage.

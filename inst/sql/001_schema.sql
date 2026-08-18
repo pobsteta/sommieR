@@ -242,3 +242,34 @@ DROP TRIGGER IF EXISTS ancrage_immutable ON ancrage;
 CREATE TRIGGER ancrage_immutable
   BEFORE UPDATE OR DELETE ON ancrage
   FOR EACH ROW EXECUTE FUNCTION interdire_mutation();
+
+-- ---------------------------------------------------------------------
+-- Budget previsionnel (v0.3.0)
+--
+-- Le previsionnel N'EST PAS une entree de sommier. Le brief est explicite :
+-- « le programme previsionnel appartient a l'amenagement/PSG ; le sommier
+-- n'enregistre que le realise et le constate ». Il vit donc a cote du
+-- registre, exactement comme `exercice.possibilite_m3_an` porte la
+-- possibilite sans etre une coupe.
+--
+-- Consequence assumee : cette table est mutable, contrairement au registre.
+-- Un budget se revise, et cette revision n'a pas a etre opposable ; ce qui
+-- doit l'etre, c'est le realise, qui lui est dans la chaine.
+-- ---------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS budget_previsionnel (
+  foret_id    UUID NOT NULL REFERENCES foret(id) ON DELETE RESTRICT,
+  annee       INTEGER NOT NULL,
+  poste       TEXT NOT NULL,
+  montant_eur NUMERIC NOT NULL CHECK (montant_eur >= 0),
+  revise_le   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (foret_id, annee, poste)
+);
+
+COMMENT ON TABLE budget_previsionnel IS
+  'Budget previsionnel du document de gestion. Hors chaine, et mutable : '
+  'un budget se revise. Le realise correspondant est au registre 7.';
+
+COMMENT ON COLUMN budget_previsionnel.montant_eur IS
+  'Toujours positif : le sens vient du poste, via la nomenclature '
+  'SOMMIER_POSTES_COMPTABLES.';

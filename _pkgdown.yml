@@ -61,6 +61,16 @@ reference:
     desc: "Imprimés A50J, A50J bis et A50H."
     contents:
     - registre6_travaux
+  - title: "Registre 7 — comptabilité"
+    desc: >
+      Imprimé A50G, budget prévisionnel et bilan financier.
+    contents:
+    - registre7_ecriture
+    - SOMMIER_POSTES_COMPTABLES
+    - SOMMIER_DISPOSITIFS_FISCAUX
+    - budget_definir
+    - sommier_bilan_financier
+    - sommier_execution_budgetaire
   - title: "Registre 8 — évènements et faune"
     desc: >
       Imprimés A50K et A50L, équilibre forêt-gibier, et détections issues de

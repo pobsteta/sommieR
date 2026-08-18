@@ -148,7 +148,7 @@ Le socle est commun aux trois régimes à environ 85 % ; ce qui varie tient à
 l'autorité de validation, à l'affouage (communal seulement) et aux paramètres
 de la balance.
 
-| # | Registre | Imprimé A50 | Échelle | v0.2.0 |
+| # | Registre | Imprimé A50 | Échelle | v0.3.0 |
 |---|---|---|---|:--:|
 | 1 | **Validations (visas, agréments)** | A10 | forêt | ✅ |
 | 2 | Foncier & limites | A40 | forêt | |
@@ -156,12 +156,44 @@ de la balance.
 | 4 | Infrastructures | A50D/D bis | forêt | |
 | 5 | **Coupes & récoltes** | A50E/F/I | mixte | ✅ |
 | 6 | **Travaux** | A50J/J bis/H | mixte | ✅ |
-| 7 | Comptabilité | A50G | forêt | |
+| 7 | **Comptabilité** | A50G | forêt | ✅ |
 | 8 | **Événements & faune** | A50K/L | mixte | ✅ |
 | 9 | Patrimoine remarquable | A50 r/* | UG | |
 
 Les registres fermés à l'écriture sont déclarés dans `SOMMIER_REGISTRES` et
 refusés avec un message explicite, jamais silencieusement acceptés.
+
+## Comptabilité et bilan financier
+
+Le registre 7 enregistre le réalisé ; le budget prévisionnel vit à côté, parce
+que le brief l'exige — *le programme prévisionnel appartient à l'aménagement,
+le sommier n'enregistre que le réalisé et le constaté*. Le prévisionnel est
+donc mutable, le registre ne l'est pas.
+
+```r
+budget_definir(con, foret, annee = 2026, poste = "reboisement", montant_eur = 5000)
+
+sommier_ajouter(con, sommier_entree(
+  foret_id = foret, registre = 7L,
+  date_evenement = "2026-06-30", auteur = "compta-01",
+  payload = registre7_ecriture(
+    poste = "bois_sur_pied", exercice = 2026, montant_eur = 18400,
+    quantite = 320, unite = "m3", reference = "TR-2026-014"
+  )
+))
+
+sommier_bilan_financier(con, foret)        # imprimé A50G
+sommier_execution_budgetaire(con, foret)   # réalisé contre prévisionnel
+```
+
+Le **sens de l'écriture se déduit du poste** — il ne se saisit pas — et
+`montant_eur` est toujours positif. Porter le sens dans le signe est la source
+classique des doubles négations, où une dépense saisie à `-500` sur un poste
+débiteur redevient silencieusement une recette.
+
+Dans `v_execution_budgetaire`, un poste budgété mais jamais exécuté reste
+visible avec un réalisé nul, et un poste exécuté hors budget avec un prévu nul :
+les deux sont des faits de gestion, aucun ne doit disparaître du tableau.
 
 ## Le visa : ce qui rend le sommier opposable
 

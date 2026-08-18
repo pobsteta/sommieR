@@ -273,3 +273,102 @@ WHERE e.registre = 8
 COMMENT ON VIEW v_equilibre_gibier IS
   'Equilibre foret-gibier, obligatoire en PSG depuis la LAAAF de 2014. '
   'Alimente la famille R (r4_abroutissement) de nemeton.';
+
+-- ---------------------------------------------------------------------
+-- Registre 7 - comptabilite (imprime A50G)
+-- ---------------------------------------------------------------------
+
+CREATE OR REPLACE VIEW v_comptabilite AS
+SELECT
+  e.id,
+  e.foret_id,
+  e.seq,
+  e.date_evenement,
+  e.auteur,
+  (e.payload ->> 'exercice')::INTEGER          AS exercice,
+  (e.payload ->> 'poste')::TEXT                AS poste,
+  (e.payload ->> 'sens')::TEXT                 AS sens,
+  (e.payload ->> 'rubrique')::TEXT             AS rubrique,
+  (e.payload ->> 'montant_eur')::NUMERIC       AS montant_eur,
+  (e.payload ->> 'libelle')::TEXT              AS libelle,
+  (e.payload ->> 'quantite')::NUMERIC          AS quantite,
+  (e.payload ->> 'unite')::TEXT                AS unite,
+  (e.payload ->> 'reference')::TEXT            AS reference,
+  (e.payload ->> 'dispositif_fiscal')::TEXT    AS dispositif_fiscal,
+  (e.payload ->> 'observations')::TEXT         AS observations
+FROM v_entree_courante e
+WHERE e.registre = 7;
+
+COMMENT ON VIEW v_comptabilite IS
+  'Imprime A50G. `tiers` n''est volontairement pas expose ici : c''est une '
+  'donnee a caractere personnel, qui reste lisible dans le payload pour qui '
+  'en a besoin mais ne se diffuse pas par la vue de consultation courante.';
+
+-- Bilan financier par exercice : recettes, depenses, solde, et cumul.
+-- Meme mecanique que la balance A50E, sur les euros plutot que sur les m3.
+CREATE OR REPLACE VIEW v_bilan_financier AS
+WITH par_exercice AS (
+  SELECT
+    c.foret_id,
+    c.exercice,
+    COALESCE(SUM(c.montant_eur) FILTER (WHERE c.sens = 'recette'), 0) AS recettes_eur,
+    COALESCE(SUM(c.montant_eur) FILTER (WHERE c.sens = 'depense'), 0) AS depenses_eur,
+    COALESCE(SUM(c.montant_eur) FILTER (WHERE c.rubrique = 'travaux_entretien'), 0) AS travaux_entretien_eur,
+    COALESCE(SUM(c.montant_eur) FILTER (WHERE c.rubrique = 'travaux_neufs'), 0) AS travaux_neufs_eur,
+    COALESCE(SUM(c.montant_eur) FILTER (WHERE c.rubrique = 'autres_frais'), 0) AS autres_frais_eur,
+    COALESCE(SUM(c.montant_eur) FILTER (WHERE c.poste = 'bois_delivres'), 0) AS bois_delivres_eur
+  FROM v_comptabilite c
+  GROUP BY c.foret_id, c.exercice
+)
+SELECT
+  p.foret_id,
+  p.exercice,
+  p.recettes_eur,
+  p.depenses_eur,
+  p.travaux_entretien_eur,
+  p.travaux_neufs_eur,
+  p.autres_frais_eur,
+  p.bois_delivres_eur,
+  p.recettes_eur - p.depenses_eur AS solde_eur,
+  SUM(p.recettes_eur - p.depenses_eur)
+    OVER (PARTITION BY p.foret_id ORDER BY p.exercice
+          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS solde_cumule_eur
+FROM par_exercice p
+ORDER BY p.foret_id, p.exercice;
+
+COMMENT ON VIEW v_bilan_financier IS
+  'Bilan financier de l''imprime A50G. Solde positif = excedent. '
+  'bois_delivres_eur isole l''affouage, propre a la foret communale.';
+
+-- Execution budgetaire : realise (registre 7) confronte au previsionnel
+-- (budget_previsionnel), poste par poste.
+--
+-- FULL JOIN et non LEFT JOIN : un poste budgete mais jamais execute est une
+-- information de gestion au moins aussi utile qu'un depassement, et un poste
+-- execute hors budget doit apparaitre plutot que disparaitre.
+CREATE OR REPLACE VIEW v_execution_budgetaire AS
+WITH realise AS (
+  SELECT c.foret_id, c.exercice, c.poste, SUM(c.montant_eur) AS realise_eur
+  FROM v_comptabilite c
+  GROUP BY c.foret_id, c.exercice, c.poste
+)
+SELECT
+  COALESCE(r.foret_id, b.foret_id)   AS foret_id,
+  COALESCE(r.exercice, b.annee)      AS exercice,
+  COALESCE(r.poste, b.poste)         AS poste,
+  COALESCE(b.montant_eur, 0)         AS prevu_eur,
+  COALESCE(r.realise_eur, 0)         AS realise_eur,
+  COALESCE(r.realise_eur, 0) - COALESCE(b.montant_eur, 0) AS ecart_eur,
+  CASE
+    WHEN COALESCE(b.montant_eur, 0) = 0 THEN NULL
+    ELSE ROUND(100 * COALESCE(r.realise_eur, 0) / b.montant_eur, 1)
+  END                                AS execution_pct
+FROM realise r
+FULL JOIN budget_previsionnel b
+  ON b.foret_id = r.foret_id AND b.annee = r.exercice AND b.poste = r.poste
+ORDER BY 1, 2, 3;
+
+COMMENT ON VIEW v_execution_budgetaire IS
+  'Realise confronte au previsionnel. execution_pct vaut NULL lorsque rien '
+  'n''etait budgete : un taux d''execution sur une base nulle n''a pas de sens, '
+  'et l''ecart en euros le dit deja.';

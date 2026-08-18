@@ -39,7 +39,7 @@ SOMMIER_REGISTRES <- data.frame(
   ),
   implemente = c(
     TRUE, FALSE, FALSE, FALSE, TRUE,
-    TRUE, FALSE, TRUE, FALSE
+    TRUE, TRUE, TRUE, FALSE
   ),
   stringsAsFactors = FALSE
 )
@@ -50,7 +50,7 @@ SOMMIER_REGIMES <- c("domanial", "communal", "privee")
 
 #' Registres ouverts a l'ecriture dans cette version
 #' @export
-SOMMIER_REGISTRES_OUVERTS <- c(1L, 5L, 6L, 8L)
+SOMMIER_REGISTRES_OUVERTS <- c(1L, 5L, 6L, 7L, 8L)
 
 #' Types d'entree du registre 5 (coupes et recoltes)
 #'
@@ -88,8 +88,8 @@ SOMMIER_TYPES_MARTELES <- c("martelage", "produit_accidentel", "bois_delivre")
 #'
 #' @export
 SOMMIER_SCHEMA_VERSIONS <- c(
-  "1" = "r1-1.0.0", "5" = "r5-1.0.0",
-  "6" = "r6-1.0.0", "8" = "r8-1.0.0"
+  "1" = "r1-1.0.0", "5" = "r5-1.0.0", "6" = "r6-1.0.0",
+  "7" = "r7-1.0.0", "8" = "r8-1.0.0"
 )
 
 #' Payload du registre 5 - coupes et recoltes
@@ -235,6 +235,7 @@ valider_payload <- function(registre, payload) {
     "1" = do.call(registre1_validation, payload),
     "5" = do.call(registre5_coupe, payload),
     "6" = do.call(registre6_travaux, payload),
+    "7" = do.call(registre7_ecriture, payload_r7(payload)),
     "8" = do.call(registre8_depuis_payload, list(payload))
   )
 }
@@ -256,4 +257,11 @@ compacter <- function(x) {
 
 si_present <- function(valeur, validateur, nom, ...) {
   if (est_vide(valeur)) NULL else validateur(valeur, nom, ...)
+}
+
+# `sens` et `rubrique` sont deduits du poste et non des arguments de
+# `registre7_ecriture()` : a la relecture d'un export il faut donc les ecarter
+# avant de rappeler le constructeur, qui les recalculera.
+payload_r7 <- function(payload) {
+  payload[setdiff(names(payload), c("sens", "rubrique"))]
 }
