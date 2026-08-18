@@ -149,20 +149,21 @@ jobs:
             -c "CREATE EXTENSION IF NOT EXISTS postgis;" \
             -c "SELECT postgis_version();"
 
+      # Une seule exécution de la suite, dont on tire les deux verdicts : les
+      # échecs, et l'absence de test ignoré. Un saut ici signalerait que la
+      # base n'a pas été jointe, et le vert serait trompeur.
       - name: Run tests
-        run: devtools::test(stop_on_failure = TRUE, reporter = "summary")
-        shell: Rscript {0}
-
-      # Garde-fou explicite : aucun test ignoré n'est toléré ici, sans quoi
-      # une régression de connexion passerait pour un succès.
-      - name: Aucun test ignoré
         run: |
-          res <- as.data.frame(testthat::test_local(reporter = "silent"))
+          res <- as.data.frame(devtools::test(reporter = "summary"))
+          echecs <- sum(res$failed) + sum(res$error)
           ignores <- sum(res$skipped)
-          cat("ignores:", ignores, "\n")
+          cat("\nechecs:", echecs, " ignores:", ignores, "\n")
           if (ignores > 0) {
             print(res[res$skipped > 0, c("file", "test")])
             stop("Des tests ont ete ignores alors que la base est disponible.")
+          }
+          if (echecs > 0) {
+            stop("La suite a echoue.")
           }
         shell: Rscript {0}
 

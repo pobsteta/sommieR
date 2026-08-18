@@ -14,8 +14,24 @@ base_prete <- function() {
 
 test_that("le schema se deploie et se rejoue sans dommage", {
   con <- base_prete()
-  expect_silent(sommier_init_schema(con))     # idempotent
   expect_true(DBI::dbExistsTable(con, "entree_sommier"))
+
+  compter <- function(type) {
+    DBI::dbGetQuery(con, sprintf(
+      "SELECT count(*) AS n FROM information_schema.%s
+        WHERE table_schema = 'public'", type))$n
+  }
+  tables_avant <- compter("tables")
+  vues_avant <- compter("views")
+
+  # Idempotence : le rejeu ne doit ni echouer ni modifier le schema. Il n'a en
+  # revanche pas a etre silencieux - `CREATE ... IF NOT EXISTS` emet un NOTICE
+  # par objet deja present, ce que le pilote remonte en message R. Exiger le
+  # silence reviendrait a tester le bavardage du pilote, pas l'idempotence.
+  expect_no_error(suppressMessages(sommier_init_schema(con)))
+
+  expect_equal(compter("tables"), tables_avant)
+  expect_equal(compter("views"), vues_avant)
 })
 
 test_that("une entree ecrite se relit et se verifie", {
