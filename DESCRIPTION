@@ -1,0 +1,36 @@
+Package: sommieR
+Title: Sommier Forestier Unifie a Valeur Probante
+Version: 0.1.0
+Authors@R:
+    person("Pascal", "Obstetar", email = "pascal.obstetar@gmail.com",
+           role = c("aut", "cre"))
+Description: Implementation du sommier des forets unifie decrit dans
+    specs/brief_sommier-unifie-synthese.md : un systeme de registres
+    permanents, strictement append-only, couvrant les trois regimes
+    (forets domaniale, communale, privee sous PSG). Le registre est rendu
+    verifiable cryptographiquement par un journal a chainage de hachages
+    SHA-256 calcule sur une serialisation JSON canonique (RFC 8785),
+    contraint cote base par des declencheurs d'immutabilite PostGIS. La
+    version 0.1.0 couvre le noyau append-only verifiable : forets, unites
+    de gestion a identifiant stable et filiation, entrees de sommier
+    chainees, verification de chaine et registres 5 (coupes et recoltes)
+    et 6 (travaux).
+License: GPL-3
+Encoding: UTF-8
+Depends:
+    R (>= 4.1)
+Imports:
+    DBI (>= 1.1.0),
+    openssl (>= 2.0.0),
+    jsonlite (>= 1.8.0),
+    stats,
+    utils
+Suggests:
+    RPostgres,
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+URL: https://github.com/pobsteta/sommieR
+BugReports: https://github.com/pobsteta/sommieR/issues

@@ -1,0 +1,252 @@
+#' Les neuf registres du sommier unifie
+#'
+#' @description
+#' Table de correspondance entre les registres de `sommieR`, les imprimes de
+#' la serie A50 de l'ONF dont ils derivent, et l'echelle a laquelle ils
+#' s'ancrent. Elle materialise la section 3 du brief.
+#'
+#' @details
+#' `echelle` vaut `"foret"` (l'entree porte `ug_uuid = NULL`), `"ug"`
+#' (`ug_uuid` obligatoire) ou `"mixte"` (les deux sont admis - le registre 6
+#' couvre a la fois les travaux par unite de gestion, imprime A50J, et les
+#' travaux hors unite de gestion, imprime A50H).
+#'
+#' Seuls les registres 5 et 6 sont ouverts a l'ecriture en v0.1.0,
+#' conformement a la priorite 1 du brief : ce sont eux qu'exigent la
+#' certification PEFC et le bilan du document de gestion precedent.
+#'
+#' @format `data.frame` de 9 lignes et 5 colonnes : `registre`, `nom`,
+#'   `source_a50`, `echelle`, `implemente`.
+#'
+#' @examples
+#' SOMMIER_REGISTRES
+#'
+#' @export
+SOMMIER_REGISTRES <- data.frame(
+  registre = 1:9,
+  nom = c(
+    "Validations", "Foncier & limites", "Droits & concessions",
+    "Infrastructures", "Coupes & recoltes", "Travaux",
+    "Comptabilite", "Evenements & faune", "Patrimoine remarquable"
+  ),
+  source_a50 = c(
+    "A10", "A40", "A50C", "A50D/Dbis", "A50E/F/I",
+    "A50J/Jbis/H", "A50G", "A50K/L", "A50 r/*"
+  ),
+  echelle = c(
+    "foret", "foret", "foret", "foret", "mixte",
+    "mixte", "foret", "foret", "ug"
+  ),
+  implemente = c(
+    FALSE, FALSE, FALSE, FALSE, TRUE,
+    TRUE, FALSE, FALSE, FALSE
+  ),
+  stringsAsFactors = FALSE
+)
+
+#' Regimes de propriete forestiere
+#' @export
+SOMMIER_REGIMES <- c("domanial", "communal", "privee")
+
+#' Registres ouverts a l'ecriture dans cette version
+#' @export
+SOMMIER_REGISTRES_OUVERTS <- c(5L, 6L)
+
+#' Types d'entree du registre 5 (coupes et recoltes)
+#'
+#' @description
+#' * `martelage` : volume martele en coupe reglee ou non reglee (imprime A50E).
+#' * `produit_accidentel` : chablis, bois sanitaires, volumes marteles hors
+#'   coupe prevue (imprime A50E, colonne "produits accidentels").
+#' * `bois_delivre` : delivrance, principalement l'affouage en foret communale
+#'   (imprime A50G, colonne "bois delivres") - bois martele, donc imputable.
+#' * `coupe_realisee` : releve de la coupe effectivement exploitee
+#'   (imprime A50F).
+#'
+#' @export
+SOMMIER_TYPES_COUPE <- c(
+  "martelage", "produit_accidentel", "bois_delivre", "coupe_realisee"
+)
+
+#' Types d'entree imputables a la balance de possibilite
+#'
+#' @description
+#' La balance A50E confronte a la possibilite les **volumes marteles**, soit
+#' les coupes et les produits accidentels. `coupe_realisee` en est exclu a
+#' dessein : la meme coupe est d'abord martelee (imprime A50E) puis exploitee
+#' (imprime A50F), l'imputer deux fois doublerait le prelevement constate.
+#'
+#' @seealso [sommier_balance_possibilite()]
+#' @export
+SOMMIER_TYPES_MARTELES <- c("martelage", "produit_accidentel", "bois_delivre")
+
+#' Versions de schema des payloads
+#'
+#' Le payload est du JSONB versionne par type de registre (brief, section 4).
+#' La version est hachee avec l'entree : une evolution de schema ne peut donc
+#' pas se faire passer pour l'ancienne.
+#'
+#' @export
+SOMMIER_SCHEMA_VERSIONS <- c("5" = "r5-1.0.0", "6" = "r6-1.0.0")
+
+#' Payload du registre 5 - coupes et recoltes
+#'
+#' @description
+#' Construit et valide le payload d'une entree du registre 5 (imprimes A50E,
+#' A50F et A50I). Les champs facultatifs laisses a `NULL` sont absents du JSON
+#' : ils ne sont pas ecrits comme `null`, afin qu'ajouter une precision plus
+#' tard ne ressemble pas a une correction de valeur.
+#'
+#' @param type_entree L'un de [SOMMIER_TYPES_COUPE].
+#' @param exercice Annee de l'exercice budgetaire (entier).
+#' @param nature_coupe Nature de la coupe (texte libre normalise par le
+#'   gestionnaire : amelioration, reguliere, sanitaire, emprise...).
+#' @param volume_m3 Volume en metres cubes (positif ou nul).
+#' @param surface_ha Surface parcourue en hectares (facultatif).
+#' @param essence Essence ou groupe d'essences (facultatif).
+#' @param coupon Identifiant du coupon ou de la subdivision (facultatif).
+#' @param observations Observations libres (facultatif).
+#'
+#' @return Une liste nommee, prete a etre passee a [sommier_entree()].
+#'
+#' @examples
+#' registre5_coupe(
+#'   type_entree = "martelage", exercice = 2026,
+#'   nature_coupe = "amelioration", volume_m3 = 342.5,
+#'   surface_ha = 12.4, essence = "HET"
+#' )
+#'
+#' @export
+registre5_coupe <- function(type_entree,
+                            exercice,
+                            nature_coupe,
+                            volume_m3,
+                            surface_ha = NULL,
+                            essence = NULL,
+                            coupon = NULL,
+                            observations = NULL) {
+  compacter(list(
+    type_entree  = valider_choix(type_entree, "type_entree", SOMMIER_TYPES_COUPE),
+    exercice     = valider_entier(exercice, "exercice", min = 1500, max = 2999),
+    nature_coupe = valider_texte(nature_coupe, "nature_coupe"),
+    volume_m3    = valider_nombre(volume_m3, "volume_m3", min = 0),
+    surface_ha   = si_present(surface_ha, valider_nombre, "surface_ha", min = 0),
+    essence      = si_present(essence, valider_texte, "essence"),
+    coupon       = si_present(coupon, valider_texte, "coupon"),
+    observations = si_present(observations, valider_texte, "observations")
+  ))
+}
+
+#' Payload du registre 6 - travaux
+#'
+#' @description
+#' Construit et valide le payload d'une entree du registre 6 (imprimes A50J,
+#' A50J bis pour les travaux par unite de gestion, A50H pour les travaux hors
+#' unite de gestion). Le taux de reprise est le champ "% de reprise" de
+#' l'imprime A50J, releve lors du controle des plantations.
+#'
+#' @param annee Annee de realisation (entier).
+#' @param nature_travaux Nature des travaux.
+#' @param localisation Localisation en clair - a renseigner pour les travaux
+#'   hors unite de gestion (imprime A50H), ou l'entree n'est ancree sur aucune
+#'   unite de gestion.
+#' @param repere_plan Repere sur le plan (facultatif).
+#' @param quantite,unite Quantite realisee et son unite (facultatif).
+#' @param nb_plants,provenance_plants Nombre de plants et provenance,
+#'   pour les travaux de reboisement (facultatif).
+#' @param montant_eur Montant en euros (facultatif).
+#' @param taux_reprise_pct Taux de reprise en pourcentage, 0 a 100
+#'   (facultatif).
+#' @param observations Observations libres (facultatif).
+#'
+#' @return Une liste nommee, prete a etre passee a [sommier_entree()].
+#'
+#' @examples
+#' registre6_travaux(
+#'   annee = 2026, nature_travaux = "plantation",
+#'   nb_plants = 1200, provenance_plants = "CHS - Bourgogne",
+#'   montant_eur = 4800, taux_reprise_pct = 87.5
+#' )
+#'
+#' @export
+registre6_travaux <- function(annee,
+                              nature_travaux,
+                              localisation = NULL,
+                              repere_plan = NULL,
+                              quantite = NULL,
+                              unite = NULL,
+                              nb_plants = NULL,
+                              provenance_plants = NULL,
+                              montant_eur = NULL,
+                              taux_reprise_pct = NULL,
+                              observations = NULL) {
+  if (!est_vide(quantite) && est_vide(unite)) {
+    stop("`unite` est obligatoire des lors que `quantite` est renseignee : ",
+         "un nombre sans unite n'est pas exploitable dans un registre.",
+         call. = FALSE)
+  }
+  compacter(list(
+    annee             = valider_entier(annee, "annee", min = 1500, max = 2999),
+    nature_travaux    = valider_texte(nature_travaux, "nature_travaux"),
+    localisation      = si_present(localisation, valider_texte, "localisation"),
+    repere_plan       = si_present(repere_plan, valider_texte, "repere_plan"),
+    quantite          = si_present(quantite, valider_nombre, "quantite", min = 0),
+    unite             = si_present(unite, valider_texte, "unite"),
+    nb_plants         = si_present(nb_plants, valider_entier, "nb_plants", min = 0),
+    provenance_plants = si_present(provenance_plants, valider_texte, "provenance_plants"),
+    montant_eur       = si_present(montant_eur, valider_nombre, "montant_eur"),
+    taux_reprise_pct  = si_present(taux_reprise_pct, valider_nombre,
+                                   "taux_reprise_pct", min = 0, max = 100),
+    observations      = si_present(observations, valider_texte, "observations")
+  ))
+}
+
+#' Validation d'un payload selon son registre
+#'
+#' Revalide un payload deja construit - utile a la relecture d'un export, ou
+#' les payloads arrivent en JSON sans etre passes par les constructeurs.
+#'
+#' @param registre Numero de registre (1 a 9).
+#' @param payload Liste nommee.
+#' @return Le payload valide, normalise.
+#' @export
+valider_payload <- function(registre, payload) {
+  registre <- valider_entier(registre, "registre", min = 1, max = 9)
+  if (!registre %in% SOMMIER_REGISTRES_OUVERTS) {
+    stop(
+      "Registre ", registre, " (",
+      SOMMIER_REGISTRES$nom[[registre]],
+      ") non ouvert a l'ecriture dans sommieR ", utils::packageVersion("sommieR"),
+      " ; registres disponibles : ",
+      paste(SOMMIER_REGISTRES_OUVERTS, collapse = ", "), ".",
+      call. = FALSE
+    )
+  }
+  if (!is.list(payload) || is.null(names(payload))) {
+    stop("`payload` doit etre une liste nommee.", call. = FALSE)
+  }
+  switch(
+    as.character(registre),
+    "5" = do.call(registre5_coupe, payload),
+    "6" = do.call(registre6_travaux, payload)
+  )
+}
+
+#' Echelle d'ancrage attendue pour un registre
+#' @param registre Numero de registre.
+#' @return `"foret"`, `"ug"` ou `"mixte"`.
+#' @noRd
+echelle_registre <- function(registre) {
+  SOMMIER_REGISTRES$echelle[SOMMIER_REGISTRES$registre == registre]
+}
+
+# Retire les champs absents : ils ne doivent pas apparaitre dans le JSON
+# canonique, sans quoi l'ajout ulterieur d'une precision serait indistinguable
+# d'une correction de valeur.
+compacter <- function(x) {
+  x[!vapply(x, is.null, logical(1))]
+}
+
+si_present <- function(valeur, validateur, nom, ...) {
+  if (est_vide(valeur)) NULL else validateur(valeur, nom, ...)
+}
