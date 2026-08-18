@@ -197,7 +197,11 @@ ug_scinder <- function(con, ug_uuid, enfants, date_effet) {
 #' @export
 ug_fusionner <- function(con, ug_uuids, numero_affichage, date_effet,
                          serie_id = NULL) {
-  ug_uuids <- vapply(ug_uuids, valider_uuid, character(1), nom = "ug_uuids")
+  # `USE.NAMES = FALSE` : sur un vecteur de caracteres, vapply nommerait le
+  # resultat par ses propres valeurs, et la liste de parametres arriverait
+  # nommee au pilote.
+  ug_uuids <- vapply(ug_uuids, valider_uuid, character(1), nom = "ug_uuids",
+                     USE.NAMES = FALSE)
   if (length(unique(ug_uuids)) < 2L) {
     stop("Une fusion porte sur au moins deux unites distinctes.", call. = FALSE)
   }
@@ -240,7 +244,8 @@ ug_lire <- function(con, ug_uuid = NULL, foret_id = NULL,
   conditions <- character(0)
   params <- list()
   if (!est_vide(ug_uuid)) {
-    uuids <- vapply(ug_uuid, valider_uuid, character(1), nom = "ug_uuid")
+    uuids <- vapply(ug_uuid, valider_uuid, character(1), nom = "ug_uuid",
+                    USE.NAMES = FALSE)
     conditions <- c(conditions, sprintf(
       "uuid IN (%s)",
       paste0("$", seq_along(uuids) + length(params), collapse = ", ")
@@ -263,7 +268,7 @@ ug_lire <- function(con, ug_uuid = NULL, foret_id = NULL,
   if (length(params) == 0L) {
     DBI::dbGetQuery(con, requete)
   } else {
-    DBI::dbGetQuery(con, requete, params = params)
+    DBI::dbGetQuery(con, requete, params = parametres(params))
   }
 }
 
@@ -370,4 +375,13 @@ transaction <- function(con, code) {
     DBI::dbCommit(con)
   }
   resultat
+}
+
+# Les pilotes ne s'accordent pas sur les listes de parametres nommees :
+# RPostgres les refuse (« `params` must not be named »), RPostgreSQL les
+# tolere. Un `vapply` sur un vecteur de caracteres suffit a en produire une
+# sans qu'on le veuille. On les depouille donc systematiquement, plutot que
+# de compter sur chaque site d'appel.
+parametres <- function(params) {
+  unname(as.list(params))
 }

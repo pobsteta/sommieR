@@ -61,6 +61,12 @@ Priorité 2 du brief : évènements, visas signés et ancrage.
   déjà écrit.
 * `entrees_en_data_frame()` n'utilise plus `methods::as()`, qui n'était pas
   importé.
+* Les listes de paramètres envoyées au pilote ne sont plus nommées. `vapply()`
+  sur un vecteur de caractères nomme son résultat par ses propres valeurs :
+  `ug_lire()` et `ug_fusionner()` transmettaient donc des paramètres nommés,
+  que RPostgres refuse (« `params` must not be named ») là où RPostgreSQL les
+  tolère. Les noms sont désormais retirés au point d'appel, pour qu'aucun site
+  ne puisse régresser là-dessus.
 
 # sommieR 0.1.0
 

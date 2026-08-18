@@ -133,7 +133,7 @@ sommier_lire <- function(con, foret_id, registre = NULL, depuis_seq = NULL) {
         WHERE ", paste(conditions, collapse = " AND "), "
         ORDER BY seq"
     ),
-    params = params
+    params = parametres(params)
   )
 }
 
@@ -283,7 +283,7 @@ inserer_entrees <- function(con, df, taille_paquet = 1000L) {
         "INSERT INTO entree_sommier (", paste(colonnes, collapse = ", "), ")\n",
         "VALUES ", paste(lignes, collapse = ",\n       ")
       ),
-      params = params
+      params = parametres(params)
     )
   }
   invisible(nrow(df))
