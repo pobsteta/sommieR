@@ -149,18 +149,33 @@ jobs:
             -c "CREATE EXTENSION IF NOT EXISTS postgis;" \
             -c "SELECT postgis_version();"
 
-      # Une seule exécution de la suite, dont on tire les deux verdicts : les
-      # échecs, et l'absence de test ignoré. Un saut ici signalerait que la
-      # base n'a pas été jointe, et le vert serait trompeur.
+      # Une seule exécution de la suite, dont on tire deux verdicts : les
+      # échecs, et l'absence de saut POUR CAUSE DE BASE INJOIGNABLE.
+      #
+      # Le garde-fou vise ce cas précis et non tout saut : un test qui
+      # n'exerce un chemin d'erreur qu'en l'absence d'un paquet facultatif se
+      # saute légitimement quand ce paquet est présent. Refuser tout saut
+      # faisait échouer la CI sur un test dont le seul tort était que `sf`
+      # était installé.
       - name: Run tests
         run: |
-          res <- as.data.frame(devtools::test(reporter = "summary"))
-          echecs <- sum(res$failed) + sum(res$error)
-          ignores <- sum(res$skipped)
-          cat("\nechecs:", echecs, " ignores:", ignores, "\n")
-          if (ignores > 0) {
-            print(res[res$skipped > 0, c("file", "test")])
-            stop("Des tests ont ete ignores alors que la base est disponible.")
+          res <- devtools::test(reporter = "summary")
+          plat <- as.data.frame(res)
+          echecs <- sum(plat$failed) + sum(plat$error)
+
+          motifs <- unlist(lapply(res, function(fichier) {
+            vapply(fichier$results, function(r) {
+              if (inherits(r, "expectation_skip")) conditionMessage(r) else ""
+            }, character(1))
+          }))
+          motifs <- motifs[nzchar(motifs)]
+          sans_base <- grep("Aucune base PostgreSQL", motifs, value = TRUE)
+
+          cat("\nechecs:", echecs, " sauts:", length(motifs), "\n")
+          if (length(motifs)) cat("motifs de saut :\n -", paste(motifs, collapse = "\n - "), "\n")
+          if (length(sans_base)) {
+            stop("La base de test n'a pas ete jointe : ", length(sans_base),
+                 " test(s) sautes alors que le service PostGIS tourne.")
           }
           if (echecs > 0) {
             stop("La suite a echoue.")

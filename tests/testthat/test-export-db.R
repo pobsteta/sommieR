@@ -158,6 +158,57 @@ test_that("une unite sans geometrie est signalee plutot qu'inventee", {
   expect_length(lu$features, 0L)
 })
 
+# Fabrique une foret d'une unite de gestion carree de 1 ha, geometrie posee.
+foret_cartographiee <- function(con, cote_m = 100) {
+  foret <- foret_creer(con, "Foret cartographiee", "domanial", surface_ha = 100)
+  ug <- ug_creer(con, foret, "1", "2010-01-01")
+  DBI::dbExecute(
+    con,
+    "INSERT INTO ug_geometrie (ug_uuid, version, geom, date_debut)
+     VALUES ($1, 1, ST_Multi(ST_GeomFromText($2, 2154)), $3::date)",
+    params = list(
+      ug,
+      sprintf("POLYGON((0 0, %1$d 0, %1$d %1$d, 0 %1$d, 0 0))", cote_m),
+      "2010-01-01"
+    )
+  )
+  list(foret = foret, ug = ug)
+}
+
+test_that("l'export GeoPackage ecrit une couche relisible", {
+  # `sf` est installe sur le runner de CI (il est en Suggests) : ce chemin y
+  # est donc reellement exerce, et pas seulement redige.
+  skip_if_not_installed("sf")
+  con <- base_export()
+  perimetre <- foret_cartographiee(con)
+
+  chemin <- withr::local_tempfile(fileext = ".gpkg")
+  resultat <- sommier_exporter_sig(con, perimetre$foret, chemin, format = "gpkg")
+  expect_equal(resultat$n_unites, 1L)
+  expect_true(file.exists(chemin))
+
+  couche <- sf::read_sf(chemin)
+  expect_equal(nrow(couche), 1L)
+  expect_equal(couche$numero_affichage, "1")
+  expect_equal(couche$uuid, perimetre$ug)
+  # Le systeme de coordonnees doit survivre a l'ecriture : une couche en
+  # Lambert-93 relue sans projection serait inexploitable.
+  expect_equal(sf::st_crs(couche)$epsg, 2154L)
+  expect_equal(as.numeric(sf::st_area(couche)), 10000)   # 100 m de cote
+})
+
+test_that("un GeoPackage sans unite cartographiee est refuse plutot que vide", {
+  # Un fichier SIG sans couche est plus difficile a diagnostiquer qu'une
+  # erreur : le destinataire croit avoir recu la cartographie.
+  skip_if_not_installed("sf")
+  con <- base_export()
+  foret <- foret_creer(con, "Foret sans geometrie", "domanial")
+  ug_creer(con, foret, "12", "2010-01-01")
+  chemin <- withr::local_tempfile(fileext = ".gpkg")
+  expect_error(sommier_exporter_sig(con, foret, chemin, format = "gpkg"),
+               "Aucune unite de gestion avec geometrie")
+})
+
 test_that("l'export GeoPackage exige sf et le dit", {
   skip_if(requireNamespace("sf", quietly = TRUE),
           "sf est installe : le chemin d'erreur ne s'exerce pas.")

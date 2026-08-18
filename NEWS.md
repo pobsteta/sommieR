@@ -33,7 +33,13 @@ réglementaires plutôt qu'un registre à recopier.
   destinataire ouvre sans rien installer, et `gpkg` via `sf`.
 * Une unité sans géométrie connue est **omise de la couche mais signalée** :
   la faire figurer sans contour créerait une entité fantôme, l'omettre en
-  silence laisserait croire la forêt entièrement cartographiée.
+  silence laisserait croire la forêt entièrement cartographiée. Un GeoPackage
+  qui ne contiendrait aucune unité est refusé plutôt qu'écrit vide — un
+  fichier SIG sans couche est plus difficile à diagnostiquer qu'une erreur.
+* La conversion vers `sf` passe par le WKT et non par le GeoJSON :
+  `st_as_sfc()` a une méthode caractère pour le WKT, là où lire une géométrie
+  GeoJSON nue dépendrait du pilote GDAL et de sa tolérance aux fragments sans
+  enveloppe `Feature`.
 
 # sommieR 0.4.0
 

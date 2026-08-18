@@ -355,7 +355,9 @@ qu'échoués.
 La feuille de route du brief est couverte. Restent hors périmètre, et signalés
 comme tels : la validation cryptographique de la chaîne de certification des
 jetons d'horodatage (elle demande un magasin de confiance et une validation
-CMS), et `ES256` pour les signatures.
+CMS), et `ES256` pour les signatures — JOSE veut l'ECDSA en `R||S` brut,
+OpenSSL la produit en DER, et signer sans convertir produirait des jetons
+invérifiables ailleurs.
 
 `ES256` n'est pas encore accepté pour les signatures, et ce n'est pas un oubli :
 JOSE exige la signature ECDSA au format brut `R||S` alors qu'OpenSSL la produit

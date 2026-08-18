@@ -53,7 +53,8 @@ sommier_exporter_sig <- function(con, foret_id, chemin, format = "geojson",
     "SELECT u.uuid, u.numero_affichage, u.date_debut, u.date_fin,
             (SELECT count(*) FROM entree_sommier e WHERE e.ug_uuid = u.uuid)
               AS n_entrees,
-            ST_AsGeoJSON(g.geom) AS geometrie
+            ST_AsGeoJSON(g.geom) AS geometrie,
+            ST_AsText(g.geom)    AS geometrie_wkt
        FROM ug u
        LEFT JOIN LATERAL (
          SELECT geom FROM ug_geometrie gg
@@ -118,10 +119,11 @@ ecrire_geopackage <- function(unites, chemin) {
   if (nrow(unites) == 0L) {
     stop("Aucune unite de gestion avec geometrie : rien a ecrire.", call. = FALSE)
   }
-  geometries <- sf::st_sfc(
-    lapply(unites$geometrie, function(g) sf::st_geometry(sf::read_sf(g))[[1L]]),
-    crs = 2154
-  )
+  # Conversion depuis le WKT et non depuis le GeoJSON : `st_as_sfc()` a une
+  # methode caractere pour le WKT, la ou lire une geometrie GeoJSON nue
+  # dependrait du pilote GDAL et de sa tolerance aux fragments sans enveloppe
+  # Feature.
+  geometries <- sf::st_as_sfc(unites$geometrie_wkt, crs = 2154)
   couche <- sf::st_sf(
     uuid = unites$uuid,
     numero_affichage = unites$numero_affichage,
