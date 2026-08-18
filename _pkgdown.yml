@@ -1,0 +1,153 @@
+url: https://pobsteta.github.io/sommieR/
+
+template:
+  bootstrap: 5
+  bootswatch: flatly
+  bslib:
+    primary: "#2E7D32"
+    success: "#4CAF50"
+
+home:
+  title: "sommieR - Le sommier forestier unifié"
+  description: >
+    Le sommier des forêts comme système de registres permanents, strictement
+    append-only, rendu vérifiable par un chaînage de hachages SHA-256 sur
+    sérialisation canonique RFC 8785.
+  links:
+  - text: Voir sur GitHub
+    href: https://github.com/pobsteta/sommieR
+  - text: Package coeur (nemeton)
+    href: https://github.com/pobsteta/nemeton
+
+navbar:
+  structure:
+    left:  [reference, news]
+    right: [search, github]
+
+reference:
+  - title: "Écrire et lire le sommier"
+    desc: >
+      Le cycle de vie d'une entrée : construction, chaînage, écriture,
+      relecture.
+    contents:
+    - sommier_entree
+    - sommier_ajouter
+    - sommier_lire
+    - sommier_chainer
+    - entrees_en_data_frame
+
+  - title: "Registres"
+    desc: >
+      Les neuf registres du sommier unifié et les constructeurs de payload
+      des registres ouverts à l'écriture.
+    contents:
+    - SOMMIER_REGISTRES
+    - SOMMIER_REGISTRES_OUVERTS
+    - SOMMIER_SCHEMA_VERSIONS
+    - valider_payload
+  - title: "Registre 1 — validations"
+    desc: "Imprimé A10 : visas annuels, arrêtés, délibérations, agréments."
+    contents:
+    - registre1_validation
+    - SOMMIER_TYPES_VALIDATION
+    - SOMMIER_AUTORITES
+  - title: "Registre 5 — coupes et récoltes"
+    desc: "Imprimés A50E, A50F et A50I."
+    contents:
+    - registre5_coupe
+    - SOMMIER_TYPES_COUPE
+    - SOMMIER_TYPES_MARTELES
+  - title: "Registre 6 — travaux"
+    desc: "Imprimés A50J, A50J bis et A50H."
+    contents:
+    - registre6_travaux
+  - title: "Registre 8 — évènements et faune"
+    desc: >
+      Imprimés A50K et A50L, équilibre forêt-gibier, et détections issues de
+      la télédétection.
+    contents:
+    - registre8_phenomene
+    - registre8_tableau_chasse
+    - registre8_equilibre_gibier
+    - registre8_detection
+    - registre8_suite_detection
+    - SOMMIER_TYPES_EVENEMENT
+    - SOMMIER_NATURES_PHENOMENE
+    - sommier_importer_detections
+    - sommier_valider_detection
+  - title: "Visa signé et horodatage"
+    desc: >
+      Ce qui rend le sommier opposable : la signature détachée de la tête de
+      chaîne, son horodatage qualifié, et leur vérification.
+    contents:
+    - sommier_viser
+    - sommier_ancrer
+    - sommier_verifier_visas
+    - sommier_signataire
+    - signataire_cle
+    - signataire_keycloak
+    - jws_signer_detache
+    - jws_verifier_detache
+    - jwt_claims
+    - base64url_encoder
+    - base64url_decoder
+    - SOMMIER_ALGOS_JWS
+    - tsa_requete
+    - tsa_lire_reponse
+    - tsa_horodater
+    - tsa_transport_curl
+    - SOMMIER_STATUTS_TSA
+
+  - title: "Intégrité vérifiable"
+    desc: >
+      Le chaînage de hachages et sa vérification, reproductibles par un tiers
+      à partir d'un export.
+    contents:
+    - sommier_verifier
+    - sommier_verifier_chaine
+    - sommier_empreinte
+    - sommier_empreinte_genese
+    - sommier_enregistrement_canonique
+    - SOMMIER_CHAMPS_EMPREINTE
+    - SOMMIER_VERSION_CHAINE
+    - empreinte_hex
+    - empreinte_depuis_hex
+
+  - title: "Sérialisation canonique (RFC 8785)"
+    desc: >
+      La brique sur laquelle porte le hachage : deux représentations d'un même
+      payload doivent produire les mêmes octets.
+    contents:
+    - jcs
+    - jcs_nombre
+    - jcs_depuis_json
+
+  - title: "Périmètre de gestion"
+    desc: >
+      Forêts, unités de gestion à identifiant stable, filiation et exercices.
+    contents:
+    - foret_creer
+    - ug_creer
+    - ug_lire
+    - ug_scinder
+    - ug_fusionner
+    - exercice_definir
+    - SOMMIER_REGIMES
+
+  - title: "Base de données"
+    contents:
+    - sommier_init_schema
+    - sommier_revoquer_mutations
+    - decouper_sql
+
+  - title: "Consultation et export"
+    contents:
+    - sommier_balance_possibilite
+    - sommier_exporter_manifeste
+    - sommier_verifier_manifeste
+    - SOMMIER_VERSION_MANIFESTE
+
+  - title: "Utilitaires"
+    contents:
+    - uuid_v4
+    - sommieR-package

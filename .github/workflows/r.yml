@@ -1,0 +1,244 @@
+# sommieR — intégration continue
+#
+# Porté depuis nemeton (parité des dépôts). Une différence de fond : la
+# couche d'accès de sommieR se teste contre une vraie base PostGIS, montée
+# ici en service container. Sans elle, les tests de base se sauteraient tout
+# seuls et le vert serait trompeur — le job `tests` échoue donc si la base
+# n'est pas jointe, plutôt que de passer à vide.
+name: R-CMD-check
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ============================================================
+  # Job 0 : cohérence des versions (DESCRIPTION = NEWS = CITATION)
+  # Garde-fou contre le drift. On ne compare PAS au tag git (créé après le
+  # merge par release.yml), seulement aux fichiers du dépôt : la version de
+  # release doit être posée AVANT le push.
+  # ============================================================
+  version-consistency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: DESCRIPTION = NEWS.md = CITATION.cff
+        run: |
+          desc=$(awk '/^Version:/{print $2; exit}' DESCRIPTION)
+          if ! [[ "$desc" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Cycle dev ($desc) — garde-fou de cohérence sauté."
+            exit 0
+          fi
+          news=$(grep -m1 -oE '[0-9]+\.[0-9]+\.[0-9]+' NEWS.md)
+          cff=$(grep -m1 -E '^version:' CITATION.cff | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          echo "DESCRIPTION=$desc  NEWS=$news  CITATION=$cff"
+          if [ -z "$desc" ] || [ "$desc" != "$news" ] || [ "$desc" != "$cff" ]; then
+            echo "::error::Versions désalignées (DESCRIPTION=$desc, NEWS=$news, CITATION=$cff)"
+            exit 1
+          fi
+          echo "✅ versions alignées : $desc"
+
+  # ============================================================
+  # Job 1 : R CMD check (structure, documentation, imports)
+  # ============================================================
+  R-CMD-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      NOT_CRAN: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev
+
+      - name: Install R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - name: Check package
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          # `--no-tests` : la suite testthat tourne dans le job `tests`
+          # dédié, qui seul dispose de la base PostGIS.
+          args: 'c("--no-manual", "--no-tests", "--as-cran")'
+          build_args: 'c("--no-manual")'
+          error-on: '"warning"'
+          upload-snapshots: true
+
+  # ============================================================
+  # Job 2 : tests (testthat) contre une base PostGIS réelle
+  # ============================================================
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sommier_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      NOT_CRAN: true
+      SOMMIER_TEST_DB: sommier_test
+      SOMMIER_TEST_HOST: localhost
+      SOMMIER_TEST_PORT: 5432
+      SOMMIER_TEST_USER: postgres
+      SOMMIER_TEST_PASSWORD: postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
+
+      - name: Install R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::testthat
+            any::devtools
+            any::RPostgres
+          needs: check
+
+      # Le vert ne doit pas pouvoir venir d'un saut : si la base n'est pas
+      # joignable, les tests de la couche d'accès se sauteraient sans bruit.
+      - name: Vérifier que la base de test répond
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d sommier_test \
+            -c "CREATE EXTENSION IF NOT EXISTS postgis;" \
+            -c "SELECT postgis_version();"
+
+      # Une seule exécution de la suite, dont on tire les deux verdicts : les
+      # échecs, et l'absence de test ignoré. Un saut ici signalerait que la
+      # base n'a pas été jointe, et le vert serait trompeur.
+      - name: Run tests
+        run: |
+          res <- as.data.frame(devtools::test(reporter = "summary"))
+          echecs <- sum(res$failed) + sum(res$error)
+          ignores <- sum(res$skipped)
+          cat("\nechecs:", echecs, " ignores:", ignores, "\n")
+          if (ignores > 0) {
+            print(res[res$skipped > 0, c("file", "test")])
+            stop("Des tests ont ete ignores alors que la base est disponible.")
+          }
+          if (echecs > 0) {
+            stop("La suite a echoue.")
+          }
+        shell: Rscript {0}
+
+  # ============================================================
+  # Job 3 : couverture (covr + codecov)
+  # ============================================================
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [R-CMD-check]
+
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sommier_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      NOT_CRAN: true
+      SOMMIER_TEST_DB: sommier_test
+      SOMMIER_TEST_HOST: localhost
+      SOMMIER_TEST_PORT: 5432
+      SOMMIER_TEST_USER: postgres
+      SOMMIER_TEST_PASSWORD: postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
+
+      - name: Install R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::covr
+            any::RPostgres
+          needs: coverage
+
+      - name: Préparer PostGIS
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d sommier_test \
+            -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+
+      - name: Compute coverage
+        run: |
+          cov <- covr::package_coverage(
+            quiet = FALSE,
+            clean = FALSE,
+            install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
+          )
+          covr::to_cobertura(cov)
+        shell: Rscript {0}
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./cobertura.xml
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}

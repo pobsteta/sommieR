@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "sommieR: Unified Forest Register with Evidential Value"
+abstract: >
+  Implement the unified forest register (sommier) as a system of permanent,
+  strictly append-only records covering the three French forest regimes
+  (state, communal, and private under a simple management plan). Entries form
+  a hash-chained journal over an RFC 8785 canonical JSON serialisation,
+  enforced in PostGIS by immutability triggers, so that any third party can
+  verify an export offline without trusting the server.
+authors:
+  - family-names: "Obstétar"
+    given-names: "Pascal"
+    email: "pascal.obstetar@gmail.com"
+    orcid: "https://orcid.org/0009-0003-5403-1187"
+version: "0.2.0"
+date-released: "2026-08-18"
+url: "https://github.com/pobsteta/sommieR"
+repository-code: "https://github.com/pobsteta/sommieR"
+repository-artifact: "https://github.com/pobsteta/sommieR/releases"
+license: GPL-3.0-or-later
+keywords:
+  - forestry
+  - R
+  - forest-management
+  - append-only
+  - hash-chain
+  - tamper-evidence
+  - postgis
+  - rfc8785
