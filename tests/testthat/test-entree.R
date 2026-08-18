@@ -11,14 +11,27 @@ test_that("une entree se construit et n'est pas chainee d'emblee", {
 })
 
 test_that("l'echelle d'ancrage du registre est imposee", {
-  # Le registre 9 s'ancre sur une unite de gestion.
-  expect_error(
-    sommier_entree(FORET_TEST, 9L, "2026-03-01", "a1", list()),
-    "non ouvert a l'ecriture"
-  )
   # Le registre 6 est mixte : les deux ancrages sont admis.
   expect_silent(entree_test(1L, registre = 6L))
   expect_silent(entree_test(1L, registre = 6L, ug_uuid = UG_TEST))
+
+  # Le registre 7 est a l'echelle de la foret : une comptabilite ne se
+  # rattache pas a une parcelle.
+  compta <- registre7_ecriture("bois_sur_pied", 2026, 100)
+  expect_silent(sommier_entree(FORET_TEST, 7L, "2026-03-01", "a1", compta))
+  expect_error(
+    sommier_entree(FORET_TEST, 7L, "2026-03-01", "a1", compta, ug_uuid = UG_TEST),
+    "echelle de la foret"
+  )
+})
+
+test_that("chaque registre declare une echelle connue", {
+  # La contrainte de `sommier_entree()` se lit dans SOMMIER_REGISTRES : les
+  # deux doivent rester d'accord.
+  expect_true(all(SOMMIER_REGISTRES$echelle %in% c("foret", "ug", "mixte")))
+  for (r in SOMMIER_REGISTRES$registre[SOMMIER_REGISTRES$echelle == "foret"]) {
+    expect_equal(sommieR:::echelle_registre(r), "foret")
+  }
 })
 
 test_that("les identifiants et dates malformes sont refuses", {

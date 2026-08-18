@@ -148,20 +148,94 @@ Le socle est commun aux trois régimes à environ 85 % ; ce qui varie tient à
 l'autorité de validation, à l'affouage (communal seulement) et aux paramètres
 de la balance.
 
-| # | Registre | Imprimé A50 | Échelle | v0.2.0 |
+| # | Registre | Imprimé A50 | Échelle | v0.5.0 |
 |---|---|---|---|:--:|
 | 1 | **Validations (visas, agréments)** | A10 | forêt | ✅ |
-| 2 | Foncier & limites | A40 | forêt | |
-| 3 | Droits & concessions | A50C | forêt | |
-| 4 | Infrastructures | A50D/D bis | forêt | |
+| 2 | **Foncier & limites** | A40 | mixte | ✅ |
+| 3 | **Droits & concessions** | A50C | mixte | ✅ |
+| 4 | **Infrastructures** | A50D/D bis | forêt | ✅ |
 | 5 | **Coupes & récoltes** | A50E/F/I | mixte | ✅ |
 | 6 | **Travaux** | A50J/J bis/H | mixte | ✅ |
-| 7 | Comptabilité | A50G | forêt | |
+| 7 | **Comptabilité** | A50G | forêt | ✅ |
 | 8 | **Événements & faune** | A50K/L | mixte | ✅ |
-| 9 | Patrimoine remarquable | A50 r/* | UG | |
+| 9 | **Patrimoine remarquable** | A50 r/* | mixte | ✅ |
 
-Les registres fermés à l'écriture sont déclarés dans `SOMMIER_REGISTRES` et
-refusés avec un message explicite, jamais silencieusement acceptés.
+**Les neuf registres sont ouverts.** Les échelles marquées `mixte` le sont
+d'après les imprimés eux-mêmes : l'A50C porte une colonne « unités de gestion
+/ séries », une servitude vise des parcelles identifiées, une liste d'espèces
+protégées peut couvrir la forêt entière. Le registre 4 reste à l'échelle de la
+forêt — une route traverse plusieurs unités, l'y rattacher serait arbitraire.
+
+## Générer les documents de gestion
+
+Le brief note que la section « gestion antérieure » du PSG, le bilan de
+l'aménagement précédent et l'évaluation CT88 *« se génèrent depuis les mêmes
+registres »*. Il y a donc un seul assemblage et trois présentations.
+
+```r
+ga <- sommier_gestion_anterieure(
+  con, foret, debut = "2016-01-01", fin = "2025-12-31",
+  referentiel = "psg"        # ou "amenagement", ou "ct88"
+)
+
+sommier_rapport_markdown(ga, "gestion-anterieure-chaux.md")
+```
+
+Chaque référentiel ne reçoit que ce qu'il demande : le PSG n'emporte pas le
+détail financier, que le propriétaire n'a pas à produire au CRPF ; le CT88,
+tourné vers l'évaluation d'un contrat, n'emporte pas l'inventaire du
+patrimoine. Restreindre la sortie évite de diffuser plus que nécessaire — les
+registres 3 et 7 portent des données personnelles.
+
+Le patrimoine remarquable n'est délibérément **pas** borné par la période :
+c'est un état courant, et le borner écarterait un arbre inventorié plus tôt
+alors que le document veut l'inventaire tel qu'il est aujourd'hui.
+
+## Partager la cartographie
+
+```r
+sommier_exporter_sig(con, foret, "ug-chaux.geojson")            # sans dépendance
+sommier_exporter_sig(con, foret, "ug-chaux.gpkg", format = "gpkg")   # via sf
+```
+
+Une unité sans géométrie connue est **omise de la couche mais signalée** dans
+le retour : la faire figurer sans contour créerait une entité fantôme dans le
+SIG, l'omettre en silence laisserait croire la forêt entièrement cartographiée.
+
+L'export cartographique ne remplace pas le manifeste : la valeur probante est
+dans la chaîne, et c'est `sommier_exporter_manifeste()` qui la transporte.
+
+## Comptabilité et bilan financier
+
+Le registre 7 enregistre le réalisé ; le budget prévisionnel vit à côté, parce
+que le brief l'exige — *le programme prévisionnel appartient à l'aménagement,
+le sommier n'enregistre que le réalisé et le constaté*. Le prévisionnel est
+donc mutable, le registre ne l'est pas.
+
+```r
+budget_definir(con, foret, annee = 2026, poste = "reboisement", montant_eur = 5000)
+
+sommier_ajouter(con, sommier_entree(
+  foret_id = foret, registre = 7L,
+  date_evenement = "2026-06-30", auteur = "compta-01",
+  payload = registre7_ecriture(
+    poste = "bois_sur_pied", exercice = 2026, montant_eur = 18400,
+    quantite = 320, unite = "m3", reference = "TR-2026-014"
+  )
+))
+
+sommier_bilan_financier(con, foret)        # imprimé A50G
+sommier_execution_budgetaire(con, foret)   # réalisé contre prévisionnel
+```
+
+Le **sens de l'écriture se déduit du poste** — il ne se saisit pas — et
+`montant_eur` est toujours positif. Porter le sens dans le signe est la source
+classique des doubles négations, où une dépense saisie à `-500` sur un poste
+débiteur redevient silencieusement une recette.
+
+Dans `v_execution_budgetaire`, un poste budgété mais jamais exécuté reste
+visible avec un réalisé nul, et un poste exécuté hors budget avec un prévu nul :
+les deux sont des faits de gestion, aucun ne doit disparaître du tableau.
 
 ## Le visa : ce qui rend le sommier opposable
 
@@ -273,10 +347,17 @@ qu'échoués.
 | Version | Contenu |
 |---|---|
 | 0.1.0 | Noyau append-only vérifiable, registres 5 et 6, balance A50E |
-| **0.2.0** | Registres 1 et 8 ; visa signé JWS, ancrage RFC 3161 ; import FORDEAD/FAST comme propositions à valider |
+| 0.2.0 | Registres 1 et 8 ; visa signé JWS, ancrage RFC 3161 ; import FORDEAD/FAST comme propositions à valider |
 | 0.3.0 | Registre 7 et vues A50G ; budget prévisionnel et bilan financier |
-| 0.4.0 | Registres 2, 3, 4, 9 ; export IBP |
-| 0.5.0 | Exports réglementaires (gestion antérieure du PSG, bilan d'aménagement, CT88) et export GeoPackage |
+| 0.4.0 | Registres 2, 3, 4, 9 ; densité de voirie et éléments d'IBP |
+| **0.5.0** | Exports réglementaires (PSG, aménagement, CT88) et export cartographique |
+
+La feuille de route du brief est couverte. Restent hors périmètre, et signalés
+comme tels : la validation cryptographique de la chaîne de certification des
+jetons d'horodatage (elle demande un magasin de confiance et une validation
+CMS), et `ES256` pour les signatures — JOSE veut l'ECDSA en `R||S` brut,
+OpenSSL la produit en DER, et signer sans convertir produirait des jetons
+invérifiables ailleurs.
 
 `ES256` n'est pas encore accepté pour les signatures, et ce n'est pas un oubli :
 JOSE exige la signature ECDSA au format brut `R||S` alors qu'OpenSSL la produit
