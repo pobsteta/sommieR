@@ -119,6 +119,15 @@ reference:
     - SOMMIER_TYPES_REMARQUABLE
     - SOMMIER_ETATS_SANITAIRES
     - SOMMIER_SEUIL_TGB_CM
+  - title: "Jeu de démonstration"
+    desc: >
+      Un sommier complet et cohérent sur les neuf registres, pour la prise en
+      main. Les écritures sont fictives, la géométrie vient de la fixture
+      Couchey de nemetonshiny.
+    contents:
+    - sommier_demo_couchey
+    - SOMMIER_PARCELLES_COUCHEY
+    - NOM_FORET_DEMO
   - title: "Exports réglementaires et cartographiques"
     desc: >
       Le sommier comme source des documents de gestion, et le partage
@@ -129,6 +138,8 @@ reference:
     - SOMMIER_REFERENTIELS
     - sommier_exporter_sig
     - SOMMIER_FORMATS_SIG
+    - sommier_rapport_quarto
+    - SOMMIER_FORMATS_QUARTO
   - title: "Visa signé et horodatage"
     desc: >
       Ce qui rend le sommier opposable : la signature détachée de la tête de
