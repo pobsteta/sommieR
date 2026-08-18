@@ -136,7 +136,15 @@ test_that("une scission clot le parent et cree les enfants", {
   expect_equal(ug_lire(con, parent)$date_fin, as.Date("2026-01-01"))
   expect_setequal(ug_lire(con, foret_id = foret, actives_seulement = TRUE)$numero_affichage,
                   c("12a", "12b"))
-  filiation <- DBI::dbGetQuery(con, "SELECT * FROM ug_filiation")
+  # Portee a la foret sous test : la base est partagee entre les tests, une
+  # lecture globale compterait les filiations laissees par les autres.
+  filiation <- DBI::dbGetQuery(
+    con,
+    "SELECT f.* FROM ug_filiation f
+       JOIN ug u ON u.uuid = f.enfant_uuid
+      WHERE u.foret_id = $1",
+    params = list(foret)
+  )
   expect_equal(nrow(filiation), 2L)
   expect_true(all(filiation$type_filiation == "scission"))
 })

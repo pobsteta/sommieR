@@ -35,11 +35,11 @@ SOMMIER_REGISTRES <- data.frame(
   ),
   echelle = c(
     "foret", "foret", "foret", "foret", "mixte",
-    "mixte", "foret", "foret", "ug"
+    "mixte", "foret", "mixte", "ug"
   ),
   implemente = c(
-    FALSE, FALSE, FALSE, FALSE, TRUE,
-    TRUE, FALSE, FALSE, FALSE
+    TRUE, FALSE, FALSE, FALSE, TRUE,
+    TRUE, FALSE, TRUE, FALSE
   ),
   stringsAsFactors = FALSE
 )
@@ -50,7 +50,7 @@ SOMMIER_REGIMES <- c("domanial", "communal", "privee")
 
 #' Registres ouverts a l'ecriture dans cette version
 #' @export
-SOMMIER_REGISTRES_OUVERTS <- c(5L, 6L)
+SOMMIER_REGISTRES_OUVERTS <- c(1L, 5L, 6L, 8L)
 
 #' Types d'entree du registre 5 (coupes et recoltes)
 #'
@@ -87,7 +87,10 @@ SOMMIER_TYPES_MARTELES <- c("martelage", "produit_accidentel", "bois_delivre")
 #' pas se faire passer pour l'ancienne.
 #'
 #' @export
-SOMMIER_SCHEMA_VERSIONS <- c("5" = "r5-1.0.0", "6" = "r6-1.0.0")
+SOMMIER_SCHEMA_VERSIONS <- c(
+  "1" = "r1-1.0.0", "5" = "r5-1.0.0",
+  "6" = "r6-1.0.0", "8" = "r8-1.0.0"
+)
 
 #' Payload du registre 5 - coupes et recoltes
 #'
@@ -225,10 +228,14 @@ valider_payload <- function(registre, payload) {
   if (!is.list(payload) || is.null(names(payload))) {
     stop("`payload` doit etre une liste nommee.", call. = FALSE)
   }
+  # Les registres a plusieurs imprimes se redirigent sur le constructeur du
+  # type declare : le payload porte sa propre discriminante.
   switch(
     as.character(registre),
+    "1" = do.call(registre1_validation, payload),
     "5" = do.call(registre5_coupe, payload),
-    "6" = do.call(registre6_travaux, payload)
+    "6" = do.call(registre6_travaux, payload),
+    "8" = do.call(registre8_depuis_payload, list(payload))
   )
 }
 

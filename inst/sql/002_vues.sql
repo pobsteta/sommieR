@@ -141,3 +141,135 @@ SELECT DISTINCT ON (e.foret_id)
   e.date_saisie
 FROM entree_sommier e
 ORDER BY e.foret_id, e.seq DESC;
+
+-- ---------------------------------------------------------------------
+-- Registre 1 - validations (imprime A10)
+-- ---------------------------------------------------------------------
+
+CREATE OR REPLACE VIEW v_validation AS
+SELECT
+  e.id,
+  e.foret_id,
+  e.seq,
+  e.date_evenement,
+  e.auteur,
+  (e.payload ->> 'type_validation')::TEXT AS type_validation,
+  (e.payload ->> 'autorite')::TEXT        AS autorite,
+  (e.payload ->> 'nom_qualite')::TEXT     AS nom_qualite,
+  (e.payload ->> 'exercice')::INTEGER     AS exercice,
+  (e.payload ->> 'reference')::TEXT       AS reference,
+  (e.payload ->> 'date_effet')::DATE      AS date_effet,
+  (e.payload ->> 'portee')::TEXT          AS portee,
+  (e.payload ->> 'observations')::TEXT    AS observations
+FROM v_entree_courante e
+WHERE e.registre = 1;
+
+COMMENT ON VIEW v_validation IS
+  'Imprime A10. Trace l''acte de validation ; la preuve cryptographique '
+  'correspondante vit dans la table visa, qui couvre la tete de chaine.';
+
+-- Exercices vises, avec l''etat de la preuve cryptographique. Un exercice
+-- porte au registre 1 sans visa signe correspondant n''est pas une fraude,
+-- mais il n''est pas opposable de la meme facon : la vue le montre.
+CREATE OR REPLACE VIEW v_tenue_sommier AS
+SELECT
+  v.foret_id,
+  v.exercice,
+  v.autorite,
+  v.nom_qualite,
+  v.date_evenement                       AS date_acte,
+  (s.id IS NOT NULL)                     AS signe,
+  (s.tst_rfc3161 IS NOT NULL)            AS horodate,
+  s.seq_tete
+FROM v_validation v
+LEFT JOIN visa s
+  ON s.foret_id = v.foret_id
+ AND s.exercice = v.exercice
+ AND s.autorite = v.autorite
+WHERE v.type_validation IN ('visa_annuel', 'visa_direction')
+ORDER BY v.foret_id, v.exercice;
+
+-- ---------------------------------------------------------------------
+-- Registre 8 - evenements et faune (imprimes A50K et A50L)
+-- ---------------------------------------------------------------------
+
+CREATE OR REPLACE VIEW v_evenement AS
+SELECT
+  e.id,
+  e.foret_id,
+  e.ug_uuid,
+  e.seq,
+  e.date_evenement,
+  e.auteur,
+  e.ndp,
+  (e.payload ->> 'type_entree')::TEXT       AS type_entree,
+  (e.payload ->> 'nature')::TEXT            AS nature,
+  (e.payload ->> 'description')::TEXT       AS description,
+  (e.payload ->> 'surface_ha')::NUMERIC     AS surface_ha,
+  (e.payload ->> 'volume_impacte_m3')::NUMERIC AS volume_impacte_m3,
+  (e.payload ->> 'source')::TEXT            AS source,
+  (e.payload ->> 'indice')::NUMERIC         AS indice,
+  (e.payload ->> 'statut_detection')::TEXT  AS statut_detection,
+  (e.payload ->> 'observations')::TEXT      AS observations
+FROM v_entree_courante e
+WHERE e.registre = 8
+  AND (e.payload ->> 'type_entree') IN ('phenomene', 'detection');
+
+COMMENT ON VIEW v_evenement IS
+  'Imprime A50K. Les detections encore en attente de validation y figurent '
+  'avec leur NDP d''origine ; une fois le terrain passe, elles sont '
+  'rectifiees et sortent de la vue au profit du constat NDP 0.';
+
+-- Detections proposees par teledetection et non encore tranchees. La liste
+-- de travail du gestionnaire : ce qui reste a aller voir.
+CREATE OR REPLACE VIEW v_detection_en_attente AS
+SELECT
+  e.id, e.foret_id, e.ug_uuid, e.seq, e.date_evenement, e.ndp,
+  (e.payload ->> 'nature')::TEXT        AS nature,
+  (e.payload ->> 'source')::TEXT        AS source,
+  (e.payload ->> 'description')::TEXT   AS description,
+  (e.payload ->> 'surface_ha')::NUMERIC AS surface_ha,
+  (e.payload ->> 'indice')::NUMERIC     AS indice
+FROM v_entree_courante e
+WHERE e.registre = 8
+  AND (e.payload ->> 'type_entree') = 'detection';
+
+CREATE OR REPLACE VIEW v_tableau_chasse AS
+SELECT
+  e.id,
+  e.foret_id,
+  e.seq,
+  e.date_evenement,
+  (e.payload ->> 'saison')::TEXT      AS saison,
+  (e.payload ->> 'espece')::TEXT      AS espece,
+  (e.payload ->> 'classe_age')::TEXT  AS classe_age,
+  (e.payload ->> 'sexe')::TEXT        AS sexe,
+  (e.payload ->> 'nombre')::INTEGER   AS nombre,
+  (e.payload ->> 'attribue')::INTEGER AS attribue
+FROM v_entree_courante e
+WHERE e.registre = 8
+  AND (e.payload ->> 'type_entree') = 'tableau_chasse';
+
+COMMENT ON VIEW v_tableau_chasse IS
+  'Imprime A50L. La matrice especes x saisons se reconstitue par requete : '
+  'le registre s''ecrit ligne a ligne, comme tout registre append-only.';
+
+CREATE OR REPLACE VIEW v_equilibre_gibier AS
+SELECT
+  e.id,
+  e.foret_id,
+  e.ug_uuid,
+  e.seq,
+  e.date_evenement,
+  (e.payload ->> 'saison')::TEXT                  AS saison,
+  (e.payload ->> 'surface_sensible_ha')::NUMERIC  AS surface_sensible_ha,
+  (e.payload ->> 'taux_abroutissement_pct')::NUMERIC AS taux_abroutissement_pct,
+  (e.payload ->> 'methode')::TEXT                 AS methode,
+  (e.payload ->> 'diagnostic')::TEXT              AS diagnostic
+FROM v_entree_courante e
+WHERE e.registre = 8
+  AND (e.payload ->> 'type_entree') = 'equilibre_gibier';
+
+COMMENT ON VIEW v_equilibre_gibier IS
+  'Equilibre foret-gibier, obligatoire en PSG depuis la LAAAF de 2014. '
+  'Alimente la famille R (r4_abroutissement) de nemeton.';

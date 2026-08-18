@@ -5,7 +5,7 @@
 \alias{SOMMIER_SCHEMA_VERSIONS}
 \title{Versions de schema des payloads}
 \format{
-An object of class \code{character} of length 2.
+An object of class \code{character} of length 4.
 }
 \usage{
 SOMMIER_SCHEMA_VERSIONS

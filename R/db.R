@@ -16,7 +16,11 @@ sommier_init_schema <- function(con, vues = TRUE) {
     if (chemin == "") {
       stop("Fichier SQL introuvable dans le package : ", f, call. = FALSE)
     }
-    DBI::dbExecute(con, paste(readLines(chemin, warn = FALSE), collapse = "\n"))
+    # Une instruction a la fois : les pilotes passant par le protocole etendu
+    # refusent plusieurs commandes en un seul envoi (voir decouper_sql()).
+    for (instruction in decouper_sql(readLines(chemin, warn = FALSE, encoding = "UTF-8"))) {
+      DBI::dbExecute(con, instruction)
+    }
   }
   invisible(fichiers)
 }
@@ -292,9 +296,78 @@ lier_filiation <- function(con, enfant, parent, type, date_effet) {
 # valeur vide n'aurait de toute facon pas de sens.
 texte_ou_vide <- function(x) if (est_vide(x)) "" else as.character(x)
 
-# `dbWithTransaction` gere le rollback sur erreur et le commit sur succes ;
-# il evalue `code` dans l'environnement appelant, ce qui laisse les fonctions
-# internes voir leurs variables locales.
+# Transactions reentrantes.
+#
+# `DBI::dbWithTransaction` ne s'imbrique pas : un BEGIN dans un BEGIN avertit,
+# et surtout le COMMIT interne valide la transaction externe avant l'heure.
+# `sommier_viser()` ecrit l'acte de registre 1 par `sommier_ajouter()` puis
+# inscrit le visa : sans reentrance, un echec de l'insertion du visa laisserait
+# l'acte deja valide en base. On tient donc une profondeur par connexion, et
+# les niveaux imbriques passent par des points de reprise.
+.pile_transactions <- new.env(parent = emptyenv())
+
+profondeur_transaction <- function(con) {
+  entrees <- .pile_transactions$entrees
+  if (is.null(entrees)) {
+    return(0L)
+  }
+  for (entree in entrees) {
+    if (identical(entree$con, con)) {
+      return(entree$profondeur)
+    }
+  }
+  0L
+}
+
+regler_profondeur <- function(con, profondeur) {
+  entrees <- .pile_transactions$entrees %||% list()
+  garde <- list()
+  for (entree in entrees) {
+    if (!identical(entree$con, con)) {
+      garde[[length(garde) + 1L]] <- entree
+    }
+  }
+  if (profondeur > 0L) {
+    garde[[length(garde) + 1L]] <- list(con = con, profondeur = profondeur)
+  }
+  .pile_transactions$entrees <- garde
+  invisible(profondeur)
+}
+
+nom_point_reprise <- function(profondeur) paste0("sommier_sp_", profondeur)
+
 transaction <- function(con, code) {
-  DBI::dbWithTransaction(con, code)
+  profondeur <- profondeur_transaction(con)
+  imbriquee <- profondeur > 0L
+
+  if (imbriquee) {
+    DBI::dbExecute(con, paste0("SAVEPOINT ", nom_point_reprise(profondeur)))
+  } else {
+    DBI::dbBegin(con)
+  }
+  regler_profondeur(con, profondeur + 1L)
+
+  succes <- FALSE
+  on.exit({
+    regler_profondeur(con, profondeur)
+    if (!succes) {
+      if (imbriquee) {
+        try(DBI::dbExecute(con, paste0("ROLLBACK TO SAVEPOINT ",
+                                       nom_point_reprise(profondeur))),
+            silent = TRUE)
+      } else {
+        try(DBI::dbRollback(con), silent = TRUE)
+      }
+    }
+  }, add = TRUE)
+
+  resultat <- force(code)
+  succes <- TRUE
+
+  if (imbriquee) {
+    DBI::dbExecute(con, paste0("RELEASE SAVEPOINT ", nom_point_reprise(profondeur)))
+  } else {
+    DBI::dbCommit(con)
+  }
+  resultat
 }

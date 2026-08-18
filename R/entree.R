@@ -186,7 +186,7 @@ entrees_en_data_frame <- function(entrees) {
   champ <- function(nom, type) {
     vapply(entrees, function(e) {
       v <- e[[nom]]
-      if (est_vide(v)) as(NA, type) else as(v, type)
+      if (est_vide(v)) as.vector(NA, type) else as.vector(v, type)
     }, vector(type, 1L))
   }
   data.frame(

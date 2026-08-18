@@ -140,21 +140,78 @@ Le socle est commun aux trois régimes à environ 85 % ; ce qui varie tient à
 l'autorité de validation, à l'affouage (communal seulement) et aux paramètres
 de la balance.
 
-| # | Registre | Imprimé A50 | Échelle | v0.1.0 |
+| # | Registre | Imprimé A50 | Échelle | v0.2.0 |
 |---|---|---|---|:--:|
-| 1 | Validations (visas, agréments) | A10 | forêt | |
+| 1 | **Validations (visas, agréments)** | A10 | forêt | ✅ |
 | 2 | Foncier & limites | A40 | forêt | |
 | 3 | Droits & concessions | A50C | forêt | |
 | 4 | Infrastructures | A50D/D bis | forêt | |
 | 5 | **Coupes & récoltes** | A50E/F/I | mixte | ✅ |
 | 6 | **Travaux** | A50J/J bis/H | mixte | ✅ |
 | 7 | Comptabilité | A50G | forêt | |
-| 8 | Événements & faune | A50K/L | forêt | |
+| 8 | **Événements & faune** | A50K/L | mixte | ✅ |
 | 9 | Patrimoine remarquable | A50 r/* | UG | |
 
-La v0.1.0 livre la priorité 1 du brief — le noyau append-only vérifiable. Les
-registres fermés à l'écriture sont déclarés dans `SOMMIER_REGISTRES` et
+Les registres fermés à l'écriture sont déclarés dans `SOMMIER_REGISTRES` et
 refusés avec un message explicite, jamais silencieusement acceptés.
+
+## Le visa : ce qui rend le sommier opposable
+
+Clôturer un exercice signe la tête de chaîne. L'acte est d'abord inscrit au
+registre 1, *puis* la tête est lue et signée — de sorte que le visa atteste un
+sommier qui contient déjà la trace de sa propre délivrance.
+
+```r
+# L'identité vient du fournisseur OIDC, la signature d'une clé (ou d'un
+# service eIDAS) : Keycloak atteste qui signe, il ne signe pas un contenu
+# qu'on lui soumet.
+signataire <- signataire_keycloak(jeton_id, cle = ma_cle, kid = "cle-2026")
+
+sommier_viser(
+  con, foret, exercice = 2026, autorite = "commune",
+  signataire = signataire,
+  tsa_url = "https://freetsa.org/tsr"   # facultatif
+)
+
+sommier_verifier_visas(con, foret, cles_publiques = list(`cle-2026` = ma_cle$pubkey))
+#>   exercice autorite seq_tete concorde signature_valide horodate remarque
+#> 1     2026  commune       12     TRUE             TRUE     TRUE       NA
+```
+
+La signature est détachée sur charge non encodée (RFC 7515 et 7797,
+`b64: false`) : la tête de chaîne n'est **pas** recopiée dans le jeton. Le
+vérificateur la relit du registre, ce qui lie la signature à la chaîne plutôt
+qu'à une copie.
+
+Sans `tsa_url`, le visa est posé sans jeton d'horodatage — valide, mais sa date
+ne repose que sur l'horloge du serveur, et `sommier_verifier_visas()` le dit.
+`sommier_ancrer()` horodate la tête indépendamment de tout visa, pour qu'un
+exercice non visé ne puisse pas non plus être réécrit discrètement.
+
+Les clés publiques sont fournies par l'appelant, jamais cherchées au JWKS du
+fournisseur : un visa doit rester vérifiable des années plus tard, hors ligne,
+sans dépendre de la disponibilité d'un service tiers.
+
+## Détections de télédétection
+
+Une détection FORDEAD ou FAST est une **proposition**, pas un constat : elle
+entre au registre 8 avec le NDP de sa source, jamais NDP 0.
+
+```r
+sommier_importer_detections(
+  con, foret, detections, source = "fordead", ndp = 3L, auteur = "chaine-fordead"
+)
+
+# Après passage sur le terrain — NDP 0, et la proposition est rectifiée
+sommier_valider_detection(
+  con, detection_id, auteur = "agent-01", statut = "confirme",
+  description = "Dépérissement confirmé", surface_ha = 2.8
+)
+```
+
+`v_detection_en_attente` est la liste de travail : ce qui reste à aller voir.
+Une détection tranchée en sort — qu'elle soit confirmée ou écartée — sans
+sortir de la chaîne.
 
 ## Deux points de conception à connaître
 
@@ -207,11 +264,16 @@ qu'échoués.
 
 | Version | Contenu |
 |---|---|
-| **0.1.0** | Noyau append-only vérifiable, registres 5 et 6, balance A50E |
-| 0.2.0 | Registres 1 et 8 ; visa signé JWS (AgentConnect/Keycloak), ancrage RFC 3161 ; import FORDEAD/FAST comme entrées à valider |
+| 0.1.0 | Noyau append-only vérifiable, registres 5 et 6, balance A50E |
+| **0.2.0** | Registres 1 et 8 ; visa signé JWS, ancrage RFC 3161 ; import FORDEAD/FAST comme propositions à valider |
 | 0.3.0 | Registre 7 et vues A50G ; budget prévisionnel et bilan financier |
 | 0.4.0 | Registres 2, 3, 4, 9 ; export IBP |
 | 0.5.0 | Exports réglementaires (gestion antérieure du PSG, bilan d'aménagement, CT88) et export GeoPackage |
+
+`ES256` n'est pas encore accepté pour les signatures, et ce n'est pas un oubli :
+JOSE exige la signature ECDSA au format brut `R||S` alors qu'OpenSSL la produit
+en DER. L'accepter sans faire la conversion produirait des signatures que rien
+d'autre ne saurait vérifier.
 
 ## Licence
 
