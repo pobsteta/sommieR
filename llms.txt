@@ -547,6 +547,19 @@ habitats — et ce qu’ils apportent à l’IBP.
 - [`SOMMIER_SEUIL_TGB_CM`](https://pobsteta.github.io/sommieR/reference/SOMMIER_SEUIL_TGB_CM.md)
   : Seuil de circonference des tres gros bois
 
+## Jeu de démonstration
+
+Un sommier complet et cohérent sur les neuf registres, pour la prise en
+main. Les écritures sont fictives, la géométrie vient de la fixture
+Couchey de nemetonshiny.
+
+- [`sommier_demo_couchey()`](https://pobsteta.github.io/sommieR/reference/sommier_demo_couchey.md)
+  : Jeu de demonstration : foret communale de Couchey
+- [`SOMMIER_PARCELLES_COUCHEY`](https://pobsteta.github.io/sommieR/reference/SOMMIER_PARCELLES_COUCHEY.md)
+  : Parcelles du jeu de demonstration
+- [`NOM_FORET_DEMO`](https://pobsteta.github.io/sommieR/reference/NOM_FORET_DEMO.md)
+  : Nom de la foret du jeu de demonstration
+
 ## Exports réglementaires et cartographiques
 
 Le sommier comme source des documents de gestion, et le partage
@@ -562,6 +575,10 @@ vérifiable.
   : Export cartographique des unites de gestion
 - [`SOMMIER_FORMATS_SIG`](https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_SIG.md)
   : Formats d'export cartographique
+- [`sommier_rapport_quarto()`](https://pobsteta.github.io/sommieR/reference/sommier_rapport_quarto.md)
+  : Rapport de gestion anterieure en Quarto
+- [`SOMMIER_FORMATS_QUARTO`](https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_QUARTO.md)
+  : Formats de rendu Quarto
 
 ## Visa signé et horodatage
 
