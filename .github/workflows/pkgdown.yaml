@@ -18,6 +18,12 @@ name: pkgdown
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
+    # Comme les jobs de `r.yml`. Sans borne, une étape qui pend — le
+    # 19 août 2026, l'installation de R — retient le job des heures : le site
+    # ne se déploie jamais et rien ne le signale, la panne la plus coûteuse à
+    # diagnostiquer étant celle qui n'échoue pas. La construction prend
+    # 2 à 3 minutes ; 30 laissent de la marge sans laisser pendre.
+    timeout-minutes: 30
     concurrency:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
 
