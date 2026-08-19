@@ -707,3 +707,12 @@ Forêts, unités de gestion à identifiant stable, filiation et exercices.
   [`sommieR-package`](https://pobsteta.github.io/sommieR/reference/sommieR-package.md)
   : sommieR : le sommier forestier unifie, a valeur probante
 
+# Articles
+
+### Prise en main
+
+- [Gestion antérieure : du registre au
+  document](https://pobsteta.github.io/sommieR/articles/gestion-anterieure.md):
+
+  Le rapport Quarto de gestion antérieure, déroulé pas à pas sur le
+  sommier de démonstration de la forêt communale de Couchey.
