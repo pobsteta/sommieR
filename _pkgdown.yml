@@ -147,6 +147,15 @@ reference:
     - SOMMIER_FORMATS_SIG
     - sommier_rapport_quarto
     - SOMMIER_FORMATS_QUARTO
+  - title: "Cartographie"
+    desc: >
+      Ce que le sommier sait porter sur une carte : les contours des unités de
+      gestion, en vigueur à une date, et les indicateurs qui s'y rattachent.
+    contents:
+    - sommier_couche_ug
+    - sommier_geometrie_ug
+    - sommier_indicateurs_ug
+
   - title: "Visa signé et horodatage"
     desc: >
       Ce qui rend le sommier opposable : la signature détachée de la tête de

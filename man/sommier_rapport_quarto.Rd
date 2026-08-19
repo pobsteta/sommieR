@@ -40,6 +40,10 @@ ou PDF — en y joignant l'etat de la chaine, la balance de possibilite, les
 elements d'IBP et la desserte.
 }
 \details{
+Les cartes sont portees par la meme extraction : les contours des unites de
+gestion et leurs indicateurs voyagent en WKT dans le RDS, et le document les
+convertit en \code{sf} au rendu. Le RDS n'exige donc pas \code{sf} pour etre relu.
+
 Les donnees sont extraites de la base \strong{avant} le rendu et deposees dans un
 fichier RDS que le document lit. Deux consequences voulues : aucun
 identifiant de connexion ne circule dans le document ou ses parametres, et

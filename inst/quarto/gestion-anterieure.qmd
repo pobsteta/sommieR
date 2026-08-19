@@ -44,6 +44,89 @@ tableau <- function(nom, legende = NULL) {
 }
 
 euros <- function(x) formatC(x, format = "f", digits = 0, big.mark = " ")
+
+# Cartes. `sf` est facultatif et la géométrie peut manquer : un rapport de
+# gestion ne doit pas échouer parce qu'une illustration manque. On teste donc
+# une fois, et chaque bloc de carte se tait proprement s'il ne peut pas
+# dessiner.
+carte <- rapport$carte
+cartographiable <- !is.null(carte) && nrow(carte) > 0L &&
+  requireNamespace("sf", quietly = TRUE)
+sans_geometrie <- attr(carte, "unites_sans_geometrie")
+
+contours <- if (cartographiable) {
+  sf::st_as_sfc(carte$wkt, crs = 2154)
+}
+
+# Choroplèthe à classes explicites : une carte teintée sans légende chiffrée
+# n'est qu'une impression. Les unités à valeur nulle se teignent quand même —
+# une unité où rien n'a été fait n'est pas une unité inconnue.
+teinter <- function(valeur, n = 4L) {
+  fini <- valeur[is.finite(valeur)]
+  if (length(fini) == 0L || diff(range(fini)) == 0) {
+    return(list(couleurs = rep("#E8F5E9", length(valeur)), palette = NULL))
+  }
+  # `pretty()` choisit des bornes lisibles mais pas leur nombre : sur une
+  # série resserrée il en rend le double du souhaité, et une légende de huit
+  # classes cesse d'être lue. On retombe alors sur un découpage régulier.
+  bornes <- pretty(range(fini), n = n)
+  if (length(bornes) > n + 2L) {
+    bornes <- signif(seq(min(fini), max(fini), length.out = n + 1L), 3L)
+  }
+  palette <- grDevices::colorRampPalette(c("#F1F8E9", "#2E7D32"))(
+    length(bornes) - 1L)
+  classes <- cut(valeur, breaks = bornes, include.lowest = TRUE,
+                 labels = FALSE)
+  list(couleurs = palette[classes], palette = palette, bornes = bornes)
+}
+
+dessiner <- function(valeur = NULL, etiquettes = NULL, legende = NULL,
+                     unite = "") {
+  if (!cartographiable) {
+    return(invisible(NULL))
+  }
+  echelle <- if (is.null(valeur)) {
+    list(couleurs = rep("#E8F5E9", nrow(carte)), palette = NULL)
+  } else {
+    teinter(as.numeric(valeur))
+  }
+  # La légende occupe une marge réservée et non un coin de la carte : posée
+  # dessus, elle masque justement l'unité qu'on cherche à lire.
+  op <- par(mar = c(0, 0, 0, if (is.null(echelle$palette)) 0 else 7))
+  on.exit(par(op), add = TRUE)
+  plot(contours, col = echelle$couleurs, border = "grey30")
+  if (!is.null(etiquettes)) {
+    centres <- sf::st_coordinates(sf::st_point_on_surface(contours))
+    text(centres, labels = etiquettes, cex = 0.7)
+  }
+  if (!is.null(echelle$palette)) {
+    n <- length(echelle$bornes) - 1L
+    legend(par("usr")[[2L]], par("usr")[[4L]], xpd = NA, bty = "n", cex = 0.7,
+           fill = echelle$palette, title = legende,
+           legend = paste0(echelle$bornes[seq_len(n)], " – ",
+                           echelle$bornes[seq_len(n) + 1L], " ", unite))
+  }
+  invisible(NULL)
+}
+
+# Ce que les cartes omettent se dit sous la première d'entre elles : une forêt
+# partiellement cartographiée doit se déclarer telle, sans quoi la carte laisse
+# croire qu'elle montre tout.
+mention_carte <- function() {
+  if (!cartographiable) {
+    cat("*Carte non disponible : aucun contour d'unité de gestion n'est ",
+        "enregistré, ou le paquet `sf` n'est pas installé.*\n\n", sep = "")
+    return(invisible(NULL))
+  }
+  if (length(sans_geometrie) > 0L) {
+    cat("::: {.callout-note}\n",
+        "Unité(s) sans contour connu, absente(s) de la carte : ",
+        paste(sans_geometrie, collapse = ", "),
+        ". La forêt n'est donc pas entièrement cartographiée.\n:::\n\n",
+        sep = "")
+  }
+  invisible(NULL)
+}
 ```
 
 ::: {.callout-important}
@@ -62,6 +145,17 @@ euros <- function(x) formatC(x, format = "f", digits = 0, big.mark = " ")
 | **Période couverte** | `r ga$debut` au `r ga$fin` |
 | **Référentiel** | `r ga$referentiel` |
 | **Édité le** | `r rapport$edite_le` |
+
+### Parcellaire
+
+```{r carte-identification-mention, results='asis'}
+mention_carte()
+```
+
+```{r carte-identification, fig.height=3.6, fig.width=7, fig.cap="Unités de gestion en vigueur à la fin de la période, avec leur surface."}
+dessiner(etiquettes = paste0(carte$numero_affichage, "\n",
+                             carte$surface_ha, " ha"))
+```
 
 ### Intégrité du registre
 
@@ -89,6 +183,13 @@ Imprimés A50E, A50F et A50I.
 
 ```{r coupes, results='asis'}
 tableau("coupes", "Coupes enregistrées sur la période, par exercice et nature")
+```
+
+```{r carte-coupes, fig.height=3.6, fig.width=7, fig.cap="Volume martelé par unité de gestion sur la période."}
+dessiner(carte$volume_martele_m3,
+         etiquettes = paste0(carte$numero_affichage, "\n",
+                             round(carte$volume_martele_m3), " m³"),
+         legende = "Volume martelé", unite = "m³")
 ```
 
 ### Balance de possibilité
@@ -124,6 +225,13 @@ contrôle des plantations.
 
 ```{r travaux, results='asis'}
 tableau("travaux", "Travaux réalisés sur la période")
+```
+
+```{r carte-travaux, fig.height=3.6, fig.width=7, fig.cap="Montant des travaux par unité de gestion. Les travaux hors unité de gestion (imprimé A50H) n'y figurent pas : ils ne se localisent pas."}
+dessiner(carte$montant_travaux_eur,
+         etiquettes = paste0(carte$numero_affichage, "\n",
+                             euros(carte$montant_travaux_eur), " €"),
+         legende = "Travaux", unite = "€")
 ```
 
 ## Évènements marquants {#sec-evenements}
