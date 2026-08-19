@@ -1,3 +1,59 @@
+# sommieR 0.6.0
+
+Le rapport de gestion antérieure était entièrement tabulaire, alors que le
+sommier sait déjà **où** les choses se passent : chaque entrée porte un
+`ug_uuid`, chaque unité de gestion un contour daté. Cette version le porte sur
+une carte, sans rien changer au modèle de données ni à la chaîne.
+
+Trois briefs déposés dans `specs/` cadrent la suite : ce lot, la géométrie
+dans les payloads — qui la ferait entrer dans l'empreinte, et rendrait le
+contour d'une coupe aussi opposable que son volume — et le fond cadastral.
+
+## Ce que le sommier sait porter sur une carte
+
+* `sommier_geometrie_ug()` rend le contour **en vigueur à une date**, en WKT et
+  en Lambert-93. La date n'est pas un ornement : `ug_geometrie` est versionnée,
+  et une carte qui accompagne un bilan de période doit montrer le parcellaire
+  de l'époque, non celui du jour de l'édition. `sommier_couche_ug()` prend donc
+  par défaut la borne de fin de la période, et non aujourd'hui.
+* `sommier_indicateurs_ug()` agrège par unité ce qui se cartographie : entrées,
+  volume martelé, surface coupée, montant de travaux. Le volume martelé exclut
+  `coupe_realisee`, comme la balance de possibilité — la même coupe martelée
+  puis exploitée doublerait le prélèvement.
+* `sommier_couche_ug()` joint les deux et porte en attribut les unités sans
+  contour connu.
+
+## Trois cartes dans le rapport, pas une de plus
+
+* Chapitre 1 le parcellaire, chapitre 2 les volumes martelés, chapitre 3 les
+  montants de travaux. Les chapitres 1.1, 2.1, 5 et 9 n'ont rien de spatial :
+  une carte décorative dans un document réglementaire coûte la confiance
+  qu'elle prétend gagner.
+* Une **unité sans contour** est nommée sous la première carte plutôt
+  qu'escamotée — sinon le document laisserait croire la forêt entièrement
+  cartographiée.
+* Une **unité sans écriture** se teinte à zéro plutôt que de disparaître : là
+  où rien n'a été fait n'est pas là où l'on ne sait pas.
+* Les **travaux hors unité de gestion** (imprimé A50H) ne figurent sur aucune
+  carte, faute de se localiser.
+* La géométrie voyage en WKT dans le RDS du rapport : le document n'exige donc
+  pas `sf` pour être relu. Sans `sf` ou sans contour, il s'engendre quand même,
+  avec la mention correspondante.
+
+## Site
+
+* Deux articles : « Gestion antérieure : du registre au document », qui déroule
+  les données, et « Le document engendré », qui encadre la sortie même de
+  `sommier_rapport_quarto()`.
+
+## Correction
+
+* `sommier_exporter_sig(format = "geojson")` écrivait des coordonnées en
+  Lambert-93 sans déclaration de projection, là où la RFC 7946 impose le WGS84
+  et où tout lecteur le suppose : le fichier s'ouvrait sans erreur et posait la
+  forêt à des milliers de kilomètres. L'export reprojette désormais à
+  l'émission ; le GeoPackage, qui porte son système, reste en EPSG:2154.
+
 # sommieR 0.5.0
 
 Priorité 5 du brief : les exports. Le sommier devient la source des documents
