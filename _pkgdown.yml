@@ -29,6 +29,7 @@ articles:
     navbar: ~
     contents:
     - "articles/gestion-anterieure"
+    - "articles/rapport-engendre"
 
 reference:
   - title: "Écrire et lire le sommier"
