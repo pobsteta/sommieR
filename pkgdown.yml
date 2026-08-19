@@ -3,7 +3,8 @@ pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   articles/gestion-anterieure: gestion-anterieure.html
-last_built: 2026-08-19T07:04Z
+  articles/rapport-engendre: rapport-engendre.html
+last_built: 2026-08-19T09:37Z
 urls:
   reference: https://pobsteta.github.io/sommieR/reference
   article: https://pobsteta.github.io/sommieR/articles
