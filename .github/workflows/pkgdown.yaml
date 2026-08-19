@@ -1,6 +1,9 @@
 # Site pkgdown publié sur gh-pages.
-# Porté depuis nemeton, allégé : sommieR n'a pas de dépendances géospatiales
-# lourdes à compiler.
+# Porté depuis nemeton. L'article « gestion antérieure » se construit contre
+# une base PostGIS réelle, montée ici en service container : sans elle, il se
+# rendrait sans le moindre tableau et le site publierait une démonstration
+# vide. L'étape `Vérifier que la base répond` échoue donc plutôt que de
+# laisser passer un site muet.
 on:
   push:
     branches: [main, master]
@@ -17,8 +20,29 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
+
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sommier_article
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      SOMMIER_ARTICLE_DB: sommier_article
+      SOMMIER_ARTICLE_HOST: localhost
+      SOMMIER_ARTICLE_PORT: 5432
+      SOMMIER_ARTICLE_USER: postgres
+      SOMMIER_ARTICLE_PASSWORD: postgres
     permissions:
       contents: write
     steps:
@@ -33,18 +57,39 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: |
             any::pkgdown
+            any::RPostgres
             local::.
           needs: website
+
+      - name: Vérifier que la base de l'article répond
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d sommier_article \
+            -c "CREATE EXTENSION IF NOT EXISTS postgis;" \
+            -c "SELECT postgis_version();"
 
       - name: Build site
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
+
+      # Le rendu d'un article ne signale pas l'absence de données : il rend le
+      # code et se tait. On vérifie donc que la page publiée porte bien les
+      # écritures de Couchey, et non l'avertissement de repli.
+      - name: L'article porte-t-il les données ?
+        run: |
+          page=docs/articles/gestion-anterieure.html
+          test -f "$page" || { echo "::error::Article non construit"; exit 1; }
+          if grep -q "Article rendu sans base" "$page"; then
+            echo "::error::L'article s'est rendu sans base : tableaux absents."
+            exit 1
+          fi
+          grep -q "Couchey" "$page" || { echo "::error::Jeu de démonstration absent de l'article"; exit 1; }
+          echo "✅ article construit avec les données de Couchey"
 
       - name: Deploy to GitHub pages 🚀
         # Publication seulement sur push main / release publiée — jamais sur

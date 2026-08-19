@@ -21,8 +21,14 @@ home:
 
 navbar:
   structure:
-    left:  [reference, news]
+    left:  [reference, articles, news]
     right: [search, github]
+
+articles:
+  - title: "Prise en main"
+    navbar: ~
+    contents:
+    - "articles/gestion-anterieure"
 
 reference:
   - title: "Écrire et lire le sommier"

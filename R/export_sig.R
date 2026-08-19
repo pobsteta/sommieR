@@ -27,6 +27,16 @@ SOMMIER_FORMATS_SIG <- c("geojson", "gpkg")
 #' l'omettre en silence laisserait croire que la foret est entierement
 #' cartographiee.
 #'
+#' Les deux formats ne portent pas le systeme de coordonnees de la meme
+#' maniere, et l'export en tient compte. Un GeoJSON ne transporte aucune
+#' declaration de projection : la RFC 7946 impose le WGS84, et tout lecteur le
+#' suppose. La couche est donc reprojetee en EPSG:4326 a l'emission - emettre
+#' du Lambert-93 tel quel produirait un fichier qui s'ouvre sans erreur et
+#' place la foret a des milliers de kilometres, c'est-a-dire la pire des
+#' sorties : fausse et silencieuse. Le GeoPackage, lui, ecrit son systeme dans
+#' le fichier ; il reste en EPSG:2154, ou les longueurs et les surfaces se
+#' mesurent en metres.
+#'
 #' L'export cartographique ne remplace pas le manifeste : la valeur probante
 #' est dans la chaine, que [sommier_exporter_manifeste()] transporte. Les deux
 #' se completent, et le destinataire verifie l'un avant de lire l'autre.
@@ -53,8 +63,8 @@ sommier_exporter_sig <- function(con, foret_id, chemin, format = "geojson",
     "SELECT u.uuid, u.numero_affichage, u.date_debut, u.date_fin,
             (SELECT count(*) FROM entree_sommier e WHERE e.ug_uuid = u.uuid)
               AS n_entrees,
-            ST_AsGeoJSON(g.geom) AS geometrie,
-            ST_AsText(g.geom)    AS geometrie_wkt
+            ST_AsGeoJSON(ST_Transform(g.geom, 4326)) AS geometrie,
+            ST_AsText(g.geom)                        AS geometrie_wkt
        FROM ug u
        LEFT JOIN LATERAL (
          SELECT geom FROM ug_geometrie gg
@@ -92,8 +102,8 @@ ecrire_geojson <- function(unites, chemin) {
         date_debut = as.character(unites$date_debut[[i]]),
         n_entrees = as.integer(unites$n_entrees[[i]])
       ),
-      # La geometrie vient deja en JSON de PostGIS : la reserialiser la
-      # deformerait, on l'insere telle quelle.
+      # La geometrie vient deja en JSON de PostGIS, en WGS84 : la reserialiser
+      # la deformerait, on l'insere telle quelle.
       geometry = structure(unites$geometrie[[i]], class = "json")
     )
   })

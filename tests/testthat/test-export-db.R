@@ -143,6 +143,36 @@ test_that("l'export GeoJSON rend une FeatureCollection valide", {
   expect_equal(entite$properties$n_entrees, 1L)
 })
 
+test_that("le GeoJSON sort en WGS84, comme l'exige la RFC 7946", {
+  # Un GeoJSON ne declare pas sa projection : le lecteur suppose le WGS84.
+  # Emettre du Lambert-93 tel quel donnerait un fichier qui s'ouvre sans
+  # erreur et pose la foret a des milliers de kilometres.
+  con <- base_export()
+  foret <- foret_creer(con, "Foret test", "domanial", surface_ha = 100)
+  ug <- ug_creer(con, foret, "54", "2010-01-01")
+  DBI::dbExecute(
+    con,
+    "INSERT INTO ug_geometrie (ug_uuid, version, geom, date_debut)
+     VALUES ($1, 1,
+             ST_Multi(ST_Transform(ST_GeomFromText($2, 4326), 2154)),
+             $3::date)",
+    params = list(ug, SOMMIER_PARCELLES_COUCHEY$wkt_4326[[1L]], "2010-01-01")
+  )
+
+  chemin <- withr::local_tempfile(fileext = ".geojson")
+  sommier_exporter_sig(con, foret, chemin, format = "geojson")
+
+  lu <- jsonlite::fromJSON(chemin, simplifyVector = FALSE)
+  sommets <- lu$features[[1]]$geometry$coordinates[[1]][[1]]
+  longitudes <- vapply(sommets, function(p) p[[1]], numeric(1))
+  latitudes <- vapply(sommets, function(p) p[[2]], numeric(1))
+
+  # La parcelle est a Couchey (Cote-d'Or) : ~4,95 E et ~47,27 N. La tolerance
+  # couvre l'aller-retour de reprojection, pas un changement de systeme.
+  expect_equal(mean(longitudes), 4.951, tolerance = 1e-3)
+  expect_equal(mean(latitudes), 47.271, tolerance = 1e-3)
+})
+
 test_that("une unite sans geometrie est signalee plutot qu'inventee", {
   # L'omettre en silence laisserait croire la foret entierement cartographiee.
   con <- base_export()
