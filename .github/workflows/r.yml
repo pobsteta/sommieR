@@ -76,6 +76,23 @@ jobs:
           r-version: 'release'
           use-public-rspm: true
 
+      # Tuer une étape ne tue pas ses processus fils : le `gdebi` lancé par la
+      # première tentative tient toujours le verrou dpkg, et la seconde
+      # échouait en deux secondes sur « Could not get lock
+      # /var/lib/dpkg/lock-frontend ». On solde donc l'installation
+      # interrompue avant de réessayer.
+      #
+      # `pkill` sans `-f` filtre sur le nom du processus et non sur la ligne
+      # de commande : le motif ne peut donc pas se reconnaître dans le `sudo`
+      # qui le porte et se tuer lui-même.
+      - name: Solder l'apt de la tentative interrompue
+        if: steps.setup_r.outcome == 'failure'
+        run: |
+          sudo pkill -9 '^(apt|apt-get|gdebi|dpkg)$' || true
+          sudo rm -f /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend \
+                     /var/lib/apt/lists/lock /var/cache/apt/archives/lock
+          sudo dpkg --configure -a || true
+
       - name: Setup R (seconde tentative)
         if: steps.setup_r.outcome == 'failure'
         uses: r-lib/actions/setup-r@v2
@@ -147,6 +164,23 @@ jobs:
         with:
           r-version: 'release'
           use-public-rspm: true
+
+      # Tuer une étape ne tue pas ses processus fils : le `gdebi` lancé par la
+      # première tentative tient toujours le verrou dpkg, et la seconde
+      # échouait en deux secondes sur « Could not get lock
+      # /var/lib/dpkg/lock-frontend ». On solde donc l'installation
+      # interrompue avant de réessayer.
+      #
+      # `pkill` sans `-f` filtre sur le nom du processus et non sur la ligne
+      # de commande : le motif ne peut donc pas se reconnaître dans le `sudo`
+      # qui le porte et se tuer lui-même.
+      - name: Solder l'apt de la tentative interrompue
+        if: steps.setup_r.outcome == 'failure'
+        run: |
+          sudo pkill -9 '^(apt|apt-get|gdebi|dpkg)$' || true
+          sudo rm -f /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend \
+                     /var/lib/apt/lists/lock /var/cache/apt/archives/lock
+          sudo dpkg --configure -a || true
 
       - name: Setup R (seconde tentative)
         if: steps.setup_r.outcome == 'failure'
@@ -254,6 +288,23 @@ jobs:
         with:
           r-version: 'release'
           use-public-rspm: true
+
+      # Tuer une étape ne tue pas ses processus fils : le `gdebi` lancé par la
+      # première tentative tient toujours le verrou dpkg, et la seconde
+      # échouait en deux secondes sur « Could not get lock
+      # /var/lib/dpkg/lock-frontend ». On solde donc l'installation
+      # interrompue avant de réessayer.
+      #
+      # `pkill` sans `-f` filtre sur le nom du processus et non sur la ligne
+      # de commande : le motif ne peut donc pas se reconnaître dans le `sudo`
+      # qui le porte et se tuer lui-même.
+      - name: Solder l'apt de la tentative interrompue
+        if: steps.setup_r.outcome == 'failure'
+        run: |
+          sudo pkill -9 '^(apt|apt-get|gdebi|dpkg)$' || true
+          sudo rm -f /var/lib/dpkg/lock /var/lib/dpkg/lock-frontend \
+                     /var/lib/apt/lists/lock /var/cache/apt/archives/lock
+          sudo dpkg --configure -a || true
 
       - name: Setup R (seconde tentative)
         if: steps.setup_r.outcome == 'failure'
