@@ -20,11 +20,15 @@ jobs:
   pkgdown:
     runs-on: ubuntu-latest
     # Comme les jobs de `r.yml`. Sans borne, une étape qui pend — le
-    # 19 août 2026, l'installation de R — retient le job des heures : le site
-    # ne se déploie jamais et rien ne le signale, la panne la plus coûteuse à
-    # diagnostiquer étant celle qui n'échoue pas. La construction prend
-    # 2 à 3 minutes ; 30 laissent de la marge sans laisser pendre.
-    timeout-minutes: 30
+    # 19 août 2026, l'installation de R puis celle des dépendances — retient
+    # le job des heures : le site ne se déploie jamais et rien ne le signale,
+    # la panne la plus coûteuse à diagnostiquer étant celle qui n'échoue pas.
+    #
+    # Le plafond est passé de 30 à 60 minutes en même temps que les secondes
+    # tentatives : à 30, le job coupait la reprise qu'il venait d'autoriser.
+    # Un blocage coûte donc plus longtemps dans le pire des cas, mais se
+    # termine en vert au lieu d'exiger une relance à la main.
+    timeout-minutes: 60
     concurrency:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
 
@@ -102,7 +106,28 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
 
-      - uses: r-lib/actions/setup-r-dependencies@v2
+      # Même parade que pour l'installation de R : l'étape pend elle aussi par
+      # intermittence — c'est elle qui a retenu la publication du site le
+      # 19 août 2026. Le plafond est plus haut, l'installation des dépendances
+      # pouvant légitimement demander une quinzaine de minutes à froid ; la
+      # seconde tentative repart du cache déjà posé, elle reprend plutôt que
+      # de recommencer.
+      - name: Install R dependencies
+        id: deps
+        uses: r-lib/actions/setup-r-dependencies@v2
+        timeout-minutes: 20
+        continue-on-error: true
+        with:
+          extra-packages: |
+            any::pkgdown
+            any::RPostgres
+            local::.
+          needs: website
+
+      - name: Install R dependencies (seconde tentative)
+        if: steps.deps.outcome == 'failure'
+        uses: r-lib/actions/setup-r-dependencies@v2
+        timeout-minutes: 20
         with:
           extra-packages: |
             any::pkgdown

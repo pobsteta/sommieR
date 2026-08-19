@@ -50,7 +50,7 @@ jobs:
   # ============================================================
   R-CMD-check:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -60,9 +60,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # L'installation de R pend par intermittence sur les runners (neuf fois
+      # L'installation de R pend par intermittence sur les runners (dix fois
       # le 19 août 2026), sans jamais dépasser cette étape : le job restait
-      # alors bloqué jusqu'à son `timeout-minutes`, trente minutes pour rien.
+      # alors bloqué jusqu'à son `timeout-minutes`, une demi-heure pour rien.
       # Une borne courte transforme le blocage en échec rapide, et la seconde
       # tentative l'absorbe sans intervention. `continue-on-error` porte sur
       # la première seulement — si la seconde échoue aussi, le job doit
@@ -106,8 +106,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev
 
+      # Même parade que pour l'installation de R : l'étape pend elle aussi par
+      # intermittence, et sans borne le job attendait ses trente minutes. Le
+      # plafond est plus haut ici — l'installation des dépendances prend trois
+      # à quatre minutes avec le cache chaud, mais peut légitimement en
+      # demander une quinzaine à froid, et couper trop tôt ferait échouer des
+      # constructions saines. La seconde tentative repart du cache déjà posé
+      # par la première : elle reprend, elle ne recommence pas.
       - name: Install R dependencies
+        id: deps
         uses: r-lib/actions/setup-r-dependencies@v2
+        timeout-minutes: 20
+        continue-on-error: true
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - name: Install R dependencies (seconde tentative)
+        if: steps.deps.outcome == 'failure'
+        uses: r-lib/actions/setup-r-dependencies@v2
+        timeout-minutes: 20
         with:
           extra-packages: any::rcmdcheck
           needs: check
@@ -127,7 +145,7 @@ jobs:
   # ============================================================
   tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     services:
       postgres:
@@ -195,8 +213,29 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
 
+      # Même parade que pour l'installation de R : l'étape pend elle aussi par
+      # intermittence, et sans borne le job attendait ses trente minutes. Le
+      # plafond est plus haut ici — l'installation des dépendances prend trois
+      # à quatre minutes avec le cache chaud, mais peut légitimement en
+      # demander une quinzaine à froid, et couper trop tôt ferait échouer des
+      # constructions saines. La seconde tentative repart du cache déjà posé
+      # par la première : elle reprend, elle ne recommence pas.
       - name: Install R dependencies
+        id: deps
         uses: r-lib/actions/setup-r-dependencies@v2
+        timeout-minutes: 20
+        continue-on-error: true
+        with:
+          extra-packages: |
+            any::testthat
+            any::devtools
+            any::RPostgres
+          needs: check
+
+      - name: Install R dependencies (seconde tentative)
+        if: steps.deps.outcome == 'failure'
+        uses: r-lib/actions/setup-r-dependencies@v2
+        timeout-minutes: 20
         with:
           extra-packages: |
             any::testthat
@@ -250,7 +289,7 @@ jobs:
   # ============================================================
   coverage:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     needs: [R-CMD-check]
 
     services:
@@ -319,8 +358,28 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
 
+      # Même parade que pour l'installation de R : l'étape pend elle aussi par
+      # intermittence, et sans borne le job attendait ses trente minutes. Le
+      # plafond est plus haut ici — l'installation des dépendances prend trois
+      # à quatre minutes avec le cache chaud, mais peut légitimement en
+      # demander une quinzaine à froid, et couper trop tôt ferait échouer des
+      # constructions saines. La seconde tentative repart du cache déjà posé
+      # par la première : elle reprend, elle ne recommence pas.
       - name: Install R dependencies
+        id: deps
         uses: r-lib/actions/setup-r-dependencies@v2
+        timeout-minutes: 20
+        continue-on-error: true
+        with:
+          extra-packages: |
+            any::covr
+            any::RPostgres
+          needs: coverage
+
+      - name: Install R dependencies (seconde tentative)
+        if: steps.deps.outcome == 'failure'
+        uses: r-lib/actions/setup-r-dependencies@v2
+        timeout-minutes: 20
         with:
           extra-packages: |
             any::covr
