@@ -50,7 +50,7 @@ jobs:
   # ============================================================
   R-CMD-check:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -101,7 +101,22 @@ jobs:
           r-version: 'release'
           use-public-rspm: true
 
+      # C'est cette étape — un `apt-get` de plus — qui a retenu le job
+      # `tests` cinquante-cinq minutes le 19 août 2026 : le miroir Azure
+      # décrochait, le repli sur archive.ubuntu.com restait sans réponse.
+      # Le blocage n'appartient donc à aucune action en particulier, il
+      # appartient à apt ; toute étape qui l'appelle doit être bornée.
       - name: Install system dependencies
+        id: apt
+        timeout-minutes: 8
+        continue-on-error: true
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev
+
+      - name: Install system dependencies (seconde tentative)
+        if: steps.apt.outcome == 'failure'
+        timeout-minutes: 8
         run: |
           sudo apt-get update
           sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev
@@ -145,7 +160,7 @@ jobs:
   # ============================================================
   tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
 
     services:
       postgres:
@@ -208,7 +223,22 @@ jobs:
           r-version: 'release'
           use-public-rspm: true
 
+      # C'est cette étape — un `apt-get` de plus — qui a retenu le job
+      # `tests` cinquante-cinq minutes le 19 août 2026 : le miroir Azure
+      # décrochait, le repli sur archive.ubuntu.com restait sans réponse.
+      # Le blocage n'appartient donc à aucune action en particulier, il
+      # appartient à apt ; toute étape qui l'appelle doit être bornée.
       - name: Install system dependencies
+        id: apt
+        timeout-minutes: 8
+        continue-on-error: true
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
+
+      - name: Install system dependencies (seconde tentative)
+        if: steps.apt.outcome == 'failure'
+        timeout-minutes: 8
         run: |
           sudo apt-get update
           sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
@@ -289,7 +319,7 @@ jobs:
   # ============================================================
   coverage:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
     needs: [R-CMD-check]
 
     services:
@@ -353,7 +383,22 @@ jobs:
           r-version: 'release'
           use-public-rspm: true
 
+      # C'est cette étape — un `apt-get` de plus — qui a retenu le job
+      # `tests` cinquante-cinq minutes le 19 août 2026 : le miroir Azure
+      # décrochait, le repli sur archive.ubuntu.com restait sans réponse.
+      # Le blocage n'appartient donc à aucune action en particulier, il
+      # appartient à apt ; toute étape qui l'appelle doit être bornée.
       - name: Install system dependencies
+        id: apt
+        timeout-minutes: 8
+        continue-on-error: true
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
+
+      - name: Install system dependencies (seconde tentative)
+        if: steps.apt.outcome == 'failure'
+        timeout-minutes: 8
         run: |
           sudo apt-get update
           sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client

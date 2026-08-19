@@ -19,16 +19,16 @@ name: pkgdown
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
-    # Comme les jobs de `r.yml`. Sans borne, une étape qui pend — le
-    # 19 août 2026, l'installation de R puis celle des dépendances — retient
-    # le job des heures : le site ne se déploie jamais et rien ne le signale,
-    # la panne la plus coûteuse à diagnostiquer étant celle qui n'échoue pas.
+    # Comme les jobs de `r.yml`. Sans borne, une étape qui pend retient le job
+    # des heures : le site ne se déploie jamais et rien ne le signale, la
+    # panne la plus coûteuse à diagnostiquer étant celle qui n'échoue pas.
     #
-    # Le plafond est passé de 30 à 60 minutes en même temps que les secondes
-    # tentatives : à 30, le job coupait la reprise qu'il venait d'autoriser.
-    # Un blocage coûte donc plus longtemps dans le pire des cas, mais se
-    # termine en vert au lieu d'exiger une relance à la main.
-    timeout-minutes: 60
+    # 30 et non 60 : le plafond a été porté à une heure pour laisser place aux
+    # secondes tentatives, puis ramené. Le calcul supposait qu'un blocage
+    # reste rare ; le 19 août 2026 il était le cas courant, et doubler le
+    # plafond n'a fait que doubler le temps perdu sans rendre un seul job
+    # vert. Une reprise coupée par le plafond vaut mieux qu'une heure brûlée.
+    timeout-minutes: 30
     concurrency:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
 
@@ -101,7 +101,22 @@ jobs:
         with:
           use-public-rspm: true
 
+      # C'est cette étape — un `apt-get` de plus — qui a retenu le job
+      # `tests` cinquante-cinq minutes le 19 août 2026 : le miroir Azure
+      # décrochait, le repli sur archive.ubuntu.com restait sans réponse.
+      # Le blocage n'appartient donc à aucune action en particulier, il
+      # appartient à apt ; toute étape qui l'appelle doit être bornée.
       - name: Install system dependencies
+        id: apt
+        timeout-minutes: 8
+        continue-on-error: true
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
+
+      - name: Install system dependencies (seconde tentative)
+        if: steps.apt.outcome == 'failure'
+        timeout-minutes: 8
         run: |
           sudo apt-get update
           sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
