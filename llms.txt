@@ -580,6 +580,18 @@ vérifiable.
 - [`SOMMIER_FORMATS_QUARTO`](https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_QUARTO.md)
   : Formats de rendu Quarto
 
+## Cartographie
+
+Ce que le sommier sait porter sur une carte : les contours des unités de
+gestion, en vigueur à une date, et les indicateurs qui s’y rattachent.
+
+- [`sommier_couche_ug()`](https://pobsteta.github.io/sommieR/reference/sommier_couche_ug.md)
+  : Couche cartographique des unites de gestion
+- [`sommier_geometrie_ug()`](https://pobsteta.github.io/sommieR/reference/sommier_geometrie_ug.md)
+  : Contours des unites de gestion
+- [`sommier_indicateurs_ug()`](https://pobsteta.github.io/sommieR/reference/sommier_indicateurs_ug.md)
+  : Indicateurs par unite de gestion
+
 ## Visa signé et horodatage
 
 Ce qui rend le sommier opposable : la signature détachée de la tête de

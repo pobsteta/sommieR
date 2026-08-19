@@ -11,7 +11,7 @@ elements d'IBP et la desserte."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -101,7 +101,10 @@ elements d'IBP et la desserte.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Les donnees sont extraites de la base <strong>avant</strong> le rendu et deposees dans un
+    <p>Les cartes sont portees par la meme extraction : les contours des unites de
+gestion et leurs indicateurs voyagent en WKT dans le RDS, et le document les
+convertit en <code>sf</code> au rendu. Le RDS n'exige donc pas <code>sf</code> pour etre relu.</p>
+<p>Les donnees sont extraites de la base <strong>avant</strong> le rendu et deposees dans un
 fichier RDS que le document lit. Deux consequences voulues : aucun
 identifiant de connexion ne circule dans le document ou ses parametres, et
 le rendu est reproductible a l'identique sans acces a la base — on peut

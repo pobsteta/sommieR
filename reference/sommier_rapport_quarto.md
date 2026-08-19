@@ -57,6 +57,11 @@ Invisiblement, le chemin du document produit.
 
 ## Details
 
+Les cartes sont portees par la meme extraction : les contours des unites
+de gestion et leurs indicateurs voyagent en WKT dans le RDS, et le
+document les convertit en `sf` au rendu. Le RDS n'exige donc pas `sf`
+pour etre relu.
+
 Les donnees sont extraites de la base **avant** le rendu et deposees
 dans un fichier RDS que le document lit. Deux consequences voulues :
 aucun identifiant de connexion ne circule dans le document ou ses

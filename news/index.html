@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,37 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.0" id="sommier-060">sommieR 0.6.0<a class="anchor" aria-label="anchor" href="#sommier-060"></a></h2>
+<p>Le rapport de gestion antérieure était entièrement tabulaire, alors que le sommier sait déjà <strong>où</strong> les choses se passent : chaque entrée porte un <code>ug_uuid</code>, chaque unité de gestion un contour daté. Cette version le porte sur une carte, sans rien changer au modèle de données ni à la chaîne.</p>
+<p>Trois briefs déposés dans <code>specs/</code> cadrent la suite : ce lot, la géométrie dans les payloads — qui la ferait entrer dans l’empreinte, et rendrait le contour d’une coupe aussi opposable que son volume — et le fond cadastral.</p>
+<div class="section level3">
+<h3 id="ce-que-le-sommier-sait-porter-sur-une-carte-0-6-0">Ce que le sommier sait porter sur une carte<a class="anchor" aria-label="anchor" href="#ce-que-le-sommier-sait-porter-sur-une-carte-0-6-0"></a></h3>
+<ul><li>
+<code><a href="../reference/sommier_geometrie_ug.html">sommier_geometrie_ug()</a></code> rend le contour <strong>en vigueur à une date</strong>, en WKT et en Lambert-93. La date n’est pas un ornement : <code>ug_geometrie</code> est versionnée, et une carte qui accompagne un bilan de période doit montrer le parcellaire de l’époque, non celui du jour de l’édition. <code><a href="../reference/sommier_couche_ug.html">sommier_couche_ug()</a></code> prend donc par défaut la borne de fin de la période, et non aujourd’hui.</li>
+<li>
+<code><a href="../reference/sommier_indicateurs_ug.html">sommier_indicateurs_ug()</a></code> agrège par unité ce qui se cartographie : entrées, volume martelé, surface coupée, montant de travaux. Le volume martelé exclut <code>coupe_realisee</code>, comme la balance de possibilité — la même coupe martelée puis exploitée doublerait le prélèvement.</li>
+<li>
+<code><a href="../reference/sommier_couche_ug.html">sommier_couche_ug()</a></code> joint les deux et porte en attribut les unités sans contour connu.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="trois-cartes-dans-le-rapport-pas-une-de-plus-0-6-0">Trois cartes dans le rapport, pas une de plus<a class="anchor" aria-label="anchor" href="#trois-cartes-dans-le-rapport-pas-une-de-plus-0-6-0"></a></h3>
+<ul><li>Chapitre 1 le parcellaire, chapitre 2 les volumes martelés, chapitre 3 les montants de travaux. Les chapitres 1.1, 2.1, 5 et 9 n’ont rien de spatial : une carte décorative dans un document réglementaire coûte la confiance qu’elle prétend gagner.</li>
+<li>Une <strong>unité sans contour</strong> est nommée sous la première carte plutôt qu’escamotée — sinon le document laisserait croire la forêt entièrement cartographiée.</li>
+<li>Une <strong>unité sans écriture</strong> se teinte à zéro plutôt que de disparaître : là où rien n’a été fait n’est pas là où l’on ne sait pas.</li>
+<li>Les <strong>travaux hors unité de gestion</strong> (imprimé A50H) ne figurent sur aucune carte, faute de se localiser.</li>
+<li>La géométrie voyage en WKT dans le RDS du rapport : le document n’exige donc pas <code>sf</code> pour être relu. Sans <code>sf</code> ou sans contour, il s’engendre quand même, avec la mention correspondante.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="site-0-6-0">Site<a class="anchor" aria-label="anchor" href="#site-0-6-0"></a></h3>
+<ul><li>Deux articles : « Gestion antérieure : du registre au document », qui déroule les données, et « Le document engendré », qui encadre la sortie même de <code><a href="../reference/sommier_rapport_quarto.html">sommier_rapport_quarto()</a></code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="correction-0-6-0">Correction<a class="anchor" aria-label="anchor" href="#correction-0-6-0"></a></h3>
+<ul><li>
+<code>sommier_exporter_sig(format = "geojson")</code> écrivait des coordonnées en Lambert-93 sans déclaration de projection, là où la RFC 7946 impose le WGS84 et où tout lecteur le suppose : le fichier s’ouvrait sans erreur et posait la forêt à des milliers de kilomètres. L’export reprojette désormais à l’émission ; le GeoPackage, qui porte son système, reste en EPSG:2154.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="sommier-050">sommieR 0.5.0<a class="anchor" aria-label="anchor" href="#sommier-050"></a></h2>
 <p>Priorité 5 du brief : les exports. Le sommier devient la source des documents réglementaires plutôt qu’un registre à recopier.</p>

@@ -81,6 +81,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_balance_possibilite.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_bilan_financier.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_chainer.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_couche_ug.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_demo_couchey.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_densite_voirie.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_elements_ibp.html</loc></url>
@@ -91,8 +92,10 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_execution_budgetaire.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_exporter_manifeste.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_exporter_sig.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_geometrie_ug.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_gestion_anterieure.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_importer_detections.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_indicateurs_ug.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_init_schema.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_lire.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_rapport_markdown.html</loc></url>
