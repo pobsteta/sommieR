@@ -10,6 +10,10 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 #' elements d'IBP et la desserte.
 #'
 #' @details
+#' Les cartes sont portees par la meme extraction : les contours des unites de
+#' gestion et leurs indicateurs voyagent en WKT dans le RDS, et le document les
+#' convertit en `sf` au rendu. Le RDS n'exige donc pas `sf` pour etre relu.
+#'
 #' Les donnees sont extraites de la base **avant** le rendu et deposees dans un
 #' fichier RDS que le document lit. Deux consequences voulues : aucun
 #' identifiant de connexion ne circule dans le document ou ses parametres, et
@@ -65,6 +69,9 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
       con, foret_id, debut = debut, fin = fin, referentiel = referentiel
     ),
     verification    = sommier_verifier(con, foret_id),
+    carte           = essayer_section(sommier_couche_ug(
+      con, foret_id, debut = debut, fin = fin
+    )),
     ibp             = essayer_section(sommier_elements_ibp(con, foret_id)),
     densite_voirie  = essayer_section(sommier_densite_voirie(con, foret_id)),
     version_sommier = as.character(utils::packageVersion("sommieR")),
