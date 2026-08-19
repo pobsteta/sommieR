@@ -1,9 +1,10 @@
 # Site pkgdown publié sur gh-pages.
-# Porté depuis nemeton. L'article « gestion antérieure » se construit contre
-# une base PostGIS réelle, montée ici en service container : sans elle, il se
-# rendrait sans le moindre tableau et le site publierait une démonstration
-# vide. L'étape `Vérifier que la base répond` échoue donc plutôt que de
-# laisser passer un site muet.
+# Porté depuis nemeton. Les articles se construisent contre une base PostGIS
+# réelle, montée ici en service container, et l'un d'eux appelle Quarto pour
+# engendrer le document de gestion antérieure. Sans l'un ou l'autre, ils se
+# rendraient sans tableau ni document et le site publierait une démonstration
+# vide : les étapes de vérification échouent donc plutôt que de laisser
+# passer un site muet.
 on:
   push:
     branches: [main, master]
@@ -56,6 +57,11 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2
 
+      # L'article « Le document engendré » appelle `sommier_rapport_quarto()`,
+      # qui exige Quarto dans le PATH. Les runners GitHub ne le fournissent
+      # pas. Seul le rendu HTML est engendré : le PDF demanderait LaTeX.
+      - uses: quarto-dev/quarto-actions/setup@v2
+
       - uses: r-lib/actions/setup-r@v2
         with:
           use-public-rspm: true
@@ -96,6 +102,21 @@ jobs:
           fi
           grep -q "Couchey" "$page" || { echo "::error::Jeu de démonstration absent de l'article"; exit 1; }
           echo "✅ article construit avec les données de Couchey"
+
+      # Même piège pour l'article qui encadre le document engendré : sans base
+      # ni Quarto, il se rend avec un cadre vide et un encart de repli.
+      - name: Le document engendré est-il là ?
+        run: |
+          page=docs/articles/rapport-engendre.html
+          rapport=docs/articles/rapport-gestion-anterieure.html
+          test -f "$page" || { echo "::error::Article non construit"; exit 1; }
+          if grep -q "Document non engendré" "$page"; then
+            echo "::error::Le document n'a pas été engendré : base ou Quarto absents."
+            exit 1
+          fi
+          test -f "$rapport" || { echo "::error::Le document engendré n'a pas suivi vers le site"; exit 1; }
+          grep -q "jeu de d" "$rapport" || { echo "::error::Le document ne porte pas son avertissement de démonstration"; exit 1; }
+          echo "✅ document engendré ($(du -h "$rapport" | cut -f1))"
 
       - name: Deploy to GitHub pages 🚀
         # Publication seulement sur push main / release publiée — jamais sur
