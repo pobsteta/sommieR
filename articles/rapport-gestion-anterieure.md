@@ -32,7 +32,7 @@ document.
 | **État de la chaîne** | intacte |
 | **Entrées** | 66 |
 | **Séquence de tête** | 3.3^{-322} |
-| **Empreinte de tête** | `93fbd4fdedd664c0937090c7038c4a21edd606680ecf081079ad78f678a7e537` |
+| **Empreinte de tête** | `03bf72ae819de467b2c9d4cec8b8a01510d983997f1d9f1868bb51c6976912b7` |
 
 ## 2 Coupes et récoltes
 
