@@ -171,3 +171,47 @@ test_that("le cache se cree a la demande", {
   expect_equal(repertoire_cache(cible), cible)
   expect_true(dir.exists(cible))
 })
+
+test_that("un fond deja en cache ne se retelecharge pas", {
+  # C'est le chemin ordinaire en production : on telecharge une fois par
+  # millesime, on relit ensuite. Il doit donc marcher hors ligne.
+  cache <- withr::local_tempdir()
+  chemin <- file.path(cache, "cadastre-21200-parcelles.json.gz")
+  writeLines("fixture", chemin)
+  writeLines("2026-06-01", paste0(chemin, ".millesime"))
+
+  fond <- sommier_fond_cadastral("21200", cache = cache)
+  expect_equal(fond$chemin, chemin)
+  expect_equal(fond$millesime, "2026-06-01")
+  expect_equal(fond$code_insee, "21200")
+  expect_equal(readLines(chemin, warn = FALSE), "fixture")
+})
+
+test_that("le millesime se lit sur l'index publie", {
+  # Le millesime n'est pas dans le fichier : il est dans le chemin vers lequel
+  # `latest` redirige, que le serveur affiche sur l'index du dossier.
+  index <- withr::local_tempfile(fileext = ".html")
+  writeLines(c(
+    "<html><head><title>Index</title></head><body>",
+    "<h1>Index of /etalab-cadastre/2026-06-01/geojson/communes/21/21200/</h1>",
+    "<a href=\"cadastre-21200-parcelles.json.gz\">parcelles</a>",
+    "</body></html>"
+  ), index)
+
+  expect_equal(millesime_publie(paste0("file://", index)), "2026-06-01")
+})
+
+test_that("un index sans millesime ne s'invente pas de date", {
+  index <- withr::local_tempfile(fileext = ".html")
+  writeLines("<html><body>Index of /quelque/part/</body></html>", index)
+  expect_true(is.na(millesime_publie(paste0("file://", index))))
+})
+
+test_that("un fond en cache sans millesime enregistre le dit inconnu", {
+  cache <- withr::local_tempdir()
+  writeLines("fixture", file.path(cache, "cadastre-21200-sections.json.gz"))
+  fond <- sommier_fond_cadastral("21200", couche = "sections", cache = cache)
+  expect_true(is.na(fond$millesime))
+  # Et l'affichage le dit plutot que de laisser un `NA` nu.
+  expect_output(print(fond), "millesime : inconnu")
+})

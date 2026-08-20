@@ -205,3 +205,29 @@ test_that("le jeu de demonstration porte des objets localises", {
                     objets$type_geometrie))
   expect_true(sommier_verifier(con, demo$foret_id)$valide)
 })
+
+test_that("les objets s'exportent aussi en GeoPackage", {
+  # `sf` est installe sur le runner : ce chemin y est reellement exerce.
+  skip_if_not_installed("sf")
+  con <- base_geo()
+  foret <- foret_geo(con)
+  sommier_ajouter(con, sommier_entree(
+    foret_id = foret, registre = 4L, date_evenement = "2016-06-01",
+    auteur = "a",
+    payload = registre4_voirie(
+      "Piste", "empierree", longueur_m = 620,
+      geometrie = geom_ligne(rbind(c(4.950, 47.270), c(4.952, 47.271)))
+    )
+  ))
+
+  chemin <- withr::local_tempfile(fileext = ".gpkg")
+  resultat <- sommier_exporter_sig(con, foret, chemin, format = "gpkg",
+                                   couche = "objets")
+  expect_equal(resultat$n_objets, 1L)
+
+  relu <- sf::read_sf(chemin)
+  expect_equal(relu$designation, "Piste")
+  # Le GeoPackage porte son systeme : il reste en Lambert-93, ou les
+  # longueurs se mesurent en metres.
+  expect_equal(sf::st_crs(relu)$epsg, 2154L)
+})
