@@ -161,10 +161,10 @@ registre a bougé.
 verif <- sommier_verifier(con, foret)
 verif
 #> Verification de chaine - sommier
-#>   foret     : 2bc50469-b684-46b3-aea1-6f022424b754
+#>   foret     : 6a906d29-0b49-489e-8771-58d9d5c17c45
 #>   entrees   : 66
 #>   seq tete  : 66
-#>   hash tete : f17720d67b0c1552ea1562742f4314ec522d7e031c3a1bc039ff4174f549c740
+#>   hash tete : f37c9858d6fdaef1b55d84daa866a051adc79a9933398ca370ad92dd5597d509
 #>   etat      : chaine intacte
 ```
 
@@ -405,6 +405,97 @@ tableau(sommier_densite_voirie(con, foret), "Longueurs et densités de voirie")
 
 Longueurs et densités de voirie {.table}
 
+## Ce que la carte porte
+
+Le rapport n’est plus seulement tabulaire : trois de ses chapitres
+portent une carte. Elles ne viennent pas d’un fond externe — elles
+sortent du sommier lui-même, qui sait déjà **où** les choses se passent
+: chaque entrée porte un `ug_uuid`, chaque unité de gestion un contour
+daté.
+
+[`sommier_couche_ug()`](https://pobsteta.github.io/sommieR/reference/sommier_couche_ug.md)
+rassemble ce qu’il faut pour les dessiner : les contours et, pour chaque
+unité, ce que la période y a inscrit.
+
+``` r
+
+couche_carte <- sommier_couche_ug(con, foret, "2016-01-01", "2025-12-31")
+tableau(
+  couche_carte[, c("numero_affichage", "surface_ha", "n_entrees",
+                   "volume_martele_m3", "montant_travaux_eur")],
+  "Ce que chaque unité porte sur la période"
+)
+```
+
+| numero_affichage | surface_ha | n_entrees | volume_martele_m3 | montant_travaux_eur |
+|:-----------------|-----------:|----------:|------------------:|--------------------:|
+| 54               |       3.36 |         6 |               120 |                   0 |
+| 55               |       3.36 |         9 |               185 |               2 990 |
+| 56               |       3.36 |         6 |               117 |                   0 |
+
+Ce que chaque unité porte sur la période {.table}
+
+Trois détails de ce tableau valent qu’on s’y arrête, parce qu’ils
+décident de ce que la carte dit.
+
+**Une unité sans écriture vaut zéro, pas rien.** La parcelle 54 n’a fait
+l’objet d’aucuns travaux : elle figure à `0 €`, et sur la carte elle se
+teinte. Une unité où rien n’a été fait n’est pas une unité dont on
+ignore ce qui s’y est fait, et une carte qui les confondrait mentirait
+sur ce qu’elle montre.
+
+**Le volume martelé n’est pas le volume récolté.** Une coupe est d’abord
+martelée (A50E) puis exploitée (A50F) ; les compter toutes deux
+doublerait le prélèvement. La carte reprend donc la même convention que
+la balance de possibilité, sans quoi les deux se contrediraient dans le
+même document.
+
+**Les écritures hors unité de gestion ne sont sur aucune carte.**
+L’entretien de la desserte de 2023, imprimé A50H, n’est rattaché à
+aucune parcelle : il compte dans le tableau des travaux, jamais dans le
+total cartographié.
+
+### Le contour a une date
+
+`ug_geometrie` est versionnée : le contour d’une unité change avec les
+révisions d’aménagement. Un bilan de période doit donc montrer le
+parcellaire **de cette période**, et non celui du jour où le document
+est édité — c’est pourquoi
+[`sommier_couche_ug()`](https://pobsteta.github.io/sommieR/reference/sommier_couche_ug.md)
+prend par défaut la borne de fin, non
+[`Sys.Date()`](https://rdrr.io/r/base/Sys.time.html).
+
+``` r
+
+identical(
+  sommier_geometrie_ug(con, foret, a_la_date = "2020-06-30")$wkt,
+  sommier_geometrie_ug(con, foret, a_la_date = "2025-12-31")$wkt
+)
+#> [1] TRUE
+```
+
+Sur le jeu de démonstration, les contours n’ont pas bougé depuis 2016 :
+les deux dates rendent la même géométrie. Sur une forêt réelle passée
+par une révision, elles diffèrent — et c’est la date, pas la base, qui
+décide.
+
+### Ce que la carte omet
+
+Une unité dont le contour est inconnu ne peut pas être dessinée. Elle
+n’est pas pour autant escamotée : la couche la nomme, et le rapport la
+cite sous sa première carte.
+
+``` r
+
+attr(couche_carte, "unites_sans_geometrie")
+#> character(0)
+```
+
+Vide ici, puisque les trois parcelles ont leur contour. Sur une forêt
+partiellement cartographiée, ce vecteur porte les numéros manquants — et
+le document le dit au lecteur, faute de quoi la carte laisserait croire
+qu’elle montre tout.
+
 ## Les unités de gestion sur le terrain
 
 Le même sommier s’exporte en couche SIG : les unités de gestion en
@@ -418,7 +509,7 @@ couche <- tempfile(fileext = ".geojson")
 export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
 str(export)
 #> List of 3
-#>  $ chemin               : chr "/tmp/Rtmph32bqD/file2fdb5a7551aa.geojson"
+#>  $ chemin               : chr "/tmp/RtmpN6t7Il/file2f3951da94f7.geojson"
 #>  $ n_unites             : int 3
 #>  $ unites_sans_geometrie: chr(0)
 ```
@@ -491,10 +582,10 @@ chemin <- tempfile(fileext = ".json")
 sommier_exporter_manifeste(con, foret, chemin)
 sommier_verifier_manifeste(chemin)
 #> Verification de chaine - sommier
-#>   foret     : 2bc50469-b684-46b3-aea1-6f022424b754
+#>   foret     : 6a906d29-0b49-489e-8771-58d9d5c17c45
 #>   entrees   : 66
 #>   seq tete  : 66
-#>   hash tete : f17720d67b0c1552ea1562742f4314ec522d7e031c3a1bc039ff4174f549c740
+#>   hash tete : f37c9858d6fdaef1b55d84daa866a051adc79a9933398ca370ad92dd5597d509
 #>   etat      : chaine intacte
 ```
 

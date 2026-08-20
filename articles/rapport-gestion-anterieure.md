@@ -19,7 +19,7 @@ existante.
 | **Surface**          | 7.5 ha                                            |
 | **Période couverte** | 2016-01-01 au 2025-12-31                          |
 | **Référentiel**      | amenagement                                       |
-| **Édité le**         | 19/08/2026                                        |
+| **Édité le**         | 20/08/2026                                        |
 
 ### 1.1 Parcellaire
 
@@ -38,7 +38,7 @@ document.
 | **État de la chaîne** | intacte |
 | **Entrées** | 66 |
 | **Séquence de tête** | 3.3^{-322} |
-| **Empreinte de tête** | `f17720d67b0c1552ea1562742f4314ec522d7e031c3a1bc039ff4174f549c740` |
+| **Empreinte de tête** | `f37c9858d6fdaef1b55d84daa866a051adc79a9933398ca370ad92dd5597d509` |
 
 ## 2 Coupes et récoltes
 
@@ -216,4 +216,4 @@ l’empreinte de tête, et la vérification le dit.
 ------------------------------------------------------------------------
 
 *Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.6.0 le
-19/08/2026.*
+20/08/2026.*

@@ -292,10 +292,10 @@ si le registre a bougé.</p>
 <code class="sourceCode R"><span><span class="va">verif</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_verifier.html">sommier_verifier</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span></span>
 <span><span class="va">verif</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : 2bc50469-b684-46b3-aea1-6f022424b754</span></span>
+<span><span class="co">#&gt;   foret     : 6a906d29-0b49-489e-8771-58d9d5c17c45</span></span>
 <span><span class="co">#&gt;   entrees   : 66</span></span>
 <span><span class="co">#&gt;   seq tete  : 66</span></span>
-<span><span class="co">#&gt;   hash tete : f17720d67b0c1552ea1562742f4314ec522d7e031c3a1bc039ff4174f549c740</span></span>
+<span><span class="co">#&gt;   hash tete : f37c9858d6fdaef1b55d84daa866a051adc79a9933398ca370ad92dd5597d509</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -989,21 +989,130 @@ ouvert</td>
 </table>
 </div>
 <div class="section level2">
+<h2 id="ce-que-la-carte-porte">Ce que la carte porte<a class="anchor" aria-label="anchor" href="#ce-que-la-carte-porte"></a>
+</h2>
+<p>Le rapport n’est plus seulement tabulaire : trois de ses chapitres
+portent une carte. Elles ne viennent pas d’un fond externe — elles
+sortent du sommier lui-même, qui sait déjà <strong>où</strong> les
+choses se passent : chaque entrée porte un <code>ug_uuid</code>, chaque
+unité de gestion un contour daté.</p>
+<p><code><a href="../reference/sommier_couche_ug.html">sommier_couche_ug()</a></code> rassemble ce qu’il faut pour les
+dessiner : les contours et, pour chaque unité, ce que la période y a
+inscrit.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">couche_carte</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_couche_ug.html">sommier_couche_ug</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="st">"2016-01-01"</span>, <span class="st">"2025-12-31"</span><span class="op">)</span></span>
+<span><span class="fu">tableau</span><span class="op">(</span></span>
+<span>  <span class="va">couche_carte</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"numero_affichage"</span>, <span class="st">"surface_ha"</span>, <span class="st">"n_entrees"</span>,</span>
+<span>                   <span class="st">"volume_martele_m3"</span>, <span class="st">"montant_travaux_eur"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  <span class="st">"Ce que chaque unité porte sur la période"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<caption>Ce que chaque unité porte sur la période</caption>
+<colgroup>
+<col width="22%">
+<col width="14%">
+<col width="13%">
+<col width="23%">
+<col width="26%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">numero_affichage</th>
+<th align="right">surface_ha</th>
+<th align="right">n_entrees</th>
+<th align="right">volume_martele_m3</th>
+<th align="right">montant_travaux_eur</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">54</td>
+<td align="right">3.36</td>
+<td align="right">6</td>
+<td align="right">120</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">55</td>
+<td align="right">3.36</td>
+<td align="right">9</td>
+<td align="right">185</td>
+<td align="right">2 990</td>
+</tr>
+<tr class="odd">
+<td align="left">56</td>
+<td align="right">3.36</td>
+<td align="right">6</td>
+<td align="right">117</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p>Trois détails de ce tableau valent qu’on s’y arrête, parce qu’ils
+décident de ce que la carte dit.</p>
+<p><strong>Une unité sans écriture vaut zéro, pas rien.</strong> La
+parcelle 54 n’a fait l’objet d’aucuns travaux : elle figure à
+<code>0 €</code>, et sur la carte elle se teinte. Une unité où rien n’a
+été fait n’est pas une unité dont on ignore ce qui s’y est fait, et une
+carte qui les confondrait mentirait sur ce qu’elle montre.</p>
+<p><strong>Le volume martelé n’est pas le volume récolté.</strong> Une
+coupe est d’abord martelée (A50E) puis exploitée (A50F) ; les compter
+toutes deux doublerait le prélèvement. La carte reprend donc la même
+convention que la balance de possibilité, sans quoi les deux se
+contrediraient dans le même document.</p>
+<p><strong>Les écritures hors unité de gestion ne sont sur aucune
+carte.</strong> L’entretien de la desserte de 2023, imprimé A50H, n’est
+rattaché à aucune parcelle : il compte dans le tableau des travaux,
+jamais dans le total cartographié.</p>
+<div class="section level3">
+<h3 id="le-contour-a-une-date">Le contour a une date<a class="anchor" aria-label="anchor" href="#le-contour-a-une-date"></a>
+</h3>
+<p><code>ug_geometrie</code> est versionnée : le contour d’une unité
+change avec les révisions d’aménagement. Un bilan de période doit donc
+montrer le parcellaire <strong>de cette période</strong>, et non celui
+du jour où le document est édité — c’est pourquoi
+<code><a href="../reference/sommier_couche_ug.html">sommier_couche_ug()</a></code> prend par défaut la borne de fin, non
+<code><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date()</a></code>.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/sommier_geometrie_ug.html">sommier_geometrie_ug</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, a_la_date <span class="op">=</span> <span class="st">"2020-06-30"</span><span class="op">)</span><span class="op">$</span><span class="va">wkt</span>,</span>
+<span>  <span class="fu"><a href="../reference/sommier_geometrie_ug.html">sommier_geometrie_ug</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, a_la_date <span class="op">=</span> <span class="st">"2025-12-31"</span><span class="op">)</span><span class="op">$</span><span class="va">wkt</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>Sur le jeu de démonstration, les contours n’ont pas bougé depuis 2016
+: les deux dates rendent la même géométrie. Sur une forêt réelle passée
+par une révision, elles diffèrent — et c’est la date, pas la base, qui
+décide.</p>
+</div>
+<div class="section level3">
+<h3 id="ce-que-la-carte-omet">Ce que la carte omet<a class="anchor" aria-label="anchor" href="#ce-que-la-carte-omet"></a>
+</h3>
+<p>Une unité dont le contour est inconnu ne peut pas être dessinée. Elle
+n’est pas pour autant escamotée : la couche la nomme, et le rapport la
+cite sous sa première carte.</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">couche_carte</span>, <span class="st">"unites_sans_geometrie"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; character(0)</span></span></code></pre></div>
+<p>Vide ici, puisque les trois parcelles ont leur contour. Sur une forêt
+partiellement cartographiée, ce vecteur porte les numéros manquants — et
+le document le dit au lecteur, faute de quoi la carte laisserait croire
+qu’elle montre tout.</p>
+</div>
+</div>
+<div class="section level2">
 <h2 id="les-unités-de-gestion-sur-le-terrain">Les unités de gestion sur le terrain<a class="anchor" aria-label="anchor" href="#les-unit%C3%A9s-de-gestion-sur-le-terrain"></a>
 </h2>
 <p>Le même sommier s’exporte en couche SIG : les unités de gestion en
 vigueur à une date, enrichies du nombre d’entrées qui s’y rattachent. Le
 GeoJSON n’exige rien de plus que PostGIS et s’ouvre sans rien installer
 ; le GeoPackage passe par <code>sf</code>.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">couche</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".geojson"</span><span class="op">)</span></span>
 <span><span class="va">export</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_exporter_sig.html">sommier_exporter_sig</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">couche</span>, format <span class="op">=</span> <span class="st">"geojson"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">export</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 3</span></span>
-<span><span class="co">#&gt;  $ chemin               : chr "/tmp/Rtmph32bqD/file2fdb5a7551aa.geojson"</span></span>
+<span><span class="co">#&gt;  $ chemin               : chr "/tmp/RtmpN6t7Il/file2f3951da94f7.geojson"</span></span>
 <span><span class="co">#&gt;  $ n_unites             : int 3</span></span>
 <span><span class="co">#&gt;  $ unites_sans_geometrie: chr(0)</span></span></code></pre></div>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ug</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">read_sf</a></span><span class="op">(</span><span class="va">couche</span><span class="op">)</span></span>
 <span><span class="va">teintes</span> <span class="op">&lt;-</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#E8F5E9"</span>, <span class="st">"#2E7D32"</span><span class="op">)</span><span class="op">)</span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
 <span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
@@ -1019,7 +1128,7 @@ Les trois parcelles du jeu de démonstration, teintées par nombre
 d’entrées.
 </p>
 </div>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p>Le GeoJSON sort en WGS84, comme l’exige la RFC 7946 : le format ne
 déclare pas sa projection, et tout lecteur la suppose. Le GeoPackage,
@@ -1035,7 +1144,7 @@ silence laisserait croire la forêt entièrement cartographiée.</p>
 </h2>
 <p>Tout ce qui précède, <code><a href="../reference/sommier_rapport_quarto.html">sommier_rapport_quarto()</a></code> le
 rassemble et le rend en un document autoportant, HTML ou PDF :</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sommier_rapport_quarto.html">sommier_rapport_quarto</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>, <span class="va">foret</span>, <span class="st">"gestion-anterieure.html"</span>,</span>
 <span>  debut <span class="op">=</span> <span class="st">"2016-01-01"</span>, fin <span class="op">=</span> <span class="st">"2025-12-31"</span>, referentiel <span class="op">=</span> <span class="st">"amenagement"</span></span>
@@ -1055,15 +1164,15 @@ valeur probante tient au registre : l’empreinte de tête donnée plus haut
 scelle toutes les entrées de la chaîne. Ce qui se transporte, c’est le
 manifeste — chaîne, visas et horodatages — vérifiable hors ligne, sans
 base et sans le paquet qui l’a produit.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">chemin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".json"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/sommier_exporter_manifeste.html">sommier_exporter_manifeste</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/sommier_verifier_manifeste.html">sommier_verifier_manifeste</a></span><span class="op">(</span><span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : 2bc50469-b684-46b3-aea1-6f022424b754</span></span>
+<span><span class="co">#&gt;   foret     : 6a906d29-0b49-489e-8771-58d9d5c17c45</span></span>
 <span><span class="co">#&gt;   entrees   : 66</span></span>
 <span><span class="co">#&gt;   seq tete  : 66</span></span>
-<span><span class="co">#&gt;   hash tete : f17720d67b0c1552ea1562742f4314ec522d7e031c3a1bc039ff4174f549c740</span></span>
+<span><span class="co">#&gt;   hash tete : f37c9858d6fdaef1b55d84daa866a051adc79a9933398ca370ad92dd5597d509</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span></code></pre></div>
 <p>Toute entrée modifiée, retirée ou insérée après coup invalide
 l’empreinte de tête, et la vérification le dit — y compris chez le
@@ -1077,14 +1186,14 @@ l’émetteur.</p>
 les mêmes variables d’environnement que la suite de tests
 (<code>SOMMIER_ARTICLE_*</code> d’abord, <code>SOMMIER_TEST_*</code> en
 repli) :</p>
-<div class="sourceCode" id="cb24"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="at">--name</span> sommier-pg <span class="at">-p</span> 5432:5432 <span class="dt">\</span></span>
-<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a>  <span class="at">-e</span> POSTGRES_PASSWORD=postgres <span class="at">-e</span> POSTGRES_DB=sommier_article <span class="dt">\</span></span>
-<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a>  postgis/postgis:16-3.4</span>
-<span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a></span>
-<span id="cb24-5"><a href="#cb24-5" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_DB</span><span class="op">=</span>sommier_article <span class="dt">\</span></span>
-<span id="cb24-6"><a href="#cb24-6" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_USER</span><span class="op">=</span>postgres <span class="dt">\</span></span>
-<span id="cb24-7"><a href="#cb24-7" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_PASSWORD</span><span class="op">=</span>postgres <span class="dt">\</span></span>
-<span id="cb24-8"><a href="#cb24-8" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'pkgdown::build_article("gestion-anterieure")'</span></span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="at">--name</span> sommier-pg <span class="at">-p</span> 5432:5432 <span class="dt">\</span></span>
+<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a>  <span class="at">-e</span> POSTGRES_PASSWORD=postgres <span class="at">-e</span> POSTGRES_DB=sommier_article <span class="dt">\</span></span>
+<span id="cb27-3"><a href="#cb27-3" tabindex="-1"></a>  postgis/postgis:16-3.4</span>
+<span id="cb27-4"><a href="#cb27-4" tabindex="-1"></a></span>
+<span id="cb27-5"><a href="#cb27-5" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_DB</span><span class="op">=</span>sommier_article <span class="dt">\</span></span>
+<span id="cb27-6"><a href="#cb27-6" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_USER</span><span class="op">=</span>postgres <span class="dt">\</span></span>
+<span id="cb27-7"><a href="#cb27-7" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_PASSWORD</span><span class="op">=</span>postgres <span class="dt">\</span></span>
+<span id="cb27-8"><a href="#cb27-8" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'pkgdown::build_article("gestion-anterieure")'</span></span></code></pre></div>
 <p>Sans base joignable, l’article se rend quand même : le code reste
 lisible, les tableaux manquent, et l’avertissement en tête le dit. Un
 site qui se construit n’est pas la preuve que les chiffres ont été
