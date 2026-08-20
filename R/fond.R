@@ -6,13 +6,18 @@
 #' lieux-dits, feuilles, prefixes de section et subdivisions fiscales.
 #'
 #' @details
-#' **Ce que le cadastre ne porte pas.** Ni bornes, ni fosses, ni aucun objet
-#' topographique ponctuel ou lineaire : ceux-la figurent dans la forme EDIGEO
-#' du PCI, que ces livraisons GeoJSON n'exposent pas. Une borne, un fosse, une
-#' limite materialisee relevent donc du **constat du gestionnaire** - registre
-#' 2 pour le foncier, registre 4 pour les infrastructures - et se saisissent
-#' avec leur geometrie (voir [geometries]). Les attendre du cadastre serait
-#' attendre en vain.
+#' **Ce que ces livraisons ne portent pas.** Ni bornes, ni fosses, ni aucun
+#' objet topographique ponctuel ou lineaire. Ceux-la figurent dans la forme
+#' EDIGEO du Plan Cadastral Informatise, publiee sur le meme site mais dans un
+#' autre jeu de donnees (`dgfip-pci-vecteur`), par feuille cadastrale et dans
+#' un format qui demande le pilote EDIGEO de GDAL. Elle n'est donc pas hors
+#' d'atteinte : elle est hors de ce que ce paquet va chercher aujourd'hui.
+#'
+#' Et quand bien meme on l'irait chercher, une borne relevee par la DGFiP reste
+#' la donnee d'un tiers. Ce qui fait foi dans un sommier, c'est le **constat du
+#' gestionnaire** - registre 2 pour le foncier, registre 4 pour les
+#' infrastructures - saisi avec sa geometrie (voir [geometries]) et chaine avec
+#' le reste.
 #'
 #' @export
 SOMMIER_COUCHES_CADASTRE <- c("parcelles", "sections", "batiments",

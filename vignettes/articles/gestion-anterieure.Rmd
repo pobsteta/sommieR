@@ -459,12 +459,17 @@ exposent les parcelles, les sections, les bâtiments et les lieux-dits :
 SOMMIER_COUCHES_CADASTRE
 ```
 
-Ni bornes, ni fossés — ceux-là figurent dans la forme EDIGEO du PCI, que ces
-livraisons n'exposent pas. Ils relèvent donc du **constat du gestionnaire**,
-registres 2 et 4, avec leur géométrie. C'est une vérification, pas une
-supposition : elle a été faite avant d'écrire une ligne de fond cadastral, et
-elle a déplacé la frontière entre ce que le sommier constate et ce qu'il
-emprunte.
+Ni bornes, ni fossés. Ceux-là existent bien — dans la forme EDIGEO du Plan
+Cadastral Informatisé, publiée sur le même site sous `dgfip-pci-vecteur`, mais
+par feuille cadastrale et dans un format qui demande le pilote EDIGEO de GDAL.
+Hors de portée de ce paquet aujourd'hui, donc, et non hors d'atteinte.
+
+Et quand bien même on irait les chercher, une borne relevée par la DGFiP reste
+la donnée d'un tiers. Ce qui fait foi dans un sommier, c'est le **constat du
+gestionnaire** — registres 2 et 4, saisi avec sa géométrie et chaîné avec le
+reste. C'est une vérification et non une supposition : elle a été faite avant
+d'écrire une ligne de fond cadastral, et elle a déplacé la frontière entre ce
+que le sommier constate et ce qu'il emprunte.
 
 ## Les unités de gestion sur le terrain
 

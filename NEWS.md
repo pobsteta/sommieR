@@ -55,12 +55,14 @@ payloads — donc dans l'empreinte — et le cadastre prend sa place de décor.
   fond en argument. Un document de gestion doit pouvoir s'engendrer hors
   ligne, et le même rapport rejoué plus tard ne doit pas changer de fond sans
   le dire. Le millésime est conservé avec le fichier et affiché sous la carte.
-* **Ce que le cadastre ne porte pas.** Vérification faite avant d'écrire une
-  ligne : les livraisons publiques exposent parcelles, sections, bâtiments et
-  lieux-dits — ni bornes ni fossés, qui restent dans la forme EDIGEO du PCI.
-  Ces objets relèvent donc du constat du gestionnaire, registres 2 et 4. La
-  vérification a déplacé la frontière entre ce que le sommier constate et ce
-  qu'il emprunte.
+* **Ce que ces livraisons ne portent pas.** Vérification faite avant d'écrire
+  une ligne : le GeoJSON communal expose parcelles, sections, bâtiments et
+  lieux-dits — ni bornes ni fossés. Ceux-là sont dans la forme EDIGEO du Plan
+  Cadastral Informatisé, publiée sur le même site sous `dgfip-pci-vecteur`,
+  par feuille et dans un format demandant le pilote EDIGEO de GDAL : hors de
+  portée de ce paquet aujourd'hui, non hors d'atteinte. Et de toute façon, une
+  borne relevée par la DGFiP reste la donnée d'un tiers — ce qui fait foi,
+  c'est le constat du gestionnaire, registres 2 et 4, chaîné avec le reste.
 
 ## Cartes et démonstration
 
