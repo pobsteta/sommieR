@@ -19,11 +19,15 @@ name: pkgdown
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
-    # Comme les jobs de `r.yml`. Sans borne, une étape qui pend — le
-    # 19 août 2026, l'installation de R — retient le job des heures : le site
-    # ne se déploie jamais et rien ne le signale, la panne la plus coûteuse à
-    # diagnostiquer étant celle qui n'échoue pas. La construction prend
-    # 2 à 3 minutes ; 30 laissent de la marge sans laisser pendre.
+    # Comme les jobs de `r.yml`. Sans borne, une étape qui pend retient le job
+    # des heures : le site ne se déploie jamais et rien ne le signale, la
+    # panne la plus coûteuse à diagnostiquer étant celle qui n'échoue pas.
+    #
+    # 30 et non 60 : le plafond a été porté à une heure pour laisser place aux
+    # secondes tentatives, puis ramené. Le calcul supposait qu'un blocage
+    # reste rare ; le 19 août 2026 il était le cas courant, et doubler le
+    # plafond n'a fait que doubler le temps perdu sans rendre un seul job
+    # vert. Une reprise coupée par le plafond vaut mieux qu'une heure brûlée.
     timeout-minutes: 30
     concurrency:
       group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
@@ -97,12 +101,48 @@ jobs:
         with:
           use-public-rspm: true
 
+      # C'est cette étape — un `apt-get` de plus — qui a retenu le job
+      # `tests` cinquante-cinq minutes le 19 août 2026 : le miroir Azure
+      # décrochait, le repli sur archive.ubuntu.com restait sans réponse.
+      # Le blocage n'appartient donc à aucune action en particulier, il
+      # appartient à apt ; toute étape qui l'appelle doit être bornée.
       - name: Install system dependencies
+        id: apt
+        timeout-minutes: 8
+        continue-on-error: true
         run: |
           sudo apt-get update
           sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
 
-      - uses: r-lib/actions/setup-r-dependencies@v2
+      - name: Install system dependencies (seconde tentative)
+        if: steps.apt.outcome == 'failure'
+        timeout-minutes: 8
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
+
+      # Même parade que pour l'installation de R : l'étape pend elle aussi par
+      # intermittence — c'est elle qui a retenu la publication du site le
+      # 19 août 2026. Le plafond est plus haut, l'installation des dépendances
+      # pouvant légitimement demander une quinzaine de minutes à froid ; la
+      # seconde tentative repart du cache déjà posé, elle reprend plutôt que
+      # de recommencer.
+      - name: Install R dependencies
+        id: deps
+        uses: r-lib/actions/setup-r-dependencies@v2
+        timeout-minutes: 20
+        continue-on-error: true
+        with:
+          extra-packages: |
+            any::pkgdown
+            any::RPostgres
+            local::.
+          needs: website
+
+      - name: Install R dependencies (seconde tentative)
+        if: steps.deps.outcome == 'failure'
+        uses: r-lib/actions/setup-r-dependencies@v2
+        timeout-minutes: 20
         with:
           extra-packages: |
             any::pkgdown
