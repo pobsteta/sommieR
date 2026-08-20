@@ -85,15 +85,24 @@ SOMMIER_TYPES_MARTELES <- c("martelage", "produit_accidentel", "bois_delivre")
 
 #' Versions de schema des payloads
 #'
+#' @description
 #' Le payload est du JSONB versionne par type de registre (brief, section 4).
 #' La version est hachee avec l'entree : une evolution de schema ne peut donc
 #' pas se faire passer pour l'ancienne.
 #'
+#' @details
+#' Les registres 2, 4, 5, 8 et 9 sont passes en `1.1.0` lorsque la geometrie
+#' est entree dans leurs payloads. Les entrees anterieures gardent la version
+#' sous laquelle elles ont ete ecrites, et restent valides : le registre est
+#' append-only, un changement de schema ne se retrofitte pas sur ce qui est
+#' deja chaine. C'est precisement ce que la version hachee permet de dire -
+#' cette entree a ete ecrite sous ce schema-la.
+#'
 #' @export
 SOMMIER_SCHEMA_VERSIONS <- c(
-  "1" = "r1-1.0.0", "2" = "r2-1.0.0", "3" = "r3-1.0.0",
-  "4" = "r4-1.0.0", "5" = "r5-1.0.0", "6" = "r6-1.0.0",
-  "7" = "r7-1.0.0", "8" = "r8-1.0.0", "9" = "r9-1.0.0"
+  "1" = "r1-1.0.0", "2" = "r2-1.1.0", "3" = "r3-1.0.0",
+  "4" = "r4-1.1.0", "5" = "r5-1.1.0", "6" = "r6-1.0.0",
+  "7" = "r7-1.0.0", "8" = "r8-1.1.0", "9" = "r9-1.1.0"
 )
 
 #' Payload du registre 5 - coupes et recoltes
@@ -114,6 +123,10 @@ SOMMIER_SCHEMA_VERSIONS <- c(
 #' @param coupon Identifiant du coupon ou de la subdivision (facultatif).
 #' @param observations Observations libres (facultatif).
 #'
+#' @param geometrie Emprise de la coupe, en WGS84 : voir [geom_polygone()].
+#'   Facultative — un gestionnaire sans releve continue de saisir sans, et son
+#'   sommier reste conforme.
+#'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
 #' @examples
@@ -131,7 +144,8 @@ registre5_coupe <- function(type_entree,
                             surface_ha = NULL,
                             essence = NULL,
                             coupon = NULL,
-                            observations = NULL) {
+                            observations = NULL,
+                            geometrie = NULL) {
   compacter(list(
     type_entree  = valider_choix(type_entree, "type_entree", SOMMIER_TYPES_COUPE),
     exercice     = valider_entier(exercice, "exercice", min = 1500, max = 2999),
@@ -140,6 +154,7 @@ registre5_coupe <- function(type_entree,
     surface_ha   = si_present(surface_ha, valider_nombre, "surface_ha", min = 0),
     essence      = si_present(essence, valider_texte, "essence"),
     coupon       = si_present(coupon, valider_texte, "coupon"),
+    geometrie    = geometrie_si_presente(geometrie, "Polygon"),
     observations = si_present(observations, valider_texte, "observations")
   ))
 }

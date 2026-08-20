@@ -39,6 +39,10 @@ SOMMIER_NATURES_PHENOMENE <- c(
 #'   (facultatif).
 #' @param observations Observations libres (facultatif).
 #'
+#' @param geometrie Emprise de l'objet, en WGS84 : voir [geom_polygone()].
+#'   Facultative — un gestionnaire sans releve continue de saisir sans, et son
+#'   sommier reste conforme.
+#'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
 #' @examples
@@ -53,7 +57,8 @@ registre8_phenomene <- function(nature,
                                 surface_ha = NULL,
                                 volume_impacte_m3 = NULL,
                                 intensite = NULL,
-                                observations = NULL) {
+                                observations = NULL,
+                                geometrie = NULL) {
   compacter(list(
     type_entree       = "phenomene",
     nature            = valider_choix(nature, "nature", SOMMIER_NATURES_PHENOMENE),
@@ -62,6 +67,7 @@ registre8_phenomene <- function(nature,
     volume_impacte_m3 = si_present(volume_impacte_m3, valider_nombre,
                                    "volume_impacte_m3", min = 0),
     intensite         = si_present(intensite, valider_texte, "intensite"),
+    geometrie        = geometrie_si_presente(geometrie, "Polygon"),
     observations      = si_present(observations, valider_texte, "observations")
   ))
 }

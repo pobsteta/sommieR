@@ -10,7 +10,10 @@
 #'
 #' @export
 sommier_init_schema <- function(con, vues = TRUE) {
-  fichiers <- c("001_schema.sql", if (isTRUE(vues)) "002_vues.sql")
+  # L'ordre compte : 003 ajoute une colonne a une table creee par 001, et
+  # 002 comme 003 declarent des vues qui s'appuient dessus.
+  fichiers <- c("001_schema.sql", "003_geometrie.sql",
+                if (isTRUE(vues)) "002_vues.sql")
   for (f in fichiers) {
     chemin <- system.file("sql", f, package = "sommieR")
     if (chemin == "") {

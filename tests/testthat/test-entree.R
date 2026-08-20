@@ -7,7 +7,11 @@ test_that("une entree se construit et n'est pas chainee d'emblee", {
   expect_null(e$hash)
   expect_null(e$hash_prev)
   expect_equal(e$ndp, 0)              # saisie terrain = NDP 0 par defaut
-  expect_equal(e$schema_version, "r5-1.0.0")
+  # La version vient de la table, non d'une constante recopiee : la relever
+  # ici obligerait a modifier le test a chaque evolution de schema, ce qui en
+  # ferait un miroir plutot qu'un controle.
+  expect_equal(e$schema_version, SOMMIER_SCHEMA_VERSIONS[["5"]])
+  expect_match(e$schema_version, "^r5-")
 })
 
 test_that("l'echelle d'ancrage du registre est imposee", {

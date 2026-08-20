@@ -79,6 +79,7 @@ test_that("une entree de registre 8 se chaine et se verifie", {
   e <- sommier_entree(FORET_TEST, 8L, "2026-03-01", "a1",
                       registre8_phenomene("incendie", "Depart de feu"),
                       date_saisie = "2026-08-18T10:00:00Z")
-  expect_equal(e$schema_version, "r8-1.0.0")
+  expect_equal(e$schema_version, SOMMIER_SCHEMA_VERSIONS[["8"]])
+  expect_match(e$schema_version, "^r8-")
   expect_true(sommier_verifier_chaine(sommier_chainer(list(e)))$valide)
 })

@@ -10,7 +10,8 @@ registre8_phenomene(
   surface_ha = NULL,
   volume_impacte_m3 = NULL,
   intensite = NULL,
-  observations = NULL
+  observations = NULL,
+  geometrie = NULL
 )
 }
 \arguments{
@@ -26,6 +27,10 @@ registre8_phenomene(
 (facultatif).}
 
 \item{observations}{Observations libres (facultatif).}
+
+\item{geometrie}{Emprise de l'objet, en WGS84 : voir \code{\link[=geom_polygone]{geom_polygone()}}.
+Facultative — un gestionnaire sans releve continue de saisir sans, et son
+sommier reste conforme.}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.

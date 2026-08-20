@@ -18,7 +18,8 @@ registre2_foncier(
   reference_acte = NULL,
   references_cadastrales = NULL,
   beneficiaire = NULL,
-  observations = NULL
+  observations = NULL,
+  geometrie = NULL
 )
 }
 \arguments{
@@ -48,6 +49,11 @@ elements (facultatif).}
 \item{beneficiaire}{Beneficiaire d'une servitude (facultatif).}
 
 \item{observations}{Observations libres (facultatif).}
+
+\item{geometrie}{Position ou trace, en WGS84 : une borne est un point (voir
+\code{\link[=geom_point]{geom_point()}}), une limite une ligne (voir \code{\link[=geom_ligne]{geom_ligne()}}).
+Facultative — un gestionnaire sans releve continue de saisir sans, et son
+sommier reste conforme.}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.

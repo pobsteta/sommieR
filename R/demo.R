@@ -62,6 +62,12 @@ SOMMIER_PARCELLES_COUCHEY <- data.frame(
 #' registres. Ils sont construits pour la demonstration, a une echelle
 #' coherente avec les 7,5 hectares des trois parcelles.
 #'
+#' Depuis la v0.7.0, treize ecritures portent une geometrie : voirie, bornage,
+#' emprises de phenomene, arbres et habitats remarquables. Les coordonnees sont
+#' posees dans l'emprise des trois parcelles et **inventees comme le reste** -
+#' elles servent a montrer ce que la carte sait faire, non a situer quoi que ce
+#' soit sur le terrain.
+#'
 #' Trois precautions le rendent visible plutot que de compter sur la memoire du
 #' lecteur : le nom de la foret porte la mention, le rapport engendre l'affiche
 #' en tete, et la fonction refuse de s'executer sur une base ou le jeu existe
@@ -157,7 +163,10 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
     "bornage", "Refection de la limite nord de la section A",
     heures_technicien = 9, nb_bornes = 6, cout_total_eur = 1480,
     charge_proprietaire_eur = 740, charge_riverains_eur = 740,
-    references_cadastrales = parcelles$geo_parcelle
+    references_cadastrales = parcelles$geo_parcelle,
+    geometrie = geom_ligne(rbind(
+      c(4.9500, 47.2720), c(4.9530, 47.2720), c(4.9560, 47.2720)
+    ))
   ), "2017-09-14")
 
   # Registre 3 - bail de chasse et affouage.
@@ -178,15 +187,22 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
   # Registre 4 - desserte.
   ecrire(4L, registre4_voirie(
     "Chemin de la section A", "empierree", longueur_m = 620,
-    largeur_chaussee_m = 3, usage = "exploitation", ouverte_public = FALSE
+    largeur_chaussee_m = 3, usage = "exploitation", ouverte_public = FALSE,
+    geometrie = geom_ligne(rbind(
+      c(4.9502, 47.2703), c(4.9522, 47.2705), c(4.9542, 47.2704)
+    ))
   ), "2016-06-01")
   ecrire(4L, registre4_voirie(
     "Piste de desserte est", "terrain_naturel", longueur_m = 340,
-    largeur_chaussee_m = 2.5, usage = "exploitation", ouverte_public = FALSE
+    largeur_chaussee_m = 2.5, usage = "exploitation", ouverte_public = FALSE,
+    geometrie = geom_ligne(rbind(
+      c(4.9545, 47.2703), c(4.9550, 47.2712), c(4.9552, 47.2718)
+    ))
   ), "2016-06-01")
   ecrire(4L, registre4_equipement(
     "equipement", "Place de depot", nom = "PD-01", capacite = 250,
-    unite = "m2", etat = "bon", date_controle = "2024-05-06"
+    unite = "m2", etat = "bon", date_controle = "2024-05-06",
+    geometrie = geom_point(4.9518, 47.2706)
   ), "2016-06-01")
 
   # Registre 5 - un martelage par exercice, plus un chablis.
@@ -249,11 +265,19 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
   # Registre 8 - phenomenes, chasse, equilibre foret-gibier.
   ecrire(8L, registre8_phenomene(
     "tempete", "Coup de vent du 17 fevrier", surface_ha = 0.8,
-    volume_impacte_m3 = 22, intensite = "moderee"
+    volume_impacte_m3 = 22, intensite = "moderee",
+    geometrie = geom_polygone(rbind(
+      c(4.9525, 47.2712), c(4.9535, 47.2712), c(4.9535, 47.2718),
+      c(4.9525, 47.2718)
+    ))
   ), "2022-02-17", unite = ug[["55"]])
   ecrire(8L, registre8_phenomene(
     "secheresse", "Deficit hydrique estival, roussissement des cimes",
-    surface_ha = 3.1
+    surface_ha = 3.1,
+    geometrie = geom_polygone(rbind(
+      c(4.9505, 47.2708), c(4.9555, 47.2708), c(4.9555, 47.2716),
+      c(4.9505, 47.2716)
+    ))
   ), "2020-08-10")
   for (annee in 2021:2024) {
     saison <- paste0(annee, "-", annee + 1L)
@@ -272,37 +296,47 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
   ecrire(9L, registre9_arbre(
     "Chene de la Justice", "CHS",
     "Age estime a 280 ans, port en candelabre, arbre limite historique",
-    circonference_cm = 486, hauteur_m = 26, etat_sanitaire = "bon"
+    circonference_cm = 486, hauteur_m = 26, etat_sanitaire = "bon",
+    geometrie = geom_point(4.9512, 47.2714)
   ), "2016-07-12", unite = ug[["54"]])
   ecrire(9L, registre9_arbre(
     "Chene de la Justice", "CHS",
     "Age estime a 280 ans, port en candelabre, arbre limite historique",
     circonference_cm = 502, hauteur_m = 26, etat_sanitaire = "moyen",
-    observations = "Descente de cime amorcee au nord"
+    observations = "Descente de cime amorcee au nord",
+    geometrie = geom_point(4.9512, 47.2714)
   ), "2024-07-09", unite = ug[["54"]])
   ecrire(9L, registre9_arbre(
     "Chandelle du talus est", "SAP", "Bois mort sur pied, cavites de pics",
-    circonference_cm = 210, etat_sanitaire = "mort"
+    circonference_cm = 210, etat_sanitaire = "mort",
+    geometrie = geom_point(4.9548, 47.2716)
   ), "2023-05-22", unite = ug[["56"]])
   # Vivant mais sous le seuil des tres gros bois : le jeu d'essai doit montrer
   # que le seuil separe reellement, et pas seulement qu'il s'applique.
   ecrire(9L, registre9_arbre(
     "Alisier de la lisiere sud", "ALT", "Essence rare sur le massif, port libre",
-    circonference_cm = 118, hauteur_m = 17, etat_sanitaire = "bon"
+    circonference_cm = 118, hauteur_m = 17, etat_sanitaire = "bon",
+    geometrie = geom_point(4.9531, 47.2702)
   ), "2022-09-15", unite = ug[["55"]])
   ecrire(9L, registre9_habitat(
     "Pelouse calcicole seche", surface_ha = 0.6, code_natura2000 = "6210",
-    etat_conservation = "favorable", localisation = "Rebord de plateau, A 56"
+    etat_conservation = "favorable", localisation = "Rebord de plateau, A 56",
+    geometrie = geom_polygone(rbind(
+      c(4.9543, 47.2707), c(4.9553, 47.2707), c(4.9553, 47.2711),
+      c(4.9543, 47.2711)
+    ))
   ), "2019-06-03", unite = ug[["56"]])
   ecrire(9L, registre9_espece(
     "Sabot de Venus", "Cypripedium calceolus",
     statut_protection = "Directive Habitats, annexe II", effectif = 12,
-    localisation = "Versant nord, A 56"
+    localisation = "Versant nord, A 56",
+    geometrie = geom_point(4.9546, 47.2718)
   ), "2021-05-28", unite = ug[["56"]])
   ecrire(9L, registre9_vestige(
     "Charbonniere de la section A", "Charbonniere",
     "Plateforme circulaire de 8 m, charbon de bois affleurant",
-    bibliographie = "Inventaire archeologique de la Cote 2018"
+    bibliographie = "Inventaire archeologique de la Cote 2018",
+    geometrie = geom_point(4.9508, 47.2709)
   ), "2018-10-04", unite = ug[["54"]])
 
   # Registre 1 - visas annuels de tenue du sommier.

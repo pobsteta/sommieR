@@ -36,6 +36,11 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 #' @param format `"html"` ou `"pdf"`.
 #' @param debut,fin Bornes de la periode (voir [sommier_gestion_anterieure()]).
 #' @param referentiel L'un de [SOMMIER_REFERENTIELS].
+#' @param fond Fond cadastral a poser sous les cartes, tel que le rend
+#'   [sommier_fond_lire()] ; `NULL` pour s'en passer. Il se fournit et ne se
+#'   telecharge pas : le rendu ne doit declencher aucun appel reseau, sans
+#'   quoi un rapport cesserait d'etre editable hors ligne - et le meme rapport
+#'   rejoue plus tard changerait de fond sans le dire.
 #' @param quarto Chemin de l'executable Quarto.
 #'
 #' @return Invisiblement, le chemin du document produit.
@@ -49,7 +54,7 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 #' @export
 sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
                                    debut = NULL, fin = NULL,
-                                   referentiel = "psg",
+                                   referentiel = "psg", fond = NULL,
                                    quarto = Sys.which("quarto")) {
   format <- valider_choix(format, "format", SOMMIER_FORMATS_QUARTO)
   chemin <- valider_texte(chemin, "chemin")
@@ -72,6 +77,11 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
     carte           = essayer_section(sommier_couche_ug(
       con, foret_id, debut = debut, fin = fin
     )),
+    # Sans bornes : le patrimoine remarquable et la desserte sont des etats
+    # courants, et un phenomene anterieur a la periode explique souvent ce
+    # qu'on y lit.
+    objets          = essayer_section(sommier_objets_localises(con, foret_id)),
+    fond            = fond,
     ibp             = essayer_section(sommier_elements_ibp(con, foret_id)),
     densite_voirie  = essayer_section(sommier_densite_voirie(con, foret_id)),
     version_sommier = as.character(utils::packageVersion("sommieR")),

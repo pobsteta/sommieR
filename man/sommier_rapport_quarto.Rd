@@ -12,6 +12,7 @@ sommier_rapport_quarto(
   debut = NULL,
   fin = NULL,
   referentiel = "psg",
+  fond = NULL,
   quarto = Sys.which("quarto")
 )
 }
@@ -28,6 +29,12 @@ sommier_rapport_quarto(
 \item{debut, fin}{Bornes de la periode (voir \code{\link[=sommier_gestion_anterieure]{sommier_gestion_anterieure()}}).}
 
 \item{referentiel}{L'un de \link{SOMMIER_REFERENTIELS}.}
+
+\item{fond}{Fond cadastral a poser sous les cartes, tel que le rend
+\code{\link[=sommier_fond_lire]{sommier_fond_lire()}} ; \code{NULL} pour s'en passer. Il se fournit et ne se
+telecharge pas : le rendu ne doit declencher aucun appel reseau, sans
+quoi un rapport cesserait d'etre editable hors ligne - et le meme rapport
+rejoue plus tard changerait de fond sans le dire.}
 
 \item{quarto}{Chemin de l'executable Quarto.}
 }

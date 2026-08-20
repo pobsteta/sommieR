@@ -505,3 +505,45 @@ FROM v_remarquable r
 ORDER BY r.foret_id, r.type_fiche,
          COALESCE(r.appellation, r.nom_latin, r.type_habitat),
          r.date_evenement DESC, r.seq DESC;
+
+-- ---------------------------------------------------------------------
+-- Objets localises (colonne `geom`, posee par 003_geometrie.sql)
+-- ---------------------------------------------------------------------
+
+-- Les objets localises, tous registres confondus : ce que le sommier sait
+-- placer sur une carte.
+CREATE OR REPLACE VIEW v_objet_localise AS
+SELECT
+  e.id,
+  e.foret_id,
+  e.ug_uuid,
+  e.registre,
+  e.seq,
+  e.date_evenement,
+  e.auteur,
+  e.ndp,
+  coalesce(
+    e.payload ->> 'appellation',
+    e.payload ->> 'nom',
+    e.payload ->> 'nom_francais',
+    e.payload ->> 'type_habitat',
+    e.payload ->> 'nature',
+    e.payload ->> 'nature_coupe',
+    e.payload ->> 'description',
+    e.payload ->> 'type_entree'
+  )                                        AS designation,
+  coalesce(
+    e.payload ->> 'type_fiche',
+    e.payload ->> 'type_entree'
+  )                                        AS type_objet,
+  ST_GeometryType(e.geom)                  AS type_geometrie,
+  e.geom
+FROM v_entree_courante e
+WHERE e.geom IS NOT NULL;
+
+COMMENT ON VIEW v_objet_localise IS
+  'Entrees portant une geometrie, tous registres confondus. `designation` '
+  'prend le premier libelle disponible : les registres ne nomment pas '
+  'leurs objets de la meme facon, une carte les nomme toutes pareil. Le '
+  'repli final sur type_entree evite l''objet sans nom : un trait sans '
+  'etiquette sur une carte est pire qu''un nom approximatif.';

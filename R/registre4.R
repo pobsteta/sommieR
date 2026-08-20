@@ -39,6 +39,10 @@ SOMMIER_TYPES_INFRASTRUCTURE <- c("voirie", "equipement", "ouvrage_dfci")
 #' @param date_structure Date de realisation de la structure (facultatif).
 #' @param observations Observations libres (facultatif).
 #'
+#' @param geometrie Trace de l'objet, en WGS84 : voir [geom_ligne()].
+#'   Facultative — un gestionnaire sans releve continue de saisir sans, et son
+#'   sommier reste conforme.
+#'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
 #' @examples
@@ -58,7 +62,8 @@ registre4_voirie <- function(nom,
                              voirie_publique = FALSE,
                              structure_chaussee = NULL,
                              date_structure = NULL,
-                             observations = NULL) {
+                             observations = NULL,
+                             geometrie = NULL) {
   compacter(list(
     type_entree        = "voirie",
     nom                = valider_texte(nom, "nom"),
@@ -74,6 +79,7 @@ registre4_voirie <- function(nom,
                                     "structure_chaussee"),
     date_structure     = if (est_vide(date_structure)) NULL else
       format_date(date_structure, "date_structure"),
+    geometrie        = geometrie_si_presente(geometrie, "LineString"),
     observations       = si_present(observations, valider_texte, "observations")
   ))
 }
@@ -101,6 +107,10 @@ registre4_voirie <- function(nom,
 #' @param date_controle Date du dernier controle (facultatif).
 #' @param observations Observations libres (facultatif).
 #'
+#' @param geometrie Position de l'objet, en WGS84 : voir [geom_point()].
+#'   Facultative — un gestionnaire sans releve continue de saisir sans, et son
+#'   sommier reste conforme.
+#'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
 #' @examples
@@ -117,7 +127,8 @@ registre4_equipement <- function(type_entree,
                                  unite = NULL,
                                  etat = NULL,
                                  date_controle = NULL,
-                                 observations = NULL) {
+                                 observations = NULL,
+                                 geometrie = NULL) {
   type_entree <- valider_choix(type_entree, "type_entree",
                                c("equipement", "ouvrage_dfci"))
   if (!est_vide(capacite) && est_vide(unite)) {
@@ -134,6 +145,7 @@ registre4_equipement <- function(type_entree,
                                choix = c("bon", "moyen", "degrade", "hors_service")),
     date_controle = if (est_vide(date_controle)) NULL else
       format_date(date_controle, "date_controle"),
+    geometrie        = geometrie_si_presente(geometrie, "Point"),
     observations  = si_present(observations, valider_texte, "observations")
   ))
 }

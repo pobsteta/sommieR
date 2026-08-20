@@ -145,6 +145,7 @@ reference:
     - SOMMIER_REFERENTIELS
     - sommier_exporter_sig
     - SOMMIER_FORMATS_SIG
+    - SOMMIER_COUCHES_SIG
     - sommier_rapport_quarto
     - SOMMIER_FORMATS_QUARTO
   - title: "Cartographie"
@@ -155,6 +156,27 @@ reference:
     - sommier_couche_ug
     - sommier_geometrie_ug
     - sommier_indicateurs_ug
+    - sommier_objets_localises
+
+  - title: "Fond cadastral"
+    desc: >
+      Le décor des cartes, et rien de plus : donnée tierce, datée et sourcée,
+      qui n'entre ni dans un registre ni dans une empreinte.
+    contents:
+    - sommier_fond_cadastral
+    - sommier_fond_lire
+    - SOMMIER_COUCHES_CADASTRE
+
+  - title: "Géométrie des payloads"
+    desc: >
+      La géométrie est dans le payload, donc dans l'empreinte : le contour
+      d'une coupe est aussi opposable que son volume. En WGS84, comme
+      l'exige la RFC 7946.
+    contents:
+    - geometries
+    - SOMMIER_TYPES_GEOMETRIE
+    - SOMMIER_DECIMALES_COORD
+    - valider_geometrie
 
   - title: "Visa signé et horodatage"
     desc: >

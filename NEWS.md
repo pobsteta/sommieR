@@ -1,3 +1,80 @@
+# sommieR 0.7.0
+
+Les lots 2 et 3 des briefs de cartographie. La géométrie entre dans les
+payloads — donc dans l'empreinte — et le cadastre prend sa place de décor.
+
+## La géométrie est un constat, pas un attribut d'affichage
+
+* Dix constructeurs de payload acceptent une `geometrie` : registres 2
+  (bornes, limites), 4 (voirie, équipements), 5 (emprises de coupe), 8
+  (phénomènes) et 9 (patrimoine remarquable). Elle se construit avec
+  `geom_point()`, `geom_ligne()` ou `geom_polygone()`.
+* **Elle est dans le payload, donc dans la chaîne.** Le contour d'une coupe
+  devient aussi opposable que son volume, la position d'une borne aussi
+  opposable que la date de son implantation. C'est tout l'objet du lot : la
+  géométrie n'est pas rangée à côté du registre, elle est dedans.
+* **WGS84 sans exception**, comme l'exige la RFC 7946 : un payload doit
+  s'interpréter sans contexte extérieur. Des coordonnées projetées passées
+  telles quelles sont refusées à la saisie, avec la mention du cas le plus
+  probable — du Lambert-93 pris pour des degrés.
+* **Arrondi à sept décimales**, soit le centimètre. Aucun instrument de
+  terrain ne fait mieux, et deux saisies du même point doivent produire les
+  mêmes octets sans quoi le chaînage cesse d'être reproductible. Arrondir
+  n'est pas simplifier : aucun sommet n'est retiré.
+* La géométrie reste **facultative**. Un gestionnaire sans relevé continue de
+  saisir sans, et son sommier reste conforme ; la rendre obligatoire fermerait
+  le registre à ceux qu'il doit servir.
+* Le type est contraint par la nature de l'objet : un arbre est un point, une
+  voirie une ligne, un habitat un polygone. Accepter n'importe quoi ferait de
+  la vérification une politesse.
+
+## Premier changement de schéma du projet
+
+* `003_geometrie.sql` ajoute à `entree_sommier` une colonne `geom` **dérivée**
+  du payload, posée par déclencheur et reprojetée en Lambert-93, avec son
+  index GIST. Le calcul appartient à la base et non à l'application : une
+  entrée écrite par un autre client doit porter la même géométrie dérivée.
+* La colonne est **hors empreinte** et entièrement reconstructible. Si elle
+  diverge du payload, c'est le payload qui fait foi — la colonne se
+  reconstruit, l'empreinte non.
+* Les registres 2, 4, 5, 8 et 9 passent en version de schéma `1.1.0`. Les
+  entrées antérieures gardent la leur et restent valides : le registre est
+  append-only, un changement de schéma ne se rétrofitte pas.
+* `v_objet_localise` rassemble les entrées localisées, tous registres
+  confondus. `sommier_objets_localises()` les lit ; `sommier_exporter_sig()`
+  gagne une couche `objets`.
+
+## Le cadastre est un décor, jamais une écriture
+
+* `sommier_fond_cadastral()` télécharge et met en cache une couche communale ;
+  `sommier_fond_lire()` la restreint à l'emprise de la forêt.
+* **Rien n'entre dans le registre** : ni entrée, ni empreinte, ni manifeste.
+  Verser le cadastre dans le sommier ferait passer la donnée d'un tiers pour
+  un constat du gestionnaire.
+* **Rien ne se télécharge tout seul** : `sommier_rapport_quarto()` reçoit le
+  fond en argument. Un document de gestion doit pouvoir s'engendrer hors
+  ligne, et le même rapport rejoué plus tard ne doit pas changer de fond sans
+  le dire. Le millésime est conservé avec le fichier et affiché sous la carte.
+* **Ce que ces livraisons ne portent pas.** Vérification faite avant d'écrire
+  une ligne : le GeoJSON communal expose parcelles, sections, bâtiments et
+  lieux-dits — ni bornes ni fossés. Ceux-là sont dans la forme EDIGEO du Plan
+  Cadastral Informatisé, publiée sur le même site sous `dgfip-pci-vecteur`,
+  par feuille et dans un format demandant le pilote EDIGEO de GDAL : hors de
+  portée de ce paquet aujourd'hui, non hors d'atteinte. Et de toute façon, une
+  borne relevée par la DGFiP reste la donnée d'un tiers — ce qui fait foi,
+  c'est le constat du gestionnaire, registres 2 et 4, chaîné avec le reste.
+
+## Cartes et démonstration
+
+* Le rapport gagne trois cartes d'objets : emprises des phénomènes (chapitre
+  4), patrimoine remarquable localisé (7), voirie et limites (8). Les emprises
+  sont translucides — une sécheresse englobe le chablis qu'elle a précédé, et
+  un aplat opaque en cacherait une.
+* Un sujet revisité n'est dessiné qu'une fois, à son dernier relevé : la
+  chaîne garde tout, la carte montre l'état.
+* Le jeu de démonstration porte treize écritures localisées. Les coordonnées
+  sont inventées comme le reste des écritures.
+
 # sommieR 0.6.0
 
 Le rapport de gestion antérieure était entièrement tabulaire, alors que le

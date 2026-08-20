@@ -32,6 +32,10 @@ SOMMIER_TYPES_REMARQUABLE <- c("arbre", "peuplement", "vestige", "espece",
 #'   meme un facteur de l'IBP.
 #' @param observations Observations libres (facultatif).
 #'
+#' @param geometrie Position de l'objet, en WGS84 : voir [geom_point()].
+#'   Facultative — un gestionnaire sans releve continue de saisir sans, et son
+#'   sommier reste conforme.
+#'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
 #' @examples
@@ -49,7 +53,8 @@ registre9_arbre <- function(appellation,
                             circonference_cm = NULL,
                             hauteur_m = NULL,
                             etat_sanitaire = NULL,
-                            observations = NULL) {
+                            observations = NULL,
+                            geometrie = NULL) {
   compacter(list(
     type_fiche       = "arbre",
     appellation      = valider_texte(appellation, "appellation"),
@@ -61,6 +66,7 @@ registre9_arbre <- function(appellation,
     hauteur_m        = si_present(hauteur_m, valider_nombre, "hauteur_m", min = 0),
     etat_sanitaire   = si_present(etat_sanitaire, valider_choix, "etat_sanitaire",
                                   choix = SOMMIER_ETATS_SANITAIRES),
+    geometrie        = geometrie_si_presente(geometrie, "Point"),
     observations     = si_present(observations, valider_texte, "observations")
   ))
 }
@@ -79,6 +85,10 @@ SOMMIER_ETATS_SANITAIRES <- c("bon", "moyen", "degrade", "deperissant", "mort")
 #'   du releve (facultatif).
 #' @param observations Observations libres (facultatif).
 #'
+#' @param geometrie Emprise de l'objet, en WGS84 : voir [geom_polygone()].
+#'   Facultative — un gestionnaire sans releve continue de saisir sans, et son
+#'   sommier reste conforme.
+#'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
 #' @examples
@@ -96,7 +106,8 @@ registre9_peuplement <- function(appellation,
                                  surface_ha = NULL,
                                  hauteur_dominante_m = NULL,
                                  surface_terriere_m2ha = NULL,
-                                 observations = NULL) {
+                                 observations = NULL,
+                                 geometrie = NULL) {
   if (!est_vide(composition)) {
     if (!is.list(composition) || is.null(names(composition)) ||
         any(!nzchar(names(composition)))) {
@@ -123,6 +134,7 @@ registre9_peuplement <- function(appellation,
                                        "hauteur_dominante_m", min = 0),
     surface_terriere_m2ha = si_present(surface_terriere_m2ha, valider_nombre,
                                        "surface_terriere_m2ha", min = 0),
+    geometrie        = geometrie_si_presente(geometrie, "Polygon"),
     observations          = si_present(observations, valider_texte, "observations")
   ))
 }
@@ -138,6 +150,10 @@ registre9_peuplement <- function(appellation,
 #' @param bibliographie References bibliographiques (facultatif).
 #' @param observations Observations libres (facultatif).
 #'
+#' @param geometrie Position de l'objet, en WGS84 : voir [geom_point()].
+#'   Facultative — un gestionnaire sans releve continue de saisir sans, et son
+#'   sommier reste conforme.
+#'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #' @export
 registre9_vestige <- function(appellation,
@@ -145,7 +161,8 @@ registre9_vestige <- function(appellation,
                               remarques,
                               travaux_effectues = NULL,
                               bibliographie = NULL,
-                              observations = NULL) {
+                              observations = NULL,
+                              geometrie = NULL) {
   compacter(list(
     type_fiche        = "vestige",
     appellation       = valider_texte(appellation, "appellation"),
@@ -154,6 +171,7 @@ registre9_vestige <- function(appellation,
     travaux_effectues = si_present(travaux_effectues, valider_texte,
                                    "travaux_effectues"),
     bibliographie     = valider_liste_texte(bibliographie, "bibliographie"),
+    geometrie        = geometrie_si_presente(geometrie, "Point"),
     observations      = si_present(observations, valider_texte, "observations")
   ))
 }
@@ -168,6 +186,10 @@ registre9_vestige <- function(appellation,
 #' @param localisation Localisation en clair (facultatif).
 #' @param bibliographie References bibliographiques (facultatif).
 #' @param observations Observations libres (facultatif).
+#'
+#' @param geometrie Position de l'objet, en WGS84 : voir [geom_point()].
+#'   Facultative — un gestionnaire sans releve continue de saisir sans, et son
+#'   sommier reste conforme.
 #'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
@@ -184,7 +206,8 @@ registre9_espece <- function(nom_francais,
                              effectif = NULL,
                              localisation = NULL,
                              bibliographie = NULL,
-                             observations = NULL) {
+                             observations = NULL,
+                             geometrie = NULL) {
   compacter(list(
     type_fiche        = "espece",
     nom_francais      = valider_texte(nom_francais, "nom_francais"),
@@ -194,6 +217,7 @@ registre9_espece <- function(nom_francais,
     effectif          = si_present(effectif, valider_entier, "effectif", min = 0),
     localisation      = si_present(localisation, valider_texte, "localisation"),
     bibliographie     = valider_liste_texte(bibliographie, "bibliographie"),
+    geometrie        = geometrie_si_presente(geometrie, "Point"),
     observations      = si_present(observations, valider_texte, "observations")
   ))
 }
@@ -208,6 +232,10 @@ registre9_espece <- function(nom_francais,
 #' @param localisation Localisation en clair (facultatif).
 #' @param observations Observations libres (facultatif).
 #'
+#' @param geometrie Emprise de l'objet, en WGS84 : voir [geom_polygone()].
+#'   Facultative — un gestionnaire sans releve continue de saisir sans, et son
+#'   sommier reste conforme.
+#'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #' @export
 registre9_habitat <- function(type_habitat,
@@ -215,7 +243,8 @@ registre9_habitat <- function(type_habitat,
                               code_natura2000 = NULL,
                               etat_conservation = NULL,
                               localisation = NULL,
-                              observations = NULL) {
+                              observations = NULL,
+                              geometrie = NULL) {
   compacter(list(
     type_fiche        = "habitat",
     type_habitat      = valider_texte(type_habitat, "type_habitat"),
@@ -226,6 +255,7 @@ registre9_habitat <- function(type_habitat,
                                    "etat_conservation",
                                    choix = c("favorable", "degrade", "defavorable")),
     localisation      = si_present(localisation, valider_texte, "localisation"),
+    geometrie        = geometrie_si_presente(geometrie, "Polygon"),
     observations      = si_present(observations, valider_texte, "observations")
   ))
 }

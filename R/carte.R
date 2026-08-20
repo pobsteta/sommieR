@@ -187,3 +187,66 @@ sommier_couche_ug <- function(con, foret_id, debut = NULL, fin = NULL,
   attr(couche, "unites_sans_geometrie") <- sans
   couche
 }
+
+#' Objets localises du sommier
+#'
+#' @description
+#' Rend les entrees qui portent une geometrie, tous registres confondus, en
+#' WKT et en Lambert-93.
+#'
+#' @details
+#' La geometrie qui fait foi est celle du payload, en WGS84 et chainee avec
+#' l'entree ; celle rendue ici est sa projection Lambert-93, posee par
+#' declencheur a l'ecriture. C'est elle qu'on cartographie, parce qu'une carte
+#' se mesure en metres — mais c'est le payload qu'on verifie.
+#'
+#' Les entrees rectifiees ne remontent pas : la vue s'adosse a
+#' `v_entree_courante`. Une borne deplacee apres coup montre sa position
+#' actuelle, l'ancienne restant dans la chaine sans encombrer la carte.
+#'
+#' @param con Connexion DBI.
+#' @param foret_id UUID de la foret.
+#' @param registres Registres a retenir (defaut : tous).
+#' @param debut,fin Bornes de la periode (`NULL` : sans borne). Le patrimoine
+#'   remarquable se consulte sans bornes - c'est un etat courant.
+#'
+#' @return Un `data.frame` : `id`, `registre`, `date_evenement`,
+#'   `designation`, `type_objet`, `type_geometrie`, `wkt`.
+#'
+#' @examples
+#' # Necessite une connexion :
+#' # sommier_objets_localises(con, foret, registres = 9L)
+#'
+#' @export
+sommier_objets_localises <- function(con, foret_id, registres = NULL,
+                                     debut = NULL, fin = NULL) {
+  foret_id <- valider_uuid(foret_id, "foret_id")
+  debut <- if (est_vide(debut)) "0001-01-01" else format_date(debut, "debut")
+  fin <- if (est_vide(fin)) "9999-12-31" else format_date(fin, "fin")
+  if (fin < debut) {
+    stop("`fin` (", fin, ") precede `debut` (", debut, ").", call. = FALSE)
+  }
+  filtre <- ""
+  params <- list(foret_id, debut, fin)
+  if (!est_vide(registres)) {
+    registres <- vapply(registres, function(r) {
+      valider_entier(r, "registres", min = 1, max = 9)
+    }, numeric(1))
+    filtre <- paste0(" AND registre IN (",
+                     paste(sprintf("$%d", seq_along(registres) + 3L),
+                           collapse = ", "), ")")
+    params <- c(params, as.list(as.integer(registres)))
+  }
+
+  DBI::dbGetQuery(
+    con,
+    paste0(
+      "SELECT id, registre, date_evenement, designation, type_objet,
+              type_geometrie, ST_AsText(geom) AS wkt
+         FROM v_objet_localise
+        WHERE foret_id = $1
+          AND date_evenement BETWEEN $2::date AND $3::date", filtre,
+      " ORDER BY registre, date_evenement, designation"),
+    params = parametres(params)
+  )
+}

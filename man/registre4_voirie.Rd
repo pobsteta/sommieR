@@ -14,7 +14,8 @@ registre4_voirie(
   voirie_publique = FALSE,
   structure_chaussee = NULL,
   date_structure = NULL,
-  observations = NULL
+  observations = NULL,
+  geometrie = NULL
 )
 }
 \arguments{
@@ -39,6 +40,10 @@ et seule la voirie privee entre dans la densite.}
 \item{date_structure}{Date de realisation de la structure (facultatif).}
 
 \item{observations}{Observations libres (facultatif).}
+
+\item{geometrie}{Trace de l'objet, en WGS84 : voir \code{\link[=geom_ligne]{geom_ligne()}}.
+Facultative — un gestionnaire sans releve continue de saisir sans, et son
+sommier reste conforme.}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.

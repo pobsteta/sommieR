@@ -58,6 +58,32 @@ contours <- if (cartographiable) {
   sf::st_as_sfc(carte$wkt, crs = 2154)
 }
 
+# Fond cadastral : un décor, jamais une écriture. Il est fourni par l'appelant
+# et non téléchargé ici — le rendu ne doit dépendre d'aucun réseau.
+fond <- rapport$fond
+fond_pose <- !is.null(fond) && nrow(fond) > 0L && cartographiable
+parcelles_fond <- if (fond_pose) sf::st_as_sfc(fond$wkt, crs = 2154)
+
+dessiner_fond <- function() {
+  if (!fond_pose) return(invisible(NULL))
+  plot(parcelles_fond, add = TRUE, col = NA, border = "#BDBDBD", lwd = 0.6)
+  invisible(NULL)
+}
+
+mention_fond <- function() {
+  if (!fond_pose) return(invisible(NULL))
+  millesime <- attr(fond, "millesime")
+  # « Surimpression » et non « fond » : les traits sont dessinés par-dessus les
+  # unités, faute de quoi leur aplat les masquerait. Le mot dit ce que l'œil
+  # voit.
+  cat("*Parcellaire cadastral en surimpression, ",
+      if (is.null(millesime) || is.na(millesime)) "millésime inconnu"
+      else paste("millésime", millesime),
+      ", ", attr(fond, "source") %||% "source non renseignée",
+      ". Donnée tierce, hors registre et hors chaîne.*\n\n", sep = "")
+  invisible(NULL)
+}
+
 # Choroplèthe à classes explicites : une carte teintée sans légende chiffrée
 # n'est qu'une impression. Les unités à valeur nulle se teignent quand même —
 # une unité où rien n'a été fait n'est pas une unité inconnue.
@@ -95,6 +121,7 @@ dessiner <- function(valeur = NULL, etiquettes = NULL, legende = NULL,
   op <- par(mar = c(0, 0, 0, if (is.null(echelle$palette)) 0 else 7))
   on.exit(par(op), add = TRUE)
   plot(contours, col = echelle$couleurs, border = "grey30")
+  dessiner_fond()
   if (!is.null(etiquettes)) {
     centres <- sf::st_coordinates(sf::st_point_on_surface(contours))
     text(centres, labels = etiquettes, cex = 0.7)
@@ -107,6 +134,52 @@ dessiner <- function(valeur = NULL, etiquettes = NULL, legende = NULL,
                            echelle$bornes[seq_len(n) + 1L], " ", unite))
   }
   invisible(NULL)
+}
+
+# Objets localisés : ce que les registres savent placer eux-mêmes, depuis que
+# la géométrie est entrée dans les payloads. Ils se dessinent par-dessus le
+# parcellaire, qui leur sert de repère.
+objets <- rapport$objets
+objets_de <- function(registres) {
+  if (is.null(objets) || nrow(objets) == 0L) return(NULL)
+  jeu <- objets[objets$registre %in% registres, , drop = FALSE]
+  if (nrow(jeu) == 0L) return(NULL)
+  # Un sujet revisité a plusieurs entrées : le Chêne de la Justice est relevé
+  # en 2016 puis en 2024. Les dessiner toutes superposerait le même point et
+  # son étiquette. La carte montre donc le dernier relevé de chaque sujet,
+  # comme le tableau du patrimoine ; la chaîne, elle, garde tout.
+  jeu <- jeu[order(jeu$date_evenement), , drop = FALSE]
+  jeu[!duplicated(jeu$designation, fromLast = TRUE), , drop = FALSE]
+}
+
+dessiner_objets <- function(registres, legende = NULL, etiqueter = TRUE) {
+  jeu <- objets_de(registres)
+  if (!cartographiable || is.null(jeu)) return(invisible(NULL))
+  formes <- sf::st_as_sfc(jeu$wkt, crs = 2154)
+  op <- par(mar = c(0, 0, 0, 0))
+  on.exit(par(op), add = TRUE)
+  # Le parcellaire d'abord, en fond : un point sans son cadre ne se situe pas.
+  plot(contours, col = "#F5F5F5", border = "grey70",
+       xlim = etendue(formes, 1L), ylim = etendue(formes, 2L))
+  # Les emprises se recouvrent — une sécheresse englobe le chablis qu'elle a
+  # précédé. Un aplat opaque en cacherait une : elles sont donc translucides,
+  # les points et les tracés restant pleins.
+  emprise <- grepl("Polygon", jeu$type_geometrie, fixed = TRUE)
+  plot(formes, add = TRUE, lwd = 2, pch = 19, cex = 1.1,
+       col = ifelse(emprise, "#2E7D3255", "#2E7D32"), border = "#2E7D32")
+  if (etiqueter) {
+    ancres <- sf::st_coordinates(sf::st_point_on_surface(formes))
+    text(ancres[, 1L], ancres[, 2L], labels = jeu$designation, cex = 0.62,
+         pos = 3, offset = 0.5)
+  }
+  invisible(NULL)
+}
+
+# L'étendue retenue est celle du parcellaire, élargie s'il le faut aux objets :
+# un objet hors du contour connu doit rester visible plutôt que d'être coupé.
+etendue <- function(formes, axe) {
+  boites <- rbind(sf::st_bbox(contours), sf::st_bbox(formes))
+  c(min(boites[, axe]), max(boites[, axe + 2L]))
 }
 
 # Ce que les cartes omettent se dit sous la première d'entre elles : une forêt
@@ -155,6 +228,10 @@ mention_carte()
 ```{r carte-identification, fig.height=3.6, fig.width=7, fig.cap="Unités de gestion en vigueur à la fin de la période, avec leur surface."}
 dessiner(etiquettes = paste0(carte$numero_affichage, "\n",
                              carte$surface_ha, " ha"))
+```
+
+```{r carte-identification-fond, results='asis'}
+mention_fond()
 ```
 
 ### Intégrité du registre
@@ -243,6 +320,10 @@ une valeur supérieure signale une observation issue de la télédétection.
 tableau("evenements", "Phénomènes intéressant la vie de la forêt")
 ```
 
+```{r carte-evenements, fig.height=3.6, fig.width=7, fig.cap="Emprises des phénomènes constatés. Seuls ceux dont le relevé a été porté au registre y figurent."}
+dessiner_objets(8L)
+```
+
 ```{r finances, results='asis', eval=!is.null(sections$finances)}
 cat("## Bilan financier {#sec-finances}\n\n")
 cat("Imprimé A50G. Le solde est la différence entre recettes et dépenses ",
@@ -256,6 +337,10 @@ cat("Obligatoire dans les plans simples de gestion depuis la loi d'avenir ",
     "pour l'agriculture, l'alimentation et la forêt du 13 octobre 2014.\n\n",
     sep = "")
 tableau("equilibre_gibier", "Constats d'équilibre forêt-gibier")
+```
+
+```{r carte-patrimoine, fig.height=3.6, fig.width=7, fig.cap="Patrimoine remarquable localisé : arbres, vestiges, espèces, habitats.", eval=!is.null(sections$patrimoine)}
+dessiner_objets(9L)
 ```
 
 ```{r patrimoine, results='asis', eval=!is.null(sections$patrimoine)}
@@ -284,6 +369,10 @@ cat("Imprimé A50D. Seule la voirie privée forestière entre dans la densité :
 print(knitr::kable(rapport$densite_voirie,
                    caption = "Longueurs et densités de voirie"))
 cat("\n\n")
+```
+
+```{r carte-desserte, fig.height=3.6, fig.width=7, fig.cap="Voirie et équipements portés au registre 4, et limites relevées au registre 2.", eval=!is.null(rapport$densite_voirie)}
+dessiner_objets(c(2L, 4L))
 ```
 
 ## Vérifier ce document

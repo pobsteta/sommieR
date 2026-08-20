@@ -12,7 +12,8 @@ registre9_peuplement(
   surface_ha = NULL,
   hauteur_dominante_m = NULL,
   surface_terriere_m2ha = NULL,
-  observations = NULL
+  observations = NULL,
+  geometrie = NULL
 )
 }
 \arguments{
@@ -27,6 +28,10 @@ les valeurs somment a 10 (facultatif).}
 du releve (facultatif).}
 
 \item{observations}{Observations libres (facultatif).}
+
+\item{geometrie}{Emprise de l'objet, en WGS84 : voir \code{\link[=geom_polygone]{geom_polygone()}}.
+Facultative — un gestionnaire sans releve continue de saisir sans, et son
+sommier reste conforme.}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.
