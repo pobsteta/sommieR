@@ -46,17 +46,28 @@ SOMMIER_FORMATS_SIG <- c("geojson", "gpkg")
 #' @param chemin Fichier de destination.
 #' @param format L'un de [SOMMIER_FORMATS_SIG].
 #' @param a_la_date Date de reference pour la version de geometrie et
-#'   l'activite des unites (defaut : aujourd'hui).
+#'   l'activite des unites (defaut : aujourd'hui). Sans effet sur la couche
+#'   des objets, dont chaque geometrie est datee par son entree.
+#' @param couche `"unites"` (defaut) pour les unites de gestion, `"objets"`
+#'   pour les entrees portant une geometrie - bornes, voirie, arbres
+#'   remarquables, emprises. Deux couches et non une : elles n'ont ni la meme
+#'   geometrie ni la meme table d'attributs, et les fondre obligerait a vider
+#'   la moitie des colonnes de chaque entite.
 #'
 #' @return Invisiblement, une liste : `chemin`, `n_unites`,
 #'   `unites_sans_geometrie` (leurs numeros d'affichage).
 #'
 #' @export
 sommier_exporter_sig <- function(con, foret_id, chemin, format = "geojson",
-                                 a_la_date = Sys.Date()) {
+                                 a_la_date = Sys.Date(), couche = "unites") {
   foret_id <- valider_uuid(foret_id, "foret_id")
   format <- valider_choix(format, "format", SOMMIER_FORMATS_SIG)
+  couche <- valider_choix(couche, "couche", SOMMIER_COUCHES_SIG)
   a_la_date <- format_date(a_la_date, "a_la_date")
+
+  if (identical(couche, "objets")) {
+    return(exporter_objets(con, foret_id, chemin, format))
+  }
 
   unites <- DBI::dbGetQuery(
     con,
@@ -143,4 +154,75 @@ ecrire_geopackage <- function(unites, chemin) {
   sf::st_write(couche, chemin, layer = "unites_de_gestion",
                delete_dsn = TRUE, quiet = TRUE)
   invisible(chemin)
+}
+
+#' Couches d'export cartographique
+#'
+#' @description
+#' `unites` exporte le parcellaire de gestion, `objets` ce que les registres
+#' localisent : bornes, voirie, arbres remarquables, emprises de coupe ou de
+#' phenomene.
+#'
+#' @export
+SOMMIER_COUCHES_SIG <- c("unites", "objets")
+
+# La couche des objets se construit depuis la geometrie derivee, en
+# Lambert-93 ; l'export GeoJSON la reprojette comme celui des unites, pour la
+# meme raison : la RFC 7946 impose le WGS84 et le format ne declare rien.
+exporter_objets <- function(con, foret_id, chemin, format) {
+  objets <- sommier_objets_localises(con, foret_id)
+  if (nrow(objets) == 0L) {
+    stop("Aucune entree localisee dans cette foret : rien a exporter. La ",
+         "geometrie est facultative dans les payloads, un sommier peut donc ",
+         "etre complet et sans objet cartographiable.", call. = FALSE)
+  }
+
+  if (identical(format, "geojson")) {
+    entites <- lapply(seq_len(nrow(objets)), function(i) {
+      geometrie <- DBI::dbGetQuery(
+        con,
+        "SELECT ST_AsGeoJSON(ST_Transform(geom, 4326)) AS g
+           FROM entree_sommier WHERE id = $1",
+        params = parametres(list(objets$id[[i]]))
+      )$g[[1L]]
+      list(
+        type = "Feature",
+        properties = list(
+          id = objets$id[[i]],
+          registre = as.integer(objets$registre[[i]]),
+          date_evenement = as.character(objets$date_evenement[[i]]),
+          designation = objets$designation[[i]],
+          type_objet = objets$type_objet[[i]]
+        ),
+        geometry = structure(geometrie, class = "json")
+      )
+    })
+    writeLines(
+      jsonlite::toJSON(
+        list(type = "FeatureCollection", name = "objets_localises",
+             features = entites),
+        auto_unbox = TRUE, null = "null", na = "null",
+        json_verbatim = TRUE, pretty = TRUE
+      ),
+      chemin, useBytes = TRUE
+    )
+  } else {
+    if (!requireNamespace("sf", quietly = TRUE)) {
+      stop("Le paquet `sf` est requis pour ecrire un GeoPackage ; l'installer, ",
+           "ou choisir format = \"geojson\".", call. = FALSE)
+    }
+    couche <- sf::st_sf(
+      id = objets$id,
+      registre = as.integer(objets$registre),
+      date_evenement = as.character(objets$date_evenement),
+      designation = objets$designation,
+      type_objet = objets$type_objet,
+      geometry = sf::st_as_sfc(objets$wkt, crs = 2154)
+    )
+    sf::st_write(couche, chemin, layer = "objets_localises",
+                 delete_dsn = TRUE, quiet = TRUE)
+  }
+
+  invisible(list(chemin = chemin, n_objets = nrow(objets),
+                 unites_sans_geometrie = character(0)))
 }

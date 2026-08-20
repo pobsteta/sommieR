@@ -41,6 +41,12 @@ des volumes, montants, dates, coupes ou visas qui suivent ne provient de ses
 registres. Ils sont construits pour la demonstration, a une echelle
 coherente avec les 7,5 hectares des trois parcelles.
 
+Depuis la v0.7.0, treize ecritures portent une geometrie : voirie, bornage,
+emprises de phenomene, arbres et habitats remarquables. Les coordonnees sont
+posees dans l'emprise des trois parcelles et \strong{inventees comme le reste} -
+elles servent a montrer ce que la carte sait faire, non a situer quoi que ce
+soit sur le terrain.
+
 Trois precautions le rendent visible plutot que de compter sur la memoire du
 lecteur : le nom de la foret porte la mention, le rapport engendre l'affiche
 en tete, et la fonction refuse de s'executer sur une base ou le jeu existe

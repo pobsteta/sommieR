@@ -370,6 +370,102 @@ partiellement cartographiée, ce vecteur porte les numéros manquants — et le
 document le dit au lecteur, faute de quoi la carte laisserait croire qu'elle
 montre tout.
 
+## Ce que les registres localisent eux-mêmes
+
+Jusqu'ici la carte s'arrêtait à l'unité de gestion. Depuis la v0.7.0, une
+entrée peut porter sa propre géométrie — et pas n'importe où : **dans le
+payload**, donc dans l'empreinte.
+
+```{r objets}
+objets <- sommier_objets_localises(con, foret)
+tableau(
+  objets[, c("registre", "date_evenement", "designation", "type_geometrie")],
+  "Les entrées que le sommier sait placer sur une carte"
+)
+```
+
+C'est la conséquence qui compte : le contour d'une coupe devient aussi
+opposable que son volume, la position d'une borne aussi opposable que la date
+de son implantation. Rien de tout cela n'est un attribut d'affichage rangé à
+côté du registre.
+
+```{r geometrie-empreinte}
+# La même écriture, avec et sans contour, ne donne pas la même empreinte.
+sans <- registre5_coupe("martelage", 2026, "amelioration", volume_m3 = 100)
+avec <- registre5_coupe("martelage", 2026, "amelioration", volume_m3 = 100,
+                        geometrie = geom_polygone(rbind(
+                          c(4.950, 47.270), c(4.952, 47.270), c(4.952, 47.272)
+                        )))
+identical(jcs(sans), jcs(avec))
+```
+
+Deux règles rendent cela praticable.
+
+**Le WGS84, sans exception.** La RFC 7946 l'impose, et un payload doit
+s'interpréter sans contexte extérieur : une coordonnée Lambert-93 nue n'aurait
+de sens que pour qui connaît la convention du producteur. Des coordonnées
+projetées passées telles quelles sont donc refusées à la saisie.
+
+```{r geometrie-refus, error = TRUE}
+geom_point(847490, 6687454)   # du Lambert-93 pris pour des degrés
+```
+
+**L'arrondi au centimètre.** Sept décimales de degré ; au-delà, deux relevés
+du même point différeraient sur du bruit d'instrument, et le chaînage cesserait
+d'être reproductible. Arrondir n'est pas simplifier : aucun sommet n'est
+retiré, on cesse seulement d'afficher une précision que la mesure n'a pas.
+
+```{r geometrie-arrondi}
+identical(
+  jcs(geom_point(4.95123456789, 47.27123456789)),
+  jcs(geom_point(4.95123456123, 47.27123456999))
+)
+```
+
+La géométrie reste **facultative** : un gestionnaire sans relevé continue de
+saisir sans, et son sommier reste conforme. La rendre obligatoire fermerait le
+registre à ceux qu'il doit servir.
+
+## Le cadastre, décor et non écriture
+
+Une carte de la forêt seule flotte : le lecteur ne sait pas où elle se situe.
+Le parcellaire cadastral donne ce repère — et c'est tout ce qu'il donne.
+
+```{r fond, eval = FALSE}
+fond <- sommier_fond_lire(
+  sommier_fond_cadastral("21200"),      # Couchey
+  emprise = sommier_couche_ug(con, foret)
+)
+sommier_rapport_quarto(con, foret, "gestion-anterieure.html", fond = fond)
+```
+
+Trois refus le tiennent à sa place.
+
+**Rien n'entre dans le registre.** Aucune entrée, aucune empreinte, aucun
+manifeste : verser le cadastre dans le sommier ferait passer la donnée d'un
+tiers pour un constat du gestionnaire, ce que le registre existe précisément
+pour empêcher. Le fond est daté, sourcé, et sa perte n'affecte rien.
+
+**Rien ne se télécharge tout seul.** Ni le rapport ni un export ne déclenchent
+d'appel réseau ; c'est l'appelant qui va chercher le fond, une fois, et le
+passe en argument. Un document de gestion doit pouvoir s'engendrer sur un poste
+hors ligne — et le même rapport rejoué des mois plus tard ne doit pas changer
+de fond sans le dire.
+
+**Le cadastre ne porte pas ce qu'on lui prête.** Les livraisons publiques
+exposent les parcelles, les sections, les bâtiments et les lieux-dits :
+
+```{r couches-cadastre}
+SOMMIER_COUCHES_CADASTRE
+```
+
+Ni bornes, ni fossés — ceux-là figurent dans la forme EDIGEO du PCI, que ces
+livraisons n'exposent pas. Ils relèvent donc du **constat du gestionnaire**,
+registres 2 et 4, avec leur géométrie. C'est une vérification, pas une
+supposition : elle a été faite avant d'écrire une ligne de fond cadastral, et
+elle a déplacé la frontière entre ce que le sommier constate et ce qu'il
+emprunte.
+
 ## Les unités de gestion sur le terrain
 
 Le même sommier s'exporte en couche SIG : les unités de gestion en vigueur à

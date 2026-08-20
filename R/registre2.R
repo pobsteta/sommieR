@@ -47,6 +47,11 @@ SOMMIER_TYPES_FONCIER <- c(
 #' @param beneficiaire Beneficiaire d'une servitude (facultatif).
 #' @param observations Observations libres (facultatif).
 #'
+#' @param geometrie Position ou trace, en WGS84 : une borne est un point (voir
+#'   [geom_point()]), une limite une ligne (voir [geom_ligne()]).
+#'   Facultative — un gestionnaire sans releve continue de saisir sans, et son
+#'   sommier reste conforme.
+#'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
 #' @examples
@@ -70,7 +75,8 @@ registre2_foncier <- function(type_entree,
                               reference_acte = NULL,
                               references_cadastrales = NULL,
                               beneficiaire = NULL,
-                              observations = NULL) {
+                              observations = NULL,
+                              geometrie = NULL) {
   type_entree <- valider_choix(type_entree, "type_entree", SOMMIER_TYPES_FONCIER)
 
   # Une repartition qui ne totalise pas le cout est une erreur de saisie.
@@ -109,6 +115,7 @@ registre2_foncier <- function(type_entree,
                                                  "references_cadastrales"),
     beneficiaire            = si_present(beneficiaire, valider_texte,
                                          "beneficiaire"),
+    geometrie        = geometrie_si_presente(geometrie, c("Point", "LineString")),
     observations            = si_present(observations, valider_texte,
                                          "observations")
   ))
