@@ -74,3 +74,100 @@ test_that("le fond se telecharge, se met en cache et porte son millesime", {
   expect_equal(attr(autour, "millesime"), fond$millesime)
   expect_match(autour$wkt[[1L]], "POLYGON")
 })
+
+# Fixture locale : une livraison cadastrale miniature, ecrite puis compressee
+# comme celles du serveur. Elle permet d'exercer la lecture, le decoupage et
+# les attributs sans reseau — l'essentiel de ce que fait le paquet une fois le
+# fichier obtenu.
+fond_fixture <- function(env = parent.frame()) {
+  skip_if_not_installed("sf")
+  dossier <- withr::local_tempdir(.local_envir = env)
+  chemin <- file.path(dossier, "cadastre-21200-parcelles.json.gz")
+
+  carre <- function(x, y, cote = 0.001) {
+    sf::st_polygon(list(rbind(
+      c(x, y), c(x + cote, y), c(x + cote, y + cote), c(x, y + cote), c(x, y)
+    )))
+  }
+  couche <- sf::st_sf(
+    id = c("212000000A0054", "212000000A0999"),
+    commune = "21200", section = "A", numero = c("54", "999"),
+    contenance = c(25000L, 18000L),
+    geometry = sf::st_sfc(carre(4.951, 47.271), carre(4.990, 47.250),
+                          crs = 4326)
+  )
+  brut <- sub("\\.gz$", "", chemin)
+  sf::st_write(couche, brut, driver = "GeoJSON", quiet = TRUE)
+  contenu <- readLines(brut, warn = FALSE)
+  connexion <- gzfile(chemin, "w")
+  writeLines(contenu, connexion)
+  close(connexion)
+  unlink(brut)
+
+  structure(
+    list(chemin = chemin, code_insee = "21200", couche = "parcelles",
+         millesime = "2026-06-01", source = "fixture locale",
+         telecharge_le = "20/08/2026"),
+    class = "sommier_fond"
+  )
+}
+
+test_that("un fond se lit depuis son archive, sans la decompresser", {
+  fond <- fond_fixture()
+  parcelles <- sommier_fond_lire(fond)
+
+  expect_equal(nrow(parcelles), 2L)
+  expect_equal(parcelles$reference[[1L]], "212000000A0054")
+  expect_equal(parcelles$contenance_m2[[1L]], 25000)
+  # La sortie est en Lambert-93, comme les couches du sommier : melanger deux
+  # systemes sur le meme dessin les decalerait.
+  expect_match(parcelles$wkt[[1L]], "^POLYGON")
+  expect_gt(as.numeric(sub(".*\\(\\(([0-9.]+) .*", "\\1", parcelles$wkt[[1L]])),
+            100000)
+})
+
+test_that("l'emprise restreint le fond a ce qui entoure la foret", {
+  # Couchey compte pres de trois mille parcelles, une foret n'en couvre qu'une
+  # poignee : un fond illisible ne renseigne personne.
+  fond <- fond_fixture()
+  emprise <- data.frame(wkt = paste0(
+    "POLYGON((847400 6687300, 847600 6687300, 847600 6687500, ",
+    "847400 6687500, 847400 6687300))"
+  ))
+  autour <- sommier_fond_lire(fond, emprise = emprise, marge_m = 200)
+  expect_equal(nrow(autour), 1L)
+  expect_equal(autour$reference, "212000000A0054")
+})
+
+test_that("le fond porte sa source et son millesime jusqu'au lecteur", {
+  # Un fond sans millesime induit en erreur des l'annee suivante.
+  fond <- fond_fixture()
+  parcelles <- sommier_fond_lire(fond)
+  expect_equal(attr(parcelles, "millesime"), "2026-06-01")
+  expect_equal(attr(parcelles, "source"), "fixture locale")
+})
+
+test_that("une marge negative est refusee", {
+  fond <- fond_fixture()
+  expect_error(sommier_fond_lire(fond, marge_m = -10), "marge_m")
+})
+
+test_that("un telechargement qui echoue ne laisse pas de fichier a moitie ecrit", {
+  # Un cache silencieusement corrompu serait pire qu'un cache vide : il se
+  # relirait sans erreur, en rendant moins de parcelles qu'il n'en existe.
+  destination <- withr::local_tempfile(fileext = ".json.gz")
+  expect_error(
+    suppressWarnings(telecharger("file:///introuvable/cadastre.json.gz",
+                                 destination)),
+    "Telechargement du fond cadastral impossible"
+  )
+  expect_false(file.exists(destination))
+})
+
+test_that("le cache se cree a la demande", {
+  racine <- withr::local_tempdir()
+  cible <- file.path(racine, "cadastre", "2026")
+  expect_false(dir.exists(cible))
+  expect_equal(repertoire_cache(cible), cible)
+  expect_true(dir.exists(cible))
+})
