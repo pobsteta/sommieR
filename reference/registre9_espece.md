@@ -12,7 +12,8 @@ registre9_espece(
   effectif = NULL,
   localisation = NULL,
   bibliographie = NULL,
-  observations = NULL
+  observations = NULL,
+  geometrie = NULL
 )
 ```
 
@@ -46,6 +47,13 @@ registre9_espece(
 - observations:
 
   Observations libres (facultatif).
+
+- geometrie:
+
+  Position de l'objet, en WGS84 : voir
+  [`geom_point()`](https://pobsteta.github.io/sommieR/reference/geometries.md).
+  Facultative — un gestionnaire sans releve continue de saisir sans, et
+  son sommier reste conforme.
 
 ## Value
 

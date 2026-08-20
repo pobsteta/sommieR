@@ -13,7 +13,8 @@ registre9_arbre(
   circonference_cm = NULL,
   hauteur_m = NULL,
   etat_sanitaire = NULL,
-  observations = NULL
+  observations = NULL,
+  geometrie = NULL
 )
 ```
 
@@ -45,6 +46,13 @@ registre9_arbre(
 - observations:
 
   Observations libres (facultatif).
+
+- geometrie:
+
+  Position de l'objet, en WGS84 : voir
+  [`geom_point()`](https://pobsteta.github.io/sommieR/reference/geometries.md).
+  Facultative — un gestionnaire sans releve continue de saisir sans, et
+  son sommier reste conforme.
 
 ## Value
 

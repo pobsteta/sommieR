@@ -191,6 +191,8 @@ vérifiable.
   : Export cartographique des unites de gestion
 - [`SOMMIER_FORMATS_SIG`](https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_SIG.md)
   : Formats d'export cartographique
+- [`SOMMIER_COUCHES_SIG`](https://pobsteta.github.io/sommieR/reference/SOMMIER_COUCHES_SIG.md)
+  : Couches d'export cartographique
 - [`sommier_rapport_quarto()`](https://pobsteta.github.io/sommieR/reference/sommier_rapport_quarto.md)
   : Rapport de gestion anterieure en Quarto
 - [`SOMMIER_FORMATS_QUARTO`](https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_QUARTO.md)
@@ -207,6 +209,37 @@ gestion, en vigueur à une date, et les indicateurs qui s’y rattachent.
   : Contours des unites de gestion
 - [`sommier_indicateurs_ug()`](https://pobsteta.github.io/sommieR/reference/sommier_indicateurs_ug.md)
   : Indicateurs par unite de gestion
+- [`sommier_objets_localises()`](https://pobsteta.github.io/sommieR/reference/sommier_objets_localises.md)
+  : Objets localises du sommier
+
+## Fond cadastral
+
+Le décor des cartes, et rien de plus : donnée tierce, datée et sourcée,
+qui n’entre ni dans un registre ni dans une empreinte.
+
+- [`sommier_fond_cadastral()`](https://pobsteta.github.io/sommieR/reference/sommier_fond_cadastral.md)
+  : Fond cadastral d'une commune
+- [`sommier_fond_lire()`](https://pobsteta.github.io/sommieR/reference/sommier_fond_lire.md)
+  : Lecture d'un fond cadastral
+- [`SOMMIER_COUCHES_CADASTRE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_COUCHES_CADASTRE.md)
+  : Couches du fond cadastral
+
+## Géométrie des payloads
+
+La géométrie est dans le payload, donc dans l’empreinte : le contour
+d’une coupe est aussi opposable que son volume. En WGS84, comme l’exige
+la RFC 7946.
+
+- [`geom_point()`](https://pobsteta.github.io/sommieR/reference/geometries.md)
+  [`geom_ligne()`](https://pobsteta.github.io/sommieR/reference/geometries.md)
+  [`geom_polygone()`](https://pobsteta.github.io/sommieR/reference/geometries.md)
+  : Geometries d'un payload
+- [`SOMMIER_TYPES_GEOMETRIE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_GEOMETRIE.md)
+  : Types de geometrie admis dans un payload
+- [`SOMMIER_DECIMALES_COORD`](https://pobsteta.github.io/sommieR/reference/SOMMIER_DECIMALES_COORD.md)
+  : Nombre de decimales conservees sur une coordonnee
+- [`valider_geometrie()`](https://pobsteta.github.io/sommieR/reference/valider_geometrie.md)
+  : Valide une geometrie de payload
 
 ## Visa signé et horodatage
 

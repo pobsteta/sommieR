@@ -14,7 +14,8 @@ registre4_equipement(
   unite = NULL,
   etat = NULL,
   date_controle = NULL,
-  observations = NULL
+  observations = NULL,
+  geometrie = NULL
 )
 ```
 
@@ -52,6 +53,13 @@ registre4_equipement(
 - observations:
 
   Observations libres (facultatif).
+
+- geometrie:
+
+  Position de l'objet, en WGS84 : voir
+  [`geom_point()`](https://pobsteta.github.io/sommieR/reference/geometries.md).
+  Facultative — un gestionnaire sans releve continue de saisir sans, et
+  son sommier reste conforme.
 
 ## Value
 

@@ -9,7 +9,7 @@ application du regime forestier."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,8 @@ application du regime forestier.</p>
 <span>  reference_acte <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  references_cadastrales <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  beneficiaire <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  observations <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  observations <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  geometrie <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -118,6 +119,13 @@ elements (facultatif).</p></dd>
 
 <dt id="arg-observations">observations<a class="anchor" aria-label="anchor" href="#arg-observations"></a></dt>
 <dd><p>Observations libres (facultatif).</p></dd>
+
+
+<dt id="arg-geometrie">geometrie<a class="anchor" aria-label="anchor" href="#arg-geometrie"></a></dt>
+<dd><p>Position ou trace, en WGS84 : une borne est un point (voir
+<code><a href="geometries.html">geom_point()</a></code>), une limite une ligne (voir <code><a href="geometries.html">geom_ligne()</a></code>).
+Facultative — un gestionnaire sans releve continue de saisir sans, et son
+sommier reste conforme.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -16,7 +16,8 @@ registre5_coupe(
   surface_ha = NULL,
   essence = NULL,
   coupon = NULL,
-  observations = NULL
+  observations = NULL,
+  geometrie = NULL
 )
 ```
 
@@ -55,6 +56,13 @@ registre5_coupe(
 - observations:
 
   Observations libres (facultatif).
+
+- geometrie:
+
+  Emprise de la coupe, en WGS84 : voir
+  [`geom_polygone()`](https://pobsteta.github.io/sommieR/reference/geometries.md).
+  Facultative — un gestionnaire sans releve continue de saisir sans, et
+  son sommier reste conforme.
 
 ## Value
 

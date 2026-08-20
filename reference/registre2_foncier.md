@@ -20,7 +20,8 @@ registre2_foncier(
   reference_acte = NULL,
   references_cadastrales = NULL,
   beneficiaire = NULL,
-  observations = NULL
+  observations = NULL,
+  geometrie = NULL
 )
 ```
 
@@ -74,6 +75,15 @@ registre2_foncier(
 - observations:
 
   Observations libres (facultatif).
+
+- geometrie:
+
+  Position ou trace, en WGS84 : une borne est un point (voir
+  [`geom_point()`](https://pobsteta.github.io/sommieR/reference/geometries.md)),
+  une limite une ligne (voir
+  [`geom_ligne()`](https://pobsteta.github.io/sommieR/reference/geometries.md)).
+  Facultative — un gestionnaire sans releve continue de saisir sans, et
+  son sommier reste conforme.
 
 ## Value
 

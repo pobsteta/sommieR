@@ -15,6 +15,7 @@ sommier_rapport_quarto(
   debut = NULL,
   fin = NULL,
   referentiel = "psg",
+  fond = NULL,
   quarto = Sys.which("quarto")
 )
 ```
@@ -46,6 +47,15 @@ sommier_rapport_quarto(
 
   L'un de
   [SOMMIER_REFERENTIELS](https://pobsteta.github.io/sommieR/reference/SOMMIER_REFERENTIELS.md).
+
+- fond:
+
+  Fond cadastral a poser sous les cartes, tel que le rend
+  [`sommier_fond_lire()`](https://pobsteta.github.io/sommieR/reference/sommier_fond_lire.md)
+  ; `NULL` pour s'en passer. Il se fournit et ne se telecharge pas : le
+  rendu ne doit declencher aucun appel reseau, sans quoi un rapport
+  cesserait d'etre editable hors ligne - et le meme rapport rejoue plus
+  tard changerait de fond sans le dire.
 
 - quarto:
 

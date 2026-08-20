@@ -10,6 +10,12 @@ peut donc pas se faire passer pour l'ancienne.
 SOMMIER_SCHEMA_VERSIONS
 ```
 
-## Format
+## Details
 
-An object of class `character` of length 9.
+Les registres 2, 4, 5, 8 et 9 sont passes en `1.1.0` lorsque la
+geometrie est entree dans leurs payloads. Les entrees anterieures
+gardent la version sous laquelle elles ont ete ecrites, et restent
+valides : le registre est append-only, un changement de schema ne se
+retrofitte pas sur ce qui est deja chaine. C'est precisement ce que la
+version hachee permet de dire - cette entree a ete ecrite sous ce
+schema-la.

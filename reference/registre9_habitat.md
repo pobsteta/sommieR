@@ -11,7 +11,8 @@ registre9_habitat(
   code_natura2000 = NULL,
   etat_conservation = NULL,
   localisation = NULL,
-  observations = NULL
+  observations = NULL,
+  geometrie = NULL
 )
 ```
 
@@ -40,6 +41,13 @@ registre9_habitat(
 - observations:
 
   Observations libres (facultatif).
+
+- geometrie:
+
+  Emprise de l'objet, en WGS84 : voir
+  [`geom_polygone()`](https://pobsteta.github.io/sommieR/reference/geometries.md).
+  Facultative — un gestionnaire sans releve continue de saisir sans, et
+  son sommier reste conforme.
 
 ## Value
 

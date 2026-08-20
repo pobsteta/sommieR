@@ -13,7 +13,8 @@ registre9_peuplement(
   surface_ha = NULL,
   hauteur_dominante_m = NULL,
   surface_terriere_m2ha = NULL,
-  observations = NULL
+  observations = NULL,
+  geometrie = NULL
 )
 ```
 
@@ -39,6 +40,13 @@ registre9_peuplement(
 - observations:
 
   Observations libres (facultatif).
+
+- geometrie:
+
+  Emprise de l'objet, en WGS84 : voir
+  [`geom_polygone()`](https://pobsteta.github.io/sommieR/reference/geometries.md).
+  Facultative — un gestionnaire sans releve continue de saisir sans, et
+  son sommier reste conforme.
 
 ## Value
 

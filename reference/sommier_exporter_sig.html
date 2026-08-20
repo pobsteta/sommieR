@@ -9,7 +9,7 @@ nombre d'entrees de sommier qui s'y rattachent."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,8 @@ nombre d'entrees de sommier qui s'y rattachent.</p>
 <span>  <span class="va">foret_id</span>,</span>
 <span>  <span class="va">chemin</span>,</span>
 <span>  format <span class="op">=</span> <span class="st">"geojson"</span>,</span>
-<span>  a_la_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  a_la_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  couche <span class="op">=</span> <span class="st">"unites"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -78,7 +79,16 @@ nombre d'entrees de sommier qui s'y rattachent.</p>
 
 <dt id="arg-a-la-date">a_la_date<a class="anchor" aria-label="anchor" href="#arg-a-la-date"></a></dt>
 <dd><p>Date de reference pour la version de geometrie et
-l'activite des unites (defaut : aujourd'hui).</p></dd>
+l'activite des unites (defaut : aujourd'hui). Sans effet sur la couche
+des objets, dont chaque geometrie est datee par son entree.</p></dd>
+
+
+<dt id="arg-couche">couche<a class="anchor" aria-label="anchor" href="#arg-couche"></a></dt>
+<dd><p><code>"unites"</code> (defaut) pour les unites de gestion, <code>"objets"</code>
+pour les entrees portant une geometrie - bornes, voirie, arbres
+remarquables, emprises. Deux couches et non une : elles n'ont ni la meme
+geometrie ni la meme table d'attributs, et les fondre obligerait a vider
+la moitie des colonnes de chaque entite.</p></dd>
 
 </dl></div>
     <div class="section level2">

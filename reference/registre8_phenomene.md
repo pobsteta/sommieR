@@ -13,7 +13,8 @@ registre8_phenomene(
   surface_ha = NULL,
   volume_impacte_m3 = NULL,
   intensite = NULL,
-  observations = NULL
+  observations = NULL,
+  geometrie = NULL
 )
 ```
 
@@ -43,6 +44,13 @@ registre8_phenomene(
 - observations:
 
   Observations libres (facultatif).
+
+- geometrie:
+
+  Emprise de l'objet, en WGS84 : voir
+  [`geom_polygone()`](https://pobsteta.github.io/sommieR/reference/geometries.md).
+  Facultative — un gestionnaire sans releve continue de saisir sans, et
+  son sommier reste conforme.
 
 ## Value
 

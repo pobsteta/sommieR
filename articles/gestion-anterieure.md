@@ -161,10 +161,10 @@ registre a bougé.
 verif <- sommier_verifier(con, foret)
 verif
 #> Verification de chaine - sommier
-#>   foret     : 6a906d29-0b49-489e-8771-58d9d5c17c45
+#>   foret     : eb27b1fa-b3a4-4c64-8ad0-f35cafe87d27
 #>   entrees   : 66
 #>   seq tete  : 66
-#>   hash tete : f37c9858d6fdaef1b55d84daa866a051adc79a9933398ca370ad92dd5597d509
+#>   hash tete : f77702e9af3e85bc425a5301914087d2c9650d32ac700ab4419c62695a404fa9
 #>   etat      : chaine intacte
 ```
 
@@ -496,6 +496,143 @@ partiellement cartographiée, ce vecteur porte les numéros manquants — et
 le document le dit au lecteur, faute de quoi la carte laisserait croire
 qu’elle montre tout.
 
+## Ce que les registres localisent eux-mêmes
+
+Jusqu’ici la carte s’arrêtait à l’unité de gestion. Depuis la v0.7.0,
+une entrée peut porter sa propre géométrie — et pas n’importe où :
+**dans le payload**, donc dans l’empreinte.
+
+``` r
+
+objets <- sommier_objets_localises(con, foret)
+tableau(
+  objets[, c("registre", "date_evenement", "designation", "type_geometrie")],
+  "Les entrées que le sommier sait placer sur une carte"
+)
+```
+
+| registre | date_evenement | designation | type_geometrie |
+|---:|:---|:---|:---|
+| 2 | 2017-09-14 | Refection de la limite nord de la section A | ST_LineString |
+| 4 | 2016-06-01 | Chemin de la section A | ST_LineString |
+| 4 | 2016-06-01 | PD-01 | ST_Point |
+| 4 | 2016-06-01 | Piste de desserte est | ST_LineString |
+| 8 | 2020-08-10 | secheresse | ST_Polygon |
+| 8 | 2022-02-17 | tempete | ST_Polygon |
+| 9 | 2016-07-12 | Chene de la Justice | ST_Point |
+| 9 | 2018-10-04 | Charbonniere de la section A | ST_Point |
+| 9 | 2019-06-03 | Pelouse calcicole seche | ST_Polygon |
+| 9 | 2021-05-28 | Sabot de Venus | ST_Point |
+| 9 | 2022-09-15 | Alisier de la lisiere sud | ST_Point |
+| 9 | 2023-05-22 | Chandelle du talus est | ST_Point |
+| 9 | 2024-07-09 | Chene de la Justice | ST_Point |
+
+Les entrées que le sommier sait placer sur une carte {.table}
+
+C’est la conséquence qui compte : le contour d’une coupe devient aussi
+opposable que son volume, la position d’une borne aussi opposable que la
+date de son implantation. Rien de tout cela n’est un attribut
+d’affichage rangé à côté du registre.
+
+``` r
+
+# La même écriture, avec et sans contour, ne donne pas la même empreinte.
+sans <- registre5_coupe("martelage", 2026, "amelioration", volume_m3 = 100)
+avec <- registre5_coupe("martelage", 2026, "amelioration", volume_m3 = 100,
+                        geometrie = geom_polygone(rbind(
+                          c(4.950, 47.270), c(4.952, 47.270), c(4.952, 47.272)
+                        )))
+identical(jcs(sans), jcs(avec))
+#> [1] FALSE
+```
+
+Deux règles rendent cela praticable.
+
+**Le WGS84, sans exception.** La RFC 7946 l’impose, et un payload doit
+s’interpréter sans contexte extérieur : une coordonnée Lambert-93 nue
+n’aurait de sens que pour qui connaît la convention du producteur. Des
+coordonnées projetées passées telles quelles sont donc refusées à la
+saisie.
+
+``` r
+
+geom_point(847490, 6687454)   # du Lambert-93 pris pour des degrés
+#> Error:
+#> ! `longitude` doit etre <= 180, recu : 847490.
+```
+
+**L’arrondi au centimètre.** Sept décimales de degré ; au-delà, deux
+relevés du même point différeraient sur du bruit d’instrument, et le
+chaînage cesserait d’être reproductible. Arrondir n’est pas simplifier :
+aucun sommet n’est retiré, on cesse seulement d’afficher une précision
+que la mesure n’a pas.
+
+``` r
+
+identical(
+  jcs(geom_point(4.95123456789, 47.27123456789)),
+  jcs(geom_point(4.95123456123, 47.27123456999))
+)
+#> [1] TRUE
+```
+
+La géométrie reste **facultative** : un gestionnaire sans relevé
+continue de saisir sans, et son sommier reste conforme. La rendre
+obligatoire fermerait le registre à ceux qu’il doit servir.
+
+## Le cadastre, décor et non écriture
+
+Une carte de la forêt seule flotte : le lecteur ne sait pas où elle se
+situe. Le parcellaire cadastral donne ce repère — et c’est tout ce qu’il
+donne.
+
+``` r
+
+fond <- sommier_fond_lire(
+  sommier_fond_cadastral("21200"),      # Couchey
+  emprise = sommier_couche_ug(con, foret)
+)
+sommier_rapport_quarto(con, foret, "gestion-anterieure.html", fond = fond)
+```
+
+Trois refus le tiennent à sa place.
+
+**Rien n’entre dans le registre.** Aucune entrée, aucune empreinte,
+aucun manifeste : verser le cadastre dans le sommier ferait passer la
+donnée d’un tiers pour un constat du gestionnaire, ce que le registre
+existe précisément pour empêcher. Le fond est daté, sourcé, et sa perte
+n’affecte rien.
+
+**Rien ne se télécharge tout seul.** Ni le rapport ni un export ne
+déclenchent d’appel réseau ; c’est l’appelant qui va chercher le fond,
+une fois, et le passe en argument. Un document de gestion doit pouvoir
+s’engendrer sur un poste hors ligne — et le même rapport rejoué des mois
+plus tard ne doit pas changer de fond sans le dire.
+
+**Le cadastre ne porte pas ce qu’on lui prête.** Les livraisons
+publiques exposent les parcelles, les sections, les bâtiments et les
+lieux-dits :
+
+``` r
+
+SOMMIER_COUCHES_CADASTRE
+#> [1] "parcelles"  "sections"   "batiments"  "lieux_dits"
+```
+
+Ni bornes, ni fossés. Ceux-là existent bien — dans la forme EDIGEO du
+Plan Cadastral Informatisé, publiée sur le même site sous
+`dgfip-pci-vecteur`, mais par feuille cadastrale et dans un format qui
+demande le pilote EDIGEO de GDAL. Hors de portée de ce paquet
+aujourd’hui, donc, et non hors d’atteinte.
+
+Et quand bien même on irait les chercher, une borne relevée par la DGFiP
+reste la donnée d’un tiers. Ce qui fait foi dans un sommier, c’est le
+**constat du gestionnaire** — registres 2 et 4, saisi avec sa géométrie
+et chaîné avec le reste. C’est une vérification et non une supposition :
+elle a été faite avant d’écrire une ligne de fond cadastral, et elle a
+déplacé la frontière entre ce que le sommier constate et ce qu’il
+emprunte.
+
 ## Les unités de gestion sur le terrain
 
 Le même sommier s’exporte en couche SIG : les unités de gestion en
@@ -509,7 +646,7 @@ couche <- tempfile(fileext = ".geojson")
 export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
 str(export)
 #> List of 3
-#>  $ chemin               : chr "/tmp/RtmpN6t7Il/file2f3951da94f7.geojson"
+#>  $ chemin               : chr "/tmp/RtmpYkJM5H/file309e5241c181.geojson"
 #>  $ n_unites             : int 3
 #>  $ unites_sans_geometrie: chr(0)
 ```
@@ -582,10 +719,10 @@ chemin <- tempfile(fileext = ".json")
 sommier_exporter_manifeste(con, foret, chemin)
 sommier_verifier_manifeste(chemin)
 #> Verification de chaine - sommier
-#>   foret     : 6a906d29-0b49-489e-8771-58d9d5c17c45
+#>   foret     : eb27b1fa-b3a4-4c64-8ad0-f35cafe87d27
 #>   entrees   : 66
 #>   seq tete  : 66
-#>   hash tete : f37c9858d6fdaef1b55d84daa866a051adc79a9933398ca370ad92dd5597d509
+#>   hash tete : f77702e9af3e85bc425a5301914087d2c9650d32ac700ab4419c62695a404fa9
 #>   etat      : chaine intacte
 ```
 

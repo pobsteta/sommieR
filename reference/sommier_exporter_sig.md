@@ -11,7 +11,8 @@ sommier_exporter_sig(
   foret_id,
   chemin,
   format = "geojson",
-  a_la_date = Sys.Date()
+  a_la_date = Sys.Date(),
+  couche = "unites"
 )
 ```
 
@@ -37,7 +38,16 @@ sommier_exporter_sig(
 - a_la_date:
 
   Date de reference pour la version de geometrie et l'activite des
-  unites (defaut : aujourd'hui).
+  unites (defaut : aujourd'hui). Sans effet sur la couche des objets,
+  dont chaque geometrie est datee par son entree.
+
+- couche:
+
+  `"unites"` (defaut) pour les unites de gestion, `"objets"` pour les
+  entrees portant une geometrie - bornes, voirie, arbres remarquables,
+  emprises. Deux couches et non une : elles n'ont ni la meme geometrie
+  ni la meme table d'attributs, et les fondre obligerait a vider la
+  moitie des colonnes de chaque entite.
 
 ## Value
 

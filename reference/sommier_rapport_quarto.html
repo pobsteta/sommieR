@@ -11,7 +11,7 @@ elements d'IBP et la desserte."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,6 +58,7 @@ elements d'IBP et la desserte.</p>
 <span>  debut <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  fin <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  referentiel <span class="op">=</span> <span class="st">"psg"</span>,</span>
+<span>  fond <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  quarto <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which</a></span><span class="op">(</span><span class="st">"quarto"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -89,6 +90,14 @@ elements d'IBP et la desserte.</p>
 
 <dt id="arg-referentiel">referentiel<a class="anchor" aria-label="anchor" href="#arg-referentiel"></a></dt>
 <dd><p>L'un de <a href="SOMMIER_REFERENTIELS.html">SOMMIER_REFERENTIELS</a>.</p></dd>
+
+
+<dt id="arg-fond">fond<a class="anchor" aria-label="anchor" href="#arg-fond"></a></dt>
+<dd><p>Fond cadastral a poser sous les cartes, tel que le rend
+<code><a href="sommier_fond_lire.html">sommier_fond_lire()</a></code> ; <code>NULL</code> pour s'en passer. Il se fournit et ne se
+telecharge pas : le rendu ne doit declencher aucun appel reseau, sans
+quoi un rapport cesserait d'etre editable hors ligne - et le meme rapport
+rejoue plus tard changerait de fond sans le dire.</p></dd>
 
 
 <dt id="arg-quarto">quarto<a class="anchor" aria-label="anchor" href="#arg-quarto"></a></dt>

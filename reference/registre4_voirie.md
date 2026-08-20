@@ -16,7 +16,8 @@ registre4_voirie(
   voirie_publique = FALSE,
   structure_chaussee = NULL,
   date_structure = NULL,
-  observations = NULL
+  observations = NULL,
+  geometrie = NULL
 )
 ```
 
@@ -66,6 +67,13 @@ registre4_voirie(
 - observations:
 
   Observations libres (facultatif).
+
+- geometrie:
+
+  Trace de l'objet, en WGS84 : voir
+  [`geom_ligne()`](https://pobsteta.github.io/sommieR/reference/geometries.md).
+  Facultative — un gestionnaire sans releve continue de saisir sans, et
+  son sommier reste conforme.
 
 ## Value
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,48 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.0" id="sommier-070">sommieR 0.7.0<a class="anchor" aria-label="anchor" href="#sommier-070"></a></h2>
+<p>Les lots 2 et 3 des briefs de cartographie. La géométrie entre dans les payloads — donc dans l’empreinte — et le cadastre prend sa place de décor.</p>
+<div class="section level3">
+<h3 id="la-géométrie-est-un-constat-pas-un-attribut-daffichage-0-7-0">La géométrie est un constat, pas un attribut d’affichage<a class="anchor" aria-label="anchor" href="#la-g%C3%A9om%C3%A9trie-est-un-constat-pas-un-attribut-daffichage-0-7-0"></a></h3>
+<ul><li>Dix constructeurs de payload acceptent une <code>geometrie</code> : registres 2 (bornes, limites), 4 (voirie, équipements), 5 (emprises de coupe), 8 (phénomènes) et 9 (patrimoine remarquable). Elle se construit avec <code><a href="../reference/geometries.html">geom_point()</a></code>, <code><a href="../reference/geometries.html">geom_ligne()</a></code> ou <code><a href="../reference/geometries.html">geom_polygone()</a></code>.</li>
+<li>
+<strong>Elle est dans le payload, donc dans la chaîne.</strong> Le contour d’une coupe devient aussi opposable que son volume, la position d’une borne aussi opposable que la date de son implantation. C’est tout l’objet du lot : la géométrie n’est pas rangée à côté du registre, elle est dedans.</li>
+<li>
+<strong>WGS84 sans exception</strong>, comme l’exige la RFC 7946 : un payload doit s’interpréter sans contexte extérieur. Des coordonnées projetées passées telles quelles sont refusées à la saisie, avec la mention du cas le plus probable — du Lambert-93 pris pour des degrés.</li>
+<li>
+<strong>Arrondi à sept décimales</strong>, soit le centimètre. Aucun instrument de terrain ne fait mieux, et deux saisies du même point doivent produire les mêmes octets sans quoi le chaînage cesse d’être reproductible. Arrondir n’est pas simplifier : aucun sommet n’est retiré.</li>
+<li>La géométrie reste <strong>facultative</strong>. Un gestionnaire sans relevé continue de saisir sans, et son sommier reste conforme ; la rendre obligatoire fermerait le registre à ceux qu’il doit servir.</li>
+<li>Le type est contraint par la nature de l’objet : un arbre est un point, une voirie une ligne, un habitat un polygone. Accepter n’importe quoi ferait de la vérification une politesse.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="premier-changement-de-schéma-du-projet-0-7-0">Premier changement de schéma du projet<a class="anchor" aria-label="anchor" href="#premier-changement-de-sch%C3%A9ma-du-projet-0-7-0"></a></h3>
+<ul><li>
+<code>003_geometrie.sql</code> ajoute à <code>entree_sommier</code> une colonne <code>geom</code> <strong>dérivée</strong> du payload, posée par déclencheur et reprojetée en Lambert-93, avec son index GIST. Le calcul appartient à la base et non à l’application : une entrée écrite par un autre client doit porter la même géométrie dérivée.</li>
+<li>La colonne est <strong>hors empreinte</strong> et entièrement reconstructible. Si elle diverge du payload, c’est le payload qui fait foi — la colonne se reconstruit, l’empreinte non.</li>
+<li>Les registres 2, 4, 5, 8 et 9 passent en version de schéma <code>1.1.0</code>. Les entrées antérieures gardent la leur et restent valides : le registre est append-only, un changement de schéma ne se rétrofitte pas.</li>
+<li>
+<code>v_objet_localise</code> rassemble les entrées localisées, tous registres confondus. <code><a href="../reference/sommier_objets_localises.html">sommier_objets_localises()</a></code> les lit ; <code><a href="../reference/sommier_exporter_sig.html">sommier_exporter_sig()</a></code> gagne une couche <code>objets</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="le-cadastre-est-un-décor-jamais-une-écriture-0-7-0">Le cadastre est un décor, jamais une écriture<a class="anchor" aria-label="anchor" href="#le-cadastre-est-un-d%C3%A9cor-jamais-une-%C3%A9criture-0-7-0"></a></h3>
+<ul><li>
+<code><a href="../reference/sommier_fond_cadastral.html">sommier_fond_cadastral()</a></code> télécharge et met en cache une couche communale ; <code><a href="../reference/sommier_fond_lire.html">sommier_fond_lire()</a></code> la restreint à l’emprise de la forêt.</li>
+<li>
+<strong>Rien n’entre dans le registre</strong> : ni entrée, ni empreinte, ni manifeste. Verser le cadastre dans le sommier ferait passer la donnée d’un tiers pour un constat du gestionnaire.</li>
+<li>
+<strong>Rien ne se télécharge tout seul</strong> : <code><a href="../reference/sommier_rapport_quarto.html">sommier_rapport_quarto()</a></code> reçoit le fond en argument. Un document de gestion doit pouvoir s’engendrer hors ligne, et le même rapport rejoué plus tard ne doit pas changer de fond sans le dire. Le millésime est conservé avec le fichier et affiché sous la carte.</li>
+<li>
+<strong>Ce que ces livraisons ne portent pas.</strong> Vérification faite avant d’écrire une ligne : le GeoJSON communal expose parcelles, sections, bâtiments et lieux-dits — ni bornes ni fossés. Ceux-là sont dans la forme EDIGEO du Plan Cadastral Informatisé, publiée sur le même site sous <code>dgfip-pci-vecteur</code>, par feuille et dans un format demandant le pilote EDIGEO de GDAL : hors de portée de ce paquet aujourd’hui, non hors d’atteinte. Et de toute façon, une borne relevée par la DGFiP reste la donnée d’un tiers — ce qui fait foi, c’est le constat du gestionnaire, registres 2 et 4, chaîné avec le reste.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="cartes-et-démonstration-0-7-0">Cartes et démonstration<a class="anchor" aria-label="anchor" href="#cartes-et-d%C3%A9monstration-0-7-0"></a></h3>
+<ul><li>Le rapport gagne trois cartes d’objets : emprises des phénomènes (chapitre 4), patrimoine remarquable localisé (7), voirie et limites (8). Les emprises sont translucides — une sécheresse englobe le chablis qu’elle a précédé, et un aplat opaque en cacherait une.</li>
+<li>Un sujet revisité n’est dessiné qu’une fois, à son dernier relevé : la chaîne garde tout, la carte montre l’état.</li>
+<li>Le jeu de démonstration porte treize écritures localisées. Les coordonnées sont inventées comme le reste des écritures.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.6.0" id="sommier-060">sommieR 0.6.0<a class="anchor" aria-label="anchor" href="#sommier-060"></a></h2>
 <p>Le rapport de gestion antérieure était entièrement tabulaire, alors que le sommier sait déjà <strong>où</strong> les choses se passent : chaque entrée porte un <code>ug_uuid</code>, chaque unité de gestion un contour daté. Cette version le porte sur une carte, sans rien changer au modèle de données ni à la chaîne.</p>

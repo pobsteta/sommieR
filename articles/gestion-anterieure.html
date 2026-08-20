@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -292,10 +292,10 @@ si le registre a bougé.</p>
 <code class="sourceCode R"><span><span class="va">verif</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_verifier.html">sommier_verifier</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span></span>
 <span><span class="va">verif</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : 6a906d29-0b49-489e-8771-58d9d5c17c45</span></span>
+<span><span class="co">#&gt;   foret     : eb27b1fa-b3a4-4c64-8ad0-f35cafe87d27</span></span>
 <span><span class="co">#&gt;   entrees   : 66</span></span>
 <span><span class="co">#&gt;   seq tete  : 66</span></span>
-<span><span class="co">#&gt;   hash tete : f37c9858d6fdaef1b55d84daa866a051adc79a9933398ca370ad92dd5597d509</span></span>
+<span><span class="co">#&gt;   hash tete : f77702e9af3e85bc425a5301914087d2c9650d32ac700ab4419c62695a404fa9</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -1098,21 +1098,208 @@ qu’elle montre tout.</p>
 </div>
 </div>
 <div class="section level2">
+<h2 id="ce-que-les-registres-localisent-eux-mêmes">Ce que les registres localisent eux-mêmes<a class="anchor" aria-label="anchor" href="#ce-que-les-registres-localisent-eux-m%C3%AAmes"></a>
+</h2>
+<p>Jusqu’ici la carte s’arrêtait à l’unité de gestion. Depuis la v0.7.0,
+une entrée peut porter sa propre géométrie — et pas n’importe où :
+<strong>dans le payload</strong>, donc dans l’empreinte.</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">objets</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_objets_localises.html">sommier_objets_localises</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span></span>
+<span><span class="fu">tableau</span><span class="op">(</span></span>
+<span>  <span class="va">objets</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"registre"</span>, <span class="st">"date_evenement"</span>, <span class="st">"designation"</span>, <span class="st">"type_geometrie"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>  <span class="st">"Les entrées que le sommier sait placer sur une carte"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<caption>Les entrées que le sommier sait placer sur une carte</caption>
+<colgroup>
+<col width="10%">
+<col width="18%">
+<col width="53%">
+<col width="18%">
+</colgroup>
+<thead><tr class="header">
+<th align="right">registre</th>
+<th align="left">date_evenement</th>
+<th align="left">designation</th>
+<th align="left">type_geometrie</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">2</td>
+<td align="left">2017-09-14</td>
+<td align="left">Refection de la limite nord de la section A</td>
+<td align="left">ST_LineString</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="left">2016-06-01</td>
+<td align="left">Chemin de la section A</td>
+<td align="left">ST_LineString</td>
+</tr>
+<tr class="odd">
+<td align="right">4</td>
+<td align="left">2016-06-01</td>
+<td align="left">PD-01</td>
+<td align="left">ST_Point</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="left">2016-06-01</td>
+<td align="left">Piste de desserte est</td>
+<td align="left">ST_LineString</td>
+</tr>
+<tr class="odd">
+<td align="right">8</td>
+<td align="left">2020-08-10</td>
+<td align="left">secheresse</td>
+<td align="left">ST_Polygon</td>
+</tr>
+<tr class="even">
+<td align="right">8</td>
+<td align="left">2022-02-17</td>
+<td align="left">tempete</td>
+<td align="left">ST_Polygon</td>
+</tr>
+<tr class="odd">
+<td align="right">9</td>
+<td align="left">2016-07-12</td>
+<td align="left">Chene de la Justice</td>
+<td align="left">ST_Point</td>
+</tr>
+<tr class="even">
+<td align="right">9</td>
+<td align="left">2018-10-04</td>
+<td align="left">Charbonniere de la section A</td>
+<td align="left">ST_Point</td>
+</tr>
+<tr class="odd">
+<td align="right">9</td>
+<td align="left">2019-06-03</td>
+<td align="left">Pelouse calcicole seche</td>
+<td align="left">ST_Polygon</td>
+</tr>
+<tr class="even">
+<td align="right">9</td>
+<td align="left">2021-05-28</td>
+<td align="left">Sabot de Venus</td>
+<td align="left">ST_Point</td>
+</tr>
+<tr class="odd">
+<td align="right">9</td>
+<td align="left">2022-09-15</td>
+<td align="left">Alisier de la lisiere sud</td>
+<td align="left">ST_Point</td>
+</tr>
+<tr class="even">
+<td align="right">9</td>
+<td align="left">2023-05-22</td>
+<td align="left">Chandelle du talus est</td>
+<td align="left">ST_Point</td>
+</tr>
+<tr class="odd">
+<td align="right">9</td>
+<td align="left">2024-07-09</td>
+<td align="left">Chene de la Justice</td>
+<td align="left">ST_Point</td>
+</tr>
+</tbody>
+</table>
+<p>C’est la conséquence qui compte : le contour d’une coupe devient
+aussi opposable que son volume, la position d’une borne aussi opposable
+que la date de son implantation. Rien de tout cela n’est un attribut
+d’affichage rangé à côté du registre.</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># La même écriture, avec et sans contour, ne donne pas la même empreinte.</span></span>
+<span><span class="va">sans</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/registre5_coupe.html">registre5_coupe</a></span><span class="op">(</span><span class="st">"martelage"</span>, <span class="fl">2026</span>, <span class="st">"amelioration"</span>, volume_m3 <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="va">avec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/registre5_coupe.html">registre5_coupe</a></span><span class="op">(</span><span class="st">"martelage"</span>, <span class="fl">2026</span>, <span class="st">"amelioration"</span>, volume_m3 <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>                        geometrie <span class="op">=</span> <span class="fu"><a href="../reference/geometries.html">geom_polygone</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>                          <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4.950</span>, <span class="fl">47.270</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4.952</span>, <span class="fl">47.270</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4.952</span>, <span class="fl">47.272</span><span class="op">)</span></span>
+<span>                        <span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="fu"><a href="../reference/jcs.html">jcs</a></span><span class="op">(</span><span class="va">sans</span><span class="op">)</span>, <span class="fu"><a href="../reference/jcs.html">jcs</a></span><span class="op">(</span><span class="va">avec</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] FALSE</span></span></code></pre></div>
+<p>Deux règles rendent cela praticable.</p>
+<p><strong>Le WGS84, sans exception.</strong> La RFC 7946 l’impose, et
+un payload doit s’interpréter sans contexte extérieur : une coordonnée
+Lambert-93 nue n’aurait de sens que pour qui connaît la convention du
+producteur. Des coordonnées projetées passées telles quelles sont donc
+refusées à la saisie.</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/geometries.html">geom_point</a></span><span class="op">(</span><span class="fl">847490</span>, <span class="fl">6687454</span><span class="op">)</span>   <span class="co"># du Lambert-93 pris pour des degrés</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;">:</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> `longitude` doit etre &lt;= 180, recu : 847490.</span></span></code></pre></div>
+<p><strong>L’arrondi au centimètre.</strong> Sept décimales de degré ;
+au-delà, deux relevés du même point différeraient sur du bruit
+d’instrument, et le chaînage cesserait d’être reproductible. Arrondir
+n’est pas simplifier : aucun sommet n’est retiré, on cesse seulement
+d’afficher une précision que la mesure n’a pas.</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/jcs.html">jcs</a></span><span class="op">(</span><span class="fu"><a href="../reference/geometries.html">geom_point</a></span><span class="op">(</span><span class="fl">4.95123456789</span>, <span class="fl">47.27123456789</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="../reference/jcs.html">jcs</a></span><span class="op">(</span><span class="fu"><a href="../reference/geometries.html">geom_point</a></span><span class="op">(</span><span class="fl">4.95123456123</span>, <span class="fl">47.27123456999</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>La géométrie reste <strong>facultative</strong> : un gestionnaire
+sans relevé continue de saisir sans, et son sommier reste conforme. La
+rendre obligatoire fermerait le registre à ceux qu’il doit servir.</p>
+</div>
+<div class="section level2">
+<h2 id="le-cadastre-décor-et-non-écriture">Le cadastre, décor et non écriture<a class="anchor" aria-label="anchor" href="#le-cadastre-d%C3%A9cor-et-non-%C3%A9criture"></a>
+</h2>
+<p>Une carte de la forêt seule flotte : le lecteur ne sait pas où elle
+se situe. Le parcellaire cadastral donne ce repère — et c’est tout ce
+qu’il donne.</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fond</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_fond_lire.html">sommier_fond_lire</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/sommier_fond_cadastral.html">sommier_fond_cadastral</a></span><span class="op">(</span><span class="st">"21200"</span><span class="op">)</span>,      <span class="co"># Couchey</span></span>
+<span>  emprise <span class="op">=</span> <span class="fu"><a href="../reference/sommier_couche_ug.html">sommier_couche_ug</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/sommier_rapport_quarto.html">sommier_rapport_quarto</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="st">"gestion-anterieure.html"</span>, fond <span class="op">=</span> <span class="va">fond</span><span class="op">)</span></span></code></pre></div>
+<p>Trois refus le tiennent à sa place.</p>
+<p><strong>Rien n’entre dans le registre.</strong> Aucune entrée, aucune
+empreinte, aucun manifeste : verser le cadastre dans le sommier ferait
+passer la donnée d’un tiers pour un constat du gestionnaire, ce que le
+registre existe précisément pour empêcher. Le fond est daté, sourcé, et
+sa perte n’affecte rien.</p>
+<p><strong>Rien ne se télécharge tout seul.</strong> Ni le rapport ni un
+export ne déclenchent d’appel réseau ; c’est l’appelant qui va chercher
+le fond, une fois, et le passe en argument. Un document de gestion doit
+pouvoir s’engendrer sur un poste hors ligne — et le même rapport rejoué
+des mois plus tard ne doit pas changer de fond sans le dire.</p>
+<p><strong>Le cadastre ne porte pas ce qu’on lui prête.</strong> Les
+livraisons publiques exposent les parcelles, les sections, les bâtiments
+et les lieux-dits :</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">SOMMIER_COUCHES_CADASTRE</span></span>
+<span><span class="co">#&gt; [1] "parcelles"  "sections"   "batiments"  "lieux_dits"</span></span></code></pre></div>
+<p>Ni bornes, ni fossés. Ceux-là existent bien — dans la forme EDIGEO du
+Plan Cadastral Informatisé, publiée sur le même site sous
+<code>dgfip-pci-vecteur</code>, mais par feuille cadastrale et dans un
+format qui demande le pilote EDIGEO de GDAL. Hors de portée de ce paquet
+aujourd’hui, donc, et non hors d’atteinte.</p>
+<p>Et quand bien même on irait les chercher, une borne relevée par la
+DGFiP reste la donnée d’un tiers. Ce qui fait foi dans un sommier, c’est
+le <strong>constat du gestionnaire</strong> — registres 2 et 4, saisi
+avec sa géométrie et chaîné avec le reste. C’est une vérification et non
+une supposition : elle a été faite avant d’écrire une ligne de fond
+cadastral, et elle a déplacé la frontière entre ce que le sommier
+constate et ce qu’il emprunte.</p>
+</div>
+<div class="section level2">
 <h2 id="les-unités-de-gestion-sur-le-terrain">Les unités de gestion sur le terrain<a class="anchor" aria-label="anchor" href="#les-unit%C3%A9s-de-gestion-sur-le-terrain"></a>
 </h2>
 <p>Le même sommier s’exporte en couche SIG : les unités de gestion en
 vigueur à une date, enrichies du nombre d’entrées qui s’y rattachent. Le
 GeoJSON n’exige rien de plus que PostGIS et s’ouvre sans rien installer
 ; le GeoPackage passe par <code>sf</code>.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">couche</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".geojson"</span><span class="op">)</span></span>
 <span><span class="va">export</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_exporter_sig.html">sommier_exporter_sig</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">couche</span>, format <span class="op">=</span> <span class="st">"geojson"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">export</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 3</span></span>
-<span><span class="co">#&gt;  $ chemin               : chr "/tmp/RtmpN6t7Il/file2f3951da94f7.geojson"</span></span>
+<span><span class="co">#&gt;  $ chemin               : chr "/tmp/RtmpYkJM5H/file309e5241c181.geojson"</span></span>
 <span><span class="co">#&gt;  $ n_unites             : int 3</span></span>
 <span><span class="co">#&gt;  $ unites_sans_geometrie: chr(0)</span></span></code></pre></div>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ug</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">read_sf</a></span><span class="op">(</span><span class="va">couche</span><span class="op">)</span></span>
 <span><span class="va">teintes</span> <span class="op">&lt;-</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#E8F5E9"</span>, <span class="st">"#2E7D32"</span><span class="op">)</span><span class="op">)</span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
 <span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
@@ -1128,7 +1315,7 @@ Les trois parcelles du jeu de démonstration, teintées par nombre
 d’entrées.
 </p>
 </div>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p>Le GeoJSON sort en WGS84, comme l’exige la RFC 7946 : le format ne
 déclare pas sa projection, et tout lecteur la suppose. Le GeoPackage,
@@ -1144,7 +1331,7 @@ silence laisserait croire la forêt entièrement cartographiée.</p>
 </h2>
 <p>Tout ce qui précède, <code><a href="../reference/sommier_rapport_quarto.html">sommier_rapport_quarto()</a></code> le
 rassemble et le rend en un document autoportant, HTML ou PDF :</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sommier_rapport_quarto.html">sommier_rapport_quarto</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>, <span class="va">foret</span>, <span class="st">"gestion-anterieure.html"</span>,</span>
 <span>  debut <span class="op">=</span> <span class="st">"2016-01-01"</span>, fin <span class="op">=</span> <span class="st">"2025-12-31"</span>, referentiel <span class="op">=</span> <span class="st">"amenagement"</span></span>
@@ -1164,15 +1351,15 @@ valeur probante tient au registre : l’empreinte de tête donnée plus haut
 scelle toutes les entrées de la chaîne. Ce qui se transporte, c’est le
 manifeste — chaîne, visas et horodatages — vérifiable hors ligne, sans
 base et sans le paquet qui l’a produit.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">chemin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".json"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/sommier_exporter_manifeste.html">sommier_exporter_manifeste</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/sommier_verifier_manifeste.html">sommier_verifier_manifeste</a></span><span class="op">(</span><span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : 6a906d29-0b49-489e-8771-58d9d5c17c45</span></span>
+<span><span class="co">#&gt;   foret     : eb27b1fa-b3a4-4c64-8ad0-f35cafe87d27</span></span>
 <span><span class="co">#&gt;   entrees   : 66</span></span>
 <span><span class="co">#&gt;   seq tete  : 66</span></span>
-<span><span class="co">#&gt;   hash tete : f37c9858d6fdaef1b55d84daa866a051adc79a9933398ca370ad92dd5597d509</span></span>
+<span><span class="co">#&gt;   hash tete : f77702e9af3e85bc425a5301914087d2c9650d32ac700ab4419c62695a404fa9</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span></code></pre></div>
 <p>Toute entrée modifiée, retirée ou insérée après coup invalide
 l’empreinte de tête, et la vérification le dit — y compris chez le
@@ -1186,14 +1373,14 @@ l’émetteur.</p>
 les mêmes variables d’environnement que la suite de tests
 (<code>SOMMIER_ARTICLE_*</code> d’abord, <code>SOMMIER_TEST_*</code> en
 repli) :</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="at">--name</span> sommier-pg <span class="at">-p</span> 5432:5432 <span class="dt">\</span></span>
-<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a>  <span class="at">-e</span> POSTGRES_PASSWORD=postgres <span class="at">-e</span> POSTGRES_DB=sommier_article <span class="dt">\</span></span>
-<span id="cb27-3"><a href="#cb27-3" tabindex="-1"></a>  postgis/postgis:16-3.4</span>
-<span id="cb27-4"><a href="#cb27-4" tabindex="-1"></a></span>
-<span id="cb27-5"><a href="#cb27-5" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_DB</span><span class="op">=</span>sommier_article <span class="dt">\</span></span>
-<span id="cb27-6"><a href="#cb27-6" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_USER</span><span class="op">=</span>postgres <span class="dt">\</span></span>
-<span id="cb27-7"><a href="#cb27-7" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_PASSWORD</span><span class="op">=</span>postgres <span class="dt">\</span></span>
-<span id="cb27-8"><a href="#cb27-8" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'pkgdown::build_article("gestion-anterieure")'</span></span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="at">--name</span> sommier-pg <span class="at">-p</span> 5432:5432 <span class="dt">\</span></span>
+<span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a>  <span class="at">-e</span> POSTGRES_PASSWORD=postgres <span class="at">-e</span> POSTGRES_DB=sommier_article <span class="dt">\</span></span>
+<span id="cb33-3"><a href="#cb33-3" tabindex="-1"></a>  postgis/postgis:16-3.4</span>
+<span id="cb33-4"><a href="#cb33-4" tabindex="-1"></a></span>
+<span id="cb33-5"><a href="#cb33-5" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_DB</span><span class="op">=</span>sommier_article <span class="dt">\</span></span>
+<span id="cb33-6"><a href="#cb33-6" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_USER</span><span class="op">=</span>postgres <span class="dt">\</span></span>
+<span id="cb33-7"><a href="#cb33-7" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_PASSWORD</span><span class="op">=</span>postgres <span class="dt">\</span></span>
+<span id="cb33-8"><a href="#cb33-8" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'pkgdown::build_article("gestion-anterieure")'</span></span></code></pre></div>
 <p>Sans base joignable, l’article se rend quand même : le code reste
 lisible, les tableaux manquent, et l’avertissement en tête le dit. Un
 site qui se construit n’est pas la preuve que les chiffres ont été

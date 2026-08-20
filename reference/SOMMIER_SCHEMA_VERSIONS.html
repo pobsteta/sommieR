@@ -11,7 +11,7 @@ pas se faire passer pour l'ancienne."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,8 +54,13 @@ pas se faire passer pour l'ancienne.</p>
     </div>
 
     <div class="section level2">
-    <h2 id="format">Format<a class="anchor" aria-label="anchor" href="#format"></a></h2>
-    <p>An object of class <code>character</code> of length 9.</p>
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Les registres 2, 4, 5, 8 et 9 sont passes en <code>1.1.0</code> lorsque la geometrie
+est entree dans leurs payloads. Les entrees anterieures gardent la version
+sous laquelle elles ont ete ecrites, et restent valides : le registre est
+append-only, un changement de schema ne se retrofitte pas sur ce qui est
+deja chaine. C'est precisement ce que la version hachee permet de dire -
+cette entree a ete ecrite sous ce schema-la.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

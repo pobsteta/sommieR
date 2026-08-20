@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -569,6 +569,13 @@
 
         <dt>
 
+          <code><a href="SOMMIER_COUCHES_SIG.html">SOMMIER_COUCHES_SIG</a></code>
+
+        </dt>
+        <dd>Couches d'export cartographique</dd>
+
+        <dt>
+
           <code><a href="sommier_rapport_quarto.html">sommier_rapport_quarto()</a></code>
 
         </dt>
@@ -610,6 +617,80 @@
 
         </dt>
         <dd>Indicateurs par unite de gestion</dd>
+
+        <dt>
+
+          <code><a href="sommier_objets_localises.html">sommier_objets_localises()</a></code>
+
+        </dt>
+        <dd>Objets localises du sommier</dd>
+      </dl></div><div class="section level2">
+      <h2 id="fond-cadastral">Fond cadastral<a class="anchor" aria-label="anchor" href="#fond-cadastral"></a></h2>
+
+      <div class="section-desc"><p>Le décor des cartes, et rien de plus : donnée tierce, datée et sourcée, qui n’entre ni dans un registre ni dans une empreinte.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="sommier_fond_cadastral.html">sommier_fond_cadastral()</a></code>
+
+        </dt>
+        <dd>Fond cadastral d'une commune</dd>
+
+        <dt>
+
+          <code><a href="sommier_fond_lire.html">sommier_fond_lire()</a></code>
+
+        </dt>
+        <dd>Lecture d'un fond cadastral</dd>
+
+        <dt>
+
+          <code><a href="SOMMIER_COUCHES_CADASTRE.html">SOMMIER_COUCHES_CADASTRE</a></code>
+
+        </dt>
+        <dd>Couches du fond cadastral</dd>
+      </dl></div><div class="section level2">
+      <h2 id="g-om-trie-des-payloads">Géométrie des payloads<a class="anchor" aria-label="anchor" href="#g-om-trie-des-payloads"></a></h2>
+
+      <div class="section-desc"><p>La géométrie est dans le payload, donc dans l’empreinte : le contour d’une coupe est aussi opposable que son volume. En WGS84, comme l’exige la RFC 7946.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="geometries.html">geom_point()</a></code> <code><a href="geometries.html">geom_ligne()</a></code> <code><a href="geometries.html">geom_polygone()</a></code>
+
+        </dt>
+        <dd>Geometries d'un payload</dd>
+
+        <dt>
+
+          <code><a href="SOMMIER_TYPES_GEOMETRIE.html">SOMMIER_TYPES_GEOMETRIE</a></code>
+
+        </dt>
+        <dd>Types de geometrie admis dans un payload</dd>
+
+        <dt>
+
+          <code><a href="SOMMIER_DECIMALES_COORD.html">SOMMIER_DECIMALES_COORD</a></code>
+
+        </dt>
+        <dd>Nombre de decimales conservees sur une coordonnee</dd>
+
+        <dt>
+
+          <code><a href="valider_geometrie.html">valider_geometrie()</a></code>
+
+        </dt>
+        <dd>Valide une geometrie de payload</dd>
       </dl></div><div class="section level2">
       <h2 id="visa-sign-et-horodatage">Visa signé et horodatage<a class="anchor" aria-label="anchor" href="#visa-sign-et-horodatage"></a></h2>
 

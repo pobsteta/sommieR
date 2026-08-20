@@ -9,7 +9,7 @@ largeur de chaussee et son usage."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,8 @@ largeur de chaussee et son usage.</p>
 <span>  voirie_publique <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  structure_chaussee <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  date_structure <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  observations <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  observations <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  geometrie <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -105,6 +106,12 @@ et seule la voirie privee entre dans la densite.</p></dd>
 
 <dt id="arg-observations">observations<a class="anchor" aria-label="anchor" href="#arg-observations"></a></dt>
 <dd><p>Observations libres (facultatif).</p></dd>
+
+
+<dt id="arg-geometrie">geometrie<a class="anchor" aria-label="anchor" href="#arg-geometrie"></a></dt>
+<dd><p>Trace de l'objet, en WGS84 : voir <code><a href="geometries.html">geom_ligne()</a></code>.
+Facultative — un gestionnaire sans releve continue de saisir sans, et son
+sommier reste conforme.</p></dd>
 
 </dl></div>
     <div class="section level2">
