@@ -167,6 +167,17 @@ reference:
     - sommier_fond_lire
     - SOMMIER_COUCHES_CADASTRE
 
+  - title: "PCI vecteur — bornes et détails"
+    desc: >
+      Ce que le plan cadastral porte et que les livraisons simplifiées
+      écartent : bornes, murs, fossés, haies. Décor lui aussi — le bornage
+      qui fait foi est celui du gestionnaire, au registre 2.
+    contents:
+    - sommier_feuilles_pci
+    - sommier_fond_pci
+    - sommier_fond_pci_lire
+    - SOMMIER_COUCHES_PCI
+
   - title: "Géométrie des payloads"
     desc: >
       La géométrie est dans le payload, donc dans l'empreinte : le contour

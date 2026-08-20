@@ -13,7 +13,7 @@ authors:
     given-names: "Pascal"
     email: "pascal.obstetar@gmail.com"
     orcid: "https://orcid.org/0009-0003-5403-1187"
-version: "0.7.0"
+version: "0.8.0"
 date-released: "2026-08-20"
 url: "https://github.com/pobsteta/sommieR"
 repository-code: "https://github.com/pobsteta/sommieR"

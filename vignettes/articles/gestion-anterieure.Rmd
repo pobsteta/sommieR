@@ -471,6 +471,51 @@ reste. C'est une vérification et non une supposition : elle a été faite avant
 d'écrire une ligne de fond cadastral, et elle a déplacé la frontière entre ce
 que le sommier constate et ce qu'il emprunte.
 
+### Les bornes, elles, sont ailleurs
+
+Le paragraphe ci-dessus disait vrai des livraisons GeoJSON. Il ne disait pas
+tout : les bornes et les détails topographiques existent, dans le **PCI vecteur
+brut au format EDIGÉO**, publié feuille par feuille sur le même site.
+
+```{r pci, eval = FALSE}
+feuilles <- sommier_feuilles_pci("21200", emprise = couche_carte)
+fond_pci <- sommier_fond_pci_lire(
+  sommier_fond_pci("21200", feuilles$feuille), "bornes"
+)
+```
+
+Couchey compte dix-sept feuilles ; l'emprise de la forêt en retient **deux**.
+C'est ce qui rend le lot praticable : on ne télécharge pas une commune pour
+regarder trois parcelles. Les feuilles se choisissent sur la couche légère
+d'Etalab, dont les identifiants correspondent exactement aux noms des archives
+EDIGÉO — ce que l'archive, elle, ne dit qu'une fois décompressée.
+
+Deux refus gouvernent la lecture.
+
+**La nature d'un détail n'est pas devinée.** `TLINE_id` porte un attribut `SYM`
+qui distingue mur, fossé, haie et clôture, mais sa nomenclature ne figure ni
+dans le `.DIC` ni dans le `.SCD` de l'archive : elle appartient à la
+symbolisation du plan. Le code sort donc brut, et la table de correspondance
+vous appartient — le paquet n'en embarque aucune tant qu'une source n'est pas
+citable. Une correspondance plausible mais fausse ferait dire au document
+« fossé » là où le terrain montre un mur.
+
+**Une projection inattendue est signalée, jamais réinterprétée.** Le pilote
+EDIGÉO rend un proj4 sans code EPSG ; le Lambert-93 n'est posé que s'il est
+reconnu. Les livraisons `edigeo-cc` sont en coniques conformes par zone, et les
+reprojeter au hasard poserait la feuille à côté de la forêt — le défaut même
+qu'on a corrigé en v0.6.0 sur l'export GeoJSON.
+
+Une remarque, sur ce jeu de démonstration : les bornes réelles de Couchey ne
+tombent **pas** dans les trois parcelles, dont la géométrie est inventée. La
+carte de la desserte n'en montre donc aucune, et le rapport le dit plutôt que
+d'élargir l'emprise jusqu'à en attraper. Sur une forêt réelle, elles seraient
+là.
+
+Et cela ne change rien à la règle : une borne relevée par la DGFiP reste la
+donnée d'un tiers. Le bornage qui fait foi est celui du gestionnaire, au
+registre 2, avec sa géométrie et son empreinte.
+
 ## Les unités de gestion sur le terrain
 
 Le même sommier s'exporte en couche SIG : les unités de gestion en vigueur à

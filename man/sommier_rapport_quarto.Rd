@@ -13,6 +13,7 @@ sommier_rapport_quarto(
   fin = NULL,
   referentiel = "psg",
   fond = NULL,
+  fond_pci = NULL,
   quarto = Sys.which("quarto")
 )
 }
@@ -35,6 +36,10 @@ sommier_rapport_quarto(
 telecharge pas : le rendu ne doit declencher aucun appel reseau, sans
 quoi un rapport cesserait d'etre editable hors ligne - et le meme rapport
 rejoue plus tard changerait de fond sans le dire.}
+
+\item{fond_pci}{Bornes du PCI vecteur a poser sur la carte de la desserte,
+telles que les rend \code{\link[=sommier_fond_pci_lire]{sommier_fond_pci_lire()}} ; \code{NULL} pour s'en passer.
+Meme regle que \code{fond} : fourni, jamais telecharge au rendu.}
 
 \item{quarto}{Chemin de l'executable Quarto.}
 }

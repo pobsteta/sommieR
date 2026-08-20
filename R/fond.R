@@ -21,7 +21,7 @@
 #'
 #' @export
 SOMMIER_COUCHES_CADASTRE <- c("parcelles", "sections", "batiments",
-                              "lieux_dits")
+                              "lieux_dits", "feuilles")
 
 SOMMIER_SOURCE_CADASTRE <- "https://cadastre.data.gouv.fr/data/etalab-cadastre"
 

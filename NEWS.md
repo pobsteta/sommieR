@@ -1,3 +1,54 @@
+# sommieR 0.8.0
+
+Lot 4 : le PCI vecteur. Les bornes et les détails topographiques que les
+livraisons GeoJSON écartent, cherchés là où ils se trouvent.
+
+## Ce que le lot 3 avait conclu trop vite
+
+Le lot 3 concluait que bornes et fossés n'étaient pas dans le cadastre. Vrai
+des livraisons d'Etalab, qui sont une **version simplifiée** du plan : le
+retraitement ne conserve que parcelles, bâtiments, sections, feuilles,
+lieux-dits et subdivisions fiscales. Les détails topographiques existent
+pourtant, dans le PCI vecteur brut au format EDIGÉO publié feuille par feuille
+par la DGFiP sur le même site.
+
+Vérifié sur la feuille `212000000A01` de Couchey : `BORNE_id` (12 points),
+`TLINE_id` (50 lignes, attribut `SYM`), `ZONCOMMUNI_id`, `PARCELLE_id`,
+`SECTION_id`, `SUBDSECT_id`, `LIEUDIT_id`, `COMMUNE_id`.
+
+## Ce que le paquet apporte
+
+* `sommier_feuilles_pci()` rend les feuilles de la commune avec leur emprise et
+  retient celles qui touchent la forêt. **Couchey en compte dix-sept, une forêt
+  en touche deux** : charger toute la commune serait payer huit fois le
+  nécessaire. Les feuilles se choisissent sur la couche légère d'Etalab, dont
+  les identifiants correspondent exactement aux noms des archives EDIGÉO.
+* `sommier_fond_pci()` télécharge et décompresse les archives retenues ;
+  `sommier_fond_pci_lire()` en lit une couche, restreinte à l'emprise.
+
+## Deux refus
+
+* **La nature d'un détail n'est pas devinée.** `SYM` distingue mur, fossé, haie
+  et clôture, mais sa nomenclature ne figure ni dans le `.DIC` ni dans le
+  `.SCD` de l'archive — elle appartient à la symbolisation du plan. Le code est
+  donc rendu brut, et une table de correspondance peut être **fournie par
+  l'appelant**. Aucune n'est embarquée tant qu'une source n'est pas citable :
+  une correspondance plausible mais fausse ferait dire au document « fossé » là
+  où le terrain montre un mur.
+* **Une projection inattendue est signalée, jamais réinterprétée.** Le pilote
+  EDIGÉO rend un proj4 sans code EPSG ; le Lambert-93 est posé explicitement, et
+  seulement s'il est reconnu. Les livraisons `edigeo-cc` sont en coniques
+  conformes par zone — les reprojeter au hasard poserait la feuille à côté de
+  la forêt, exactement le défaut corrigé en v0.6.0 sur le GeoJSON.
+
+## Et toujours : un décor
+
+Rien du PCI n'entre dans un registre, une empreinte ou un manifeste. Une borne
+relevée par la DGFiP est la donnée d'un tiers ; le bornage qui fait foi est
+celui du gestionnaire, porté au registre 2 avec sa géométrie depuis la v0.7.0.
+Les bornes s'affichent en surimpression sur la carte de la desserte, en croix
+brunes, avec la mention qui le dit.
+
 # sommieR 0.7.0
 
 Les lots 2 et 3 des briefs de cartographie. La géométrie entre dans les

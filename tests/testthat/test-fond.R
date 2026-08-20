@@ -14,11 +14,14 @@ test_that("la Corse passe, ses codes commencant par 2A ou 2B", {
 })
 
 test_that("les couches annoncees sont celles que la source publie", {
-  # Verifie le 20 aout 2026 sur cadastre.data.gouv.fr : ni bornes ni fosses.
-  # Ce n'est pas un detail de nomenclature - c'est ce qui renvoie ces objets
-  # au constat du gestionnaire, registres 2 et 4, avec leur geometrie.
+  # Verifie le 20 aout 2026 sur cadastre.data.gouv.fr : ni bornes ni fosses
+  # dans ces livraisons simplifiees. Ils sont dans le PCI vecteur EDIGEO, que
+  # `sommier_fond_pci()` va chercher ailleurs - et une borne DGFiP reste de
+  # toute facon la donnee d'un tiers, le constat du gestionnaire etant au
+  # registre 2.
   expect_setequal(SOMMIER_COUCHES_CADASTRE,
-                  c("parcelles", "sections", "batiments", "lieux_dits"))
+                  c("parcelles", "sections", "batiments", "lieux_dits",
+                    "feuilles"))
   expect_false("bornes" %in% SOMMIER_COUCHES_CADASTRE)
   expect_false("fosses" %in% SOMMIER_COUCHES_CADASTRE)
 })
