@@ -81,12 +81,8 @@ sommier_feuilles_pci <- function(code_insee, emprise = NULL, marge_m = 100,
     sf::read_sf(paste0("/vsigzip/", normalizePath(fond$chemin))), 2154
   )
   if (!is.null(emprise) && nrow(emprise) > 0L && !is.null(emprise$wkt)) {
-    boite <- sf::st_buffer(
-      sf::st_as_sfc(sf::st_bbox(sf::st_as_sfc(emprise$wkt, crs = 2154))),
-      marge_m
-    )
-    couche <- couche[sf::st_intersects(couche, boite, sparse = FALSE)[, 1L], ,
-                     drop = FALSE]
+    couche <- couche[sf::st_intersects(couche, boite_emprise(emprise, marge_m),
+                                       sparse = FALSE)[, 1L], , drop = FALSE]
   }
 
   data.frame(
@@ -250,27 +246,8 @@ sommier_fond_pci_lire <- function(fond, couche = "bornes", emprise = NULL,
       stringsAsFactors = FALSE
     )
   })
-  resultat <- do.call(rbind, morceaux[!vapply(morceaux, is.null, logical(1))])
-  if (is.null(resultat)) {
-    resultat <- data.frame(feuille = character(0), objet = character(0),
-                           sym = character(0), wkt = character(0),
-                           stringsAsFactors = FALSE)
-  }
-
-  if (!is.null(emprise) && nrow(resultat) > 0L && nrow(emprise) > 0L &&
-      !is.null(emprise$wkt)) {
-    boite <- sf::st_buffer(
-      sf::st_as_sfc(sf::st_bbox(sf::st_as_sfc(emprise$wkt, crs = 2154))),
-      marge_m
-    )
-    dedans <- sf::st_intersects(sf::st_as_sfc(resultat$wkt, crs = 2154),
-                                boite, sparse = FALSE)[, 1L]
-    resultat <- resultat[dedans, , drop = FALSE]
-  }
-
-  # `character(0)` et non `NA` quand rien ne subsiste : affecter une valeur
-  # unique a un tableau vide echouerait, et une couche vide est un cas
-  # ordinaire - une foret peut n'avoir aucune borne sur ses feuilles.
+  resultat <- assembler_objets(morceaux)
+  resultat <- restreindre_emprise(resultat, emprise, marge_m)
   resultat$nature <- appliquer_symboles(resultat, symboles)
   resultat <- resultat[, c("feuille", "objet", "sym", "nature", "wkt")]
   rownames(resultat) <- NULL
@@ -280,6 +257,43 @@ sommier_fond_pci_lire <- function(fond, couche = "bornes", emprise = NULL,
 }
 
 # ---------------------------------------------------------------------------
+
+# Une feuille peut ne porter aucun objet de la couche demandee, et toutes
+# peuvent etre vides : le tableau vide doit alors avoir les memes colonnes que
+# le tableau plein, sinon l'appelant aurait deux formes a traiter.
+assembler_objets <- function(morceaux) {
+  garde <- morceaux[!vapply(morceaux, is.null, logical(1))]
+  if (length(garde) == 0L) {
+    return(data.frame(feuille = character(0), objet = character(0),
+                      sym = character(0), wkt = character(0),
+                      stringsAsFactors = FALSE))
+  }
+  do.call(rbind, garde)
+}
+
+# Restreint un tableau a colonne `wkt` a l'emprise tamponnee d'un autre. La
+# regle sert au parcellaire, aux feuilles et aux objets PCI : trois endroits ou
+# la meme boite se calculait, donc trois occasions de diverger.
+restreindre_emprise <- function(objets, emprise, marge_m) {
+  if (is.null(emprise) || nrow(objets) == 0L || nrow(emprise) == 0L ||
+      is.null(emprise$wkt)) {
+    return(objets)
+  }
+  dedans <- sf::st_intersects(sf::st_as_sfc(objets$wkt, crs = 2154),
+                              boite_emprise(emprise, marge_m),
+                              sparse = FALSE)[, 1L]
+  objets[dedans, , drop = FALSE]
+}
+
+# La boite englobante tamponnee, et non le contour exact : une foret collee au
+# bord de sa carte se lit mal, et decouper au contour retirerait les objets qui
+# la bordent - ceux-la interessent justement le gestionnaire.
+boite_emprise <- function(emprise, marge_m) {
+  sf::st_buffer(
+    sf::st_as_sfc(sf::st_bbox(sf::st_as_sfc(emprise$wkt, crs = 2154))),
+    marge_m
+  )
+}
 
 # Sans table fournie, la nature reste inconnue plutot qu'inventee : une
 # correspondance plausible mais fausse ferait dire au document « fosse » la ou

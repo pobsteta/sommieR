@@ -153,9 +153,7 @@ sommier_fond_lire <- function(fond, emprise = NULL, marge_m = 100) {
   couche <- sf::st_transform(couche, 2154)
 
   if (!is.null(emprise) && nrow(emprise) > 0L && !is.null(emprise$wkt)) {
-    boite <- sf::st_bbox(sf::st_as_sfc(emprise$wkt, crs = 2154))
-    boite <- sf::st_as_sfc(boite)
-    couche <- couche[sf::st_intersects(couche, sf::st_buffer(boite, marge_m),
+    couche <- couche[sf::st_intersects(couche, boite_emprise(emprise, marge_m),
                                        sparse = FALSE)[, 1L], , drop = FALSE]
   }
 
