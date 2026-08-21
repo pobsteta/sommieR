@@ -42,10 +42,13 @@ et \code{symboles} permet de fournir la correspondance. Sans elle, \code{nature}
 \code{NA} - un paquet dont l'objet est la valeur probante ne peut pas afficher
 « fosse » la ou le terrain montre un mur.
 
-Le systeme de coordonnees est \strong{pose explicitement} : le pilote EDIGEO rend
-un proj4 sans code EPSG. Il n'est pose que si ce proj4 est bien du
-Lambert-93 ; une projection inattendue - les livraisons \code{edigeo-cc} sont en
-coniques conformes par zone - est signalee plutot que reinterpretee.
+Le systeme de coordonnees vient de la \strong{declaration du lot}. EDIGEO est
+auto-descripteur : le fichier \code{.GEO} porte le referentiel employe
+(\code{LAMB93} pour la metropole, \code{CC42} a \code{CC50} pour les livraisons
+\code{edigeo-cc}). Le pilote de GDAL, lui, rend un proj4 sans code EPSG. On lit
+donc la declaration a la source, et la sortie est ramenee en Lambert-93 quel
+que soit le lot. Un referentiel non reconnu est signale plutot que
+reinterprete - reprojeter au hasard poserait la feuille a cote de la foret.
 }
 \examples{
 # Necessite `sf` et un fond telecharge :

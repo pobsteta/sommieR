@@ -15,9 +15,28 @@ SOMMIER_COUCHES_PCI <- c(bornes = "BORNE_id", details = "TLINE_id",
 
 SOMMIER_SOURCE_PCI <- "https://cadastre.data.gouv.fr/data/dgfip-pci-vecteur"
 
-# Lambert-93 : le proj4 que rend le pilote EDIGEO pour la France
-# metropolitaine, reconnaissable a son parallele d'origine et son meridien.
-MOTIF_LAMBERT93 <- "lat_0=46\\.5.*lon_0=3.*x_0=700000"
+#' Projections declarees par les lots EDIGEO
+#'
+#' @description
+#' Correspondance entre le code de reference porte par le fichier `.GEO` d'une
+#' archive EDIGEO et le code EPSG de la projection.
+#'
+#' @details
+#' EDIGEO est auto-descripteur : le lot declare son referentiel dans son
+#' fichier `.GEO`, sous la forme `RELSA06:LAMB93` pour la metropole. On le lit
+#' donc plutot que de reconnaitre une chaine proj4 - la declaration est
+#' l'intention du producteur, le proj4 n'en est qu'une traduction par le
+#' pilote, et elle arrive sans code EPSG.
+#'
+#' Les livraisons `edigeo-cc` declarent une conique conforme par zone, de CC42
+#' a CC50, soit les codes EPSG 3942 a 3950.
+#'
+#' @export
+SOMMIER_PROJECTIONS_EDIGEO <- c(
+  LAMB93 = 2154L,
+  CC42 = 3942L, CC43 = 3943L, CC44 = 3944L, CC45 = 3945L, CC46 = 3946L,
+  CC47 = 3947L, CC48 = 3948L, CC49 = 3949L, CC50 = 3950L
+)
 
 #' Feuilles cadastrales d'une commune
 #'
@@ -177,10 +196,13 @@ print.sommier_fond_pci <- function(x, ...) {
 #' `NA` - un paquet dont l'objet est la valeur probante ne peut pas afficher
 #' « fosse » la ou le terrain montre un mur.
 #'
-#' Le systeme de coordonnees est **pose explicitement** : le pilote EDIGEO rend
-#' un proj4 sans code EPSG. Il n'est pose que si ce proj4 est bien du
-#' Lambert-93 ; une projection inattendue - les livraisons `edigeo-cc` sont en
-#' coniques conformes par zone - est signalee plutot que reinterpretee.
+#' Le systeme de coordonnees vient de la **declaration du lot**. EDIGEO est
+#' auto-descripteur : le fichier `.GEO` porte le referentiel employe
+#' (`LAMB93` pour la metropole, `CC42` a `CC50` pour les livraisons
+#' `edigeo-cc`). Le pilote de GDAL, lui, rend un proj4 sans code EPSG. On lit
+#' donc la declaration a la source, et la sortie est ramenee en Lambert-93 quel
+#' que soit le lot. Un referentiel non reconnu est signale plutot que
+#' reinterprete - reprojeter au hasard poserait la feuille a cote de la foret.
 #'
 #' @param fond Objet `sommier_fond_pci`.
 #' @param couche L'une des noms de [SOMMIER_COUCHES_PCI].
@@ -224,7 +246,7 @@ sommier_fond_pci_lire <- function(fond, couche = "bornes", emprise = NULL,
       feuille = fond$feuilles$feuille[[i]],
       objet = objets[["OBJECT_RID"]] %||% NA_character_,
       sym = as.character(objets[["SYM"]] %||% NA_character_),
-      wkt = sf::st_as_text(poser_lambert93(sf::st_geometry(objets), thf)),
+      wkt = sf::st_as_text(poser_projection(sf::st_geometry(objets), thf)),
       stringsAsFactors = FALSE
     )
   })
@@ -282,23 +304,44 @@ fichier_thf <- function(dossier) {
   if (length(trouves) == 0L) NA_character_ else trouves[[1L]]
 }
 
-# Le pilote EDIGEO rend un proj4 sans code EPSG. On ne pose le 2154 que si ce
-# proj4 est bien du Lambert-93 : reprojeter au hasard poserait la feuille a
-# cote de la foret sans que rien ne l'annonce.
-poser_lambert93 <- function(geometrie, thf) {
+# EDIGEO declare son referentiel dans le fichier `.GEO` du lot, a cote du
+# `.THF`. Le pilote de GDAL construit bien les couches et leurs champs a partir
+# de ces fichiers de description, mais il rend un proj4 sans code EPSG : on lit
+# donc la declaration a la source plutot que de reconnaitre une chaine.
+projection_declaree <- function(thf) {
+  geo <- list.files(dirname(thf), pattern = "\\.GEO$", full.names = TRUE,
+                    ignore.case = TRUE)
+  if (length(geo) == 0L) {
+    return(NA_character_)
+  }
+  lignes <- readLines(geo[[1L]], warn = FALSE)
+  declaration <- grep("^REL[A-Z]{2}[0-9]{2}:", lignes, value = TRUE)
+  if (length(declaration) == 0L) {
+    return(NA_character_)
+  }
+  trimws(sub("^REL[A-Z]{2}[0-9]{2}:", "", declaration[[1L]]))
+}
+
+# La geometrie arrive sans code EPSG : on pose celui que le lot declare.
+# Reprojeter au hasard poserait la feuille a cote de la foret sans que rien ne
+# l'annonce - c'est le defaut du GeoJSON en Lambert-93 corrige en v0.6.0.
+poser_projection <- function(geometrie, thf) {
   systeme <- sf::st_crs(geometrie)
-  if (!is.na(systeme$epsg) && systeme$epsg == 2154L) {
+  if (!is.na(systeme$epsg)) {
     return(geometrie)
   }
-  proj <- systeme$proj4string %||% ""
-  if (!grepl(MOTIF_LAMBERT93, proj)) {
-    stop("Feuille en projection inattendue (", thf, ") : ",
-         if (nzchar(proj)) proj else "systeme absent",
-         ".\nLes livraisons `edigeo-cc` sont en coniques conformes par zone ",
-         "et ne sont pas du Lambert-93 ; les reprojeter au hasard poserait ",
-         "la feuille a cote de la foret.", call. = FALSE)
+  code <- projection_declaree(thf)
+  if (is.na(code) || !code %in% names(SOMMIER_PROJECTIONS_EDIGEO)) {
+    stop("Projection non reconnue pour la feuille ", basename(thf), " : ",
+         if (is.na(code)) "aucune declaration dans le fichier .GEO du lot"
+         else paste0("referentiel declare `", code, "`"),
+         ".\nProjections connues : ",
+         paste(names(SOMMIER_PROJECTIONS_EDIGEO), collapse = ", "), ".",
+         call. = FALSE)
   }
   # `st_set_crs()` avertit qu'il ne reprojette pas : c'est bien ce qu'on veut,
-  # la donnee est deja en Lambert-93 et il lui manque seulement son etiquette.
-  suppressWarnings(sf::st_set_crs(geometrie, 2154))
+  # la donnee est deja dans cette projection, il lui manque son etiquette.
+  epsg <- SOMMIER_PROJECTIONS_EDIGEO[[code]]
+  geometrie <- suppressWarnings(sf::st_set_crs(geometrie, epsg))
+  if (epsg == 2154L) geometrie else sf::st_transform(geometrie, 2154)
 }

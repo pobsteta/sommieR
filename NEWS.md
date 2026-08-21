@@ -28,18 +28,25 @@ Vérifié sur la feuille `212000000A01` de Couchey : `BORNE_id` (12 points),
 
 ## Deux refus
 
-* **La nature d'un détail n'est pas devinée.** `SYM` distingue mur, fossé, haie
-  et clôture, mais sa nomenclature ne figure ni dans le `.DIC` ni dans le
-  `.SCD` de l'archive — elle appartient à la symbolisation du plan. Le code est
+* **La nature d'un détail n'est pas devinée.** EDIGÉO décrit sa structure, et
+  GDAL s'en sert pour bâtir les couches et leurs champs — c'est ainsi qu'on
+  obtient `SYM` sans lire le `.DIC` soi-même. Mais la structure n'est pas la
+  sémantique : sur la feuille examinée, toutes les définitions du `.DIC` sont
+  vides et aucune section n'énumère les valeurs. `SYM` distingue mur, fossé,
+  haie et clôture ; sa nomenclature appartient à la symbolisation du plan,
+  publiée ailleurs. Le code est
   donc rendu brut, et une table de correspondance peut être **fournie par
   l'appelant**. Aucune n'est embarquée tant qu'une source n'est pas citable :
   une correspondance plausible mais fausse ferait dire au document « fossé » là
   où le terrain montre un mur.
-* **Une projection inattendue est signalée, jamais réinterprétée.** Le pilote
-  EDIGÉO rend un proj4 sans code EPSG ; le Lambert-93 est posé explicitement, et
-  seulement s'il est reconnu. Les livraisons `edigeo-cc` sont en coniques
-  conformes par zone — les reprojeter au hasard poserait la feuille à côté de
-  la forêt, exactement le défaut corrigé en v0.6.0 sur le GeoJSON.
+* **La projection vient de ce que le lot déclare.** EDIGÉO est
+  auto-descripteur : son fichier `.GEO` porte le référentiel employé
+  (`LAMB93`, ou `CC42` à `CC50` pour les livraisons `edigeo-cc`). Le pilote,
+  lui, rend un proj4 sans code EPSG. On lit donc la déclaration à la source, et
+  la sortie est ramenée en Lambert-93 quelle que soit la livraison — les lots
+  en conique conforme sont donc lisibles, non refusés. Un référentiel absent ou
+  inconnu est signalé plutôt que deviné : reprojeter au hasard poserait la
+  feuille à côté de la forêt, exactement le défaut corrigé en v0.6.0.
 
 ## Et toujours : un décor
 

@@ -21,23 +21,53 @@ test_that("une couche inconnue est refusee avant toute lecture", {
   expect_error(sommier_fond_pci_lire(fond, couche = "fosses"), "couche")
 })
 
-test_that("une projection inattendue est signalee, jamais reinterpretee", {
-  # Les livraisons `edigeo-cc` sont en coniques conformes par zone. Les
-  # reprojeter au hasard poserait la feuille a cote de la foret sans que rien
-  # ne l'annonce - c'est le defaut du GeoJSON en Lambert-93 corrige en v0.6.0.
-  skip_if_not_installed("sf")
-  point <- sf::st_sfc(sf::st_point(c(1650000, 2200000)), crs = 3946)
-  expect_error(poser_lambert93(point, "feuille-cc.THF"),
-               "projection inattendue")
+# Un lot EDIGEO reduit a sa declaration de referentiel : de quoi verifier ce
+# que le paquet en fait, sans telecharger une feuille.
+lot_declarant <- function(reference, env = parent.frame()) {
+  dossier <- withr::local_tempdir(.local_envir = env)
+  thf <- file.path(dossier, "E0000A01.THF")
+  writeLines("BOMT 12:E0000A01.THF", thf)
+  if (!is.null(reference)) {
+    writeLines(c("RTYSA03:GEO", paste0("RELSA06:", reference), "UNHST01:m"),
+               file.path(dossier, "ED0A01SE.GEO"))
+  }
+  thf
+}
 
-  # Et le Lambert-93 reconnu se pose sans bruit, meme prive de son code EPSG.
-  # `st_crs<-` avertit qu'il ne reprojette pas : c'est precisement ce qu'on
-  # veut ici - la donnee est deja en Lambert-93, il lui manque son etiquette.
-  sans_epsg <- suppressWarnings(sf::st_set_crs(
-    sf::st_sfc(sf::st_point(c(847500, 6687400))),
-    sf::st_crs(sf::st_crs(2154)$proj4string)
-  ))
-  expect_equal(sf::st_crs(poser_lambert93(sans_epsg, "f.THF"))$epsg, 2154L)
+test_that("le referentiel se lit dans la declaration du lot", {
+  # EDIGEO est auto-descripteur : le `.GEO` porte le referentiel employe. Le
+  # lire vaut mieux que reconnaitre une chaine proj4 - la declaration est
+  # l'intention du producteur, le proj4 une traduction du pilote, rendue sans
+  # code EPSG.
+  expect_equal(projection_declaree(lot_declarant("LAMB93")), "LAMB93")
+  expect_equal(projection_declaree(lot_declarant("CC47")), "CC47")
+  expect_true(is.na(projection_declaree(lot_declarant(NULL))))
+})
+
+test_that("une conique conforme declaree est ramenee en Lambert-93", {
+  # Les livraisons `edigeo-cc` sont en CC42 a CC50 : elles ne sont plus
+  # refusees, elles sont reprojetees d'apres ce qu'elles declarent.
+  skip_if_not_installed("sf")
+  ramene <- poser_projection(sf::st_sfc(sf::st_point(c(1700000, 5300000))),
+                             lot_declarant("CC47"))
+  expect_equal(sf::st_crs(ramene)$epsg, 2154L)
+})
+
+test_that("un referentiel absent ou inconnu est signale, jamais devine", {
+  # Reprojeter au hasard poserait la feuille a cote de la foret sans que rien
+  # ne l'annonce - c'est le defaut du GeoJSON corrige en v0.6.0.
+  skip_if_not_installed("sf")
+  nu <- sf::st_sfc(sf::st_point(c(847500, 6687400)))
+  expect_error(poser_projection(nu, lot_declarant(NULL)), "aucune declaration")
+  expect_error(poser_projection(nu, lot_declarant("UTM31")),
+               "referentiel declare")
+})
+
+test_that("une geometrie deja etiquetee n'est pas retouchee", {
+  skip_if_not_installed("sf")
+  l93 <- sf::st_sfc(sf::st_point(c(847500, 6687400)), crs = 2154)
+  expect_equal(sf::st_crs(poser_projection(l93, lot_declarant("LAMB93")))$epsg,
+               2154L)
 })
 
 test_that("la nature d'un detail n'est pas devinee", {

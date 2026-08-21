@@ -36,13 +36,20 @@ Deux constats qui commandent la conception :
    contiennent la table de correspondance : elle appartient à la symbolisation
    du plan, publiée ailleurs.
 2. **Le système de coordonnées arrive sans code EPSG.** Le pilote rend un
-   proj4 Lambert-93 mais `st_crs()$epsg` vaut `NA`. La variante `edigeo-cc`
-   livre des coniques conformes par zone, qui ne sont pas du 2154.
+   proj4 Lambert-93 mais `st_crs()$epsg` vaut `NA`. Le lot, lui, **déclare son
+   référentiel** : EDIGÉO est auto-descripteur, et le fichier `.GEO` porte
+   `RELSA06:LAMB93` — `CC42` à `CC50` pour les livraisons `edigeo-cc`. On lit
+   donc la déclaration plutôt que de reconnaître une chaîne.
 
 ## Décisions de conception
 
-1. **On ne devine pas la nature d'un détail.** Le code `SYM` est exposé tel
-   quel, et une table de correspondance peut être **fournie par l'appelant**.
+1. **On ne devine pas la nature d'un détail.** EDIGÉO décrit sa *structure* —
+   noms d'objets, d'attributs et de relations — et GDAL s'en sert pour bâtir
+   les couches et leurs champs ; c'est ainsi qu'on obtient `SYM` sans lire le
+   `.DIC` soi-même. Mais la structure n'est pas la sémantique : sur la feuille
+   examinée, toutes les définitions du `.DIC` sont vides (`DEFST00:`) et aucune
+   section n'énumère les valeurs. Le code `SYM` est donc exposé tel quel, et
+   une table de correspondance peut être **fournie par l'appelant**.
    Aucune table n'est embarquée tant qu'une source n'est pas citable : une
    correspondance plausible mais fausse ferait dire au document « fossé » là où
    le terrain montre un mur. Un paquet dont l'objet est la valeur probante ne
@@ -59,10 +66,11 @@ Deux constats qui commandent la conception :
    la donnée d'un tiers ; le constat qui fait foi est celui du gestionnaire,
    au registre 2, avec sa géométrie.
 
-4. **Le CRS est posé explicitement**, et seulement quand le proj4 lu est bien
-   du Lambert-93. Une projection inattendue se signale plutôt que de se laisser
-   réinterpréter — c'est le même défaut que le GeoJSON en 2154 corrigé en
-   v0.6.0, et il se paie au même prix.
+4. **Le CRS vient de ce que le lot déclare**, non de ce qu'on croit
+   reconnaître : le `.GEO` est lu, son code traduit en EPSG, et la sortie
+   ramenée en Lambert-93 quelle que soit la livraison. Un référentiel absent ou
+   inconnu se signale plutôt que de se laisser deviner — c'est le même défaut
+   que le GeoJSON en 2154 corrigé en v0.6.0, et il se paie au même prix.
 
 5. **Le téléchargement reste explicite**, comme au lot 3 : ni le rapport ni un
    export ne déclenchent d'appel réseau.
@@ -82,5 +90,6 @@ Deux constats qui commandent la conception :
 * Une forêt de trois parcelles ne fait télécharger qu'une ou deux feuilles.
 * Le `SYM` remonte brut ; sans table fournie, la nature reste `NA` et le
   document ne l'affiche pas.
-* Une feuille en projection inattendue est refusée, pas reprojetée au hasard.
+* Une feuille en conique conforme est reprojetée d'après ce qu'elle déclare ;
+  un référentiel absent ou inconnu est refusé, pas deviné.
 * Aucune donnée PCI n'entre dans la chaîne de hachage.

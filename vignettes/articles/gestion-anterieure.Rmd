@@ -492,19 +492,26 @@ EDIGÉO — ce que l'archive, elle, ne dit qu'une fois décompressée.
 
 Deux refus gouvernent la lecture.
 
-**La nature d'un détail n'est pas devinée.** `TLINE_id` porte un attribut `SYM`
-qui distingue mur, fossé, haie et clôture, mais sa nomenclature ne figure ni
-dans le `.DIC` ni dans le `.SCD` de l'archive : elle appartient à la
-symbolisation du plan. Le code sort donc brut, et la table de correspondance
-vous appartient — le paquet n'en embarque aucune tant qu'une source n'est pas
+**La nature d'un détail n'est pas devinée.** EDIGÉO est auto-descripteur : le
+`.DIC` définit objets, attributs et relations, le `.SCD` dit quelle classe
+porte quels attributs, et GDAL s'en sert pour bâtir les couches et leurs
+champs — c'est ainsi qu'on récupère `SYM` sans parser le dictionnaire
+soi-même. Mais la structure n'est pas la sémantique : sur la feuille examinée,
+toutes les définitions du `.DIC` sont vides et aucune section n'énumère les
+valeurs. `SYM` distingue mur, fossé, haie et clôture ; sa nomenclature
+appartient à la symbolisation du plan, publiée ailleurs. Le code sort donc
+brut, et la table de correspondance vous appartient — le paquet n'en embarque aucune tant qu'une source n'est pas
 citable. Une correspondance plausible mais fausse ferait dire au document
 « fossé » là où le terrain montre un mur.
 
-**Une projection inattendue est signalée, jamais réinterprétée.** Le pilote
-EDIGÉO rend un proj4 sans code EPSG ; le Lambert-93 n'est posé que s'il est
-reconnu. Les livraisons `edigeo-cc` sont en coniques conformes par zone, et les
-reprojeter au hasard poserait la feuille à côté de la forêt — le défaut même
-qu'on a corrigé en v0.6.0 sur l'export GeoJSON.
+**La projection vient de ce que le lot déclare.** Le `.GEO` porte le
+référentiel employé — `RELSA06:LAMB93` sur nos feuilles, `CC42` à `CC50` pour
+les livraisons `edigeo-cc`. C'est lui qu'on lit, plutôt que de reconnaître la
+chaîne proj4 que le pilote reconstruit sans code EPSG : la déclaration est
+l'intention du producteur, le proj4 n'en est qu'une traduction. Les lots en
+conique conforme sont donc lisibles et ramenés en Lambert-93 ; un référentiel
+absent ou inconnu est refusé, jamais deviné — le défaut même qu'on a corrigé en
+v0.6.0 sur l'export GeoJSON.
 
 Une remarque, sur ce jeu de démonstration : les bornes réelles de Couchey ne
 tombent **pas** dans les trois parcelles, dont la géométrie est inventée. La

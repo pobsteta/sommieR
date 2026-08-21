@@ -177,6 +177,7 @@ reference:
     - sommier_fond_pci
     - sommier_fond_pci_lire
     - SOMMIER_COUCHES_PCI
+    - SOMMIER_PROJECTIONS_EDIGEO
 
   - title: "Géométrie des payloads"
     desc: >
