@@ -41,6 +41,9 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 #'   telecharge pas : le rendu ne doit declencher aucun appel reseau, sans
 #'   quoi un rapport cesserait d'etre editable hors ligne - et le meme rapport
 #'   rejoue plus tard changerait de fond sans le dire.
+#' @param fond_pci Bornes du PCI vecteur a poser sur la carte de la desserte,
+#'   telles que les rend [sommier_fond_pci_lire()] ; `NULL` pour s'en passer.
+#'   Meme regle que `fond` : fourni, jamais telecharge au rendu.
 #' @param quarto Chemin de l'executable Quarto.
 #'
 #' @return Invisiblement, le chemin du document produit.
@@ -55,6 +58,7 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
                                    debut = NULL, fin = NULL,
                                    referentiel = "psg", fond = NULL,
+                                   fond_pci = NULL,
                                    quarto = Sys.which("quarto")) {
   format <- valider_choix(format, "format", SOMMIER_FORMATS_QUARTO)
   chemin <- valider_texte(chemin, "chemin")
@@ -82,6 +86,7 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
     # qu'on y lit.
     objets          = essayer_section(sommier_objets_localises(con, foret_id)),
     fond            = fond,
+    fond_pci        = fond_pci,
     ibp             = essayer_section(sommier_elements_ibp(con, foret_id)),
     densite_voirie  = essayer_section(sommier_densite_voirie(con, foret_id)),
     version_sommier = as.character(utils::packageVersion("sommieR")),
