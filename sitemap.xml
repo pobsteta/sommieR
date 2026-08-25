@@ -13,6 +13,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_AUTORITES.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_CHAMPS_EMPREINTE.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_COUCHES_CADASTRE.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_COUCHES_PCI.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_COUCHES_SIG.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_DECIMALES_COORD.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_DISPOSITIFS_FISCAUX.html</loc></url>
@@ -22,6 +23,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_NATURES_PHENOMENE.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_PARCELLES_COUCHEY.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_POSTES_COMPTABLES.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_PROJECTIONS_EDIGEO.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_REFERENTIELS.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_REGIMES.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_REGISTRES.html</loc></url>
@@ -97,8 +99,11 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_execution_budgetaire.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_exporter_manifeste.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_exporter_sig.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_feuilles_pci.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_fond_cadastral.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_fond_lire.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_fond_pci.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_fond_pci_lire.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_geometrie_ug.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_gestion_anterieure.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_importer_detections.html</loc></url>

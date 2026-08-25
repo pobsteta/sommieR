@@ -224,6 +224,23 @@ qui n’entre ni dans un registre ni dans une empreinte.
 - [`SOMMIER_COUCHES_CADASTRE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_COUCHES_CADASTRE.md)
   : Couches du fond cadastral
 
+## PCI vecteur — bornes et détails
+
+Ce que le plan cadastral porte et que les livraisons simplifiées
+écartent : bornes, murs, fossés, haies. Décor lui aussi — le bornage qui
+fait foi est celui du gestionnaire, au registre 2.
+
+- [`sommier_feuilles_pci()`](https://pobsteta.github.io/sommieR/reference/sommier_feuilles_pci.md)
+  : Feuilles cadastrales d'une commune
+- [`sommier_fond_pci()`](https://pobsteta.github.io/sommieR/reference/sommier_fond_pci.md)
+  : Fond PCI vecteur d'une ou plusieurs feuilles
+- [`sommier_fond_pci_lire()`](https://pobsteta.github.io/sommieR/reference/sommier_fond_pci_lire.md)
+  : Lecture d'une couche du PCI vecteur
+- [`SOMMIER_COUCHES_PCI`](https://pobsteta.github.io/sommieR/reference/SOMMIER_COUCHES_PCI.md)
+  : Couches du PCI vecteur (EDIGEO)
+- [`SOMMIER_PROJECTIONS_EDIGEO`](https://pobsteta.github.io/sommieR/reference/SOMMIER_PROJECTIONS_EDIGEO.md)
+  : Projections declarees par les lots EDIGEO
+
 ## Géométrie des payloads
 
 La géométrie est dans le payload, donc dans l’empreinte : le contour

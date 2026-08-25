@@ -16,6 +16,7 @@ sommier_rapport_quarto(
   fin = NULL,
   referentiel = "psg",
   fond = NULL,
+  fond_pci = NULL,
   quarto = Sys.which("quarto")
 )
 ```
@@ -56,6 +57,14 @@ sommier_rapport_quarto(
   rendu ne doit declencher aucun appel reseau, sans quoi un rapport
   cesserait d'etre editable hors ligne - et le meme rapport rejoue plus
   tard changerait de fond sans le dire.
+
+- fond_pci:
+
+  Bornes du PCI vecteur a poser sur la carte de la desserte, telles que
+  les rend
+  [`sommier_fond_pci_lire()`](https://pobsteta.github.io/sommieR/reference/sommier_fond_pci_lire.md)
+  ; `NULL` pour s'en passer. Meme regle que `fond` : fourni, jamais
+  telecharge au rendu.
 
 - quarto:
 

@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -292,10 +292,10 @@ si le registre a bougé.</p>
 <code class="sourceCode R"><span><span class="va">verif</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_verifier.html">sommier_verifier</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span></span>
 <span><span class="va">verif</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : eb27b1fa-b3a4-4c64-8ad0-f35cafe87d27</span></span>
+<span><span class="co">#&gt;   foret     : 69a8d745-bb70-4150-b00d-373cfef76095</span></span>
 <span><span class="co">#&gt;   entrees   : 66</span></span>
 <span><span class="co">#&gt;   seq tete  : 66</span></span>
-<span><span class="co">#&gt;   hash tete : f77702e9af3e85bc425a5301914087d2c9650d32ac700ab4419c62695a404fa9</span></span>
+<span><span class="co">#&gt;   hash tete : a20b83fd8b84dbc5f3f74fd9a0b700aed0390a9c2d992de9d8bf277851837d40</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -1270,7 +1270,7 @@ livraisons publiques exposent les parcelles, les sections, les bâtiments
 et les lieux-dits :</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">SOMMIER_COUCHES_CADASTRE</span></span>
-<span><span class="co">#&gt; [1] "parcelles"  "sections"   "batiments"  "lieux_dits"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "parcelles"  "sections"   "batiments"  "lieux_dits" "feuilles"</span></span></code></pre></div>
 <p>Ni bornes, ni fossés. Ceux-là existent bien — dans la forme EDIGEO du
 Plan Cadastral Informatisé, publiée sur le même site sous
 <code>dgfip-pci-vecteur</code>, mais par feuille cadastrale et dans un
@@ -1283,6 +1283,57 @@ avec sa géométrie et chaîné avec le reste. C’est une vérification et non
 une supposition : elle a été faite avant d’écrire une ligne de fond
 cadastral, et elle a déplacé la frontière entre ce que le sommier
 constate et ce qu’il emprunte.</p>
+<div class="section level3">
+<h3 id="les-bornes-elles-sont-ailleurs">Les bornes, elles, sont ailleurs<a class="anchor" aria-label="anchor" href="#les-bornes-elles-sont-ailleurs"></a>
+</h3>
+<p>Le paragraphe ci-dessus disait vrai des livraisons GeoJSON. Il ne
+disait pas tout : les bornes et les détails topographiques existent,
+dans le <strong>PCI vecteur brut au format EDIGÉO</strong>, publié
+feuille par feuille sur le même site.</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">feuilles</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_feuilles_pci.html">sommier_feuilles_pci</a></span><span class="op">(</span><span class="st">"21200"</span>, emprise <span class="op">=</span> <span class="va">couche_carte</span><span class="op">)</span></span>
+<span><span class="va">fond_pci</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_fond_pci_lire.html">sommier_fond_pci_lire</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/sommier_fond_pci.html">sommier_fond_pci</a></span><span class="op">(</span><span class="st">"21200"</span>, <span class="va">feuilles</span><span class="op">$</span><span class="va">feuille</span><span class="op">)</span>, <span class="st">"bornes"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Couchey compte dix-sept feuilles ; l’emprise de la forêt en retient
+<strong>deux</strong>. C’est ce qui rend le lot praticable : on ne
+télécharge pas une commune pour regarder trois parcelles. Les feuilles
+se choisissent sur la couche légère d’Etalab, dont les identifiants
+correspondent exactement aux noms des archives EDIGÉO — ce que
+l’archive, elle, ne dit qu’une fois décompressée.</p>
+<p>Deux refus gouvernent la lecture.</p>
+<p><strong>La nature d’un détail n’est pas devinée.</strong> EDIGÉO est
+auto-descripteur : le <code>.DIC</code> définit objets, attributs et
+relations, le <code>.SCD</code> dit quelle classe porte quels attributs,
+et GDAL s’en sert pour bâtir les couches et leurs champs — c’est ainsi
+qu’on récupère <code>SYM</code> sans parser le dictionnaire soi-même.
+Mais la structure n’est pas la sémantique : sur la feuille examinée,
+toutes les définitions du <code>.DIC</code> sont vides et aucune section
+n’énumère les valeurs. <code>SYM</code> distingue mur, fossé, haie et
+clôture ; sa nomenclature appartient à la symbolisation du plan, publiée
+ailleurs. Le code sort donc brut, et la table de correspondance vous
+appartient — le paquet n’en embarque aucune tant qu’une source n’est pas
+citable. Une correspondance plausible mais fausse ferait dire au
+document « fossé » là où le terrain montre un mur.</p>
+<p><strong>La projection vient de ce que le lot déclare.</strong> Le
+<code>.GEO</code> porte le référentiel employé —
+<code>RELSA06:LAMB93</code> sur nos feuilles, <code>CC42</code> à
+<code>CC50</code> pour les livraisons <code>edigeo-cc</code>. C’est lui
+qu’on lit, plutôt que de reconnaître la chaîne proj4 que le pilote
+reconstruit sans code EPSG : la déclaration est l’intention du
+producteur, le proj4 n’en est qu’une traduction. Les lots en conique
+conforme sont donc lisibles et ramenés en Lambert-93 ; un référentiel
+absent ou inconnu est refusé, jamais deviné — le défaut même qu’on a
+corrigé en v0.6.0 sur l’export GeoJSON.</p>
+<p>Une remarque, sur ce jeu de démonstration : les bornes réelles de
+Couchey ne tombent <strong>pas</strong> dans les trois parcelles, dont
+la géométrie est inventée. La carte de la desserte n’en montre donc
+aucune, et le rapport le dit plutôt que d’élargir l’emprise jusqu’à en
+attraper. Sur une forêt réelle, elles seraient là.</p>
+<p>Et cela ne change rien à la règle : une borne relevée par la DGFiP
+reste la donnée d’un tiers. Le bornage qui fait foi est celui du
+gestionnaire, au registre 2, avec sa géométrie et son empreinte.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="les-unités-de-gestion-sur-le-terrain">Les unités de gestion sur le terrain<a class="anchor" aria-label="anchor" href="#les-unit%C3%A9s-de-gestion-sur-le-terrain"></a>
@@ -1291,15 +1342,15 @@ constate et ce qu’il emprunte.</p>
 vigueur à une date, enrichies du nombre d’entrées qui s’y rattachent. Le
 GeoJSON n’exige rien de plus que PostGIS et s’ouvre sans rien installer
 ; le GeoPackage passe par <code>sf</code>.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">couche</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".geojson"</span><span class="op">)</span></span>
 <span><span class="va">export</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_exporter_sig.html">sommier_exporter_sig</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">couche</span>, format <span class="op">=</span> <span class="st">"geojson"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">export</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 3</span></span>
-<span><span class="co">#&gt;  $ chemin               : chr "/tmp/RtmpYkJM5H/file309e5241c181.geojson"</span></span>
+<span><span class="co">#&gt;  $ chemin               : chr "/tmp/RtmpZqvvLj/file329b60fed97d.geojson"</span></span>
 <span><span class="co">#&gt;  $ n_unites             : int 3</span></span>
 <span><span class="co">#&gt;  $ unites_sans_geometrie: chr(0)</span></span></code></pre></div>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ug</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">read_sf</a></span><span class="op">(</span><span class="va">couche</span><span class="op">)</span></span>
 <span><span class="va">teintes</span> <span class="op">&lt;-</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#E8F5E9"</span>, <span class="st">"#2E7D32"</span><span class="op">)</span><span class="op">)</span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
 <span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
@@ -1315,7 +1366,7 @@ Les trois parcelles du jeu de démonstration, teintées par nombre
 d’entrées.
 </p>
 </div>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p>Le GeoJSON sort en WGS84, comme l’exige la RFC 7946 : le format ne
 déclare pas sa projection, et tout lecteur la suppose. Le GeoPackage,
@@ -1331,7 +1382,7 @@ silence laisserait croire la forêt entièrement cartographiée.</p>
 </h2>
 <p>Tout ce qui précède, <code><a href="../reference/sommier_rapport_quarto.html">sommier_rapport_quarto()</a></code> le
 rassemble et le rend en un document autoportant, HTML ou PDF :</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sommier_rapport_quarto.html">sommier_rapport_quarto</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>, <span class="va">foret</span>, <span class="st">"gestion-anterieure.html"</span>,</span>
 <span>  debut <span class="op">=</span> <span class="st">"2016-01-01"</span>, fin <span class="op">=</span> <span class="st">"2025-12-31"</span>, referentiel <span class="op">=</span> <span class="st">"amenagement"</span></span>
@@ -1351,15 +1402,15 @@ valeur probante tient au registre : l’empreinte de tête donnée plus haut
 scelle toutes les entrées de la chaîne. Ce qui se transporte, c’est le
 manifeste — chaîne, visas et horodatages — vérifiable hors ligne, sans
 base et sans le paquet qui l’a produit.</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">chemin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".json"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/sommier_exporter_manifeste.html">sommier_exporter_manifeste</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/sommier_verifier_manifeste.html">sommier_verifier_manifeste</a></span><span class="op">(</span><span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : eb27b1fa-b3a4-4c64-8ad0-f35cafe87d27</span></span>
+<span><span class="co">#&gt;   foret     : 69a8d745-bb70-4150-b00d-373cfef76095</span></span>
 <span><span class="co">#&gt;   entrees   : 66</span></span>
 <span><span class="co">#&gt;   seq tete  : 66</span></span>
-<span><span class="co">#&gt;   hash tete : f77702e9af3e85bc425a5301914087d2c9650d32ac700ab4419c62695a404fa9</span></span>
+<span><span class="co">#&gt;   hash tete : a20b83fd8b84dbc5f3f74fd9a0b700aed0390a9c2d992de9d8bf277851837d40</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span></code></pre></div>
 <p>Toute entrée modifiée, retirée ou insérée après coup invalide
 l’empreinte de tête, et la vérification le dit — y compris chez le
@@ -1373,14 +1424,14 @@ l’émetteur.</p>
 les mêmes variables d’environnement que la suite de tests
 (<code>SOMMIER_ARTICLE_*</code> d’abord, <code>SOMMIER_TEST_*</code> en
 repli) :</p>
-<div class="sourceCode" id="cb33"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="at">--name</span> sommier-pg <span class="at">-p</span> 5432:5432 <span class="dt">\</span></span>
-<span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a>  <span class="at">-e</span> POSTGRES_PASSWORD=postgres <span class="at">-e</span> POSTGRES_DB=sommier_article <span class="dt">\</span></span>
-<span id="cb33-3"><a href="#cb33-3" tabindex="-1"></a>  postgis/postgis:16-3.4</span>
-<span id="cb33-4"><a href="#cb33-4" tabindex="-1"></a></span>
-<span id="cb33-5"><a href="#cb33-5" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_DB</span><span class="op">=</span>sommier_article <span class="dt">\</span></span>
-<span id="cb33-6"><a href="#cb33-6" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_USER</span><span class="op">=</span>postgres <span class="dt">\</span></span>
-<span id="cb33-7"><a href="#cb33-7" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_PASSWORD</span><span class="op">=</span>postgres <span class="dt">\</span></span>
-<span id="cb33-8"><a href="#cb33-8" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'pkgdown::build_article("gestion-anterieure")'</span></span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="at">--name</span> sommier-pg <span class="at">-p</span> 5432:5432 <span class="dt">\</span></span>
+<span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a>  <span class="at">-e</span> POSTGRES_PASSWORD=postgres <span class="at">-e</span> POSTGRES_DB=sommier_article <span class="dt">\</span></span>
+<span id="cb34-3"><a href="#cb34-3" tabindex="-1"></a>  postgis/postgis:16-3.4</span>
+<span id="cb34-4"><a href="#cb34-4" tabindex="-1"></a></span>
+<span id="cb34-5"><a href="#cb34-5" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_DB</span><span class="op">=</span>sommier_article <span class="dt">\</span></span>
+<span id="cb34-6"><a href="#cb34-6" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_USER</span><span class="op">=</span>postgres <span class="dt">\</span></span>
+<span id="cb34-7"><a href="#cb34-7" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_PASSWORD</span><span class="op">=</span>postgres <span class="dt">\</span></span>
+<span id="cb34-8"><a href="#cb34-8" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'pkgdown::build_article("gestion-anterieure")'</span></span></code></pre></div>
 <p>Sans base joignable, l’article se rend quand même : le code reste
 lisible, les tableaux manquent, et l’avertissement en tête le dit. Un
 site qui se construit n’est pas la preuve que les chiffres ont été

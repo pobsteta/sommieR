@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,33 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.8.0" id="sommier-080">sommieR 0.8.0<a class="anchor" aria-label="anchor" href="#sommier-080"></a></h2>
+<p>Lot 4 : le PCI vecteur. Les bornes et les détails topographiques que les livraisons GeoJSON écartent, cherchés là où ils se trouvent.</p>
+<div class="section level3">
+<h3 id="ce-que-le-lot-avait-conclu-trop-vite-0-8-0">Ce que le lot 3 avait conclu trop vite<a class="anchor" aria-label="anchor" href="#ce-que-le-lot-avait-conclu-trop-vite-0-8-0"></a></h3>
+<p>Le lot 3 concluait que bornes et fossés n’étaient pas dans le cadastre. Vrai des livraisons d’Etalab, qui sont une <strong>version simplifiée</strong> du plan : le retraitement ne conserve que parcelles, bâtiments, sections, feuilles, lieux-dits et subdivisions fiscales. Les détails topographiques existent pourtant, dans le PCI vecteur brut au format EDIGÉO publié feuille par feuille par la DGFiP sur le même site.</p>
+<p>Vérifié sur la feuille <code>212000000A01</code> de Couchey : <code>BORNE_id</code> (12 points), <code>TLINE_id</code> (50 lignes, attribut <code>SYM</code>), <code>ZONCOMMUNI_id</code>, <code>PARCELLE_id</code>, <code>SECTION_id</code>, <code>SUBDSECT_id</code>, <code>LIEUDIT_id</code>, <code>COMMUNE_id</code>.</p>
+</div>
+<div class="section level3">
+<h3 id="ce-que-le-paquet-apporte-0-8-0">Ce que le paquet apporte<a class="anchor" aria-label="anchor" href="#ce-que-le-paquet-apporte-0-8-0"></a></h3>
+<ul><li>
+<code><a href="../reference/sommier_feuilles_pci.html">sommier_feuilles_pci()</a></code> rend les feuilles de la commune avec leur emprise et retient celles qui touchent la forêt. <strong>Couchey en compte dix-sept, une forêt en touche deux</strong> : charger toute la commune serait payer huit fois le nécessaire. Les feuilles se choisissent sur la couche légère d’Etalab, dont les identifiants correspondent exactement aux noms des archives EDIGÉO.</li>
+<li>
+<code><a href="../reference/sommier_fond_pci.html">sommier_fond_pci()</a></code> télécharge et décompresse les archives retenues ; <code><a href="../reference/sommier_fond_pci_lire.html">sommier_fond_pci_lire()</a></code> en lit une couche, restreinte à l’emprise.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="deux-refus-0-8-0">Deux refus<a class="anchor" aria-label="anchor" href="#deux-refus-0-8-0"></a></h3>
+<ul><li>
+<strong>La nature d’un détail n’est pas devinée.</strong> EDIGÉO décrit sa structure, et GDAL s’en sert pour bâtir les couches et leurs champs — c’est ainsi qu’on obtient <code>SYM</code> sans lire le <code>.DIC</code> soi-même. Mais la structure n’est pas la sémantique : sur la feuille examinée, toutes les définitions du <code>.DIC</code> sont vides et aucune section n’énumère les valeurs. <code>SYM</code> distingue mur, fossé, haie et clôture ; sa nomenclature appartient à la symbolisation du plan, publiée ailleurs. Le code est donc rendu brut, et une table de correspondance peut être <strong>fournie par l’appelant</strong>. Aucune n’est embarquée tant qu’une source n’est pas citable : une correspondance plausible mais fausse ferait dire au document « fossé » là où le terrain montre un mur.</li>
+<li>
+<strong>La projection vient de ce que le lot déclare.</strong> EDIGÉO est auto-descripteur : son fichier <code>.GEO</code> porte le référentiel employé (<code>LAMB93</code>, ou <code>CC42</code> à <code>CC50</code> pour les livraisons <code>edigeo-cc</code>). Le pilote, lui, rend un proj4 sans code EPSG. On lit donc la déclaration à la source, et la sortie est ramenée en Lambert-93 quelle que soit la livraison — les lots en conique conforme sont donc lisibles, non refusés. Un référentiel absent ou inconnu est signalé plutôt que deviné : reprojeter au hasard poserait la feuille à côté de la forêt, exactement le défaut corrigé en v0.6.0.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="et-toujours--un-décor-0-8-0">Et toujours : un décor<a class="anchor" aria-label="anchor" href="#et-toujours--un-d%C3%A9cor-0-8-0"></a></h3>
+<p>Rien du PCI n’entre dans un registre, une empreinte ou un manifeste. Une borne relevée par la DGFiP est la donnée d’un tiers ; le bornage qui fait foi est celui du gestionnaire, porté au registre 2 avec sa géométrie depuis la v0.7.0. Les bornes s’affichent en surimpression sur la carte de la desserte, en croix brunes, avec la mention qui le dit.</p>
+</div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.7.0" id="sommier-070">sommieR 0.7.0<a class="anchor" aria-label="anchor" href="#sommier-070"></a></h2>
 <p>Les lots 2 et 3 des briefs de cartographie. La géométrie entre dans les payloads — donc dans l’empreinte — et le cadastre prend sa place de décor.</p>

@@ -161,10 +161,10 @@ registre a bougé.
 verif <- sommier_verifier(con, foret)
 verif
 #> Verification de chaine - sommier
-#>   foret     : eb27b1fa-b3a4-4c64-8ad0-f35cafe87d27
+#>   foret     : 69a8d745-bb70-4150-b00d-373cfef76095
 #>   entrees   : 66
 #>   seq tete  : 66
-#>   hash tete : f77702e9af3e85bc425a5301914087d2c9650d32ac700ab4419c62695a404fa9
+#>   hash tete : a20b83fd8b84dbc5f3f74fd9a0b700aed0390a9c2d992de9d8bf277851837d40
 #>   etat      : chaine intacte
 ```
 
@@ -616,7 +616,7 @@ lieux-dits :
 ``` r
 
 SOMMIER_COUCHES_CADASTRE
-#> [1] "parcelles"  "sections"   "batiments"  "lieux_dits"
+#> [1] "parcelles"  "sections"   "batiments"  "lieux_dits" "feuilles"
 ```
 
 Ni bornes, ni fossés. Ceux-là existent bien — dans la forme EDIGEO du
@@ -633,6 +633,62 @@ elle a été faite avant d’écrire une ligne de fond cadastral, et elle a
 déplacé la frontière entre ce que le sommier constate et ce qu’il
 emprunte.
 
+### Les bornes, elles, sont ailleurs
+
+Le paragraphe ci-dessus disait vrai des livraisons GeoJSON. Il ne disait
+pas tout : les bornes et les détails topographiques existent, dans le
+**PCI vecteur brut au format EDIGÉO**, publié feuille par feuille sur le
+même site.
+
+``` r
+
+feuilles <- sommier_feuilles_pci("21200", emprise = couche_carte)
+fond_pci <- sommier_fond_pci_lire(
+  sommier_fond_pci("21200", feuilles$feuille), "bornes"
+)
+```
+
+Couchey compte dix-sept feuilles ; l’emprise de la forêt en retient
+**deux**. C’est ce qui rend le lot praticable : on ne télécharge pas une
+commune pour regarder trois parcelles. Les feuilles se choisissent sur
+la couche légère d’Etalab, dont les identifiants correspondent
+exactement aux noms des archives EDIGÉO — ce que l’archive, elle, ne dit
+qu’une fois décompressée.
+
+Deux refus gouvernent la lecture.
+
+**La nature d’un détail n’est pas devinée.** EDIGÉO est auto-descripteur
+: le `.DIC` définit objets, attributs et relations, le `.SCD` dit quelle
+classe porte quels attributs, et GDAL s’en sert pour bâtir les couches
+et leurs champs — c’est ainsi qu’on récupère `SYM` sans parser le
+dictionnaire soi-même. Mais la structure n’est pas la sémantique : sur
+la feuille examinée, toutes les définitions du `.DIC` sont vides et
+aucune section n’énumère les valeurs. `SYM` distingue mur, fossé, haie
+et clôture ; sa nomenclature appartient à la symbolisation du plan,
+publiée ailleurs. Le code sort donc brut, et la table de correspondance
+vous appartient — le paquet n’en embarque aucune tant qu’une source
+n’est pas citable. Une correspondance plausible mais fausse ferait dire
+au document « fossé » là où le terrain montre un mur.
+
+**La projection vient de ce que le lot déclare.** Le `.GEO` porte le
+référentiel employé — `RELSA06:LAMB93` sur nos feuilles, `CC42` à `CC50`
+pour les livraisons `edigeo-cc`. C’est lui qu’on lit, plutôt que de
+reconnaître la chaîne proj4 que le pilote reconstruit sans code EPSG :
+la déclaration est l’intention du producteur, le proj4 n’en est qu’une
+traduction. Les lots en conique conforme sont donc lisibles et ramenés
+en Lambert-93 ; un référentiel absent ou inconnu est refusé, jamais
+deviné — le défaut même qu’on a corrigé en v0.6.0 sur l’export GeoJSON.
+
+Une remarque, sur ce jeu de démonstration : les bornes réelles de
+Couchey ne tombent **pas** dans les trois parcelles, dont la géométrie
+est inventée. La carte de la desserte n’en montre donc aucune, et le
+rapport le dit plutôt que d’élargir l’emprise jusqu’à en attraper. Sur
+une forêt réelle, elles seraient là.
+
+Et cela ne change rien à la règle : une borne relevée par la DGFiP reste
+la donnée d’un tiers. Le bornage qui fait foi est celui du gestionnaire,
+au registre 2, avec sa géométrie et son empreinte.
+
 ## Les unités de gestion sur le terrain
 
 Le même sommier s’exporte en couche SIG : les unités de gestion en
@@ -646,7 +702,7 @@ couche <- tempfile(fileext = ".geojson")
 export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
 str(export)
 #> List of 3
-#>  $ chemin               : chr "/tmp/RtmpYkJM5H/file309e5241c181.geojson"
+#>  $ chemin               : chr "/tmp/RtmpZqvvLj/file329b60fed97d.geojson"
 #>  $ n_unites             : int 3
 #>  $ unites_sans_geometrie: chr(0)
 ```
@@ -719,10 +775,10 @@ chemin <- tempfile(fileext = ".json")
 sommier_exporter_manifeste(con, foret, chemin)
 sommier_verifier_manifeste(chemin)
 #> Verification de chaine - sommier
-#>   foret     : eb27b1fa-b3a4-4c64-8ad0-f35cafe87d27
+#>   foret     : 69a8d745-bb70-4150-b00d-373cfef76095
 #>   entrees   : 66
 #>   seq tete  : 66
-#>   hash tete : f77702e9af3e85bc425a5301914087d2c9650d32ac700ab4419c62695a404fa9
+#>   hash tete : a20b83fd8b84dbc5f3f74fd9a0b700aed0390a9c2d992de9d8bf277851837d40
 #>   etat      : chaine intacte
 ```
 
