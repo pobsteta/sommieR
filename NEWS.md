@@ -1,3 +1,61 @@
+# sommieR 0.8.0
+
+Lot 4 : le PCI vecteur. Les bornes et les détails topographiques que les
+livraisons GeoJSON écartent, cherchés là où ils se trouvent.
+
+## Ce que le lot 3 avait conclu trop vite
+
+Le lot 3 concluait que bornes et fossés n'étaient pas dans le cadastre. Vrai
+des livraisons d'Etalab, qui sont une **version simplifiée** du plan : le
+retraitement ne conserve que parcelles, bâtiments, sections, feuilles,
+lieux-dits et subdivisions fiscales. Les détails topographiques existent
+pourtant, dans le PCI vecteur brut au format EDIGÉO publié feuille par feuille
+par la DGFiP sur le même site.
+
+Vérifié sur la feuille `212000000A01` de Couchey : `BORNE_id` (12 points),
+`TLINE_id` (50 lignes, attribut `SYM`), `ZONCOMMUNI_id`, `PARCELLE_id`,
+`SECTION_id`, `SUBDSECT_id`, `LIEUDIT_id`, `COMMUNE_id`.
+
+## Ce que le paquet apporte
+
+* `sommier_feuilles_pci()` rend les feuilles de la commune avec leur emprise et
+  retient celles qui touchent la forêt. **Couchey en compte dix-sept, une forêt
+  en touche deux** : charger toute la commune serait payer huit fois le
+  nécessaire. Les feuilles se choisissent sur la couche légère d'Etalab, dont
+  les identifiants correspondent exactement aux noms des archives EDIGÉO.
+* `sommier_fond_pci()` télécharge et décompresse les archives retenues ;
+  `sommier_fond_pci_lire()` en lit une couche, restreinte à l'emprise.
+
+## Deux refus
+
+* **La nature d'un détail n'est pas devinée.** EDIGÉO décrit sa structure, et
+  GDAL s'en sert pour bâtir les couches et leurs champs — c'est ainsi qu'on
+  obtient `SYM` sans lire le `.DIC` soi-même. Mais la structure n'est pas la
+  sémantique : sur la feuille examinée, toutes les définitions du `.DIC` sont
+  vides et aucune section n'énumère les valeurs. `SYM` distingue mur, fossé,
+  haie et clôture ; sa nomenclature appartient à la symbolisation du plan,
+  publiée ailleurs. Le code est
+  donc rendu brut, et une table de correspondance peut être **fournie par
+  l'appelant**. Aucune n'est embarquée tant qu'une source n'est pas citable :
+  une correspondance plausible mais fausse ferait dire au document « fossé » là
+  où le terrain montre un mur.
+* **La projection vient de ce que le lot déclare.** EDIGÉO est
+  auto-descripteur : son fichier `.GEO` porte le référentiel employé
+  (`LAMB93`, ou `CC42` à `CC50` pour les livraisons `edigeo-cc`). Le pilote,
+  lui, rend un proj4 sans code EPSG. On lit donc la déclaration à la source, et
+  la sortie est ramenée en Lambert-93 quelle que soit la livraison — les lots
+  en conique conforme sont donc lisibles, non refusés. Un référentiel absent ou
+  inconnu est signalé plutôt que deviné : reprojeter au hasard poserait la
+  feuille à côté de la forêt, exactement le défaut corrigé en v0.6.0.
+
+## Et toujours : un décor
+
+Rien du PCI n'entre dans un registre, une empreinte ou un manifeste. Une borne
+relevée par la DGFiP est la donnée d'un tiers ; le bornage qui fait foi est
+celui du gestionnaire, porté au registre 2 avec sa géométrie depuis la v0.7.0.
+Les bornes s'affichent en surimpression sur la carte de la desserte, en croix
+brunes, avec la mention qui le dit.
+
 # sommieR 0.7.0
 
 Les lots 2 et 3 des briefs de cartographie. La géométrie entre dans les

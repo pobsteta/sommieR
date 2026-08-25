@@ -70,6 +70,31 @@ dessiner_fond <- function() {
   invisible(NULL)
 }
 
+# Bornes du PCI vecteur : décor lui aussi, et de la même source qu'un fond
+# parcellaire — une borne relevée par la DGFiP n'est pas un constat du
+# gestionnaire, celui-là est au registre 2.
+fond_pci <- rapport$fond_pci
+pci_pose <- !is.null(fond_pci) && nrow(fond_pci) > 0L && cartographiable
+
+dessiner_pci <- function() {
+  if (!pci_pose) return(invisible(NULL))
+  plot(sf::st_as_sfc(fond_pci$wkt, crs = 2154), add = TRUE,
+       pch = 3, cex = 0.8, col = "#8D6E63")
+  invisible(NULL)
+}
+
+mention_pci <- function() {
+  if (is.null(fond_pci)) return(invisible(NULL))
+  if (nrow(fond_pci) == 0L) {
+    cat("*Aucune borne du plan cadastral dans l'emprise de la forêt.*\n\n")
+    return(invisible(NULL))
+  }
+  cat("*Croix brunes : ", nrow(fond_pci), " borne(s) du plan cadastral ",
+      "informatisé (PCI vecteur, DGFiP). Donnée tierce, hors registre : le ",
+      "bornage constaté par le gestionnaire est au registre 2.*\n\n", sep = "")
+  invisible(NULL)
+}
+
 mention_fond <- function() {
   if (!fond_pose) return(invisible(NULL))
   millesime <- attr(fond, "millesime")
@@ -152,7 +177,8 @@ objets_de <- function(registres) {
   jeu[!duplicated(jeu$designation, fromLast = TRUE), , drop = FALSE]
 }
 
-dessiner_objets <- function(registres, legende = NULL, etiqueter = TRUE) {
+dessiner_objets <- function(registres, legende = NULL, etiqueter = TRUE,
+                            pci = FALSE) {
   jeu <- objets_de(registres)
   if (!cartographiable || is.null(jeu)) return(invisible(NULL))
   formes <- sf::st_as_sfc(jeu$wkt, crs = 2154)
@@ -172,6 +198,7 @@ dessiner_objets <- function(registres, legende = NULL, etiqueter = TRUE) {
     text(ancres[, 1L], ancres[, 2L], labels = jeu$designation, cex = 0.62,
          pos = 3, offset = 0.5)
   }
+  if (isTRUE(pci)) dessiner_pci()
   invisible(NULL)
 }
 
@@ -372,7 +399,11 @@ cat("\n\n")
 ```
 
 ```{r carte-desserte, fig.height=3.6, fig.width=7, fig.cap="Voirie et équipements portés au registre 4, et limites relevées au registre 2.", eval=!is.null(rapport$densite_voirie)}
-dessiner_objets(c(2L, 4L))
+dessiner_objets(c(2L, 4L), pci = TRUE)
+```
+
+```{r carte-desserte-pci, results='asis'}
+mention_pci()
 ```
 
 ## Vérifier ce document
