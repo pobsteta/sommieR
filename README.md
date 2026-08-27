@@ -350,10 +350,16 @@ qu'échoués.
 | 0.2.0 | Registres 1 et 8 ; visa signé JWS, ancrage RFC 3161 ; import FORDEAD/FAST comme propositions à valider |
 | 0.3.0 | Registre 7 et vues A50G ; budget prévisionnel et bilan financier |
 | 0.4.0 | Registres 2, 3, 4, 9 ; densité de voirie et éléments d'IBP |
-| **0.5.0** | Exports réglementaires (PSG, aménagement, CT88) et export cartographique |
+| 0.5.0 | Exports réglementaires (PSG, aménagement, CT88) et export cartographique |
+| 0.6.0 | Carte du rapport de gestion antérieure ; géométries des unités de gestion |
+| 0.7.0 | Géométrie dans les payloads, donc dans l'empreinte ; fond cadastral |
+| **0.8.0** | PCI vecteur EDIGÉO : bornes et détails topographiques |
 
-La feuille de route du brief est couverte. Restent hors périmètre, et signalés
-comme tels : la validation cryptographique de la chaîne de certification des
+Les cinq priorités du brief de synthèse sont couvertes, ainsi que les quatre
+lots de la série cartographique. Deux briefs déposés dans `specs/` cadrent la
+suite : `brief_probant-1` (ES256, et ce qu'un jeton d'horodatage atteste) et
+`brief_probant-2` (la chaîne de certification). Restent hors périmètre, et
+signalés comme tels : la validation cryptographique de la chaîne de certification des
 jetons d'horodatage (elle demande un magasin de confiance et une validation
 CMS), et `ES256` pour les signatures — JOSE veut l'ECDSA en `R||S` brut,
 OpenSSL la produit en DER, et signer sans convertir produirait des jetons
