@@ -10,7 +10,7 @@ sommier_signataire(claims, signer, alg = "RS256", kid = NULL)
 \item{claims}{Liste nommee des claims d'identite (au minimum \code{sub}).}
 
 \item{signer}{Fonction prenant un vecteur \code{raw} et rendant la signature,
-en \code{raw}.}
+en \code{raw}, au format JOSE de \code{alg}.}
 
 \item{alg}{Algorithme JOSE, parmi \link{SOMMIER_ALGOS_JWS}.}
 
@@ -25,6 +25,15 @@ de quoi signer. Les deux sont volontairement separes, parce qu'ils viennent
 de sources differentes - le fournisseur d'identite (Keycloak, AgentConnect)
 atteste \strong{qui} signe, une cle ou un service de signature eIDAS produit
 \strong{la} signature. Keycloak ne signe pas de contenu arbitraire.
+}
+\details{
+\code{signer} doit rendre la signature \strong{au format que JOSE attend pour \code{alg}} :
+pour \code{ES256}, les 64 octets \code{R||S}, et non le DER que produit OpenSSL.
+\code{\link[=signataire_cle]{signataire_cle()}} s'en charge, puisqu'elle tient la cle ;
+un service de signature externe branche ici doit le faire de son cote. Le
+paquet ne devine pas le format rendu : une signature ECDSA en DER peut, tres
+rarement, faire exactement 64 octets, et un reniflage se tromperait alors
+sans que rien ne le signale.
 }
 \seealso{
 \code{\link[=signataire_cle]{signataire_cle()}}, \code{\link[=signataire_keycloak]{signataire_keycloak()}}

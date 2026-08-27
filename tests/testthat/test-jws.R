@@ -70,7 +70,7 @@ test_that("un signataire sans identite est refuse", {
   expect_error(sommier_signataire(list(sub = "a"), "pas une fonction"),
                "fonction")
   expect_error(
-    sommier_signataire(list(sub = "a"), function(x) x, alg = "ES256"),
+    sommier_signataire(list(sub = "a"), function(x) x, alg = "HS256"),
     "alg"
   )
 })
@@ -94,4 +94,92 @@ test_that("un jeton malforme ou sans sub est refuse", {
   jeton <- paste0(base64url_encoder('{"alg":"RS256"}'), ".",
                   base64url_encoder('{"nom":"sans sub"}'), ".sig")
   expect_error(signataire_keycloak(jeton, cle_test()), "sub")
+})
+
+# ---------------------------------------------------------------------------
+# ES256
+# ---------------------------------------------------------------------------
+
+test_that("une cle ECDSA donne un signataire ES256 sans qu'on le declare", {
+  expect_equal(signataire_cle(openssl::ec_keygen("P-256"),
+                              claims = list(sub = "a"))$alg, "ES256")
+  expect_equal(signataire_cle(cle_test(), claims = list(sub = "a"))$alg, "RS256")
+})
+
+test_that("une courbe autre que P-256 est refusee plutot que rembourree", {
+  # Rembourrer une composante de 48 octets a 32 la tronquerait.
+  expect_error(signataire_cle(openssl::ec_keygen("P-384"), list(sub = "a")),
+               "P-256")
+})
+
+test_that("une signature ES256 fait 64 octets et se verifie", {
+  cle <- openssl::ec_keygen("P-256")
+  s <- signataire_cle(cle, claims = list(sub = "agent-es"))
+  charge <- openssl::rand_bytes(32L)
+  jws <- jws_signer_detache(charge, s)
+
+  entete <- jsonlite::fromJSON(
+    rawToChar(base64url_decoder(strsplit(jws, "..", fixed = TRUE)[[1]][[1]])),
+    simplifyVector = FALSE
+  )
+  expect_equal(entete$alg, "ES256")
+  signature <- base64url_decoder(strsplit(jws, "..", fixed = TRUE)[[1]][[2]])
+  expect_length(signature, 64L)
+  expect_true(jws_verifier_detache(jws, charge, cle$pubkey))
+})
+
+test_that("une composante a zero de tete reste sur 32 octets", {
+  # ECDSA est randomise : la meme charge resignee finit par produire une
+  # composante courte. L'attendre du hasard d'un seul essai laisserait passer
+  # le defaut - il ne se manifeste qu'une signature sur cent quarante.
+  cle <- openssl::ec_keygen("P-256")
+  s <- signataire_cle(cle, claims = list(sub = "agent-es"))
+  charge <- openssl::rand_bytes(32L)
+
+  trouve <- NULL
+  for (i in seq_len(20000L)) {
+    jws <- jws_signer_detache(charge, s)
+    signature <- base64url_decoder(strsplit(jws, "..", fixed = TRUE)[[1]][[2]])
+    if (signature[[1L]] == as.raw(0L) || signature[[33L]] == as.raw(0L)) {
+      trouve <- list(jws = jws, signature = signature)
+      break
+    }
+  }
+  skip_if(is.null(trouve), "aucune composante courte tiree en 20 000 essais")
+
+  expect_length(trouve$signature, 64L)
+  expect_true(jws_verifier_detache(trouve$jws, charge, cle$pubkey))
+})
+
+test_that("la conversion DER vers R||S fait l'aller-retour", {
+  cle <- openssl::ec_keygen("P-256")
+  der <- openssl::signature_create(charToRaw("essai"), openssl::sha256, key = cle)
+  brut <- ecdsa_der_vers_brut(der)
+  expect_length(brut, 64L)
+  expect_true(openssl::signature_verify(
+    charToRaw("essai"), ecdsa_brut_vers_der(brut), openssl::sha256,
+    pubkey = cle$pubkey
+  ))
+})
+
+test_that("une signature ES256 non rembourree est refusee", {
+  # C'est ce qu'emettrait une implementation qui concatene deux bignum : la
+  # reconvertir en DER donnerait un `r` faux, syntaxiquement correct.
+  cle <- openssl::ec_keygen("P-256")
+  s <- signataire_cle(cle, claims = list(sub = "agent-es"))
+  charge <- openssl::rand_bytes(32L)
+  parties <- strsplit(jws_signer_detache(charge, s), "..", fixed = TRUE)[[1]]
+  tronquee <- base64url_decoder(parties[[2L]])[-1L]
+  faux <- paste0(parties[[1L]], "..", base64url_encoder(tronquee))
+
+  expect_error(jws_verifier_detache(faux, charge, cle$pubkey), "63 octets")
+})
+
+test_that("une signature ES256 ne se verifie pas sous une autre cle", {
+  cle <- openssl::ec_keygen("P-256")
+  s <- signataire_cle(cle, claims = list(sub = "agent-es"))
+  charge <- openssl::rand_bytes(32L)
+  jws <- jws_signer_detache(charge, s)
+  expect_false(jws_verifier_detache(jws, charge,
+                                    openssl::ec_keygen("P-256")$pubkey))
 })

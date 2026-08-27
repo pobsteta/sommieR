@@ -11,7 +11,8 @@ sommier_verifier_manifeste(chemin)
 }
 \value{
 Un objet \code{sommier_rapport}, dont les anomalies incluent les types
-\code{visa_orphelin} et \code{ancrage_orphelin}.
+\code{visa_orphelin}, \code{ancrage_orphelin}, \code{visa_horodatage} et
+\code{ancrage_horodatage}.
 }
 \description{
 Verifie hors ligne la chaine d'un manifeste produit par
@@ -19,10 +20,20 @@ Verifie hors ligne la chaine d'un manifeste produit par
 a l'empreinte qu'il pretend attester.
 }
 \details{
-La verification des signatures JWS et des jetons d'horodatage RFC 3161
-releve du flux de visa (priorite 2 du brief) et n'est pas faite ici : ce
-qui est verifie, c'est que le \code{hash_tete} atteste correspond bien a l'etat
-de la chaine a la sequence annoncee. Un visa dont l'empreinte ne
-correspond a aucune entree est signale - c'est deja suffisant pour
-detecter une attestation rapportee d'une autre chaine.
+Deux confrontations sont faites, sans reseau ni magasin de confiance.
+\enumerate{
+\item Le \code{hash_tete} que l'attestation declare correspond a l'etat de la chaine
+a la sequence annoncee. Un visa dont l'empreinte ne correspond a aucune
+entree est signale : c'est ce qui detecte une attestation rapportee d'une
+autre chaine.
+\item \strong{Le jeton d'horodatage atteste bien cette empreinte-la.} Le point 1
+porte sur ce que la base declare ; celui-ci sur ce que l'autorite a
+reellement signe. Sans lui, un jeton obtenu pour une autre tete de chaine
+accompagnerait le manifeste sans que rien ne le distingue du bon.
+}
+
+Ce qui n'est pas verifie : la signature JWS du visa, faute de clé publique
+dans le manifeste, et la chaine de certification de l'autorite
+d'horodatage, qui demande une ancre de confiance. Les deux relevent du lot
+suivant.
 }

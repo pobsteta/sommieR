@@ -82,12 +82,42 @@ test_that("un ancrage discordant est signale", {
   ch <- chaine_test(4L)
   ancrage <- data.frame(
     id = "nnnnnnnn-0000-4000-8000-000000000001", seq_tete = 2,
-    hash_tete = strrep("cd", 32L), tst_rfc3161 = "00",
+    hash_tete = strrep("cd", 32L),
     date_ancrage = "2026-08-18T10:00:00Z", stringsAsFactors = FALSE
   )
   r <- sommier_verifier_manifeste(manifeste_test(ch, ancrages = ancrage))
   expect_false(r$valide)
   expect_equal(r$anomalies$type, "ancrage_orphelin")
+})
+
+test_that("un jeton obtenu pour autre chose est signale", {
+  # L'ancrage declare la bonne empreinte, et son jeton en atteste une autre :
+  # la colonne dit vrai, l'autorite dit autre chose. Un booleen « horodate »
+  # comptait ce cas comme bon.
+  ch <- chaine_test(4L)
+  ancrage <- data.frame(
+    id = "nnnnnnnn-0000-4000-8000-000000000002", seq_tete = 2,
+    hash_tete = empreinte_hex(ch[[2]]$hash),
+    tst_rfc3161 = JETON_TSA_FIGE_HEX(),
+    date_ancrage = "2026-08-18T10:00:00Z", stringsAsFactors = FALSE
+  )
+  r <- sommier_verifier_manifeste(manifeste_test(ch, ancrages = ancrage))
+  expect_false(r$valide)
+  expect_equal(r$anomalies$type, "ancrage_horodatage")
+  expect_match(r$anomalies$message, "obtenu pour autre chose")
+})
+
+test_that("un jeton illisible est signale plutot qu'ignore", {
+  ch <- chaine_test(4L)
+  ancrage <- data.frame(
+    id = "nnnnnnnn-0000-4000-8000-000000000003", seq_tete = 2,
+    hash_tete = empreinte_hex(ch[[2]]$hash), tst_rfc3161 = "00",
+    date_ancrage = "2026-08-18T10:00:00Z", stringsAsFactors = FALSE
+  )
+  r <- sommier_verifier_manifeste(manifeste_test(ch, ancrages = ancrage))
+  expect_false(r$valide)
+  expect_equal(r$anomalies$type, "ancrage_horodatage")
+  expect_match(r$anomalies$message, "illisible")
 })
 
 test_that("un format ou une version de chaine inconnus sont refuses", {

@@ -5,18 +5,25 @@
 \alias{SOMMIER_ALGOS_JWS}
 \title{Algorithmes de signature reconnus}
 \format{
-An object of class \code{character} of length 1.
+An object of class \code{character} of length 2.
 }
 \usage{
 SOMMIER_ALGOS_JWS
 }
 \description{
-\code{RS256} seulement pour l'instant : RSASSA-PKCS1-v1_5 avec SHA-256, qui est
-l'algorithme par defaut de Keycloak et d'AgentConnect.
+\itemize{
+\item \code{RS256} : RSASSA-PKCS1-v1_5 avec SHA-256, algorithme par defaut de
+Keycloak et d'AgentConnect.
+\item \code{ES256} : ECDSA sur P-256 avec SHA-256.
+}
+}
+\details{
+\code{ES256} demande une conversion, parce que JOSE veut la signature en \code{R||S}
+brut la ou OpenSSL la produit encodee en DER. \code{\link[=ecdsa_der_vers_brut]{ecdsa_der_vers_brut()}} et
+\code{\link[=ecdsa_brut_vers_der]{ecdsa_brut_vers_der()}} la font dans les deux sens.
 
-\code{ES256} n'est pas encore accepte, et ce n'est pas un oubli : JOSE exige la
-signature ECDSA au format brut R||S, alors qu'OpenSSL la produit encodee en
-DER. Accepter \code{ES256} sans faire la conversion produirait des signatures
-que rien d'autre ne saurait verifier - mieux vaut refuser franchement.
+Seule la courbe P-256 est acceptee : \code{ES384} et \code{ES512} supposent des
+composantes de 48 et 66 octets, et les rembourrer a 32 tronquerait la
+signature.
 }
 \keyword{datasets}

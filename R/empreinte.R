@@ -124,6 +124,20 @@ empreinte_hex <- function(x) {
   paste0(sprintf("%02x", as.integer(x)), collapse = "")
 }
 
+# Un vecteur d'octets quelconque depuis sa notation hexadecimale. Sert la ou
+# la longueur n'est pas connue d'avance - un jeton d'horodatage, par exemple -
+# la ou empreinte_depuis_hex() exige les 32 octets d'une empreinte.
+octets_depuis_hex <- function(x, quoi = "valeur") {
+  x <- tolower(trimws(as.character(x)))
+  if (length(x) != 1L || is.na(x) || !nzchar(x) || nchar(x) %% 2L != 0L ||
+      !grepl("^[0-9a-f]+$", x)) {
+    stop("`", quoi, "` n'est pas une chaine hexadecimale d'octets entiers.",
+         call. = FALSE)
+  }
+  n <- nchar(x)
+  as.raw(strtoi(substring(x, seq(1L, n - 1L, by = 2L), seq(2L, n, by = 2L)), 16L))
+}
+
 #' Empreinte depuis une chaine hexadecimale
 #'
 #' @param x Chaine hexadecimale de 64 caracteres.

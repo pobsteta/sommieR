@@ -19,6 +19,14 @@ jws_verifier_detache(jws, charge, cle_publique)
 \description{
 Verification d'une signature JWS detachee
 }
+\details{
+Une signature \code{ES256} est reconvertie en DER avant d'etre soumise a
+\code{openssl::signature_verify()}, qui n'accepte que ce format. Sa longueur est
+d'abord verifiee : \code{ES256} impose exactement 64 octets, et une signature
+plus courte revele une implementation qui a concatene deux \code{bignum} sans les
+rembourrer. La refuser franchement vaut mieux que de la reconvertir en un
+DER syntaxiquement correct mais portant un \code{r} faux.
+}
 \examples{
 cle <- openssl::rsa_keygen(2048)
 s <- signataire_cle(cle, claims = list(sub = "agent-01"))

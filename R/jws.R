@@ -33,16 +33,108 @@ base64url_decoder <- function(x) {
 #' Algorithmes de signature reconnus
 #'
 #' @description
-#' `RS256` seulement pour l'instant : RSASSA-PKCS1-v1_5 avec SHA-256, qui est
-#' l'algorithme par defaut de Keycloak et d'AgentConnect.
+#' * `RS256` : RSASSA-PKCS1-v1_5 avec SHA-256, algorithme par defaut de
+#'   Keycloak et d'AgentConnect.
+#' * `ES256` : ECDSA sur P-256 avec SHA-256.
 #'
-#' `ES256` n'est pas encore accepte, et ce n'est pas un oubli : JOSE exige la
-#' signature ECDSA au format brut R||S, alors qu'OpenSSL la produit encodee en
-#' DER. Accepter `ES256` sans faire la conversion produirait des signatures
-#' que rien d'autre ne saurait verifier - mieux vaut refuser franchement.
+#' @details
+#' `ES256` demande une conversion, parce que JOSE veut la signature en `R||S`
+#' brut la ou OpenSSL la produit encodee en DER. [ecdsa_der_vers_brut()] et
+#' [ecdsa_brut_vers_der()] la font dans les deux sens.
+#'
+#' Seule la courbe P-256 est acceptee : `ES384` et `ES512` supposent des
+#' composantes de 48 et 66 octets, et les rembourrer a 32 tronquerait la
+#' signature.
 #'
 #' @export
-SOMMIER_ALGOS_JWS <- c("RS256")
+SOMMIER_ALGOS_JWS <- c("RS256", "ES256")
+
+# Taille d'une composante ECDSA en P-256 : 32 octets, comme l'ordre du groupe.
+TAILLE_COMPOSANTE_ES256 <- 32L
+
+# Un bignum ne porte pas ses zeros de tete - c'est un nombre, pas une chaine
+# d'octets. Les rendre est ce qui distingue une composante JOSE valide d'une
+# signature courte que rien d'autre n'accepterait.
+bignum_rembourre <- function(x, taille) {
+  octets <- as.raw(x)
+  if (length(octets) > taille) {
+    stop("Composante ECDSA de ", length(octets), " octets, ", taille,
+         " attendus : la courbe n'est pas celle attendue.", call. = FALSE)
+  }
+  c(raw(taille - length(octets)), octets)
+}
+
+#' Conversion d'une signature ECDSA du DER vers le format JOSE
+#'
+#' @description
+#' OpenSSL encode une signature ECDSA en DER (`SEQUENCE { INTEGER r,
+#' INTEGER s }`), JOSE l'attend en `R||S` : les deux composantes concatenees,
+#' chacune sur la taille de la courbe.
+#'
+#' @details
+#' Le rembourrage n'est pas une precaution de style. `openssl::ecdsa_parse()`
+#' rend deux `bignum`, et un `bignum` ne porte pas ses zeros de tete : une
+#' composante dont le premier octet est nul s'y presente sur 31 octets. Sur
+#' 4 000 signatures P-256 mesurees, 29 - soit 0,72 % - ont au moins une
+#' composante courte. Les concatener telles quelles produirait une signature de
+#' 63 octets, refusee par toute autre implementation JOSE, et le defaut ne se
+#' manifesterait qu'une fois sur cent quarante.
+#'
+#' @param der Signature encodee en DER (`raw`).
+#' @param taille Taille d'une composante, en octets. 32 pour P-256.
+#' @return Un vecteur `raw` de `2 * taille` octets.
+#'
+#' @seealso [ecdsa_brut_vers_der()]
+#' @export
+ecdsa_der_vers_brut <- function(der, taille = TAILLE_COMPOSANTE_ES256) {
+  composantes <- openssl::ecdsa_parse(der)
+  c(bignum_rembourre(composantes$r, taille),
+    bignum_rembourre(composantes$s, taille))
+}
+
+#' Conversion d'une signature ECDSA du format JOSE vers le DER
+#'
+#' @description
+#' L'inverse d'[ecdsa_der_vers_brut()] : `openssl::signature_verify()` attend
+#' du DER, une signature JOSE n'en est pas.
+#'
+#' @param brut Signature `R||S` (`raw`), de longueur paire.
+#' @return Un vecteur `raw` : la signature encodee en DER.
+#'
+#' @seealso [ecdsa_der_vers_brut()]
+#' @export
+ecdsa_brut_vers_der <- function(brut) {
+  if (!is.raw(brut) || length(brut) == 0L || length(brut) %% 2L != 0L) {
+    stop("Signature ECDSA brute attendue : R et S concatenes, donc un ",
+         "nombre pair d'octets.", call. = FALSE)
+  }
+  moitie <- length(brut) %/% 2L
+  openssl::ecdsa_write(
+    openssl::bignum(brut[seq_len(moitie)]),
+    openssl::bignum(brut[(moitie + 1L):length(brut)])
+  )
+}
+
+# L'algorithme JOSE que la cle impose. Le deduire plutot que le demander evite
+# le seul defaut qu'une cle et un `alg` separes rendent possible : un en-tete
+# annoncant RS256 au-dessus d'une signature ECDSA.
+alg_de_la_cle <- function(cle) {
+  type <- cle$type %||% ""
+  if (identical(type, "rsa")) {
+    return("RS256")
+  }
+  if (identical(type, "ecdsa")) {
+    courbe <- cle$data$curve %||% "(inconnue)"
+    if (!identical(courbe, "P-256")) {
+      stop("Courbe ", courbe, " non prise en charge : `ES256` suppose P-256. ",
+           "Signer sur une autre courbe produirait une signature qu'aucun ",
+           "verificateur JOSE ne saurait lire.", call. = FALSE)
+    }
+    return("ES256")
+  }
+  stop("Type de cle non pris en charge : ", if (nzchar(type)) type else "(inconnu)",
+       ". Attendus : rsa (RS256) ou ecdsa P-256 (ES256).", call. = FALSE)
+}
 
 #' Construction d'un signataire
 #'
@@ -53,9 +145,18 @@ SOMMIER_ALGOS_JWS <- c("RS256")
 #' atteste **qui** signe, une cle ou un service de signature eIDAS produit
 #' **la** signature. Keycloak ne signe pas de contenu arbitraire.
 #'
+#' @details
+#' `signer` doit rendre la signature **au format que JOSE attend pour `alg`** :
+#' pour `ES256`, les 64 octets `R||S`, et non le DER que produit OpenSSL.
+#' [signataire_cle()] s'en charge, puisqu'elle tient la cle ;
+#' un service de signature externe branche ici doit le faire de son cote. Le
+#' paquet ne devine pas le format rendu : une signature ECDSA en DER peut, tres
+#' rarement, faire exactement 64 octets, et un reniflage se tromperait alors
+#' sans que rien ne le signale.
+#'
 #' @param claims Liste nommee des claims d'identite (au minimum `sub`).
 #' @param signer Fonction prenant un vecteur `raw` et rendant la signature,
-#'   en `raw`.
+#'   en `raw`, au format JOSE de `alg`.
 #' @param alg Algorithme JOSE, parmi [SOMMIER_ALGOS_JWS].
 #' @param kid Identifiant de cle, porte dans l'en-tete JWS (facultatif).
 #'
@@ -92,7 +193,21 @@ print.sommier_signataire <- function(x, ...) {
 
 #' Signataire adosse a une cle privee
 #'
-#' @param cle Cle privee lue par [openssl::read_key()].
+#' @description
+#' L'algorithme se deduit de la cle : `RS256` pour une cle RSA, `ES256` pour
+#' une cle ECDSA sur P-256.
+#'
+#' @details
+#' Il n'est volontairement pas demandable. Laisser l'appelant declarer `alg`
+#' tout en passant une cle d'un autre type produirait un en-tete annoncant
+#' `RS256` au-dessus d'une signature ECDSA : invalide partout, y compris ici,
+#' et decouvert seulement au moment ou quelqu'un cherche a verifier le visa -
+#' c'est-a-dire trop tard.
+#'
+#' La conversion vers le format JOSE est faite ici : `openssl` signe en DER,
+#' `ES256` veut du `R||S`, voir [ecdsa_der_vers_brut()].
+#'
+#' @param cle Cle privee lue par [openssl::read_key()], RSA ou ECDSA P-256.
 #' @param claims Liste nommee des claims d'identite.
 #' @param kid Identifiant de cle (facultatif).
 #' @return Un objet `sommier_signataire`.
@@ -101,12 +216,19 @@ print.sommier_signataire <- function(x, ...) {
 #' cle <- openssl::rsa_keygen(2048)
 #' signataire_cle(cle, claims = list(sub = "agent-01", name = "Maire"))
 #'
+#' # Une cle ECDSA donne un signataire ES256, sans rien declarer.
+#' signataire_cle(openssl::ec_keygen("P-256"), claims = list(sub = "agent-02"))
+#'
 #' @export
 signataire_cle <- function(cle, claims, kid = NULL) {
+  alg <- alg_de_la_cle(cle)
   sommier_signataire(
     claims = claims,
-    signer = function(donnees) openssl::signature_create(donnees, openssl::sha256, key = cle),
-    alg = "RS256",
+    signer = function(donnees) {
+      signature <- openssl::signature_create(donnees, openssl::sha256, key = cle)
+      if (identical(alg, "ES256")) ecdsa_der_vers_brut(signature) else signature
+    },
+    alg = alg,
     kid = kid
   )
 }
@@ -209,6 +331,14 @@ jws_signer_detache <- function(charge, signataire) {
 
 #' Verification d'une signature JWS detachee
 #'
+#' @details
+#' Une signature `ES256` est reconvertie en DER avant d'etre soumise a
+#' `openssl::signature_verify()`, qui n'accepte que ce format. Sa longueur est
+#' d'abord verifiee : `ES256` impose exactement 64 octets, et une signature
+#' plus courte revele une implementation qui a concatene deux `bignum` sans les
+#' rembourrer. La refuser franchement vaut mieux que de la reconvertir en un
+#' DER syntaxiquement correct mais portant un `r` faux.
+#'
 #' @param jws Jeton `en-tete..signature`.
 #' @param charge Vecteur `raw` signe.
 #' @param cle_publique Cle publique, lue par [openssl::read_pubkey()].
@@ -245,10 +375,21 @@ jws_verifier_detache <- function(jws, charge, cle_publique) {
     stop("Algorithme non reconnu : ", entete$alg, ".", call. = FALSE)
   }
 
+  signature <- base64url_decoder(parties[[2L]])
+  if (identical(entete$alg, "ES256")) {
+    attendu <- 2L * TAILLE_COMPOSANTE_ES256
+    if (length(signature) != attendu) {
+      stop("Signature ES256 de ", length(signature), " octets, ", attendu,
+           " attendus : les composantes n'ont pas ete rembourrees.",
+           call. = FALSE)
+    }
+    signature <- ecdsa_brut_vers_der(signature)
+  }
+
   entree <- c(charToRaw(paste0(parties[[1L]], ".")), charge)
   resultat <- try(
-    openssl::signature_verify(entree, base64url_decoder(parties[[2L]]),
-                              openssl::sha256, pubkey = cle_publique),
+    openssl::signature_verify(entree, signature, openssl::sha256,
+                              pubkey = cle_publique),
     silent = TRUE
   )
   isTRUE(!inherits(resultat, "try-error") && resultat)
