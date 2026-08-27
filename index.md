@@ -260,9 +260,10 @@ sommier_viser(
   tsa_url = "https://freetsa.org/tsr"   # facultatif
 )
 
-sommier_verifier_visas(con, foret, cles_publiques = list(`cle-2026` = ma_cle$pubkey))
-#>   exercice autorite seq_tete concorde signature_valide horodate         date_attestee remarque
-#> 1     2026  commune       12     TRUE             TRUE     TRUE  2026-08-27T06:04:56Z       NA
+sommier_verifier_visas(con, foret, cles_publiques = list(`cle-2026` = ma_cle$pubkey),
+                       ancres = list(certificat_lire(racine_de_l_autorite)))
+#>   exercice autorite seq_tete concorde signature_valide horodatage         date_attestee remarque
+#> 1     2026  commune       12     TRUE             TRUE     valide  2026-08-27T06:04:56Z       NA
 ```
 
 `date_attestee` est lue **dans le jeton d’horodatage**, pas dans la
@@ -291,6 +292,33 @@ visé ne puisse pas non plus être réécrit discrètement.
 Les clés publiques sont fournies par l’appelant, jamais cherchées au
 JWKS du fournisseur : un visa doit rester vérifiable des années plus
 tard, hors ligne, sans dépendre de la disponibilité d’un service tiers.
+
+### Le visa autoporteur
+
+Mieux : le visa peut porter le certificat de son signataire, enregistré
+**au moment de signer** — il fait partie de ce que le visa atteste. Le
+destinataire d’un export n’a alors plus rien à se procurer, exactement
+comme pour le jeton d’horodatage, où l’autorité inclut le sien.
+
+``` r
+
+signataire <- signataire_cle(ma_cle, claims = list(sub = "maire-01"),
+                             certificat = mon_certificat_der)
+
+# Chez le destinataire : le manifeste, ses ancres de confiance, et rien d'autre.
+sommier_verifier_manifeste("export.json", ancres = list(certificat_lire(racine)))
+```
+
+[`tsa_verifier_jeton()`](https://pobsteta.github.io/sommieR/reference/tsa_verifier_jeton.md)
+rend trois états et non deux : `valide` (chaîne rattachée à une ancre
+fournie), `non_rattache` (le jeton est intact, mais aucune ancre ne le
+couvre) et `invalide` (quelque chose cloche dans le jeton). Dire «
+invalide » à une commune dont le jeton est parfait mais émis par une
+autorité qu’on n’a pas listée serait faux.
+
+La validité du certificat s’apprécie **à la date attestée**, non à la
+date du jour : un jeton de 2019 reste bon après l’expiration du
+certificat qui l’a produit — c’est même tout l’intérêt de l’horodatage.
 
 ## Détections de télédétection
 
@@ -378,25 +406,18 @@ plutôt qu’échoués.
 | 0.6.0 | Carte du rapport de gestion antérieure ; géométries des unités de gestion |
 | 0.7.0 | Géométrie dans les payloads, donc dans l’empreinte ; fond cadastral |
 | 0.8.0 | PCI vecteur EDIGÉO : bornes et détails topographiques |
-| **0.9.0** | `ES256` ; ce qu’un jeton d’horodatage atteste — date certifiée, empreinte couverte, nonce |
+| 0.9.0 | `ES256` ; ce qu’un jeton d’horodatage atteste — date certifiée, empreinte couverte, nonce |
+| **0.10.0** | Chaîne de certification des jetons ; le visa porte son certificat et se vérifie seul |
 
 Les cinq priorités du brief de synthèse sont couvertes, ainsi que les
-quatre lots de la série cartographique et le premier lot de la couche
-probante (`specs/brief_probant-1`).
+quatre lots de la série cartographique et les deux lots de la couche
+probante (`specs/brief_probant-1` et `-2`).
 
-Reste hors périmètre, et signalé comme tel : **la chaîne de
-certification des jetons d’horodatage**. Le paquet lit ce qu’un jeton
-atteste, il ne vérifie pas encore la signature de l’autorité ni la
-chaîne qui la rattache à une racine — cela demande une ancre de
-confiance fournie par l’appelant et une validation CMS complète. Un
-`TSTInfo` lu n’est pas un `TSTInfo` authentifié. C’est l’objet du lot 2,
-cadré dans `specs/brief_probant-2`, avec la question qui l’accompagne :
-le manifeste emporte la signature JWS mais pas la clé publique, si bien
-que la vérification hors ligne par un tiers n’est aujourd’hui vraie qu’à
-moitié.
-
-En attendant, `openssl ts -verify` fait le travail, en s’appuyant sur le
-certificat que l’autorité inclut dans le jeton.
+**Ce qui reste hors périmètre, et y reste franchement : la révocation.**
+CRL et OCSP demandent le réseau, ce que la vérification hors ligne
+exclut par construction. Un certificat révoqué mais non expiré passe
+donc. C’est écrit dans la documentation et rendu en réserve dans chaque
+rapport, plutôt que passé sous silence.
 
 ## Licence
 

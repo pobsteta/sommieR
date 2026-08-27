@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -336,19 +336,33 @@
 <span>  tsa_url <span class="op">=</span> <span class="st">"https://freetsa.org/tsr"</span>   <span class="co"># facultatif</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/sommier_verifier_visas.html">sommier_verifier_visas</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, cles_publiques <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>`cle-2026` <span class="op">=</span> <span class="va">ma_cle</span><span class="op">$</span><span class="va">pubkey</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   exercice autorite seq_tete concorde signature_valide horodate         date_attestee remarque</span></span>
-<span><span class="co">#&gt; 1     2026  commune       12     TRUE             TRUE     TRUE  2026-08-27T06:04:56Z       NA</span></span></code></pre></div>
+<span><span class="fu"><a href="reference/sommier_verifier_visas.html">sommier_verifier_visas</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, cles_publiques <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>`cle-2026` <span class="op">=</span> <span class="va">ma_cle</span><span class="op">$</span><span class="va">pubkey</span><span class="op">)</span>,</span>
+<span>                       ancres <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="reference/certificat_lire.html">certificat_lire</a></span><span class="op">(</span><span class="va">racine_de_l_autorite</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   exercice autorite seq_tete concorde signature_valide horodatage         date_attestee remarque</span></span>
+<span><span class="co">#&gt; 1     2026  commune       12     TRUE             TRUE     valide  2026-08-27T06:04:56Z       NA</span></span></code></pre></div>
 <p><code>date_attestee</code> est lue <strong>dans le jeton d’horodatage</strong>, pas dans la base. La colonne <code>date_visa</code>, elle, est celle que le registre s’est donnée à lui-même : elle ne prouve rien contre celui qui tient la base. Et le jeton est confronté à la tête qu’il prétend couvrir — un jeton valide mais obtenu pour une autre empreinte est signalé, là où un simple booléen le comptait comme bon.</p>
 <p>La signature est détachée sur charge non encodée (RFC 7515 et 7797, <code>b64: false</code>) : la tête de chaîne n’est <strong>pas</strong> recopiée dans le jeton. Le vérificateur la relit du registre, ce qui lie la signature à la chaîne plutôt qu’à une copie. <code>RS256</code> et <code>ES256</code> sont acceptés, et l’algorithme se déduit de la clé plutôt que de se déclarer : une clé ECDSA sous un en-tête <code>RS256</code> donnerait un visa que personne ne saurait vérifier.</p>
 <p>Sans <code>tsa_url</code>, le visa est posé sans jeton d’horodatage — valide, mais sa date ne repose que sur l’horloge du serveur, et <code><a href="reference/sommier_verifier_visas.html">sommier_verifier_visas()</a></code> le dit. <code><a href="reference/sommier_ancrer.html">sommier_ancrer()</a></code> horodate la tête indépendamment de tout visa, pour qu’un exercice non visé ne puisse pas non plus être réécrit discrètement.</p>
 <p>Les clés publiques sont fournies par l’appelant, jamais cherchées au JWKS du fournisseur : un visa doit rester vérifiable des années plus tard, hors ligne, sans dépendre de la disponibilité d’un service tiers.</p>
+<div class="section level3">
+<h3 id="le-visa-autoporteur">Le visa autoporteur<a class="anchor" aria-label="anchor" href="#le-visa-autoporteur"></a>
+</h3>
+<p>Mieux : le visa peut porter le certificat de son signataire, enregistré <strong>au moment de signer</strong> — il fait partie de ce que le visa atteste. Le destinataire d’un export n’a alors plus rien à se procurer, exactement comme pour le jeton d’horodatage, où l’autorité inclut le sien.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">signataire</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/signataire_cle.html">signataire_cle</a></span><span class="op">(</span><span class="va">ma_cle</span>, claims <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sub <span class="op">=</span> <span class="st">"maire-01"</span><span class="op">)</span>,</span>
+<span>                             certificat <span class="op">=</span> <span class="va">mon_certificat_der</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Chez le destinataire : le manifeste, ses ancres de confiance, et rien d'autre.</span></span>
+<span><span class="fu"><a href="reference/sommier_verifier_manifeste.html">sommier_verifier_manifeste</a></span><span class="op">(</span><span class="st">"export.json"</span>, ancres <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="reference/certificat_lire.html">certificat_lire</a></span><span class="op">(</span><span class="va">racine</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="reference/tsa_verifier_jeton.html">tsa_verifier_jeton()</a></code> rend trois états et non deux : <code>valide</code> (chaîne rattachée à une ancre fournie), <code>non_rattache</code> (le jeton est intact, mais aucune ancre ne le couvre) et <code>invalide</code> (quelque chose cloche dans le jeton). Dire « invalide » à une commune dont le jeton est parfait mais émis par une autorité qu’on n’a pas listée serait faux.</p>
+<p>La validité du certificat s’apprécie <strong>à la date attestée</strong>, non à la date du jour : un jeton de 2019 reste bon après l’expiration du certificat qui l’a produit — c’est même tout l’intérêt de l’horodatage.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="détections-de-télédétection">Détections de télédétection<a class="anchor" aria-label="anchor" href="#d%C3%A9tections-de-t%C3%A9l%C3%A9d%C3%A9tection"></a>
 </h2>
 <p>Une détection FORDEAD ou FAST est une <strong>proposition</strong>, pas un constat : elle entre au registre 8 avec le NDP de sa source, jamais NDP 0.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/sommier_importer_detections.html">sommier_importer_detections</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>, <span class="va">foret</span>, <span class="va">detections</span>, source <span class="op">=</span> <span class="st">"fordead"</span>, ndp <span class="op">=</span> <span class="fl">3L</span>, auteur <span class="op">=</span> <span class="st">"chaine-fordead"</span></span>
 <span><span class="op">)</span></span>
@@ -380,14 +394,14 @@
 <div class="section level2">
 <h2 id="développement">Développement<a class="anchor" aria-label="anchor" href="#d%C3%A9veloppement"></a>
 </h2>
-<div class="sourceCode" id="cb11"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL .</span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a></span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="co"># Tests hors base (le noyau se teste entièrement sans serveur)</span></span>
-<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local()'</span></span>
-<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a></span>
-<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="co"># Tests complets, base comprise</span></span>
-<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="ex">createdb</span> sommier_test</span>
-<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="va">SOMMIER_TEST_DB</span><span class="op">=</span>sommier_test <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local()'</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL .</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co"># Tests hors base (le noyau se teste entièrement sans serveur)</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local()'</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co"># Tests complets, base comprise</span></span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="ex">createdb</span> sommier_test</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="va">SOMMIER_TEST_DB</span><span class="op">=</span>sommier_test <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local()'</span></span></code></pre></div>
 <p>Sans <code>SOMMIER_TEST_DB</code>, les tests de la couche d’accès sont ignorés plutôt qu’échoués.</p>
 </div>
 <div class="section level2">
@@ -436,15 +450,18 @@
 <td>PCI vecteur EDIGÉO : bornes et détails topographiques</td>
 </tr>
 <tr>
-<td><strong>0.9.0</strong></td>
+<td>0.9.0</td>
 <td>
 <code>ES256</code> ; ce qu’un jeton d’horodatage atteste — date certifiée, empreinte couverte, nonce</td>
 </tr>
+<tr>
+<td><strong>0.10.0</strong></td>
+<td>Chaîne de certification des jetons ; le visa porte son certificat et se vérifie seul</td>
+</tr>
 </tbody>
 </table>
-<p>Les cinq priorités du brief de synthèse sont couvertes, ainsi que les quatre lots de la série cartographique et le premier lot de la couche probante (<code>specs/brief_probant-1</code>).</p>
-<p>Reste hors périmètre, et signalé comme tel : <strong>la chaîne de certification des jetons d’horodatage</strong>. Le paquet lit ce qu’un jeton atteste, il ne vérifie pas encore la signature de l’autorité ni la chaîne qui la rattache à une racine — cela demande une ancre de confiance fournie par l’appelant et une validation CMS complète. Un <code>TSTInfo</code> lu n’est pas un <code>TSTInfo</code> authentifié. C’est l’objet du lot 2, cadré dans <code>specs/brief_probant-2</code>, avec la question qui l’accompagne : le manifeste emporte la signature JWS mais pas la clé publique, si bien que la vérification hors ligne par un tiers n’est aujourd’hui vraie qu’à moitié.</p>
-<p>En attendant, <code>openssl ts -verify</code> fait le travail, en s’appuyant sur le certificat que l’autorité inclut dans le jeton.</p>
+<p>Les cinq priorités du brief de synthèse sont couvertes, ainsi que les quatre lots de la série cartographique et les deux lots de la couche probante (<code>specs/brief_probant-1</code> et <code>-2</code>).</p>
+<p><strong>Ce qui reste hors périmètre, et y reste franchement : la révocation.</strong> CRL et OCSP demandent le réseau, ce que la vérification hors ligne exclut par construction. Un certificat révoqué mais non expiré passe donc. C’est écrit dans la documentation et rendu en réserve dans chaque rapport, plutôt que passé sous silence.</p>
 </div>
 <div class="section level2">
 <h2 id="licence">Licence<a class="anchor" aria-label="anchor" href="#licence"></a>

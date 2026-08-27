@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,62 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.10.0" id="sommier-0100">sommieR 0.10.0<a class="anchor" aria-label="anchor" href="#sommier-0100"></a></h2>
+<p>Lot 2 de la couche probante. Le lot 1 faisait dire au jeton <strong>ce</strong> qu’il atteste ; celui-ci établit <strong>qui</strong> l’atteste — et rend le visa aussi autoporteur que le jeton.</p>
+<div class="section level3">
+<h3 id="la-chaîne-de-certification-0-10-0">La chaîne de certification<a class="anchor" aria-label="anchor" href="#la-cha%C3%AEne-de-certification-0-10-0"></a></h3>
+<p><code><a href="../reference/tsa_verifier_jeton.html">tsa_verifier_jeton()</a></code> valide le CMS complet, dans l’ordre : l’attribut <code>contentType</code>, le <code>messageDigest</code> confronté au contenu lu, l’<code>ESSCertID</code> qui désigne le certificat employé, la signature portant sur les attributs signés réencodés en <code>SET OF</code> (RFC 5652 §5.4), l’usage <code>timeStamping</code>, la validité du certificat, et la chaîne jusqu’à une ancre.</p>
+<p><strong>Trois états, pas deux.</strong></p>
+<table class="table"><colgroup><col width="50%"><col width="50%"></colgroup><thead><tr><th>État</th>
+<th>Ce qu’il dit</th>
+</tr></thead><tbody><tr><td><code>valide</code></td>
+<td>tout est vérifié, et la chaîne remonte à une ancre fournie</td>
+</tr><tr><td><code>non_rattache</code></td>
+<td>le jeton est intact, mais aucune ancre ne le couvre</td>
+</tr><tr><td><code>invalide</code></td>
+<td>quelque chose cloche dans le jeton lui-même</td>
+</tr></tbody></table><p>La distinction n’est pas cosmétique. Dire « invalide » à une commune dont le jeton est parfait mais émis par une autorité qu’on n’a pas listée serait faux ; lui faire croire à une garantie non vérifiée le serait tout autant.</p>
+</div>
+<div class="section level3">
+<h3 id="trois-décisions-0-10-0">Trois décisions<a class="anchor" aria-label="anchor" href="#trois-d%C3%A9cisions-0-10-0"></a></h3>
+<ul><li>
+<strong>La validité s’apprécie à la date attestée, pas aujourd’hui.</strong> Un jeton de 2019 reste bon après l’expiration du certificat qui l’a produit — c’est même tout l’intérêt de l’horodatage. C’est pourquoi la chaîne est parcourue à la main plutôt que confiée à <code><a href="https://jeroen.r-universe.dev/openssl/reference/certificates.html" class="external-link">openssl::cert_verify()</a></code>, qui juge à l’heure courante et condamnerait tout jeton ancien.</li>
+<li>
+<strong>Aucune ancre n’est embarquée.</strong> Un magasin de racines livré avec le paquet ferait dépendre du rythme de publication de sommieR la question de savoir qui est digne de confiance, et une racine retirée resterait attestée par toute version installée. C’est la règle du lot 4 cartographique, appliquée ici.</li>
+<li>
+<strong>L’usage <code>timeStamping</code> doit être le seul, et critique</strong> (RFC 3161 §2.3). Un certificat servant aussi à authentifier un serveur web n’est plus dédié à l’horodatage, et c’est la dédicace qui fait la garantie.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="le-visa-devient-autoporteur-0-10-0">Le visa devient autoporteur<a class="anchor" aria-label="anchor" href="#le-visa-devient-autoporteur-0-10-0"></a></h3>
+<p>Le jeton RFC 3161 emporte le certificat de son autorité ; le visa, lui, n’emportait que sa signature. Le manifeste laissait donc son destinataire — une commune, un CRPF — avec une signature qu’il ne pouvait confronter à aucune clé. La vérification hors ligne par un tiers n’était vraie qu’à moitié.</p>
+<ul><li>Le certificat du signataire s’enregistre <strong>au moment de signer</strong>, non se cherche au moment de vérifier : il fait partie de ce que le visa atteste. Nouvelle colonne facultative <code>visa.certificat</code> (<code>004_certificat_visa.sql</code>).</li>
+<li>
+<code><a href="../reference/sommier_verifier_visas.html">sommier_verifier_visas()</a></code> en tire la clé : <code>cles_publiques</code> devient inutile pour les visas qui en portent un. Les visas antérieurs gardent le comportement précédent — leur inventer un certificat après coup serait écrire dans un registre append-only ce qui n’y a jamais été.</li>
+<li>
+<code><a href="../reference/sommier_verifier_manifeste.html">sommier_verifier_manifeste()</a></code> vérifie les signatures JWS et les jetons, et lève la réserve inscrite depuis la v0.5.0.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="anomalies-et-réserves-ne-se-confondent-plus-0-10-0">Anomalies et réserves ne se confondent plus<a class="anchor" aria-label="anchor" href="#anomalies-et-r%C3%A9serves-ne-se-confondent-plus-0-10-0"></a></h3>
+<p>Une anomalie dit que quelque chose est faux ; une <strong>réserve</strong>, que quelque chose n’a pas pu être vérifié sans que rien n’indique pour autant que ce soit faux — un jeton intact qu’aucune ancre fournie ne couvre, un visa sans certificat, la révocation. Les confondre déclarerait invalide un manifeste parfait vérifié sans ancres. <code>sommier_rapport</code> porte donc <code>reserves</code> à côté de <code>anomalies</code>, et <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> les montre.</p>
+</div>
+<div class="section level3">
+<h3 id="format-de-manifeste-0-10-0">Format de manifeste<a class="anchor" aria-label="anchor" href="#format-de-manifeste-0-10-0"></a></h3>
+<p><code>SOMMIER_VERSION_MANIFESTE</code> passe à <code>sommier-manifeste-2</code> — le certificat du signataire s’y ajoute. Mais <strong>la v1 reste vérifiable</strong> : <code>SOMMIER_FORMATS_MANIFESTE_LUS</code> liste les formats lus, plus nombreux que celui qui s’écrit. Un manifeste est un export destiné à être vérifié des années plus tard ; refuser l’ancien format annulerait cela même qu’il promet.</p>
+</div>
+<div class="section level3">
+<h3 id="changement-dans-le-rapport-de-visas-0-10-0">Changement dans le rapport de visas<a class="anchor" aria-label="anchor" href="#changement-dans-le-rapport-de-visas-0-10-0"></a></h3>
+<p><code><a href="../reference/sommier_verifier_visas.html">sommier_verifier_visas()</a></code> rend <code>horodatage</code> (quatre états : <code>absent</code>, <code>valide</code>, <code>non_rattache</code>, <code>invalide</code>) à la place du booléen <code>horodate</code> : un jeton se juge sur plus que sa présence. La fonction accepte un argument <code>ancres</code>.</p>
+</div>
+<div class="section level3">
+<h3 id="ce-qui-reste-hors-périmètre-et-le-reste-franchement-0-10-0">Ce qui reste hors périmètre, et le reste franchement<a class="anchor" aria-label="anchor" href="#ce-qui-reste-hors-p%C3%A9rim%C3%A8tre-et-le-reste-franchement-0-10-0"></a></h3>
+<p><strong>La révocation n’est pas vérifiée.</strong> CRL et OCSP demandent le réseau, ce que la vérification hors ligne exclut par construction. Un certificat révoqué mais non expiré passe donc. La limite est écrite dans la documentation et rendue en réserve dans chaque rapport, plutôt que passée sous silence.</p>
+</div>
+<div class="section level3">
+<h3 id="tests-0-10-0">Tests<a class="anchor" aria-label="anchor" href="#tests-0-10-0"></a></h3>
+<p>Les autorités de test se montent à la volée, avec l’usage et la criticité voulus. Un constat consigné au passage : <strong><code>openssl ts</code> refuse lui-même de signer avec un certificat non conforme</strong> (« invalid signer certificate purpose »), si bien qu’un jeton contrefait de cette façon n’est pas fabricable — les règles d’usage s’éprouvent donc sur le certificat, qui est exactement ce que consulte la vérification.</p>
+</div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.9.0" id="sommier-090">sommieR 0.9.0<a class="anchor" aria-label="anchor" href="#sommier-090"></a></h2>
 <p>Lot 1 de la couche probante. Le paquet savait poser un visa et obtenir un jeton d’horodatage ; il sait désormais les lire jusqu’au bout — sans magasin de confiance, sans réseau, sans configuration.</p>

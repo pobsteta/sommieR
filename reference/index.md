@@ -297,12 +297,29 @@ chaîne, son horodatage qualifié, et leur vérification.
   : Lecture d'une reponse d'horodatage RFC 3161
 - [`tsa_lire_jeton()`](https://pobsteta.github.io/sommieR/reference/tsa_lire_jeton.md)
   : Lecture du contenu d'un jeton d'horodatage
+- [`tsa_verifier_jeton()`](https://pobsteta.github.io/sommieR/reference/tsa_verifier_jeton.md)
+  : Verification d'un jeton d'horodatage
 - [`tsa_horodater()`](https://pobsteta.github.io/sommieR/reference/tsa_horodater.md)
   : Obtention d'un jeton d'horodatage
 - [`tsa_transport_curl()`](https://pobsteta.github.io/sommieR/reference/tsa_transport_curl.md)
   : Transport HTTP pour l'horodatage
 - [`SOMMIER_STATUTS_TSA`](https://pobsteta.github.io/sommieR/reference/SOMMIER_STATUTS_TSA.md)
   : Statuts PKIStatus (RFC 3161 section 2.4.2)
+
+## Certificats et chaîne de confiance
+
+Ce qui rattache la signature d’une autorité d’horodatage à une racine
+que le vérificateur reconnaît. Aucune ancre n’est embarquée dans le
+paquet : elles sont fournies par l’appelant.
+
+- [`certificat_lire()`](https://pobsteta.github.io/sommieR/reference/certificat_lire.md)
+  : Lecture d'un certificat X.509
+- [`certificat_usages()`](https://pobsteta.github.io/sommieR/reference/certificat_usages.md)
+  : Usages etendus declares par un certificat
+- [`certificat_horodateur()`](https://pobsteta.github.io/sommieR/reference/certificat_horodateur.md)
+  : Le certificat est-il celui d'une autorite d'horodatage ?
+- [`certificat_valide_a()`](https://pobsteta.github.io/sommieR/reference/certificat_valide_a.md)
+  : Validite d'un certificat a une date donnee
 
 ## Intégrité vérifiable
 
@@ -323,6 +340,8 @@ Le chaînage de hachages et sa vérification, reproductibles par un tiers
   : Champs couverts par l'empreinte d'une entree
 - [`SOMMIER_VERSION_CHAINE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_VERSION_CHAINE.md)
   : Version de l'algorithme de chainage
+- [`SOMMIER_FORMATS_MANIFESTE_LUS`](https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_MANIFESTE_LUS.md)
+  : Formats de manifeste que la verification accepte
 - [`empreinte_hex()`](https://pobsteta.github.io/sommieR/reference/empreinte_hex.md)
   : Empreinte en hexadecimal
 - [`empreinte_depuis_hex()`](https://pobsteta.github.io/sommieR/reference/empreinte_depuis_hex.md)

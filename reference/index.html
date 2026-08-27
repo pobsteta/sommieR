@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -866,6 +866,13 @@
 
         <dt>
 
+          <code><a href="tsa_verifier_jeton.html">tsa_verifier_jeton()</a></code>
+
+        </dt>
+        <dd>Verification d'un jeton d'horodatage</dd>
+
+        <dt>
+
           <code><a href="tsa_horodater.html">tsa_horodater()</a></code>
 
         </dt>
@@ -884,6 +891,43 @@
 
         </dt>
         <dd>Statuts PKIStatus (RFC 3161 section 2.4.2)</dd>
+      </dl></div><div class="section level2">
+      <h2 id="certificats-et-cha-ne-de-confiance">Certificats et chaîne de confiance<a class="anchor" aria-label="anchor" href="#certificats-et-cha-ne-de-confiance"></a></h2>
+
+      <div class="section-desc"><p>Ce qui rattache la signature d’une autorité d’horodatage à une racine que le vérificateur reconnaît. Aucune ancre n’est embarquée dans le paquet : elles sont fournies par l’appelant.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="certificat_lire.html">certificat_lire()</a></code>
+
+        </dt>
+        <dd>Lecture d'un certificat X.509</dd>
+
+        <dt>
+
+          <code><a href="certificat_usages.html">certificat_usages()</a></code>
+
+        </dt>
+        <dd>Usages etendus declares par un certificat</dd>
+
+        <dt>
+
+          <code><a href="certificat_horodateur.html">certificat_horodateur()</a></code>
+
+        </dt>
+        <dd>Le certificat est-il celui d'une autorite d'horodatage ?</dd>
+
+        <dt>
+
+          <code><a href="certificat_valide_a.html">certificat_valide_a()</a></code>
+
+        </dt>
+        <dd>Validite d'un certificat a une date donnee</dd>
       </dl></div><div class="section level2">
       <h2 id="int-grit-v-rifiable">Intégrité vérifiable<a class="anchor" aria-label="anchor" href="#int-grit-v-rifiable"></a></h2>
 
@@ -942,6 +986,13 @@
 
         </dt>
         <dd>Version de l'algorithme de chainage</dd>
+
+        <dt>
+
+          <code><a href="SOMMIER_FORMATS_MANIFESTE_LUS.html">SOMMIER_FORMATS_MANIFESTE_LUS</a></code>
+
+        </dt>
+        <dd>Formats de manifeste que la verification accepte</dd>
 
         <dt>
 

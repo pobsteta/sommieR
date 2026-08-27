@@ -6,7 +6,7 @@ pour une cle ECDSA sur P-256.
 ## Usage
 
 ``` r
-signataire_cle(cle, claims, kid = NULL)
+signataire_cle(cle, claims, kid = NULL, certificat = NULL)
 ```
 
 ## Arguments
@@ -24,6 +24,10 @@ signataire_cle(cle, claims, kid = NULL)
 - kid:
 
   Identifiant de cle (facultatif).
+
+- certificat:
+
+  Certificat X.509 du signataire, en DER (`raw`).
 
 ## Value
 

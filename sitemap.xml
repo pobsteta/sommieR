@@ -18,6 +18,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_DECIMALES_COORD.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_DISPOSITIFS_FISCAUX.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_SANITAIRES.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_MANIFESTE_LUS.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_QUARTO.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_SIG.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_NATURES_PHENOMENE.html</loc></url>
@@ -47,6 +48,10 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/base64url_decoder.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/base64url_encoder.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/budget_definir.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/certificat_horodateur.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/certificat_lire.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/certificat_usages.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/certificat_valide_a.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/decouper_sql.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/ecdsa_brut_vers_der.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/ecdsa_der_vers_brut.html</loc></url>
@@ -128,6 +133,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/tsa_lire_reponse.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/tsa_requete.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/tsa_transport_curl.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/tsa_verifier_jeton.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/ug_creer.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/ug_fusionner.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/ug_lire.html</loc></url>

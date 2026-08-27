@@ -11,7 +11,13 @@ pas de contenu arbitraire.
 ## Usage
 
 ``` r
-sommier_signataire(claims, signer, alg = "RS256", kid = NULL)
+sommier_signataire(
+  claims,
+  signer,
+  alg = "RS256",
+  kid = NULL,
+  certificat = NULL
+)
 ```
 
 ## Arguments
@@ -33,6 +39,14 @@ sommier_signataire(claims, signer, alg = "RS256", kid = NULL)
 - kid:
 
   Identifiant de cle, porte dans l'en-tete JWS (facultatif).
+
+- certificat:
+
+  Certificat X.509 du signataire, en DER (`raw`). Facultatif, mais c'est
+  lui qui rend le visa verifiable par un tiers : enregistre au moment de
+  signer, il voyage avec l'export, et le destinataire n'a plus besoin
+  qu'une ancre de confiance - exactement comme pour le jeton
+  d'horodatage, ou l'autorite inclut le sien.
 
 ## Value
 

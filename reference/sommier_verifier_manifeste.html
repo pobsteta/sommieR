@@ -11,7 +11,7 @@ a l'empreinte qu'il pretend attester."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,7 @@ a l'empreinte qu'il pretend attester.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sommier_verifier_manifeste</span><span class="op">(</span><span class="va">chemin</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sommier_verifier_manifeste</span><span class="op">(</span><span class="va">chemin</span>, ancres <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -60,12 +60,18 @@ a l'empreinte qu'il pretend attester.</p>
 <dl><dt id="arg-chemin">chemin<a class="anchor" aria-label="anchor" href="#arg-chemin"></a></dt>
 <dd><p>Fichier JSON produit par <code><a href="sommier_exporter_manifeste.html">sommier_exporter_manifeste()</a></code>.</p></dd>
 
+
+<dt id="arg-ancres">ancres<a class="anchor" aria-label="anchor" href="#arg-ancres"></a></dt>
+<dd><p>Ancres de confiance, lues par <code><a href="certificat_lire.html">certificat_lire()</a></code>. Aucune
+n'est embarquee : ce serait faire dependre du rythme de publication de
+sommieR la question de savoir qui est digne de confiance.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Un objet <code>sommier_rapport</code>, dont les anomalies incluent les types
-<code>visa_orphelin</code>, <code>ancrage_orphelin</code>, <code>visa_horodatage</code> et
-<code>ancrage_horodatage</code>.</p>
+<code>visa_orphelin</code>, <code>ancrage_orphelin</code>, <code>visa_horodatage</code>,
+<code>ancrage_horodatage</code> et <code>visa_signature</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -77,10 +83,19 @@ autre chaine.</p></li>
 porte sur ce que la base declare ; celui-ci sur ce que l'autorite a
 reellement signe. Sans lui, un jeton obtenu pour une autre tete de chaine
 accompagnerait le manifeste sans que rien ne le distingue du bon.</p></li>
-</ol><p>Ce qui n'est pas verifie : la signature JWS du visa, faute de clé publique
-dans le manifeste, et la chaine de certification de l'autorite
-d'horodatage, qui demande une ancre de confiance. Les deux relevent du lot
-suivant.</p>
+<li><p><strong>La signature JWS du visa se verifie</strong>, quand le visa porte le
+certificat de son signataire (format <code>sommier-manifeste-2</code>). C'est ce
+qui rend l'export verifiable par un tiers sans qu'il ait a se procurer
+la cle par un canal que le manifeste n'organise pas.</p></li>
+</ol><p><strong>Anomalies et reserves ne se confondent pas.</strong> Une anomalie dit que
+quelque chose est faux ; une reserve, que quelque chose n'a pas pu etre
+verifie sans que rien n'indique pour autant que ce soit faux - un jeton
+intact dont aucune ancre fournie ne couvre l'autorite, un visa sans
+certificat. Compter les secondes comme les premieres declarerait invalide
+un manifeste parfait verifie sans ancres.</p>
+<p>La revocation n'est jamais verifiee : CRL et OCSP demandent le reseau, ce
+que la verification hors ligne exclut par construction. Le rapport le dit
+en reserve plutot que de laisser croire le contraire.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

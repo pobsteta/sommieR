@@ -1,6 +1,6 @@
 # Deploiement du schema du sommier
 
-Execute `001_schema.sql` puis `002_vues.sql`. Les deux fichiers sont
+Execute les fichiers de schema puis, au choix, les vues. Tous sont
 idempotents : les rejouer sur une base deja initialisee ne detruit ni
 n'altere de donnee.
 

@@ -11,7 +11,8 @@ signataire_keycloak(
   cle,
   kid = NULL,
   claims_retenus = c("sub", "given_name", "usual_name", "family_name", "email", "siret",
-    "iss")
+    "iss"),
+  certificat = NULL
 )
 ```
 
@@ -33,6 +34,10 @@ signataire_keycloak(
 
   Claims a archiver dans le visa. Par defaut ceux que le brief nomme,
   plus `siret`.
+
+- certificat:
+
+  Certificat X.509 du signataire, en DER (`raw`).
 
 ## Value
 
