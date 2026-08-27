@@ -7,7 +7,7 @@
 signataire_cle(cle, claims, kid = NULL)
 }
 \arguments{
-\item{cle}{Cle privee lue par \code{\link[openssl:read_key]{openssl::read_key()}}.}
+\item{cle}{Cle privee lue par \code{\link[openssl:read_key]{openssl::read_key()}}, RSA ou ECDSA P-256.}
 
 \item{claims}{Liste nommee des claims d'identite.}
 
@@ -17,10 +17,24 @@ signataire_cle(cle, claims, kid = NULL)
 Un objet \code{sommier_signataire}.
 }
 \description{
-Signataire adosse a une cle privee
+L'algorithme se deduit de la cle : \code{RS256} pour une cle RSA, \code{ES256} pour
+une cle ECDSA sur P-256.
+}
+\details{
+Il n'est volontairement pas demandable. Laisser l'appelant declarer \code{alg}
+tout en passant une cle d'un autre type produirait un en-tete annoncant
+\code{RS256} au-dessus d'une signature ECDSA : invalide partout, y compris ici,
+et decouvert seulement au moment ou quelqu'un cherche a verifier le visa -
+c'est-a-dire trop tard.
+
+La conversion vers le format JOSE est faite ici : \code{openssl} signe en DER,
+\code{ES256} veut du \code{R||S}, voir \code{\link[=ecdsa_der_vers_brut]{ecdsa_der_vers_brut()}}.
 }
 \examples{
 cle <- openssl::rsa_keygen(2048)
 signataire_cle(cle, claims = list(sub = "agent-01", name = "Maire"))
+
+# Une cle ECDSA donne un signataire ES256, sans rien declarer.
+signataire_cle(openssl::ec_keygen("P-256"), claims = list(sub = "agent-02"))
 
 }

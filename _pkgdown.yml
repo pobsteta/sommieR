@@ -207,8 +207,11 @@ reference:
     - base64url_encoder
     - base64url_decoder
     - SOMMIER_ALGOS_JWS
+    - ecdsa_der_vers_brut
+    - ecdsa_brut_vers_der
     - tsa_requete
     - tsa_lire_reponse
+    - tsa_lire_jeton
     - tsa_horodater
     - tsa_transport_curl
     - SOMMIER_STATUTS_TSA

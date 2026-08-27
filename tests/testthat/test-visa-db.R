@@ -7,11 +7,10 @@ base_visa <- function() {
   con
 }
 
-# Autorite d'horodatage simulee : les tests ne doivent dependre d'aucun
-# service externe, et le transport est justement un parametre pour cela.
-tsa_simulee <- function(jeton = as.raw(c(0x30, 0x03, 0x02, 0x01, 0x2a))) {
-  function(url, corps) reponse_tsa_simulee(0L, jeton)
-}
+# L'autorite d'horodatage vient de helper-tsa.R : depuis que tsa_horodater()
+# confronte l'empreinte et le nonce du jeton, un jeton bricole ne passe plus,
+# et il faut une autorite qui reponde vraiment. Elle est montee localement -
+# les tests ne dependent toujours d'aucun service externe.
 
 foret_avec_entree <- function(con) {
   foret <- foret_creer(con, "Foret test", "communal")

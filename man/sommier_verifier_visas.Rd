@@ -16,7 +16,7 @@ par \code{sub} du signataire.}
 }
 \value{
 Un \code{data.frame} : \code{exercice}, \code{autorite}, \code{seq_tete}, \code{concorde},
-\code{signature_valide}, \code{horodate}, \code{remarque}.
+\code{signature_valide}, \code{horodate}, \code{date_attestee}, \code{remarque}.
 }
 \description{
 Confronte chaque visa a la chaine : l'empreinte attestee correspond-elle
@@ -33,4 +33,14 @@ verifiable des annees plus tard, hors ligne.
 Un visa sans jeton d'horodatage est signale mais n'invalide rien : sa date
 repose sur l'horloge du serveur, ce que l'appelant doit savoir sans que
 cela constitue une fraude.
+
+\code{date_attestee} est lue \strong{dans le jeton}, non dans la base : c'est la date
+que l'autorite a certifiee. La colonne \code{date_visa}, elle, est celle que le
+registre s'est donnee a lui-meme, et ne prouve rien contre celui qui tient
+la base. Le jeton est aussi confronte a la tete visee : un jeton valide mais
+obtenu pour une autre empreinte est signale, la ou \code{horodate} seul le
+comptait comme bon.
+
+La signature de l'autorite d'horodatage n'est pas verifiee ici : elle
+demande un magasin de confiance, et fait l'objet du lot suivant.
 }

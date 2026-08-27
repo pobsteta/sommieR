@@ -39,7 +39,8 @@ claim \code{name} du signataire, a defaut son \code{sub}.}
 }
 \value{
 Invisiblement, une liste : \code{id}, \code{seq_tete}, \code{hash_tete}
-(hexadecimal), \code{horodate} (booleen).
+(hexadecimal), \code{horodate} (booleen) et \code{date_attestee} - la date que
+l'autorite a certifiee, \code{NA} sans horodatage.
 }
 \description{
 Cloture un exercice : enregistre l'acte de visa au registre 1, signe la

@@ -34,7 +34,8 @@
 #' @param enregistrer_acte Ecrire l'entree de registre 1 (defaut `TRUE`).
 #'
 #' @return Invisiblement, une liste : `id`, `seq_tete`, `hash_tete`
-#'   (hexadecimal), `horodate` (booleen).
+#'   (hexadecimal), `horodate` (booleen) et `date_attestee` - la date que
+#'   l'autorite a certifiee, `NA` sans horodatage.
 #'
 #' @seealso [sommier_verifier_visas()]
 #' @export
@@ -104,7 +105,13 @@ sommier_viser <- function(con, foret_id, exercice, autorite, signataire,
 
     invisible(list(id = id, seq_tete = seq_tete,
                    hash_tete = empreinte_hex(hash_tete),
-                   horodate = !is.null(jeton)))
+                   horodate = !is.null(jeton),
+                   date_attestee = if (is.null(jeton)) {
+                     NA_character_
+                   } else {
+                     format(tsa_lire_jeton(jeton)$date, "%Y-%m-%dT%H:%M:%SZ",
+                            tz = "UTC")
+                   }))
   })
 }
 
@@ -119,7 +126,8 @@ sommier_viser <- function(con, foret_id, exercice, autorite, signataire,
 #' @param foret_id UUID de la foret.
 #' @param tsa_url URL de l'autorite d'horodatage.
 #' @param transport Transport HTTP, voir [tsa_transport_curl()].
-#' @return Invisiblement, une liste : `id`, `seq_tete`, `hash_tete`.
+#' @return Invisiblement, une liste : `id`, `seq_tete`, `hash_tete` et
+#'   `date_attestee`.
 #'
 #' @export
 sommier_ancrer <- function(con, foret_id, tsa_url,
@@ -148,7 +156,9 @@ sommier_ancrer <- function(con, foret_id, tsa_url,
                   empreinte_hex(jeton))
   )
   invisible(list(id = id, seq_tete = seq_tete,
-                 hash_tete = empreinte_hex(hash_tete)))
+                 hash_tete = empreinte_hex(hash_tete),
+                 date_attestee = format(tsa_lire_jeton(jeton)$date,
+                                        "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")))
 }
 
 #' Verification des visas d'une foret
@@ -169,12 +179,22 @@ sommier_ancrer <- function(con, foret_id, tsa_url,
 #' repose sur l'horloge du serveur, ce que l'appelant doit savoir sans que
 #' cela constitue une fraude.
 #'
+#' `date_attestee` est lue **dans le jeton**, non dans la base : c'est la date
+#' que l'autorite a certifiee. La colonne `date_visa`, elle, est celle que le
+#' registre s'est donnee a lui-meme, et ne prouve rien contre celui qui tient
+#' la base. Le jeton est aussi confronte a la tete visee : un jeton valide mais
+#' obtenu pour une autre empreinte est signale, la ou `horodate` seul le
+#' comptait comme bon.
+#'
+#' La signature de l'autorite d'horodatage n'est pas verifiee ici : elle
+#' demande un magasin de confiance, et fait l'objet du lot suivant.
+#'
 #' @param con Connexion DBI.
 #' @param foret_id UUID de la foret.
 #' @param cles_publiques Liste nommee de cles publiques, indexee par `kid` ou
 #'   par `sub` du signataire.
 #' @return Un `data.frame` : `exercice`, `autorite`, `seq_tete`, `concorde`,
-#'   `signature_valide`, `horodate`, `remarque`.
+#'   `signature_valide`, `horodate`, `date_attestee`, `remarque`.
 #'
 #' @export
 sommier_verifier_visas <- function(con, foret_id, cles_publiques = list()) {
@@ -184,7 +204,7 @@ sommier_verifier_visas <- function(con, foret_id, cles_publiques = list()) {
     "SELECT v.id, v.exercice, v.autorite, v.seq_tete,
             encode(v.hash_tete, 'hex') AS hash_tete,
             v.signataire::text AS signataire, v.signature_jws,
-            (v.tst_rfc3161 IS NOT NULL) AS horodate,
+            encode(v.tst_rfc3161, 'hex') AS tst,
             encode(e.hash, 'hex') AS hash_chaine
        FROM visa v
        LEFT JOIN entree_sommier e
@@ -197,7 +217,8 @@ sommier_verifier_visas <- function(con, foret_id, cles_publiques = list()) {
     return(data.frame(
       exercice = integer(0), autorite = character(0), seq_tete = numeric(0),
       concorde = logical(0), signature_valide = logical(0),
-      horodate = logical(0), remarque = character(0),
+      horodate = logical(0), date_attestee = character(0),
+      remarque = character(0),
       stringsAsFactors = FALSE
     ))
   }
@@ -215,6 +236,8 @@ sommier_verifier_visas <- function(con, foret_id, cles_publiques = list()) {
       jws_verifier_detache(v$signature_jws, empreinte_depuis_hex(v$hash_tete), cle)
     }
 
+    horodatage <- horodatage_atteste(v$tst, v$hash_tete)
+
     remarques <- character(0)
     if (is.na(v$hash_chaine)) {
       remarques <- c(remarques, "sequence visee absente de la chaine")
@@ -226,19 +249,51 @@ sommier_verifier_visas <- function(con, foret_id, cles_publiques = list()) {
     } else if (isFALSE(valide)) {
       remarques <- c(remarques, "signature invalide")
     }
-    if (!isTRUE(v$horodate)) {
-      remarques <- c(remarques, "sans jeton d'horodatage : date non opposable")
-    }
+    remarques <- c(remarques, horodatage$remarques)
 
     data.frame(
       exercice = as.integer(v$exercice), autorite = v$autorite,
       seq_tete = as.numeric(v$seq_tete), concorde = concorde,
-      signature_valide = valide, horodate = isTRUE(v$horodate),
+      signature_valide = valide, horodate = horodatage$present,
+      date_attestee = horodatage$date,
       remarque = if (length(remarques)) paste(remarques, collapse = " ; ") else NA_character_,
       stringsAsFactors = FALSE
     )
   })
   do.call(rbind, resultat)
+}
+
+# Ce qu'un jeton apprend d'une attestation : la date que l'autorite a
+# certifiee, et l'empreinte qu'elle couvre reellement. Quatre etats, la ou le
+# booleen `horodate` n'en distinguait que deux - pas de jeton, ou un jeton dont
+# on ne savait rien.
+horodatage_atteste <- function(tst_hex, hash_attendu) {
+  vide <- list(present = FALSE, date = NA_character_, remarques = character(0))
+  if (est_vide(tst_hex)) {
+    return(utils::modifyList(vide, list(
+      remarques = "sans jeton d'horodatage : date non opposable"
+    )))
+  }
+  lu <- try(tsa_lire_jeton(octets_depuis_hex(tst_hex, "tst_rfc3161")),
+            silent = TRUE)
+  if (inherits(lu, "try-error")) {
+    return(utils::modifyList(vide, list(
+      present = TRUE,
+      remarques = paste0("jeton d'horodatage illisible : ",
+                         trimws(conditionMessage(attr(lu, "condition"))))
+    )))
+  }
+
+  remarques <- character(0)
+  if (!identical(empreinte_hex(lu$empreinte), tolower(as.character(hash_attendu)))) {
+    remarques <- c(remarques, paste0(
+      "le jeton atteste ", lu$algorithme, ":", empreinte_hex(lu$empreinte),
+      ", et non l'empreinte visee : il a ete obtenu pour autre chose"
+    ))
+  }
+  list(present = TRUE,
+       date = format(lu$date, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+       remarques = remarques)
 }
 
 # Retrouve la cle a employer : d'abord par le `kid` de l'en-tete JWS, qui est

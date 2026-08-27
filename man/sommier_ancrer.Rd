@@ -16,7 +16,8 @@ sommier_ancrer(con, foret_id, tsa_url, transport = tsa_transport_curl())
 \item{transport}{Transport HTTP, voir \code{\link[=tsa_transport_curl]{tsa_transport_curl()}}.}
 }
 \value{
-Invisiblement, une liste : \code{id}, \code{seq_tete}, \code{hash_tete}.
+Invisiblement, une liste : \code{id}, \code{seq_tete}, \code{hash_tete} et
+\code{date_attestee}.
 }
 \description{
 Horodate la tete de chaine independamment de tout visa. Le brief
