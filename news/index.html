@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,27 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.10.1" id="sommier-0101">sommieR 0.10.1<a class="anchor" aria-label="anchor" href="#sommier-0101"></a></h2>
+<p>Un hôte injoignable n’est pas un fichier absent.</p>
+<div class="section level3">
+<h3 id="ce-qui-sest-passé-0-10-1">Ce qui s’est passé<a class="anchor" aria-label="anchor" href="#ce-qui-sest-pass%C3%A9-0-10-1"></a></h3>
+<p>Le 27 août 2026, la CI de <code>main</code> a échoué sur <code>test-pci.R</code> : l’endpoint OVH qui sert les livraisons d’Etalab n’a pas répondu. Le test avait pourtant son <code>skip_if_offline()</code>. Ce garde-fou demande <strong>s’il y a un internet</strong>, pas <strong>si cet hôte-là répond</strong> : il est passé, et le téléchargement a échoué en erreur.</p>
+</div>
+<div class="section level3">
+<h3 id="ce-qui-change-0-10-1">Ce qui change<a class="anchor" aria-label="anchor" href="#ce-qui-change-0-10-1"></a></h3>
+<p><code>telecharger()</code> distingue désormais deux échecs, parce qu’ils ne veulent pas dire la même chose :</p>
+<table class="table"><colgroup><col width="50%"><col width="50%"></colgroup><thead><tr><th>Condition</th>
+<th>Ce qu’elle signifie</th>
+</tr></thead><tbody><tr><td><code>sommier_reseau_indisponible</code></td>
+<td>hôte injoignable, délai dépassé, 5xx — une panne d’infrastructure</td>
+</tr><tr><td><code>sommier_ressource_absente</code></td>
+<td>404, fichier vide — le fichier n’est pas là où on le cherche</td>
+</tr></tbody></table><p>La distinction demande le statut HTTP, donc <code>curl</code> ; sans lui, la condition reste <code>sommier_transfert_echoue</code> et le comportement est inchangé — on ne prétend pas distinguer ce qu’on ne peut pas voir.</p>
+<p>Côté tests, <code>sauter_si_source_indisponible()</code> saute sur la première et laisse passer la seconde. Sauter les deux rendrait un vert trompeur le jour où la source déplacerait ses fichiers ; échouer sur les deux rend la CI otage d’un serveur tiers.</p>
+<p>Deux tests seulement sont concernés : ceux qui vérifient le chemin de téléchargement contre la vraie source, ce qu’aucun cache pré-rempli ne peut faire. Tout le reste passait déjà par des fixtures.</p>
+</div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.10.0" id="sommier-0100">sommieR 0.10.0<a class="anchor" aria-label="anchor" href="#sommier-0100"></a></h2>
 <p>Lot 2 de la couche probante. Le lot 1 faisait dire au jeton <strong>ce</strong> qu’il atteste ; celui-ci établit <strong>qui</strong> l’atteste — et rend le visa aussi autoporteur que le jeton.</p>

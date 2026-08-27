@@ -38,7 +38,7 @@ document.
 | **État de la chaîne** | intacte |
 | **Entrées** | 66 |
 | **Séquence de tête** | 3.3^{-322} |
-| **Empreinte de tête** | `91ba43f4a3706da9afbcf33e467bc05c205b846f9d2733b10d7f840fef837a54` |
+| **Empreinte de tête** | `d587d7ec64a22f97f93102660a39743549bcccf507d054e4118d48c65054863c` |
 
 ## 2 Coupes et récoltes
 
@@ -229,5 +229,5 @@ l’empreinte de tête, et la vérification le dit.
 
 ------------------------------------------------------------------------
 
-*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.10.0 le
+*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.10.1 le
 27/08/2026.*
