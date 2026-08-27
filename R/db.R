@@ -1,6 +1,6 @@
 #' Deploiement du schema du sommier
 #'
-#' Execute `001_schema.sql` puis `002_vues.sql`. Les deux fichiers sont
+#' Execute les fichiers de schema puis, au choix, les vues. Tous sont
 #' idempotents : les rejouer sur une base deja initialisee ne detruit ni
 #' n'altere de donnee.
 #'
@@ -10,9 +10,10 @@
 #'
 #' @export
 sommier_init_schema <- function(con, vues = TRUE) {
-  # L'ordre compte : 003 ajoute une colonne a une table creee par 001, et
-  # 002 comme 003 declarent des vues qui s'appuient dessus.
+  # L'ordre compte : 003 et 004 ajoutent des colonnes a des tables creees
+  # par 001, et 002 declare des vues qui s'appuient dessus.
   fichiers <- c("001_schema.sql", "003_geometrie.sql",
+                "004_certificat_visa.sql",
                 if (isTRUE(vues)) "002_vues.sql")
   for (f in fichiers) {
     chemin <- system.file("sql", f, package = "sommieR")

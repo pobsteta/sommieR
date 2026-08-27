@@ -104,7 +104,7 @@ test_that("un jeton obtenu pour autre chose est signale", {
   r <- sommier_verifier_manifeste(manifeste_test(ch, ancrages = ancrage))
   expect_false(r$valide)
   expect_equal(r$anomalies$type, "ancrage_horodatage")
-  expect_match(r$anomalies$message, "obtenu pour autre chose")
+  expect_match(r$anomalies$message, "et non")
 })
 
 test_that("un jeton illisible est signale plutot qu'ignore", {
@@ -127,4 +127,98 @@ test_that("un format ou une version de chaine inconnus sont refuses", {
     sommier_verifier_manifeste(manifeste_test(version_chaine = "sommier-chaine-0")),
     "incompatible"
   )
+})
+
+# ---------------------------------------------------------------------------
+# Format 2 : le visa porte son certificat, donc se verifie seul
+# ---------------------------------------------------------------------------
+
+# Un visa reel : signature detachee sur la tete, et le certificat qui permet
+# de la confronter. C'est ce que recoit un tiers - une commune, un CRPF - qui
+# n'a que le manifeste et ses ancres.
+visa_signe <- function(chaine, seq = 4L, id = "vvvvvvvv-0000-4000-8000-000000000009") {
+  materiel <- signataire_avec_certificat("maire-01")
+  hash <- chaine[[seq]]$hash
+  data.frame(
+    id = id, exercice = 2026, seq_tete = seq,
+    hash_tete = empreinte_hex(hash), autorite = "commune",
+    signataire = '{"sub":"maire-01"}',
+    signature_jws = jws_signer_detache(hash, materiel$signataire),
+    certificat = empreinte_hex(materiel$certificat),
+    date_visa = "2026-08-18T10:00:00Z", stringsAsFactors = FALSE
+  )
+}
+
+test_that("la signature d'un visa se verifie sous le certificat qu'il porte", {
+  ch <- chaine_test(4L)
+  r <- sommier_verifier_manifeste(manifeste_test(ch, visas = visa_signe(ch)))
+  expect_true(r$valide)
+  # Aucune reserve sur la signature : elle a bien ete verifiee.
+  expect_false(any(grepl("sans certificat", r$reserves)))
+})
+
+test_that("une signature de visa alteree est signalee", {
+  ch <- chaine_test(4L)
+  visa <- visa_signe(ch)
+  # Un octet de la signature suffit ; la charge, elle, n'est pas dans le jeton.
+  parties <- strsplit(visa$signature_jws, "..", fixed = TRUE)[[1]]
+  brute <- base64url_decoder(parties[[2L]])
+  brute[[1L]] <- as.raw(bitwXor(as.integer(brute[[1L]]), 1L))
+  visa$signature_jws <- paste0(parties[[1L]], "..", base64url_encoder(brute))
+
+  r <- sommier_verifier_manifeste(manifeste_test(ch, visas = visa))
+  expect_false(r$valide)
+  expect_equal(r$anomalies$type, "visa_signature")
+})
+
+test_that("un visa sans certificat laisse une reserve, non une anomalie", {
+  # Il n'y a rien de faux a ne pas pouvoir verifier : le dire en reserve, et
+  # non en anomalie, est la difference entre « je n'ai pas pu » et « c'est
+  # faux ».
+  ch <- chaine_test(4L)
+  visa <- visa_signe(ch)
+  visa$certificat <- NA_character_
+  r <- sommier_verifier_manifeste(manifeste_test(ch, visas = visa))
+  expect_true(r$valide)
+  expect_match(paste(r$reserves, collapse = " ; "), "sans certificat")
+})
+
+test_that("la revocation non verifiee est dite, toujours", {
+  r <- sommier_verifier_manifeste(manifeste_test())
+  expect_true(r$valide)
+  expect_match(paste(r$reserves, collapse = " ; "), "[Rr]evocation")
+})
+
+test_that("un manifeste du format precedent reste verifiable", {
+  # Un manifeste est un export destine a etre verifie des annees plus tard :
+  # refuser l'ancien format annulerait cela meme qu'il promet.
+  expect_true(
+    sommier_verifier_manifeste(
+      manifeste_test(format = "sommier-manifeste-1")
+    )$valide
+  )
+  expect_error(sommier_verifier_manifeste(manifeste_test(format = "autre")),
+               "Format de manifeste inconnu")
+})
+
+test_that("un destinataire n'ayant que le manifeste et ses ancres verifie tout", {
+  # Le critere du lot : ni reseau, ni base, ni cle a se procurer.
+  ch <- chaine_test(4L)
+  visa <- visa_signe(ch)
+  hash <- ch[[4]]$hash
+  visa$tst_rfc3161 <- empreinte_hex(
+    tsa_horodater(hash, "https://tsa.test", tsa_simulee())
+  )
+  chemin <- manifeste_test(ch, visas = visa)
+
+  r <- sommier_verifier_manifeste(chemin, ancres = list(racine_tsa_de_test()))
+  expect_true(r$valide)
+  # Rien ne reste en suspens, hors la revocation qui exige le reseau.
+  expect_false(any(grepl("ancre", r$reserves)))
+  expect_false(any(grepl("sans certificat", r$reserves)))
+
+  # Sans ancre, le meme manifeste reste valide, avec une reserve.
+  sans <- sommier_verifier_manifeste(chemin)
+  expect_true(sans$valide)
+  expect_match(paste(sans$reserves, collapse = " ; "), "aucune ancre")
 })

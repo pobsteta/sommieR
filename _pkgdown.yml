@@ -212,9 +212,21 @@ reference:
     - tsa_requete
     - tsa_lire_reponse
     - tsa_lire_jeton
+    - tsa_verifier_jeton
     - tsa_horodater
     - tsa_transport_curl
     - SOMMIER_STATUTS_TSA
+
+  - title: "Certificats et chaîne de confiance"
+    desc: >
+      Ce qui rattache la signature d'une autorité d'horodatage à une racine
+      que le vérificateur reconnaît. Aucune ancre n'est embarquée dans le
+      paquet : elles sont fournies par l'appelant.
+    contents:
+    - certificat_lire
+    - certificat_usages
+    - certificat_horodateur
+    - certificat_valide_a
 
   - title: "Intégrité vérifiable"
     desc: >
@@ -228,6 +240,7 @@ reference:
     - sommier_enregistrement_canonique
     - SOMMIER_CHAMPS_EMPREINTE
     - SOMMIER_VERSION_CHAINE
+    - SOMMIER_FORMATS_MANIFESTE_LUS
     - empreinte_hex
     - empreinte_depuis_hex
 

@@ -4,7 +4,13 @@
 \alias{sommier_signataire}
 \title{Construction d'un signataire}
 \usage{
-sommier_signataire(claims, signer, alg = "RS256", kid = NULL)
+sommier_signataire(
+  claims,
+  signer,
+  alg = "RS256",
+  kid = NULL,
+  certificat = NULL
+)
 }
 \arguments{
 \item{claims}{Liste nommee des claims d'identite (au minimum \code{sub}).}
@@ -15,6 +21,12 @@ en \code{raw}, au format JOSE de \code{alg}.}
 \item{alg}{Algorithme JOSE, parmi \link{SOMMIER_ALGOS_JWS}.}
 
 \item{kid}{Identifiant de cle, porte dans l'en-tete JWS (facultatif).}
+
+\item{certificat}{Certificat X.509 du signataire, en DER (\code{raw}).
+Facultatif, mais c'est lui qui rend le visa verifiable par un tiers :
+enregistre au moment de signer, il voyage avec l'export, et le
+destinataire n'a plus besoin qu'une ancre de confiance - exactement comme
+pour le jeton d'horodatage, ou l'autorite inclut le sien.}
 }
 \value{
 Un objet de classe \code{sommier_signataire}.

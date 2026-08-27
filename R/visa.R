@@ -93,13 +93,16 @@ sommier_viser <- function(con, foret_id, exercice, autorite, signataire,
     DBI::dbExecute(
       con,
       "INSERT INTO visa (id, foret_id, exercice, seq_tete, hash_tete,
-                         autorite, signataire, signature_jws, tst_rfc3161)
+                         autorite, signataire, signature_jws, tst_rfc3161,
+                         certificat)
        VALUES ($1, $2, $3, $4, decode($5, 'hex'), $6, $7::jsonb, $8,
-               NULLIF($9, '')::bytea)",
+               NULLIF($9, '')::bytea, NULLIF($10, '')::bytea)",
       params = list(
         id, foret_id, exercice, seq_tete, empreinte_hex(hash_tete),
         autorite, jcs(signataire$claims), signature,
-        if (is.null(jeton)) "" else paste0("\\x", empreinte_hex(jeton))
+        if (is.null(jeton)) "" else paste0("\\x", empreinte_hex(jeton)),
+        if (is.null(signataire$certificat)) "" else
+          paste0("\\x", empreinte_hex(signataire$certificat))
       )
     )
 
@@ -179,31 +182,44 @@ sommier_ancrer <- function(con, foret_id, tsa_url,
 #' repose sur l'horloge du serveur, ce que l'appelant doit savoir sans que
 #' cela constitue une fraude.
 #'
+#' Depuis la v0.10.0, un visa peut porter le certificat de son signataire.
+#' Quand il en porte un, la cle en est tiree et `cles_publiques` devient
+#' inutile : le visa se verifie seul. Les visas anterieurs gardent le
+#' comportement precedent.
+#'
 #' `date_attestee` est lue **dans le jeton**, non dans la base : c'est la date
 #' que l'autorite a certifiee. La colonne `date_visa`, elle, est celle que le
 #' registre s'est donnee a lui-meme, et ne prouve rien contre celui qui tient
-#' la base. Le jeton est aussi confronte a la tete visee : un jeton valide mais
-#' obtenu pour une autre empreinte est signale, la ou `horodate` seul le
-#' comptait comme bon.
+#' la base.
 #'
-#' La signature de l'autorite d'horodatage n'est pas verifiee ici : elle
-#' demande un magasin de confiance, et fait l'objet du lot suivant.
+#' `horodatage` porte quatre etats plutot qu'un booleen, parce qu'un jeton se
+#' juge sur plus que sa presence : `"absent"`, `"valide"` (signature de
+#' l'autorite verifiee et chaine rattachee a une ancre), `"non_rattache"` (le
+#' jeton est intact, mais aucune ancre ne le couvre) et `"invalide"`.
+#'
+#' La revocation des certificats n'est jamais verifiee : CRL et OCSP demandent
+#' le reseau. Voir [tsa_verifier_jeton()].
 #'
 #' @param con Connexion DBI.
 #' @param foret_id UUID de la foret.
 #' @param cles_publiques Liste nommee de cles publiques, indexee par `kid` ou
-#'   par `sub` du signataire.
+#'   par `sub` du signataire. Inutile pour les visas portant leur certificat.
+#' @param ancres Ancres de confiance pour les jetons d'horodatage, lues par
+#'   [certificat_lire()]. Sans elles, un jeton intact est dit
+#'   `"non_rattache"` plutot que valide.
 #' @return Un `data.frame` : `exercice`, `autorite`, `seq_tete`, `concorde`,
-#'   `signature_valide`, `horodate`, `date_attestee`, `remarque`.
+#'   `signature_valide`, `horodatage`, `date_attestee`, `remarque`.
 #'
 #' @export
-sommier_verifier_visas <- function(con, foret_id, cles_publiques = list()) {
+sommier_verifier_visas <- function(con, foret_id, cles_publiques = list(),
+                                   ancres = list()) {
   foret_id <- valider_uuid(foret_id, "foret_id")
   visas <- DBI::dbGetQuery(
     con,
     "SELECT v.id, v.exercice, v.autorite, v.seq_tete,
             encode(v.hash_tete, 'hex') AS hash_tete,
             v.signataire::text AS signataire, v.signature_jws,
+            encode(v.certificat, 'hex') AS certificat,
             encode(v.tst_rfc3161, 'hex') AS tst,
             encode(e.hash, 'hex') AS hash_chaine
        FROM visa v
@@ -217,7 +233,7 @@ sommier_verifier_visas <- function(con, foret_id, cles_publiques = list()) {
     return(data.frame(
       exercice = integer(0), autorite = character(0), seq_tete = numeric(0),
       concorde = logical(0), signature_valide = logical(0),
-      horodate = logical(0), date_attestee = character(0),
+      horodatage = character(0), date_attestee = character(0),
       remarque = character(0),
       stringsAsFactors = FALSE
     ))
@@ -229,14 +245,15 @@ sommier_verifier_visas <- function(con, foret_id, cles_publiques = list()) {
       identical(tolower(v$hash_chaine), tolower(v$hash_tete))
 
     claims <- jsonlite::fromJSON(v$signataire, simplifyVector = FALSE)
-    cle <- cle_du_signataire(cles_publiques, v$signature_jws, claims)
+    porteur <- cle_du_certificat(v$certificat)
+    cle <- porteur$cle %||% cle_du_signataire(cles_publiques, v$signature_jws, claims)
     valide <- if (is.null(cle)) {
       NA
     } else {
       jws_verifier_detache(v$signature_jws, empreinte_depuis_hex(v$hash_tete), cle)
     }
 
-    horodatage <- horodatage_atteste(v$tst, v$hash_tete)
+    horodatage <- horodatage_atteste(v$tst, v$hash_tete, ancres)
 
     remarques <- character(0)
     if (is.na(v$hash_chaine)) {
@@ -244,6 +261,7 @@ sommier_verifier_visas <- function(con, foret_id, cles_publiques = list()) {
     } else if (!concorde) {
       remarques <- c(remarques, "empreinte visee differente de celle de la chaine")
     }
+    remarques <- c(remarques, porteur$remarques)
     if (is.null(cle)) {
       remarques <- c(remarques, "aucune cle publique fournie pour ce signataire")
     } else if (isFALSE(valide)) {
@@ -254,7 +272,7 @@ sommier_verifier_visas <- function(con, foret_id, cles_publiques = list()) {
     data.frame(
       exercice = as.integer(v$exercice), autorite = v$autorite,
       seq_tete = as.numeric(v$seq_tete), concorde = concorde,
-      signature_valide = valide, horodate = horodatage$present,
+      signature_valide = valide, horodatage = horodatage$etat,
       date_attestee = horodatage$date,
       remarque = if (length(remarques)) paste(remarques, collapse = " ; ") else NA_character_,
       stringsAsFactors = FALSE
@@ -264,36 +282,46 @@ sommier_verifier_visas <- function(con, foret_id, cles_publiques = list()) {
 }
 
 # Ce qu'un jeton apprend d'une attestation : la date que l'autorite a
-# certifiee, et l'empreinte qu'elle couvre reellement. Quatre etats, la ou le
-# booleen `horodate` n'en distinguait que deux - pas de jeton, ou un jeton dont
-# on ne savait rien.
-horodatage_atteste <- function(tst_hex, hash_attendu) {
-  vide <- list(present = FALSE, date = NA_character_, remarques = character(0))
+# certifiee, l'empreinte qu'elle couvre, et ce que vaut sa signature. Quatre
+# etats, la ou le booleen `horodate` n'en distinguait que deux - pas de jeton,
+# ou un jeton dont on ne savait rien.
+horodatage_atteste <- function(tst_hex, hash_attendu, ancres = list()) {
   if (est_vide(tst_hex)) {
-    return(utils::modifyList(vide, list(
-      remarques = "sans jeton d'horodatage : date non opposable"
-    )))
+    return(list(etat = "absent", date = NA_character_,
+                remarques = "sans jeton d'horodatage : date non opposable"))
   }
-  lu <- try(tsa_lire_jeton(octets_depuis_hex(tst_hex, "tst_rfc3161")),
-            silent = TRUE)
-  if (inherits(lu, "try-error")) {
-    return(utils::modifyList(vide, list(
-      present = TRUE,
-      remarques = paste0("jeton d'horodatage illisible : ",
-                         trimws(conditionMessage(attr(lu, "condition"))))
-    )))
+  jeton <- try(octets_depuis_hex(tst_hex, "tst_rfc3161"), silent = TRUE)
+  if (inherits(jeton, "try-error")) {
+    return(list(etat = "invalide", date = NA_character_,
+                remarques = "jeton d'horodatage illisible"))
   }
+  verdict <- tsa_verifier_jeton(jeton, empreinte_depuis_hex(hash_attendu), ancres)
+  list(
+    etat = verdict$etat,
+    date = if (is.null(verdict$jeton)) NA_character_ else
+      format(verdict$jeton$date, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+    remarques = verdict$motifs
+  )
+}
 
-  remarques <- character(0)
-  if (!identical(empreinte_hex(lu$empreinte), tolower(as.character(hash_attendu)))) {
-    remarques <- c(remarques, paste0(
-      "le jeton atteste ", lu$algorithme, ":", empreinte_hex(lu$empreinte),
-      ", et non l'empreinte visee : il a ete obtenu pour autre chose"
-    ))
+# La cle publique que porte le visa lui-meme. C'est ce qui le rend
+# autoporteur : le destinataire d'un export n'a plus a se procurer la cle par
+# un canal que le manifeste n'organise pas.
+cle_du_certificat <- function(certificat_hex) {
+  if (est_vide(certificat_hex)) {
+    return(list(cle = NULL, remarques = character(0)))
   }
-  list(present = TRUE,
-       date = format(lu$date, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
-       remarques = remarques)
+  cert <- try(certificat_lire(octets_depuis_hex(certificat_hex, "certificat")),
+              silent = TRUE)
+  if (inherits(cert, "try-error")) {
+    return(list(cle = NULL, remarques = "certificat du visa illisible"))
+  }
+  cle <- try(openssl::read_pubkey(cert$cle_publique, der = TRUE), silent = TRUE)
+  if (inherits(cle, "try-error")) {
+    return(list(cle = NULL,
+                remarques = "cle publique illisible dans le certificat du visa"))
+  }
+  list(cle = cle, remarques = character(0))
 }
 
 # Retrouve la cle a employer : d'abord par le `kid` de l'en-tete JWS, qui est
