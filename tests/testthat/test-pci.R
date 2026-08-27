@@ -93,12 +93,18 @@ test_that("le PCI se telecharge feuille par feuille, et seulement les utiles", {
     "POLYGON((847400 6687300, 847900 6687300, 847900 6687600, ",
     "847400 6687600, 847400 6687300))"
   ))
-  toutes <- sommier_feuilles_pci("21200", cache = cache)
+  # Une panne du serveur de la DGFiP saute ce test ; un 404 le fait echouer.
+  toutes <- sauter_si_source_indisponible(
+    sommier_feuilles_pci("21200", cache = cache)
+  )
+  # Le cache est chaud : cet appel-ci ne touche plus au reseau.
   autour <- sommier_feuilles_pci("21200", emprise = emprise, cache = cache)
   expect_gt(nrow(toutes), nrow(autour))
   expect_gt(nrow(autour), 0L)
 
-  fond <- sommier_fond_pci("21200", autour$feuille, cache = cache)
+  fond <- sauter_si_source_indisponible(
+    sommier_fond_pci("21200", autour$feuille, cache = cache)
+  )
   expect_equal(nrow(fond$feuilles), nrow(autour))
   expect_true(all(file.exists(fond$feuilles$thf)))
 

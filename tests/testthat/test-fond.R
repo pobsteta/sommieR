@@ -53,7 +53,10 @@ test_that("le fond se telecharge, se met en cache et porte son millesime", {
   skip_if_not_installed("sf")
   cache <- withr::local_tempdir()
 
-  fond <- sommier_fond_cadastral("21200", cache = cache)
+  # Une panne du serveur d'Etalab saute ce test ; un 404 le fait echouer.
+  fond <- sauter_si_source_indisponible(
+    sommier_fond_cadastral("21200", cache = cache)
+  )
   expect_true(file.exists(fond$chemin))
   expect_equal(fond$code_insee, "21200")
   expect_match(fond$millesime, "^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
@@ -165,6 +168,59 @@ test_that("un telechargement qui echoue ne laisse pas de fichier a moitie ecrit"
     "Telechargement du fond cadastral impossible"
   )
   expect_false(file.exists(destination))
+})
+
+test_that("un hote injoignable et un fichier absent ne se confondent pas", {
+  # Les confondre ferait passer une regression pour une panne, et l'inverse.
+  # C'est ce qui a fait echouer la CI de `main` le 27 aout 2026 : le
+  # garde-fou `skip_if_offline()` demande s'il y a un internet, pas si cet
+  # hote-la repond.
+  skip_if_not_installed("curl")
+  destination <- withr::local_tempfile(fileext = ".gz")
+
+  injoignable <- tryCatch(
+    telecharger("https://hote-qui-n-existe-pas.invalid/x.gz", destination),
+    error = function(e) e
+  )
+  expect_s3_class(injoignable, "sommier_reseau_indisponible")
+  expect_s3_class(injoignable, "sommier_erreur_telechargement")
+
+  # Un serveur qui repond 404 dit que le fichier n'est pas la ou on le
+  # cherche : l'URL est fausse, ou la source a bouge.
+  skip_on_cran()
+  testthat::skip_if_offline()
+  absente <- tryCatch(
+    telecharger(paste0(SOMMIER_SOURCE_CADASTRE,
+                       "/latest/geojson/communes/21/21200/introuvable.json.gz"),
+                destination),
+    error = function(e) e
+  )
+  skip_if(inherits(absente, "sommier_reseau_indisponible"),
+          "source distante injoignable")
+  expect_s3_class(absente, "sommier_ressource_absente")
+  expect_false(file.exists(destination))
+})
+
+test_that("le garde-fou saute sur une panne et laisse passer un 404", {
+  saute <- tryCatch(
+    sauter_si_source_indisponible(stop(structure(
+      class = c("sommier_reseau_indisponible", "sommier_erreur_telechargement",
+                "error", "condition"),
+      list(message = "hote injoignable", call = NULL)
+    ))),
+    condition = function(c) class(c)[[1L]]
+  )
+  expect_equal(saute, "skip")
+
+  # Une ressource absente n'est pas rattrapee : elle doit faire echouer.
+  expect_error(
+    sauter_si_source_indisponible(stop(structure(
+      class = c("sommier_ressource_absente", "sommier_erreur_telechargement",
+                "error", "condition"),
+      list(message = "statut HTTP 404", call = NULL)
+    ))),
+    "404"
+  )
 })
 
 test_that("le cache se cree a la demande", {

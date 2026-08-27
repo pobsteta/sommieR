@@ -1,3 +1,37 @@
+# sommieR 0.10.1
+
+Un hôte injoignable n'est pas un fichier absent.
+
+## Ce qui s'est passé
+
+Le 27 août 2026, la CI de `main` a échoué sur `test-pci.R` : l'endpoint OVH qui
+sert les livraisons d'Etalab n'a pas répondu. Le test avait pourtant son
+`skip_if_offline()`. Ce garde-fou demande **s'il y a un internet**, pas **si cet
+hôte-là répond** : il est passé, et le téléchargement a échoué en erreur.
+
+## Ce qui change
+
+`telecharger()` distingue désormais deux échecs, parce qu'ils ne veulent pas
+dire la même chose :
+
+| Condition | Ce qu'elle signifie |
+|---|---|
+| `sommier_reseau_indisponible` | hôte injoignable, délai dépassé, 5xx — une panne d'infrastructure |
+| `sommier_ressource_absente` | 404, fichier vide — le fichier n'est pas là où on le cherche |
+
+La distinction demande le statut HTTP, donc `curl` ; sans lui, la condition
+reste `sommier_transfert_echoue` et le comportement est inchangé — on ne
+prétend pas distinguer ce qu'on ne peut pas voir.
+
+Côté tests, `sauter_si_source_indisponible()` saute sur la première et laisse
+passer la seconde. Sauter les deux rendrait un vert trompeur le jour où la
+source déplacerait ses fichiers ; échouer sur les deux rend la CI otage d'un
+serveur tiers.
+
+Deux tests seulement sont concernés : ceux qui vérifient le chemin de
+téléchargement contre la vraie source, ce qu'aucun cache pré-rempli ne peut
+faire. Tout le reste passait déjà par des fixtures.
+
 # sommieR 0.10.0
 
 Lot 2 de la couche probante. Le lot 1 faisait dire au jeton **ce** qu'il

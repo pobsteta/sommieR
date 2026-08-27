@@ -216,17 +216,65 @@ millesime_publie <- function(dossier) {
   substr(trouve, 17L, 26L)
 }
 
-telecharger <- function(url, destination) {
-  resultat <- try(
-    utils::download.file(url, destination, mode = "wb", quiet = TRUE),
-    silent = TRUE
-  )
-  if (inherits(resultat, "try-error") || !file.exists(destination) ||
-      file.info(destination)$size == 0L) {
-    unlink(destination)
-    stop("Telechargement du fond cadastral impossible : ", url,
-         "\nVerifier l'acces reseau, ou fournir le fichier au cache a la main.",
-         call. = FALSE)
+# Rend NULL en cas de succes, sinon la classe de l'echec et son detail.
+#
+# Deux echecs, qui ne veulent pas dire la meme chose. Un hote injoignable ou
+# en erreur est une panne d'infrastructure : rien n'est casse ici, il n'y a
+# qu'a revenir plus tard. Un 404 dit au contraire que le fichier n'est pas la
+# ou on le cherche - l'URL qu'on batit est fausse, ou la source a bouge -, et
+# c'est un vrai probleme. Les confondre ferait passer une regression pour une
+# panne, et une panne pour une regression.
+transferer <- function(url, destination) {
+  if (!requireNamespace("curl", quietly = TRUE)) {
+    # Sans curl, le statut HTTP n'est pas accessible : on ne sait pas
+    # distinguer, et on ne le pretend pas.
+    resultat <- try(
+      utils::download.file(url, destination, mode = "wb", quiet = TRUE),
+      silent = TRUE
+    )
+    if (inherits(resultat, "try-error")) {
+      return(list(classe = "sommier_transfert_echoue",
+                  detail = trimws(conditionMessage(attr(resultat, "condition")))))
+    }
+  } else {
+    reponse <- try(curl::curl_fetch_disk(url, destination), silent = TRUE)
+    if (inherits(reponse, "try-error")) {
+      return(list(classe = "sommier_reseau_indisponible",
+                  detail = trimws(conditionMessage(attr(reponse, "condition")))))
+    }
+    if (reponse$status_code >= 400L) {
+      return(list(
+        classe = if (reponse$status_code < 500L) {
+          "sommier_ressource_absente"
+        } else {
+          "sommier_reseau_indisponible"
+        },
+        detail = paste0("statut HTTP ", reponse$status_code)
+      ))
+    }
   }
-  invisible(destination)
+  if (!file.exists(destination) || file.info(destination)$size == 0L) {
+    return(list(classe = "sommier_ressource_absente",
+                detail = "le serveur a rendu un fichier vide"))
+  }
+  NULL
+}
+
+telecharger <- function(url, destination) {
+  echec <- transferer(url, destination)
+  if (is.null(echec)) {
+    return(invisible(destination))
+  }
+  unlink(destination)
+  stop(structure(
+    class = c(echec$classe, "sommier_erreur_telechargement", "error", "condition"),
+    list(
+      message = paste0(
+        "Telechargement du fond cadastral impossible : ", url,
+        "\n", echec$detail,
+        "\nVerifier l'acces reseau, ou fournir le fichier au cache a la main."
+      ),
+      call = NULL
+    )
+  ))
 }
