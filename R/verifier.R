@@ -177,14 +177,23 @@ print.sommier_rapport <- function(x, ...) {
           x$anomalies$message[[i]], "\n", sep = "")
     }
   }
+  for (reserve in x$reserves %||% character(0)) {
+    cat("  reserve   : ", reserve, "\n", sep = "")
+  }
   invisible(x)
 }
 
-rapport <- function(valide, n_entrees, foret_id, seq_tete, hash_tete, anomalies) {
+rapport <- function(valide, n_entrees, foret_id, seq_tete, hash_tete, anomalies,
+                    reserves = character(0)) {
   structure(
     list(
       valide = valide, n_entrees = n_entrees, foret_id = foret_id,
-      seq_tete = seq_tete, hash_tete = hash_tete, anomalies = anomalies
+      seq_tete = seq_tete, hash_tete = hash_tete, anomalies = anomalies,
+      # Une reserve n'est pas une anomalie : elle dit ce qui n'a PAS pu etre
+      # verifie, quand rien n'indique pour autant que ce soit faux. Les
+      # confondre ferait declarer invalide un manifeste intact dont on n'a
+      # simplement pas les ancres de confiance.
+      reserves = reserves
     ),
     class = "sommier_rapport"
   )

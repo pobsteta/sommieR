@@ -159,12 +159,18 @@ alg_de_la_cle <- function(cle) {
 #'   en `raw`, au format JOSE de `alg`.
 #' @param alg Algorithme JOSE, parmi [SOMMIER_ALGOS_JWS].
 #' @param kid Identifiant de cle, porte dans l'en-tete JWS (facultatif).
+#' @param certificat Certificat X.509 du signataire, en DER (`raw`).
+#'   Facultatif, mais c'est lui qui rend le visa verifiable par un tiers :
+#'   enregistre au moment de signer, il voyage avec l'export, et le
+#'   destinataire n'a plus besoin qu'une ancre de confiance - exactement comme
+#'   pour le jeton d'horodatage, ou l'autorite inclut le sien.
 #'
 #' @return Un objet de classe `sommier_signataire`.
 #'
 #' @seealso [signataire_cle()], [signataire_keycloak()]
 #' @export
-sommier_signataire <- function(claims, signer, alg = "RS256", kid = NULL) {
+sommier_signataire <- function(claims, signer, alg = "RS256", kid = NULL,
+                               certificat = NULL) {
   if (!is.list(claims) || est_vide(claims$sub)) {
     stop("`claims` doit etre une liste nommee portant au moins `sub` : ",
          "un visa sans signataire identifie n'est pas opposable.", call. = FALSE)
@@ -172,12 +178,22 @@ sommier_signataire <- function(claims, signer, alg = "RS256", kid = NULL) {
   if (!is.function(signer)) {
     stop("`signer` doit etre une fonction (raw) -> raw.", call. = FALSE)
   }
+  if (!is.null(certificat)) {
+    if (!is.raw(certificat)) {
+      stop("`certificat` doit etre le certificat X.509 en DER (raw).",
+           call. = FALSE)
+    }
+    # Lu tout de suite : un certificat illisible enregistre au visa serait
+    # decouvert des annees plus tard, par celui qui cherche a verifier.
+    certificat_lire(certificat)
+  }
   structure(
     list(
-      claims = claims,
-      signer = signer,
-      alg    = valider_choix(alg, "alg", SOMMIER_ALGOS_JWS),
-      kid    = if (est_vide(kid)) NULL else valider_texte(kid, "kid")
+      claims     = claims,
+      signer     = signer,
+      alg        = valider_choix(alg, "alg", SOMMIER_ALGOS_JWS),
+      kid        = if (est_vide(kid)) NULL else valider_texte(kid, "kid"),
+      certificat = certificat
     ),
     class = "sommier_signataire"
   )
@@ -188,6 +204,10 @@ print.sommier_signataire <- function(x, ...) {
   cat("<signataire de sommier>\n")
   cat("  sub : ", x$claims$sub, "\n", sep = "")
   cat("  alg : ", x$alg, if (!is.null(x$kid)) paste0(" (kid ", x$kid, ")"), "\n", sep = "")
+  if (!is.null(x$certificat)) {
+    cat("  cert: ", length(x$certificat), " octets (le visa sera autoporteur)\n",
+        sep = "")
+  }
   invisible(x)
 }
 
@@ -210,6 +230,7 @@ print.sommier_signataire <- function(x, ...) {
 #' @param cle Cle privee lue par [openssl::read_key()], RSA ou ECDSA P-256.
 #' @param claims Liste nommee des claims d'identite.
 #' @param kid Identifiant de cle (facultatif).
+#' @param certificat Certificat X.509 du signataire, en DER (`raw`).
 #' @return Un objet `sommier_signataire`.
 #'
 #' @examples
@@ -220,7 +241,7 @@ print.sommier_signataire <- function(x, ...) {
 #' signataire_cle(openssl::ec_keygen("P-256"), claims = list(sub = "agent-02"))
 #'
 #' @export
-signataire_cle <- function(cle, claims, kid = NULL) {
+signataire_cle <- function(cle, claims, kid = NULL, certificat = NULL) {
   alg <- alg_de_la_cle(cle)
   sommier_signataire(
     claims = claims,
@@ -229,7 +250,8 @@ signataire_cle <- function(cle, claims, kid = NULL) {
       if (identical(alg, "ES256")) ecdsa_der_vers_brut(signature) else signature
     },
     alg = alg,
-    kid = kid
+    kid = kid,
+    certificat = certificat
   )
 }
 
@@ -256,19 +278,21 @@ signataire_cle <- function(cle, claims, kid = NULL) {
 #' @param kid Identifiant de cle (facultatif).
 #' @param claims_retenus Claims a archiver dans le visa. Par defaut ceux que
 #'   le brief nomme, plus `siret`.
+#' @param certificat Certificat X.509 du signataire, en DER (`raw`).
 #' @return Un objet `sommier_signataire`.
 #'
 #' @export
 signataire_keycloak <- function(jeton_id, cle, kid = NULL,
                                 claims_retenus = c("sub", "given_name",
                                                    "usual_name", "family_name",
-                                                   "email", "siret", "iss")) {
+                                                   "email", "siret", "iss"),
+                                certificat = NULL) {
   claims <- jwt_claims(jeton_id)
   retenus <- claims[intersect(claims_retenus, names(claims))]
   if (est_vide(retenus$sub)) {
     stop("Le jeton d'identite ne porte pas de claim `sub`.", call. = FALSE)
   }
-  signataire_cle(cle, claims = retenus, kid = kid)
+  signataire_cle(cle, claims = retenus, kid = kid, certificat = certificat)
 }
 
 #' Claims d'un jeton JWT

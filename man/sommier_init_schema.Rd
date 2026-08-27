@@ -15,7 +15,7 @@ sommier_init_schema(con, vues = TRUE)
 Invisiblement, le vecteur des fichiers executes.
 }
 \description{
-Execute \verb{001_schema.sql} puis \verb{002_vues.sql}. Les deux fichiers sont
+Execute les fichiers de schema puis, au choix, les vues. Tous sont
 idempotents : les rejouer sur une base deja initialisee ne detruit ni
 n'altere de donnee.
 }

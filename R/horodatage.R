@@ -80,12 +80,13 @@ tsa_requete <- function(empreinte, nonce = NULL, demander_certificat = TRUE) {
   )
 }
 
-# Lecture d'un TLV DER a la position `i`. Rend le tag, les bornes du contenu
-# et la position suivante.
+# Lecture d'un TLV DER a la position `i`. Rend le tag, les bornes du contenu,
+# celles du TLV entier - en-tete compris, parce que c'est sur cette forme-la
+# qu'une signature porte - et la position suivante.
 der_lire <- function(octets, i = 1L) {
   n <- length(octets)
   if (i + 1L > n) {
-    stop("Reponse d'horodatage tronquee.", call. = FALSE)
+    stop("Donnees DER tronquees.", call. = FALSE)
   }
   tag <- as.integer(octets[[i]])
   premier <- as.integer(octets[[i + 1L]])
@@ -95,7 +96,7 @@ der_lire <- function(octets, i = 1L) {
   } else {
     nb <- premier - 128L
     if (nb == 0L || i + 1L + nb > n) {
-      stop("Longueur DER indefinie ou tronquee dans la reponse.", call. = FALSE)
+      stop("Longueur DER indefinie ou tronquee.", call. = FALSE)
     }
     longueur <- 0L
     for (k in seq_len(nb)) {
@@ -104,10 +105,20 @@ der_lire <- function(octets, i = 1L) {
     debut <- i + 2L + nb
   }
   if (debut + longueur - 1L > n) {
-    stop("Contenu DER tronque dans la reponse.", call. = FALSE)
+    stop("Contenu DER tronque.", call. = FALSE)
   }
-  list(tag = tag, debut = debut, fin = debut + longueur - 1L,
+  list(tag = tag, debut_tlv = i, debut = debut, fin = debut + longueur - 1L,
        suivant = debut + longueur)
+}
+
+# Les octets du TLV entier, tag et longueur compris.
+der_tlv_octets <- function(octets, tlv) {
+  octets[tlv$debut_tlv:(tlv$suivant - 1L)]
+}
+
+# Les octets du seul contenu.
+der_contenu <- function(octets, tlv) {
+  if (tlv$fin < tlv$debut) raw(0) else octets[tlv$debut:tlv$fin]
 }
 
 der_entier_valeur <- function(octets, tlv) {

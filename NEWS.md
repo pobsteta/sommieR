@@ -1,3 +1,101 @@
+# sommieR 0.10.0
+
+Lot 2 de la couche probante. Le lot 1 faisait dire au jeton **ce** qu'il
+atteste ; celui-ci établit **qui** l'atteste — et rend le visa aussi
+autoporteur que le jeton.
+
+## La chaîne de certification
+
+`tsa_verifier_jeton()` valide le CMS complet, dans l'ordre : l'attribut
+`contentType`, le `messageDigest` confronté au contenu lu, l'`ESSCertID` qui
+désigne le certificat employé, la signature portant sur les attributs signés
+réencodés en `SET OF` (RFC 5652 §5.4), l'usage `timeStamping`, la validité du
+certificat, et la chaîne jusqu'à une ancre.
+
+**Trois états, pas deux.**
+
+| État | Ce qu'il dit |
+|---|---|
+| `valide` | tout est vérifié, et la chaîne remonte à une ancre fournie |
+| `non_rattache` | le jeton est intact, mais aucune ancre ne le couvre |
+| `invalide` | quelque chose cloche dans le jeton lui-même |
+
+La distinction n'est pas cosmétique. Dire « invalide » à une commune dont le
+jeton est parfait mais émis par une autorité qu'on n'a pas listée serait faux ;
+lui faire croire à une garantie non vérifiée le serait tout autant.
+
+## Trois décisions
+
+* **La validité s'apprécie à la date attestée, pas aujourd'hui.** Un jeton de
+  2019 reste bon après l'expiration du certificat qui l'a produit — c'est même
+  tout l'intérêt de l'horodatage. C'est pourquoi la chaîne est parcourue à la
+  main plutôt que confiée à `openssl::cert_verify()`, qui juge à l'heure
+  courante et condamnerait tout jeton ancien.
+* **Aucune ancre n'est embarquée.** Un magasin de racines livré avec le paquet
+  ferait dépendre du rythme de publication de sommieR la question de savoir qui
+  est digne de confiance, et une racine retirée resterait attestée par toute
+  version installée. C'est la règle du lot 4 cartographique, appliquée ici.
+* **L'usage `timeStamping` doit être le seul, et critique** (RFC 3161 §2.3).
+  Un certificat servant aussi à authentifier un serveur web n'est plus dédié à
+  l'horodatage, et c'est la dédicace qui fait la garantie.
+
+## Le visa devient autoporteur
+
+Le jeton RFC 3161 emporte le certificat de son autorité ; le visa, lui,
+n'emportait que sa signature. Le manifeste laissait donc son destinataire — une
+commune, un CRPF — avec une signature qu'il ne pouvait confronter à aucune clé.
+La vérification hors ligne par un tiers n'était vraie qu'à moitié.
+
+* Le certificat du signataire s'enregistre **au moment de signer**, non se
+  cherche au moment de vérifier : il fait partie de ce que le visa atteste.
+  Nouvelle colonne facultative `visa.certificat` (`004_certificat_visa.sql`).
+* `sommier_verifier_visas()` en tire la clé : `cles_publiques` devient inutile
+  pour les visas qui en portent un. Les visas antérieurs gardent le
+  comportement précédent — leur inventer un certificat après coup serait écrire
+  dans un registre append-only ce qui n'y a jamais été.
+* `sommier_verifier_manifeste()` vérifie les signatures JWS et les jetons, et
+  lève la réserve inscrite depuis la v0.5.0.
+
+## Anomalies et réserves ne se confondent plus
+
+Une anomalie dit que quelque chose est faux ; une **réserve**, que quelque
+chose n'a pas pu être vérifié sans que rien n'indique pour autant que ce soit
+faux — un jeton intact qu'aucune ancre fournie ne couvre, un visa sans
+certificat, la révocation. Les confondre déclarerait invalide un manifeste
+parfait vérifié sans ancres. `sommier_rapport` porte donc `reserves` à côté de
+`anomalies`, et `print()` les montre.
+
+## Format de manifeste
+
+`SOMMIER_VERSION_MANIFESTE` passe à `sommier-manifeste-2` — le certificat du
+signataire s'y ajoute. Mais **la v1 reste vérifiable** :
+`SOMMIER_FORMATS_MANIFESTE_LUS` liste les formats lus, plus nombreux que celui
+qui s'écrit. Un manifeste est un export destiné à être vérifié des années plus
+tard ; refuser l'ancien format annulerait cela même qu'il promet.
+
+## Changement dans le rapport de visas
+
+`sommier_verifier_visas()` rend `horodatage` (quatre états : `absent`,
+`valide`, `non_rattache`, `invalide`) à la place du booléen `horodate` : un
+jeton se juge sur plus que sa présence. La fonction accepte un argument
+`ancres`.
+
+## Ce qui reste hors périmètre, et le reste franchement
+
+**La révocation n'est pas vérifiée.** CRL et OCSP demandent le réseau, ce que
+la vérification hors ligne exclut par construction. Un certificat révoqué mais
+non expiré passe donc. La limite est écrite dans la documentation et rendue en
+réserve dans chaque rapport, plutôt que passée sous silence.
+
+## Tests
+
+Les autorités de test se montent à la volée, avec l'usage et la criticité
+voulus. Un constat consigné au passage : **`openssl ts` refuse lui-même de
+signer avec un certificat non conforme** (« invalid signer certificate
+purpose »), si bien qu'un jeton contrefait de cette façon n'est pas
+fabricable — les règles d'usage s'éprouvent donc sur le certificat, qui est
+exactement ce que consulte la vérification.
+
 # sommieR 0.9.0
 
 Lot 1 de la couche probante. Le paquet savait poser un visa et obtenir un jeton

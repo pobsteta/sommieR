@@ -36,7 +36,8 @@ test_that("un visa signe couvre la tete de chaine et se verifie", {
   expect_equal(nrow(rapport), 1L)
   expect_true(rapport$concorde)
   expect_true(rapport$signature_valide)
-  expect_false(rapport$horodate)
+  expect_equal(rapport$horodatage, "absent")
+  expect_true(is.na(rapport$date_attestee))
   expect_match(rapport$remarque, "sans jeton d'horodatage")
 })
 
@@ -68,9 +69,31 @@ test_that("un visa horodate porte son jeton", {
                         tsa_url = "https://tsa.example",
                         transport = tsa_simulee())
   expect_true(visa$horodate)
+
+  # Sans ancre : le jeton est lu et intact, mais rien ne le rattache.
   rapport <- sommier_verifier_visas(con, foret, list(`maire-01` = cle$pubkey))
-  expect_true(rapport$horodate)
-  expect_true(is.na(rapport$remarque))
+  expect_equal(rapport$horodatage, "non_rattache")
+  expect_equal(rapport$date_attestee, visa$date_attestee)
+  expect_match(rapport$remarque, "aucune ancre")
+
+  # Avec l'ancre qui convient, le meme jeton est valide et sans remarque.
+  rattache <- sommier_verifier_visas(con, foret, list(`maire-01` = cle$pubkey),
+                                     ancres = list(racine_tsa_de_test()))
+  expect_equal(rattache$horodatage, "valide")
+  expect_true(is.na(rattache$remarque))
+})
+
+test_that("un visa portant son certificat se verifie sans cle fournie", {
+  # C'est ce qui rend l'export verifiable par un tiers : la cle voyage avec
+  # le visa, comme le certificat de l'autorite voyage dans le jeton.
+  con <- base_visa()
+  foret <- foret_avec_entree(con)
+  materiel <- signataire_avec_certificat()
+  sommier_viser(con, foret, 2026, "commune", materiel$signataire)
+
+  rapport <- sommier_verifier_visas(con, foret)
+  expect_true(rapport$signature_valide)
+  expect_false(grepl("aucune cle publique", rapport$remarque %||% ""))
 })
 
 test_that("une signature posee par une autre cle est detectee", {

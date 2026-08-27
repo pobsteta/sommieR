@@ -4,7 +4,7 @@
 \alias{signataire_cle}
 \title{Signataire adosse a une cle privee}
 \usage{
-signataire_cle(cle, claims, kid = NULL)
+signataire_cle(cle, claims, kid = NULL, certificat = NULL)
 }
 \arguments{
 \item{cle}{Cle privee lue par \code{\link[openssl:read_key]{openssl::read_key()}}, RSA ou ECDSA P-256.}
@@ -12,6 +12,8 @@ signataire_cle(cle, claims, kid = NULL)
 \item{claims}{Liste nommee des claims d'identite.}
 
 \item{kid}{Identifiant de cle (facultatif).}
+
+\item{certificat}{Certificat X.509 du signataire, en DER (\code{raw}).}
 }
 \value{
 Un objet \code{sommier_signataire}.

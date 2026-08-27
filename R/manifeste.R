@@ -1,6 +1,22 @@
 #' Version du format de manifeste
 #' @export
-SOMMIER_VERSION_MANIFESTE <- "sommier-manifeste-1"
+SOMMIER_VERSION_MANIFESTE <- "sommier-manifeste-2"
+
+#' Formats de manifeste que la verification accepte
+#'
+#' @description
+#' Le format ecrit est [SOMMIER_VERSION_MANIFESTE] ; ceux qui se **lisent**
+#' sont plus nombreux.
+#'
+#' @details
+#' Un manifeste est un export destine a etre verifie par un tiers, des annees
+#' plus tard. Refuser de verifier un manifeste ancien sous pretexte qu'une
+#' version posterieure du paquet ecrit autrement reviendrait a annuler cela
+#' meme qu'il promet. Les evolutions du format sont additives : la v2 ajoute
+#' le certificat du signataire, elle ne retire rien.
+#'
+#' @export
+SOMMIER_FORMATS_MANIFESTE_LUS <- c("sommier-manifeste-1", "sommier-manifeste-2")
 
 #' Export d'un manifeste verifiable
 #'
@@ -45,6 +61,7 @@ sommier_exporter_manifeste <- function(con, foret_id, chemin) {
     con,
     "SELECT id, exercice, seq_tete, encode(hash_tete, 'hex') AS hash_tete,
             autorite, signataire::text AS signataire, signature_jws,
+            encode(certificat, 'hex') AS certificat,
             encode(tst_rfc3161, 'hex') AS tst_rfc3161,
             to_char(date_visa AT TIME ZONE 'UTC',
                     'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') AS date_visa
@@ -99,25 +116,40 @@ sommier_exporter_manifeste <- function(con, foret_id, chemin) {
 #'    reellement signe. Sans lui, un jeton obtenu pour une autre tete de chaine
 #'    accompagnerait le manifeste sans que rien ne le distingue du bon.
 #'
-#' Ce qui n'est pas verifie : la signature JWS du visa, faute de clé publique
-#' dans le manifeste, et la chaine de certification de l'autorite
-#' d'horodatage, qui demande une ancre de confiance. Les deux relevent du lot
-#' suivant.
+#' 3. **La signature JWS du visa se verifie**, quand le visa porte le
+#'    certificat de son signataire (format `sommier-manifeste-2`). C'est ce
+#'    qui rend l'export verifiable par un tiers sans qu'il ait a se procurer
+#'    la cle par un canal que le manifeste n'organise pas.
+#'
+#' **Anomalies et reserves ne se confondent pas.** Une anomalie dit que
+#' quelque chose est faux ; une reserve, que quelque chose n'a pas pu etre
+#' verifie sans que rien n'indique pour autant que ce soit faux - un jeton
+#' intact dont aucune ancre fournie ne couvre l'autorite, un visa sans
+#' certificat. Compter les secondes comme les premieres declarerait invalide
+#' un manifeste parfait verifie sans ancres.
+#'
+#' La revocation n'est jamais verifiee : CRL et OCSP demandent le reseau, ce
+#' que la verification hors ligne exclut par construction. Le rapport le dit
+#' en reserve plutot que de laisser croire le contraire.
 #'
 #' @param chemin Fichier JSON produit par [sommier_exporter_manifeste()].
+#' @param ancres Ancres de confiance, lues par [certificat_lire()]. Aucune
+#'   n'est embarquee : ce serait faire dependre du rythme de publication de
+#'   sommieR la question de savoir qui est digne de confiance.
 #' @return Un objet `sommier_rapport`, dont les anomalies incluent les types
-#'   `visa_orphelin`, `ancrage_orphelin`, `visa_horodatage` et
-#'   `ancrage_horodatage`.
+#'   `visa_orphelin`, `ancrage_orphelin`, `visa_horodatage`,
+#'   `ancrage_horodatage` et `visa_signature`.
 #'
 #' @export
-sommier_verifier_manifeste <- function(chemin) {
+sommier_verifier_manifeste <- function(chemin, ancres = list()) {
   manifeste <- jsonlite::fromJSON(chemin, simplifyVector = TRUE,
                                   simplifyDataFrame = TRUE)
 
-  if (!identical(manifeste$format, SOMMIER_VERSION_MANIFESTE)) {
+  if (!isTRUE(manifeste$format %in% SOMMIER_FORMATS_MANIFESTE_LUS)) {
     stop("Format de manifeste inconnu : ",
          manifeste$format %||% "(absent)",
-         " ; attendu ", SOMMIER_VERSION_MANIFESTE, ".", call. = FALSE)
+         " ; connus : ", paste(SOMMIER_FORMATS_MANIFESTE_LUS, collapse = ", "),
+         ".", call. = FALSE)
   }
   if (!identical(manifeste$version_chaine, SOMMIER_VERSION_CHAINE)) {
     stop("Manifeste chaine avec ", manifeste$version_chaine %||% "(absent)",
@@ -134,28 +166,90 @@ sommier_verifier_manifeste <- function(chemin) {
     as.character(manifeste$entrees$hash),
     as.character(manifeste$entrees$seq)
   )
-  rapport$anomalies <- verifier_attestations(
-    rapport$anomalies, manifeste$visas, tetes, "visa_orphelin",
-    "visa_horodatage", "Visa"
-  )
-  rapport$anomalies <- verifier_attestations(
-    rapport$anomalies, manifeste$ancrages, tetes, "ancrage_orphelin",
-    "ancrage_horodatage", "Ancrage"
-  )
+  reserves <- character(0)
+  for (attestations in list(
+    list(table = manifeste$visas, tetes = tetes, type = "visa_orphelin",
+         type_horodatage = "visa_horodatage", libelle = "Visa"),
+    list(table = manifeste$ancrages, tetes = tetes, type = "ancrage_orphelin",
+         type_horodatage = "ancrage_horodatage", libelle = "Ancrage")
+  )) {
+    controle <- verifier_attestations(
+      rapport$anomalies, attestations$table, attestations$tetes,
+      attestations$type, attestations$type_horodatage, attestations$libelle,
+      ancres
+    )
+    rapport$anomalies <- controle$anomalies
+    reserves <- c(reserves, controle$reserves)
+  }
+
+  controle <- verifier_signatures_visas(rapport$anomalies, manifeste$visas)
+  rapport$anomalies <- controle$anomalies
+  reserves <- c(reserves, controle$reserves)
+
+  rapport$reserves <- c(reserves,
+                        "revocation des certificats non verifiee : CRL et OCSP demandent le reseau")
   rapport$valide <- nrow(rapport$anomalies) == 0L
   rapport
 }
 
-verifier_attestations <- function(anomalies, table, tetes, type,
-                                  type_horodatage, libelle) {
-  if (is.null(table) || !is.data.frame(table) || nrow(table) == 0L) {
-    return(anomalies)
+# La signature detachee du visa, confrontee au certificat que le visa porte.
+verifier_signatures_visas <- function(anomalies, visas) {
+  reserves <- character(0)
+  if (is.null(visas) || !is.data.frame(visas) || nrow(visas) == 0L) {
+    return(list(anomalies = anomalies, reserves = reserves))
   }
+  sans_certificat <- 0L
+  for (i in seq_len(nrow(visas))) {
+    cert_hex <- if ("certificat" %in% names(visas)) visas$certificat[[i]] else NA
+    if (est_vide(cert_hex)) {
+      sans_certificat <- sans_certificat + 1L
+      next
+    }
+    porteur <- cle_du_certificat(cert_hex)
+    if (is.null(porteur$cle)) {
+      anomalies <- ajouter_anomalie(
+        anomalies, as.numeric(visas$seq_tete[[i]]), visas$id[[i]],
+        "visa_signature",
+        paste0("Visa portant un certificat inexploitable : ",
+               paste(porteur$remarques, collapse = " ; "), ".")
+      )
+      next
+    }
+    valide <- try(jws_verifier_detache(
+      visas$signature_jws[[i]],
+      empreinte_depuis_hex(visas$hash_tete[[i]]), porteur$cle
+    ), silent = TRUE)
+    if (inherits(valide, "try-error") || !isTRUE(valide)) {
+      anomalies <- ajouter_anomalie(
+        anomalies, as.numeric(visas$seq_tete[[i]]), visas$id[[i]],
+        "visa_signature",
+        "Visa dont la signature ne se verifie pas sous le certificat qu'il porte."
+      )
+    }
+  }
+  if (sans_certificat > 0L) {
+    reserves <- c(reserves, paste0(
+      sans_certificat, " visa(s) sans certificat : signature non verifiee, ",
+      "la cle doit etre fournie autrement"
+    ))
+  }
+  list(anomalies = anomalies, reserves = reserves)
+}
+
+verifier_attestations <- function(anomalies, table, tetes, type,
+                                  type_horodatage, libelle, ancres = list()) {
+  reserves <- character(0)
+  if (is.null(table) || !is.data.frame(table) || nrow(table) == 0L) {
+    return(list(anomalies = anomalies, reserves = reserves))
+  }
+  non_rattaches <- 0L
   for (i in seq_len(nrow(table))) {
     seq_tete <- as.character(table$seq_tete[[i]])
-    anomalies <- verifier_jeton_atteste(
-      anomalies, table, i, seq_tete, type_horodatage, libelle
+    controle <- verifier_jeton_atteste(
+      anomalies, table, i, seq_tete, type_horodatage, libelle, ancres
     )
+    anomalies <- controle$anomalies
+    non_rattaches <- non_rattaches + controle$non_rattache
     # `tetes[[seq_tete]]` leverait une erreur sur une sequence absente, alors
     # que c'est precisement l'anomalie a signaler : on passe par match().
     position <- match(seq_tete, names(tetes))
@@ -175,34 +269,40 @@ verifier_attestations <- function(anomalies, table, tetes, type,
       )
     }
   }
-  anomalies
+  if (non_rattaches > 0L) {
+    reserves <- c(reserves, paste0(
+      non_rattaches, " jeton(s) d'horodatage lus et intacts, mais rattaches a ",
+      "aucune ancre de confiance fournie"
+    ))
+  }
+  list(anomalies = anomalies, reserves = reserves)
 }
 
 # Ce que l'autorite a reellement signe, oppose a ce que la base declare. La
 # colonne `hash_tete` et le jeton peuvent differer : c'est precisement le cas
 # qu'un booleen « horodate » ne savait pas voir.
-verifier_jeton_atteste <- function(anomalies, table, i, seq_tete, type, libelle) {
+verifier_jeton_atteste <- function(anomalies, table, i, seq_tete, type, libelle,
+                                   ancres = list()) {
   tst <- if ("tst_rfc3161" %in% names(table)) table$tst_rfc3161[[i]] else NA
   if (est_vide(tst)) {
-    return(anomalies)
+    return(list(anomalies = anomalies, non_rattache = 0L))
   }
-  lu <- try(tsa_lire_jeton(octets_depuis_hex(tst, "tst_rfc3161")), silent = TRUE)
-  if (inherits(lu, "try-error")) {
-    return(ajouter_anomalie(
+  jeton <- try(octets_depuis_hex(tst, "tst_rfc3161"), silent = TRUE)
+  if (inherits(jeton, "try-error")) {
+    return(list(non_rattache = 0L, anomalies = ajouter_anomalie(
       anomalies, as.numeric(table$seq_tete[[i]]), table$id[[i]], type,
-      paste0(libelle, " porte un jeton d'horodatage illisible : ",
-             trimws(conditionMessage(attr(lu, "condition"))))
-    ))
+      paste0(libelle, " porte un jeton d'horodatage illisible.")
+    )))
   }
   declare <- tolower(as.character(table$hash_tete[[i]]))
-  if (!identical(empreinte_hex(lu$empreinte), declare)) {
-    return(ajouter_anomalie(
+  verdict <- tsa_verifier_jeton(jeton, empreinte_depuis_hex(declare), ancres)
+  if (identical(verdict$etat, "invalide")) {
+    return(list(non_rattache = 0L, anomalies = ajouter_anomalie(
       anomalies, as.numeric(table$seq_tete[[i]]), table$id[[i]], type,
-      paste0(libelle, " declare ", declare, " a la sequence ", seq_tete,
-             ", mais son jeton atteste ", lu$algorithme, ":",
-             empreinte_hex(lu$empreinte), " : l'horodatage a ete obtenu ",
-             "pour autre chose.")
-    ))
+      paste0(libelle, " a la sequence ", seq_tete, " : ",
+             paste(verdict$motifs, collapse = " ; "), ".")
+    )))
   }
-  anomalies
+  list(anomalies = anomalies,
+       non_rattache = if (identical(verdict$etat, "non_rattache")) 1L else 0L)
 }

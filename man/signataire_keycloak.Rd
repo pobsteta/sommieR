@@ -9,7 +9,8 @@ signataire_keycloak(
   cle,
   kid = NULL,
   claims_retenus = c("sub", "given_name", "usual_name", "family_name", "email", "siret",
-    "iss")
+    "iss"),
+  certificat = NULL
 )
 }
 \arguments{
@@ -21,6 +22,8 @@ signataire_keycloak(
 
 \item{claims_retenus}{Claims a archiver dans le visa. Par defaut ceux que
 le brief nomme, plus \code{siret}.}
+
+\item{certificat}{Certificat X.509 du signataire, en DER (\code{raw}).}
 }
 \value{
 Un objet \code{sommier_signataire}.
