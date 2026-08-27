@@ -27,6 +27,16 @@ jws_verifier_detache(jws, charge, cle_publique)
 
 `TRUE` si la signature est valide, `FALSE` sinon.
 
+## Details
+
+Une signature `ES256` est reconvertie en DER avant d'etre soumise a
+[`openssl::signature_verify()`](https://jeroen.r-universe.dev/openssl/reference/signatures.html),
+qui n'accepte que ce format. Sa longueur est d'abord verifiee : `ES256`
+impose exactement 64 octets, et une signature plus courte revele une
+implementation qui a concatene deux `bignum` sans les rembourrer. La
+refuser franchement vaut mieux que de la reconvertir en un DER
+syntaxiquement correct mais portant un `r` faux.
+
 ## Examples
 
 ``` r

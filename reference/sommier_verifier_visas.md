@@ -28,7 +28,7 @@ sommier_verifier_visas(con, foret_id, cles_publiques = list())
 ## Value
 
 Un `data.frame` : `exercice`, `autorite`, `seq_tete`, `concorde`,
-`signature_valide`, `horodate`, `remarque`.
+`signature_valide`, `horodate`, `date_attestee`, `remarque`.
 
 ## Details
 
@@ -41,3 +41,13 @@ doit rester verifiable des annees plus tard, hors ligne.
 Un visa sans jeton d'horodatage est signale mais n'invalide rien : sa
 date repose sur l'horloge du serveur, ce que l'appelant doit savoir sans
 que cela constitue une fraude.
+
+`date_attestee` est lue **dans le jeton**, non dans la base : c'est la
+date que l'autorite a certifiee. La colonne `date_visa`, elle, est celle
+que le registre s'est donnee a lui-meme, et ne prouve rien contre celui
+qui tient la base. Le jeton est aussi confronte a la tete visee : un
+jeton valide mais obtenu pour une autre empreinte est signale, la ou
+`horodate` seul le comptait comme bon.
+
+La signature de l'autorite d'horodatage n'est pas verifiee ici : elle
+demande un magasin de confiance, et fait l'objet du lot suivant.

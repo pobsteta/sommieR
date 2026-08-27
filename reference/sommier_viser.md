@@ -65,7 +65,8 @@ sommier_viser(
 ## Value
 
 Invisiblement, une liste : `id`, `seq_tete`, `hash_tete` (hexadecimal),
-`horodate` (booleen).
+`horodate` (booleen) et `date_attestee` - la date que l'autorite a
+certifiee, `NA` sans horodatage.
 
 ## Details
 

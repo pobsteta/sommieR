@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,6 +66,15 @@
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p><code>TRUE</code> si la signature est valide, <code>FALSE</code> sinon.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Une signature <code>ES256</code> est reconvertie en DER avant d'etre soumise a
+<code><a href="https://jeroen.r-universe.dev/openssl/reference/signatures.html" class="external-link">openssl::signature_verify()</a></code>, qui n'accepte que ce format. Sa longueur est
+d'abord verifiee : <code>ES256</code> impose exactement 64 octets, et une signature
+plus courte revele une implementation qui a concatene deux <code>bignum</code> sans les
+rembourrer. La refuser franchement vaut mieux que de la reconvertir en un
+DER syntaxiquement correct mais portant un <code>r</code> faux.</p>
     </div>
 
     <div class="section level2">

@@ -11,7 +11,7 @@ la cle fournie ?"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,7 +73,7 @@ par <code>sub</code> du signataire.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Un <code>data.frame</code> : <code>exercice</code>, <code>autorite</code>, <code>seq_tete</code>, <code>concorde</code>,
-<code>signature_valide</code>, <code>horodate</code>, <code>remarque</code>.</p>
+<code>signature_valide</code>, <code>horodate</code>, <code>date_attestee</code>, <code>remarque</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -85,6 +85,14 @@ verifiable des annees plus tard, hors ligne.</p>
 <p>Un visa sans jeton d'horodatage est signale mais n'invalide rien : sa date
 repose sur l'horloge du serveur, ce que l'appelant doit savoir sans que
 cela constitue une fraude.</p>
+<p><code>date_attestee</code> est lue <strong>dans le jeton</strong>, non dans la base : c'est la date
+que l'autorite a certifiee. La colonne <code>date_visa</code>, elle, est celle que le
+registre s'est donnee a lui-meme, et ne prouve rien contre celui qui tient
+la base. Le jeton est aussi confronte a la tete visee : un jeton valide mais
+obtenu pour une autre empreinte est signale, la ou <code>horodate</code> seul le
+comptait comme bon.</p>
+<p>La signature de l'autorite d'horodatage n'est pas verifiee ici : elle
+demande un magasin de confiance, et fait l'objet du lot suivant.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

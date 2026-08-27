@@ -1,13 +1,9 @@
 # Algorithmes de signature reconnus
 
-`RS256` seulement pour l'instant : RSASSA-PKCS1-v1_5 avec SHA-256, qui
-est l'algorithme par defaut de Keycloak et d'AgentConnect.
+- `RS256` : RSASSA-PKCS1-v1_5 avec SHA-256, algorithme par defaut de
+  Keycloak et d'AgentConnect.
 
-`ES256` n'est pas encore accepte, et ce n'est pas un oubli : JOSE exige
-la signature ECDSA au format brut R\|\|S, alors qu'OpenSSL la produit
-encodee en DER. Accepter `ES256` sans faire la conversion produirait des
-signatures que rien d'autre ne saurait verifier - mieux vaut refuser
-franchement.
+- `ES256` : ECDSA sur P-256 avec SHA-256.
 
 ## Usage
 
@@ -17,4 +13,17 @@ SOMMIER_ALGOS_JWS
 
 ## Format
 
-An object of class `character` of length 1.
+An object of class `character` of length 2.
+
+## Details
+
+`ES256` demande une conversion, parce que JOSE veut la signature en
+`R||S` brut la ou OpenSSL la produit encodee en DER.
+[`ecdsa_der_vers_brut()`](https://pobsteta.github.io/sommieR/reference/ecdsa_der_vers_brut.md)
+et
+[`ecdsa_brut_vers_der()`](https://pobsteta.github.io/sommieR/reference/ecdsa_brut_vers_der.md)
+la font dans les deux sens.
+
+Seule la courbe P-256 est acceptee : `ES384` et `ES512` supposent des
+composantes de 48 et 66 octets, et les rembourrer a 32 tronquerait la
+signature.

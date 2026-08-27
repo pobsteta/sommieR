@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,48 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.0" id="sommier-090">sommieR 0.9.0<a class="anchor" aria-label="anchor" href="#sommier-090"></a></h2>
+<p>Lot 1 de la couche probante. Le paquet savait poser un visa et obtenir un jeton d’horodatage ; il sait désormais les lire jusqu’au bout — sans magasin de confiance, sans réseau, sans configuration.</p>
+<div class="section level3">
+<h3 id="ce-quun-jeton-atteste-et-non-plus-seulement-quil-existe-0-9-0">Ce qu’un jeton atteste, et non plus seulement qu’il existe<a class="anchor" aria-label="anchor" href="#ce-quun-jeton-atteste-et-non-plus-seulement-quil-existe-0-9-0"></a></h3>
+<p><code><a href="../reference/sommier_verifier_visas.html">sommier_verifier_visas()</a></code> rendait <code>horodate</code>, un booléen qui signifiait « il y a un jeton dans la colonne ». Ni la date certifiée par l’autorité, ni l’empreinte que le jeton couvre n’étaient regardées : <strong>un jeton parfaitement valide, obtenu pour une autre tête de chaîne — une autre forêt, un autre exercice — passait exactement comme le bon.</strong></p>
+<ul><li>
+<code><a href="../reference/tsa_lire_jeton.html">tsa_lire_jeton()</a></code> rend le <code>TSTInfo</code> encapsulé dans le CMS : empreinte attestée, date, numéro de série, nonce, politique.</li>
+<li>
+<code><a href="../reference/sommier_verifier_visas.html">sommier_verifier_visas()</a></code> gagne <code>date_attestee</code>, <strong>lue dans le jeton</strong> et non dans la base. La colonne <code>date_visa</code> est celle que le registre s’est donnée à lui-même ; elle ne prouve rien contre celui qui tient la base.</li>
+<li>Le jeton est confronté à la tête qu’il prétend couvrir, dans le rapport de visas comme dans <code><a href="../reference/sommier_verifier_manifeste.html">sommier_verifier_manifeste()</a></code> — nouvelles anomalies <code>visa_horodatage</code> et <code>ancrage_horodatage</code>. Le point existant portait sur ce que la base déclare ; celui-ci sur ce que l’autorité a réellement signé.</li>
+<li>
+<code><a href="../reference/tsa_horodater.html">tsa_horodater()</a></code> confronte aussi le nonce rendu à celui envoyé. Le nonce était posé depuis la v0.2.0 « pour détecter le rejeu d’une réponse antérieure », mais personne ne le relisait : la détection annoncée n’avait jamais eu lieu.</li>
+<li>
+<code><a href="../reference/sommier_viser.html">sommier_viser()</a></code> et <code><a href="../reference/sommier_ancrer.html">sommier_ancrer()</a></code> rendent la date attestée.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="es256-et-les-octets-qui-le-rendent-interopérable-0-9-0">ES256, et les 32 octets qui le rendent interopérable<a class="anchor" aria-label="anchor" href="#es256-et-les-octets-qui-le-rendent-interop%C3%A9rable-0-9-0"></a></h3>
+<p>Le refus d’<code>ES256</code> datait d’une époque où la conversion DER → <code>R||S</code> n’était pas à portée. <code>openssl</code> expose <code>ecdsa_parse()</code> et <code>ecdsa_write()</code> : elle l’est.</p>
+<ul><li>
+<code>SOMMIER_ALGOS_JWS</code> accepte <code>RS256</code> et <code>ES256</code>. <code><a href="../reference/ecdsa_der_vers_brut.html">ecdsa_der_vers_brut()</a></code> et <code><a href="../reference/ecdsa_brut_vers_der.html">ecdsa_brut_vers_der()</a></code> font la conversion dans les deux sens.</li>
+<li>
+<strong>Chaque composante est rembourrée à 32 octets</strong>, et ce n’est pas une précaution de style. <code>ecdsa_parse()</code> rend deux <code>bignum</code>, et un <code>bignum</code> ne porte pas ses zéros de tête : sur 4 000 signatures P-256, 29 — soit 0,72 % — ont une composante courte. Les concaténer telles quelles produirait une signature de 63 octets que la RFC 7518 fait refuser, une fois sur cent quarante. Le test ne compte pas sur le hasard pour rencontrer le cas : il resigne jusqu’à l’obtenir.</li>
+<li>
+<code><a href="../reference/signataire_cle.html">signataire_cle()</a></code> <strong>déduit l’algorithme de la clé</strong> au lieu de le demander. Laisser l’appelant déclarer <code>alg</code> en passant une clé d’un autre type produirait un en-tête annonçant <code>RS256</code> au-dessus d’une signature ECDSA : invalide partout, et découvert seulement le jour où quelqu’un cherche à vérifier le visa.</li>
+<li>Seule la courbe P-256 est acceptée. <code>ES384</code> et <code>ES512</code> supposent des composantes de 48 et 66 octets, et les rembourrer à 32 les tronquerait : une clé P-384 est refusée plutôt que mal signée.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="ce-qui-reste-hors-périmètre-et-le-reste-franchement-0-9-0">Ce qui reste hors périmètre, et le reste franchement<a class="anchor" aria-label="anchor" href="#ce-qui-reste-hors-p%C3%A9rim%C3%A8tre-et-le-reste-franchement-0-9-0"></a></h3>
+<p>La signature de l’autorité d’horodatage et la chaîne de certification qui la rattache à une racine ne sont toujours pas vérifiées : cela demande une ancre de confiance, et fait l’objet du lot 2 (<code>specs/brief_probant-2</code>). Un <code>TSTInfo</code> lu n’est pas un <code>TSTInfo</code> authentifié, et la documentation le dit à chaque endroit où la distinction compte.</p>
+</div>
+<div class="section level3">
+<h3 id="tests-0-9-0">Tests<a class="anchor" aria-label="anchor" href="#tests-0-9-0"></a></h3>
+<ul><li>Un vrai jeton RFC 3161 entre au dépôt comme fixture, engendré hors ligne — un <code>TSTInfo</code> reconstitué à la main ne serait qu’une imitation de ce que le paquet doit savoir lire. Sa requête vient de <code><a href="../reference/tsa_requete.html">tsa_requete()</a></code> : <strong>l’encodeur DER du paquet est donc soumis à une vraie implémentation d’autorité</strong>, qui l’accepte.</li>
+<li>Les tests de flux montent leur propre autorité à la volée plutôt que de verser une clé privée au dépôt, et se sautent là où <code>openssl</code> en ligne de commande manque.</li>
+<li>L’interopérabilité d’<code>ES256</code> a été vérifiée contre une implémentation tierce, cas à composante courte compris.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="correction-0-9-0">Correction<a class="anchor" aria-label="anchor" href="#correction-0-9-0"></a></h3>
+<p><code>der_entier_valeur()</code> accumulait en entier : un <code>INTEGER</code> de plus de quatre octets — un numéro de série, un nonce — débordait et se rendait en <code>NA</code> sans que rien ne l’annonce. L’accumulation se fait en double.</p>
+</div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.8.0" id="sommier-080">sommieR 0.8.0<a class="anchor" aria-label="anchor" href="#sommier-080"></a></h2>
 <p>Lot 4 : le PCI vecteur. Les bornes et les détails topographiques que les livraisons GeoJSON écartent, cherchés là où ils se trouvent.</p>

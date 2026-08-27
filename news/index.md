@@ -1,5 +1,100 @@
 # Changelog
 
+## sommieR 0.9.0
+
+Lot 1 de la couche probante. Le paquet savait poser un visa et obtenir
+un jeton d’horodatage ; il sait désormais les lire jusqu’au bout — sans
+magasin de confiance, sans réseau, sans configuration.
+
+### Ce qu’un jeton atteste, et non plus seulement qu’il existe
+
+[`sommier_verifier_visas()`](https://pobsteta.github.io/sommieR/reference/sommier_verifier_visas.md)
+rendait `horodate`, un booléen qui signifiait « il y a un jeton dans la
+colonne ». Ni la date certifiée par l’autorité, ni l’empreinte que le
+jeton couvre n’étaient regardées : **un jeton parfaitement valide,
+obtenu pour une autre tête de chaîne — une autre forêt, un autre
+exercice — passait exactement comme le bon.**
+
+- [`tsa_lire_jeton()`](https://pobsteta.github.io/sommieR/reference/tsa_lire_jeton.md)
+  rend le `TSTInfo` encapsulé dans le CMS : empreinte attestée, date,
+  numéro de série, nonce, politique.
+- [`sommier_verifier_visas()`](https://pobsteta.github.io/sommieR/reference/sommier_verifier_visas.md)
+  gagne `date_attestee`, **lue dans le jeton** et non dans la base. La
+  colonne `date_visa` est celle que le registre s’est donnée à lui-même
+  ; elle ne prouve rien contre celui qui tient la base.
+- Le jeton est confronté à la tête qu’il prétend couvrir, dans le
+  rapport de visas comme dans
+  [`sommier_verifier_manifeste()`](https://pobsteta.github.io/sommieR/reference/sommier_verifier_manifeste.md)
+  — nouvelles anomalies `visa_horodatage` et `ancrage_horodatage`. Le
+  point existant portait sur ce que la base déclare ; celui-ci sur ce
+  que l’autorité a réellement signé.
+- [`tsa_horodater()`](https://pobsteta.github.io/sommieR/reference/tsa_horodater.md)
+  confronte aussi le nonce rendu à celui envoyé. Le nonce était posé
+  depuis la v0.2.0 « pour détecter le rejeu d’une réponse antérieure »,
+  mais personne ne le relisait : la détection annoncée n’avait jamais eu
+  lieu.
+- [`sommier_viser()`](https://pobsteta.github.io/sommieR/reference/sommier_viser.md)
+  et
+  [`sommier_ancrer()`](https://pobsteta.github.io/sommieR/reference/sommier_ancrer.md)
+  rendent la date attestée.
+
+### ES256, et les 32 octets qui le rendent interopérable
+
+Le refus d’`ES256` datait d’une époque où la conversion DER → `R||S`
+n’était pas à portée. `openssl` expose `ecdsa_parse()` et
+`ecdsa_write()` : elle l’est.
+
+- `SOMMIER_ALGOS_JWS` accepte `RS256` et `ES256`.
+  [`ecdsa_der_vers_brut()`](https://pobsteta.github.io/sommieR/reference/ecdsa_der_vers_brut.md)
+  et
+  [`ecdsa_brut_vers_der()`](https://pobsteta.github.io/sommieR/reference/ecdsa_brut_vers_der.md)
+  font la conversion dans les deux sens.
+- **Chaque composante est rembourrée à 32 octets**, et ce n’est pas une
+  précaution de style. `ecdsa_parse()` rend deux `bignum`, et un
+  `bignum` ne porte pas ses zéros de tête : sur 4 000 signatures P-256,
+  29 — soit 0,72 % — ont une composante courte. Les concaténer telles
+  quelles produirait une signature de 63 octets que la RFC 7518 fait
+  refuser, une fois sur cent quarante. Le test ne compte pas sur le
+  hasard pour rencontrer le cas : il resigne jusqu’à l’obtenir.
+- [`signataire_cle()`](https://pobsteta.github.io/sommieR/reference/signataire_cle.md)
+  **déduit l’algorithme de la clé** au lieu de le demander. Laisser
+  l’appelant déclarer `alg` en passant une clé d’un autre type
+  produirait un en-tête annonçant `RS256` au-dessus d’une signature
+  ECDSA : invalide partout, et découvert seulement le jour où quelqu’un
+  cherche à vérifier le visa.
+- Seule la courbe P-256 est acceptée. `ES384` et `ES512` supposent des
+  composantes de 48 et 66 octets, et les rembourrer à 32 les tronquerait
+  : une clé P-384 est refusée plutôt que mal signée.
+
+### Ce qui reste hors périmètre, et le reste franchement
+
+La signature de l’autorité d’horodatage et la chaîne de certification
+qui la rattache à une racine ne sont toujours pas vérifiées : cela
+demande une ancre de confiance, et fait l’objet du lot 2
+(`specs/brief_probant-2`). Un `TSTInfo` lu n’est pas un `TSTInfo`
+authentifié, et la documentation le dit à chaque endroit où la
+distinction compte.
+
+### Tests
+
+- Un vrai jeton RFC 3161 entre au dépôt comme fixture, engendré hors
+  ligne — un `TSTInfo` reconstitué à la main ne serait qu’une imitation
+  de ce que le paquet doit savoir lire. Sa requête vient de
+  [`tsa_requete()`](https://pobsteta.github.io/sommieR/reference/tsa_requete.md)
+  : **l’encodeur DER du paquet est donc soumis à une vraie
+  implémentation d’autorité**, qui l’accepte.
+- Les tests de flux montent leur propre autorité à la volée plutôt que
+  de verser une clé privée au dépôt, et se sautent là où `openssl` en
+  ligne de commande manque.
+- L’interopérabilité d’`ES256` a été vérifiée contre une implémentation
+  tierce, cas à composante courte compris.
+
+### Correction
+
+`der_entier_valeur()` accumulait en entier : un `INTEGER` de plus de
+quatre octets — un numéro de série, un nonce — débordait et se rendait
+en `NA` sans que rien ne l’annonce. L’accumulation se fait en double.
+
 ## sommieR 0.8.0
 
 Lot 4 : le PCI vecteur. Les bornes et les détails topographiques que les

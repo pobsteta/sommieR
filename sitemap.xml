@@ -48,6 +48,8 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/base64url_encoder.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/budget_definir.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/decouper_sql.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/ecdsa_brut_vers_der.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/ecdsa_der_vers_brut.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/empreinte_depuis_hex.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/empreinte_hex.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/entrees_en_data_frame.html</loc></url>
@@ -122,6 +124,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_verifier_visas.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_viser.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/tsa_horodater.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/tsa_lire_jeton.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/tsa_lire_reponse.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/tsa_requete.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/tsa_transport_curl.html</loc></url>

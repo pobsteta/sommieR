@@ -11,7 +11,7 @@ a l'empreinte qu'il pretend attester."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,16 +64,23 @@ a l'empreinte qu'il pretend attester.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Un objet <code>sommier_rapport</code>, dont les anomalies incluent les types
-<code>visa_orphelin</code> et <code>ancrage_orphelin</code>.</p>
+<code>visa_orphelin</code>, <code>ancrage_orphelin</code>, <code>visa_horodatage</code> et
+<code>ancrage_horodatage</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>La verification des signatures JWS et des jetons d'horodatage RFC 3161
-releve du flux de visa (priorite 2 du brief) et n'est pas faite ici : ce
-qui est verifie, c'est que le <code>hash_tete</code> atteste correspond bien a l'etat
-de la chaine a la sequence annoncee. Un visa dont l'empreinte ne
-correspond a aucune entree est signale - c'est deja suffisant pour
-detecter une attestation rapportee d'une autre chaine.</p>
+    <p>Deux confrontations sont faites, sans reseau ni magasin de confiance.</p><ol><li><p>Le <code>hash_tete</code> que l'attestation declare correspond a l'etat de la chaine
+a la sequence annoncee. Un visa dont l'empreinte ne correspond a aucune
+entree est signale : c'est ce qui detecte une attestation rapportee d'une
+autre chaine.</p></li>
+<li><p><strong>Le jeton d'horodatage atteste bien cette empreinte-la.</strong> Le point 1
+porte sur ce que la base declare ; celui-ci sur ce que l'autorite a
+reellement signe. Sans lui, un jeton obtenu pour une autre tete de chaine
+accompagnerait le manifeste sans que rien ne le distingue du bon.</p></li>
+</ol><p>Ce qui n'est pas verifie : la signature JWS du visa, faute de clé publique
+dans le manifeste, et la chaine de certification de l'autorite
+d'horodatage, qui demande une ancre de confiance. Les deux relevent du lot
+suivant.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

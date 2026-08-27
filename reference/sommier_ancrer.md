@@ -31,4 +31,5 @@ sommier_ancrer(con, foret_id, tsa_url, transport = tsa_transport_curl())
 
 ## Value
 
-Invisiblement, une liste : `id`, `seq_tete`, `hash_tete`.
+Invisiblement, une liste : `id`, `seq_tete`, `hash_tete` et
+`date_attestee`.

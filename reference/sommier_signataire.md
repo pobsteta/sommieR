@@ -22,7 +22,8 @@ sommier_signataire(claims, signer, alg = "RS256", kid = NULL)
 
 - signer:
 
-  Fonction prenant un vecteur `raw` et rendant la signature, en `raw`.
+  Fonction prenant un vecteur `raw` et rendant la signature, en `raw`,
+  au format JOSE de `alg`.
 
 - alg:
 
@@ -36,6 +37,18 @@ sommier_signataire(claims, signer, alg = "RS256", kid = NULL)
 ## Value
 
 Un objet de classe `sommier_signataire`.
+
+## Details
+
+`signer` doit rendre la signature **au format que JOSE attend pour
+`alg`** : pour `ES256`, les 64 octets `R||S`, et non le DER que produit
+OpenSSL.
+[`signataire_cle()`](https://pobsteta.github.io/sommieR/reference/signataire_cle.md)
+s'en charge, puisqu'elle tient la cle ; un service de signature externe
+branche ici doit le faire de son cote. Le paquet ne devine pas le format
+rendu : une signature ECDSA en DER peut, tres rarement, faire exactement
+64 octets, et un reniflage se tromperait alors sans que rien ne le
+signale.
 
 ## See also
 

@@ -287,10 +287,16 @@ chaîne, son horodatage qualifié, et leur vérification.
   : Decodage base64url
 - [`SOMMIER_ALGOS_JWS`](https://pobsteta.github.io/sommieR/reference/SOMMIER_ALGOS_JWS.md)
   : Algorithmes de signature reconnus
+- [`ecdsa_der_vers_brut()`](https://pobsteta.github.io/sommieR/reference/ecdsa_der_vers_brut.md)
+  : Conversion d'une signature ECDSA du DER vers le format JOSE
+- [`ecdsa_brut_vers_der()`](https://pobsteta.github.io/sommieR/reference/ecdsa_brut_vers_der.md)
+  : Conversion d'une signature ECDSA du format JOSE vers le DER
 - [`tsa_requete()`](https://pobsteta.github.io/sommieR/reference/tsa_requete.md)
   : Requete d'horodatage RFC 3161
 - [`tsa_lire_reponse()`](https://pobsteta.github.io/sommieR/reference/tsa_lire_reponse.md)
   : Lecture d'une reponse d'horodatage RFC 3161
+- [`tsa_lire_jeton()`](https://pobsteta.github.io/sommieR/reference/tsa_lire_jeton.md)
+  : Lecture du contenu d'un jeton d'horodatage
 - [`tsa_horodater()`](https://pobsteta.github.io/sommieR/reference/tsa_horodater.md)
   : Obtention d'un jeton d'horodatage
 - [`tsa_transport_curl()`](https://pobsteta.github.io/sommieR/reference/tsa_transport_curl.md)

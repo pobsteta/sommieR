@@ -261,14 +261,24 @@ sommier_viser(
 )
 
 sommier_verifier_visas(con, foret, cles_publiques = list(`cle-2026` = ma_cle$pubkey))
-#>   exercice autorite seq_tete concorde signature_valide horodate remarque
-#> 1     2026  commune       12     TRUE             TRUE     TRUE       NA
+#>   exercice autorite seq_tete concorde signature_valide horodate         date_attestee remarque
+#> 1     2026  commune       12     TRUE             TRUE     TRUE  2026-08-27T06:04:56Z       NA
 ```
+
+`date_attestee` est lue **dans le jeton d’horodatage**, pas dans la
+base. La colonne `date_visa`, elle, est celle que le registre s’est
+donnée à lui-même : elle ne prouve rien contre celui qui tient la base.
+Et le jeton est confronté à la tête qu’il prétend couvrir — un jeton
+valide mais obtenu pour une autre empreinte est signalé, là où un simple
+booléen le comptait comme bon.
 
 La signature est détachée sur charge non encodée (RFC 7515 et 7797,
 `b64: false`) : la tête de chaîne n’est **pas** recopiée dans le jeton.
 Le vérificateur la relit du registre, ce qui lie la signature à la
-chaîne plutôt qu’à une copie.
+chaîne plutôt qu’à une copie. `RS256` et `ES256` sont acceptés, et
+l’algorithme se déduit de la clé plutôt que de se déclarer : une clé
+ECDSA sous un en-tête `RS256` donnerait un visa que personne ne saurait
+vérifier.
 
 Sans `tsa_url`, le visa est posé sans jeton d’horodatage — valide, mais
 sa date ne repose que sur l’horloge du serveur, et
@@ -364,19 +374,29 @@ plutôt qu’échoués.
 | 0.2.0 | Registres 1 et 8 ; visa signé JWS, ancrage RFC 3161 ; import FORDEAD/FAST comme propositions à valider |
 | 0.3.0 | Registre 7 et vues A50G ; budget prévisionnel et bilan financier |
 | 0.4.0 | Registres 2, 3, 4, 9 ; densité de voirie et éléments d’IBP |
-| **0.5.0** | Exports réglementaires (PSG, aménagement, CT88) et export cartographique |
+| 0.5.0 | Exports réglementaires (PSG, aménagement, CT88) et export cartographique |
+| 0.6.0 | Carte du rapport de gestion antérieure ; géométries des unités de gestion |
+| 0.7.0 | Géométrie dans les payloads, donc dans l’empreinte ; fond cadastral |
+| 0.8.0 | PCI vecteur EDIGÉO : bornes et détails topographiques |
+| **0.9.0** | `ES256` ; ce qu’un jeton d’horodatage atteste — date certifiée, empreinte couverte, nonce |
 
-La feuille de route du brief est couverte. Restent hors périmètre, et
-signalés comme tels : la validation cryptographique de la chaîne de
-certification des jetons d’horodatage (elle demande un magasin de
-confiance et une validation CMS), et `ES256` pour les signatures — JOSE
-veut l’ECDSA en `R||S` brut, OpenSSL la produit en DER, et signer sans
-convertir produirait des jetons invérifiables ailleurs.
+Les cinq priorités du brief de synthèse sont couvertes, ainsi que les
+quatre lots de la série cartographique et le premier lot de la couche
+probante (`specs/brief_probant-1`).
 
-`ES256` n’est pas encore accepté pour les signatures, et ce n’est pas un
-oubli : JOSE exige la signature ECDSA au format brut `R||S` alors
-qu’OpenSSL la produit en DER. L’accepter sans faire la conversion
-produirait des signatures que rien d’autre ne saurait vérifier.
+Reste hors périmètre, et signalé comme tel : **la chaîne de
+certification des jetons d’horodatage**. Le paquet lit ce qu’un jeton
+atteste, il ne vérifie pas encore la signature de l’autorité ni la
+chaîne qui la rattache à une racine — cela demande une ancre de
+confiance fournie par l’appelant et une validation CMS complète. Un
+`TSTInfo` lu n’est pas un `TSTInfo` authentifié. C’est l’objet du lot 2,
+cadré dans `specs/brief_probant-2`, avec la question qui l’accompagne :
+le manifeste emporte la signature JWS mais pas la clé publique, si bien
+que la vérification hors ligne par un tiers n’est aujourd’hui vraie qu’à
+moitié.
+
+En attendant, `openssl ts -verify` fait le travail, en s’appuyant sur le
+certificat que l’autorité inclut dans le jeton.
 
 ## Licence
 
@@ -671,10 +691,16 @@ chaîne, son horodatage qualifié, et leur vérification.
   : Decodage base64url
 - [`SOMMIER_ALGOS_JWS`](https://pobsteta.github.io/sommieR/reference/SOMMIER_ALGOS_JWS.md)
   : Algorithmes de signature reconnus
+- [`ecdsa_der_vers_brut()`](https://pobsteta.github.io/sommieR/reference/ecdsa_der_vers_brut.md)
+  : Conversion d'une signature ECDSA du DER vers le format JOSE
+- [`ecdsa_brut_vers_der()`](https://pobsteta.github.io/sommieR/reference/ecdsa_brut_vers_der.md)
+  : Conversion d'une signature ECDSA du format JOSE vers le DER
 - [`tsa_requete()`](https://pobsteta.github.io/sommieR/reference/tsa_requete.md)
   : Requete d'horodatage RFC 3161
 - [`tsa_lire_reponse()`](https://pobsteta.github.io/sommieR/reference/tsa_lire_reponse.md)
   : Lecture d'une reponse d'horodatage RFC 3161
+- [`tsa_lire_jeton()`](https://pobsteta.github.io/sommieR/reference/tsa_lire_jeton.md)
+  : Lecture du contenu d'un jeton d'horodatage
 - [`tsa_horodater()`](https://pobsteta.github.io/sommieR/reference/tsa_horodater.md)
   : Obtention d'un jeton d'horodatage
 - [`tsa_transport_curl()`](https://pobsteta.github.io/sommieR/reference/tsa_transport_curl.md)

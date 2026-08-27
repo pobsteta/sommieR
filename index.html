@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -337,9 +337,10 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/sommier_verifier_visas.html">sommier_verifier_visas</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, cles_publiques <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>`cle-2026` <span class="op">=</span> <span class="va">ma_cle</span><span class="op">$</span><span class="va">pubkey</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   exercice autorite seq_tete concorde signature_valide horodate remarque</span></span>
-<span><span class="co">#&gt; 1     2026  commune       12     TRUE             TRUE     TRUE       NA</span></span></code></pre></div>
-<p>La signature est détachée sur charge non encodée (RFC 7515 et 7797, <code>b64: false</code>) : la tête de chaîne n’est <strong>pas</strong> recopiée dans le jeton. Le vérificateur la relit du registre, ce qui lie la signature à la chaîne plutôt qu’à une copie.</p>
+<span><span class="co">#&gt;   exercice autorite seq_tete concorde signature_valide horodate         date_attestee remarque</span></span>
+<span><span class="co">#&gt; 1     2026  commune       12     TRUE             TRUE     TRUE  2026-08-27T06:04:56Z       NA</span></span></code></pre></div>
+<p><code>date_attestee</code> est lue <strong>dans le jeton d’horodatage</strong>, pas dans la base. La colonne <code>date_visa</code>, elle, est celle que le registre s’est donnée à lui-même : elle ne prouve rien contre celui qui tient la base. Et le jeton est confronté à la tête qu’il prétend couvrir — un jeton valide mais obtenu pour une autre empreinte est signalé, là où un simple booléen le comptait comme bon.</p>
+<p>La signature est détachée sur charge non encodée (RFC 7515 et 7797, <code>b64: false</code>) : la tête de chaîne n’est <strong>pas</strong> recopiée dans le jeton. Le vérificateur la relit du registre, ce qui lie la signature à la chaîne plutôt qu’à une copie. <code>RS256</code> et <code>ES256</code> sont acceptés, et l’algorithme se déduit de la clé plutôt que de se déclarer : une clé ECDSA sous un en-tête <code>RS256</code> donnerait un visa que personne ne saurait vérifier.</p>
 <p>Sans <code>tsa_url</code>, le visa est posé sans jeton d’horodatage — valide, mais sa date ne repose que sur l’horloge du serveur, et <code><a href="reference/sommier_verifier_visas.html">sommier_verifier_visas()</a></code> le dit. <code><a href="reference/sommier_ancrer.html">sommier_ancrer()</a></code> horodate la tête indépendamment de tout visa, pour qu’un exercice non visé ne puisse pas non plus être réécrit discrètement.</p>
 <p>Les clés publiques sont fournies par l’appelant, jamais cherchées au JWKS du fournisseur : un visa doit rester vérifiable des années plus tard, hors ligne, sans dépendre de la disponibilité d’un service tiers.</p>
 </div>
@@ -419,13 +420,31 @@
 <td>Registres 2, 3, 4, 9 ; densité de voirie et éléments d’IBP</td>
 </tr>
 <tr>
-<td><strong>0.5.0</strong></td>
+<td>0.5.0</td>
 <td>Exports réglementaires (PSG, aménagement, CT88) et export cartographique</td>
+</tr>
+<tr>
+<td>0.6.0</td>
+<td>Carte du rapport de gestion antérieure ; géométries des unités de gestion</td>
+</tr>
+<tr>
+<td>0.7.0</td>
+<td>Géométrie dans les payloads, donc dans l’empreinte ; fond cadastral</td>
+</tr>
+<tr>
+<td>0.8.0</td>
+<td>PCI vecteur EDIGÉO : bornes et détails topographiques</td>
+</tr>
+<tr>
+<td><strong>0.9.0</strong></td>
+<td>
+<code>ES256</code> ; ce qu’un jeton d’horodatage atteste — date certifiée, empreinte couverte, nonce</td>
 </tr>
 </tbody>
 </table>
-<p>La feuille de route du brief est couverte. Restent hors périmètre, et signalés comme tels : la validation cryptographique de la chaîne de certification des jetons d’horodatage (elle demande un magasin de confiance et une validation CMS), et <code>ES256</code> pour les signatures — JOSE veut l’ECDSA en <code>R||S</code> brut, OpenSSL la produit en DER, et signer sans convertir produirait des jetons invérifiables ailleurs.</p>
-<p><code>ES256</code> n’est pas encore accepté pour les signatures, et ce n’est pas un oubli : JOSE exige la signature ECDSA au format brut <code>R||S</code> alors qu’OpenSSL la produit en DER. L’accepter sans faire la conversion produirait des signatures que rien d’autre ne saurait vérifier.</p>
+<p>Les cinq priorités du brief de synthèse sont couvertes, ainsi que les quatre lots de la série cartographique et le premier lot de la couche probante (<code>specs/brief_probant-1</code>).</p>
+<p>Reste hors périmètre, et signalé comme tel : <strong>la chaîne de certification des jetons d’horodatage</strong>. Le paquet lit ce qu’un jeton atteste, il ne vérifie pas encore la signature de l’autorité ni la chaîne qui la rattache à une racine — cela demande une ancre de confiance fournie par l’appelant et une validation CMS complète. Un <code>TSTInfo</code> lu n’est pas un <code>TSTInfo</code> authentifié. C’est l’objet du lot 2, cadré dans <code>specs/brief_probant-2</code>, avec la question qui l’accompagne : le manifeste emporte la signature JWS mais pas la clé publique, si bien que la vérification hors ligne par un tiers n’est aujourd’hui vraie qu’à moitié.</p>
+<p>En attendant, <code>openssl ts -verify</code> fait le travail, en s’appuyant sur le certificat que l’autorité inclut dans le jeton.</p>
 </div>
 <div class="section level2">
 <h2 id="licence">Licence<a class="anchor" aria-label="anchor" href="#licence"></a>
