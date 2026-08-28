@@ -92,7 +92,10 @@ SOMMIER_TYPES_MARTELES <- c("martelage", "produit_accidentel", "bois_delivre")
 #'
 #' @details
 #' Les registres 2, 4, 5, 8 et 9 sont passes en `1.1.0` lorsque la geometrie
-#' est entree dans leurs payloads. Les entrees anterieures gardent la version
+#' est entree dans leurs payloads. Les neuf sont passes a la version suivante
+#' lorsque le bloc `reprise` est devenu admissible dans tous les payloads
+#' (voir [sommier_reprise()]) : la provenance concerne chaque registre, la
+#' version le dit pour chacun. Les entrees anterieures gardent la version
 #' sous laquelle elles ont ete ecrites, et restent valides : le registre est
 #' append-only, un changement de schema ne se retrofitte pas sur ce qui est
 #' deja chaine. C'est precisement ce que la version hachee permet de dire -
@@ -100,9 +103,9 @@ SOMMIER_TYPES_MARTELES <- c("martelage", "produit_accidentel", "bois_delivre")
 #'
 #' @export
 SOMMIER_SCHEMA_VERSIONS <- c(
-  "1" = "r1-1.0.0", "2" = "r2-1.1.0", "3" = "r3-1.0.0",
-  "4" = "r4-1.1.0", "5" = "r5-1.1.0", "6" = "r6-1.0.0",
-  "7" = "r7-1.0.0", "8" = "r8-1.1.0", "9" = "r9-1.1.0"
+  "1" = "r1-1.1.0", "2" = "r2-1.2.0", "3" = "r3-1.1.0",
+  "4" = "r4-1.2.0", "5" = "r5-1.2.0", "6" = "r6-1.1.0",
+  "7" = "r7-1.1.0", "8" = "r8-1.2.0", "9" = "r9-1.2.0"
 )
 
 #' Payload du registre 5 - coupes et recoltes
@@ -228,6 +231,15 @@ registre6_travaux <- function(annee,
 #' Revalide un payload deja construit - utile a la relecture d'un export, ou
 #' les payloads arrivent en JSON sans etre passes par les constructeurs.
 #'
+#' @details
+#' La cle `reprise` est admise dans le payload de n'importe quel registre :
+#' elle porte la provenance d'une entree transcrite (voir [sommier_reprise()]).
+#' Elle est detachee avant l'appel au constructeur du registre - qui n'a pas a
+#' la connaitre - validee par [valider_reprise()], puis rattachee. C'est le
+#' seul champ commun aux neuf payloads, parce que la question a laquelle il
+#' repond, celle de savoir d'ou vient cette ecriture, se pose partout de la
+#' meme facon.
+#'
 #' @param registre Numero de registre (1 a 9).
 #' @param payload Liste nommee.
 #' @return Le payload valide, normalise.
@@ -247,9 +259,11 @@ valider_payload <- function(registre, payload) {
   if (!is.list(payload) || is.null(names(payload))) {
     stop("`payload` doit etre une liste nommee.", call. = FALSE)
   }
+  reprise <- payload$reprise
+  payload <- payload[setdiff(names(payload), "reprise")]
   # Les registres a plusieurs imprimes se redirigent sur le constructeur du
   # type declare : le payload porte sa propre discriminante.
-  switch(
+  valide <- switch(
     as.character(registre),
     "1" = do.call(registre1_validation, payload),
     "2" = do.call(registre2_foncier, payload),
@@ -261,6 +275,10 @@ valider_payload <- function(registre, payload) {
     "8" = do.call(registre8_depuis_payload, list(payload)),
     "9" = do.call(registre9_depuis_payload, list(payload))
   )
+  if (!is.null(reprise)) {
+    valide$reprise <- valider_reprise(reprise)
+  }
+  valide
 }
 
 #' Echelle d'ancrage attendue pour un registre

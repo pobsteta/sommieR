@@ -6,6 +6,15 @@
 -- garantit que le constate affiche est bien celui que la chaine couvre.
 -- =====================================================================
 
+-- Chaque vue metier porte trois colonnes de provenance : `repris`,
+-- `reprise_source` et `reprise_reference`. Elles disent si la ligne a ete
+-- CONSTATEE ou TRANSCRITE d'une piece anterieure au sommier, et de laquelle.
+-- Sans elles, un tableau melerait la recopie et la mesure sans le dire ; le
+-- bloc lui-meme vit dans le payload, donc dans l'empreinte (voir
+-- sommier_reprise() cote R). A ne pas confondre avec `taux_reprise_pct` du
+-- registre 6, qui mesure la reprise des plants apres une plantation : meme
+-- mot, deux choses.
+
 -- Entrees en vigueur : une entree rectifiee par une entree ulterieure sort
 -- des vues de consultation, mais reste dans la chaine. C'est la mention
 -- rectificative du classeur papier, pas une rature.
@@ -39,7 +48,10 @@ SELECT
   (e.payload ->> 'surface_ha')::NUMERIC           AS surface_ha,
   (e.payload ->> 'essence')::TEXT                 AS essence,
   (e.payload ->> 'coupon')::TEXT                  AS coupon,
-  (e.payload ->> 'observations')::TEXT            AS observations
+  (e.payload ->> 'observations')::TEXT            AS observations,
+  jsonb_exists(e.payload, 'reprise')          AS repris,
+  (e.payload -> 'reprise' ->> 'source')       AS reprise_source,
+  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference
 FROM v_entree_courante e
 WHERE e.registre = 5;
 
@@ -119,7 +131,10 @@ SELECT
   (e.payload ->> 'montant_eur')::NUMERIC      AS montant_eur,
   (e.payload ->> 'taux_reprise_pct')::NUMERIC AS taux_reprise_pct,
   (e.payload ->> 'observations')::TEXT        AS observations,
-  (e.ug_uuid IS NULL)                         AS hors_unite_gestion
+  (e.ug_uuid IS NULL)                         AS hors_unite_gestion,
+  jsonb_exists(e.payload, 'reprise')          AS repris,
+  (e.payload -> 'reprise' ->> 'source')       AS reprise_source,
+  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference
 FROM v_entree_courante e
 WHERE e.registre = 6;
 
@@ -160,7 +175,10 @@ SELECT
   (e.payload ->> 'reference')::TEXT       AS reference,
   (e.payload ->> 'date_effet')::DATE      AS date_effet,
   (e.payload ->> 'portee')::TEXT          AS portee,
-  (e.payload ->> 'observations')::TEXT    AS observations
+  (e.payload ->> 'observations')::TEXT    AS observations,
+  jsonb_exists(e.payload, 'reprise')          AS repris,
+  (e.payload -> 'reprise' ->> 'source')       AS reprise_source,
+  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference
 FROM v_entree_courante e
 WHERE e.registre = 1;
 
@@ -210,7 +228,10 @@ SELECT
   (e.payload ->> 'source')::TEXT            AS source,
   (e.payload ->> 'indice')::NUMERIC         AS indice,
   (e.payload ->> 'statut_detection')::TEXT  AS statut_detection,
-  (e.payload ->> 'observations')::TEXT      AS observations
+  (e.payload ->> 'observations')::TEXT      AS observations,
+  jsonb_exists(e.payload, 'reprise')          AS repris,
+  (e.payload -> 'reprise' ->> 'source')       AS reprise_source,
+  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference
 FROM v_entree_courante e
 WHERE e.registre = 8
   AND (e.payload ->> 'type_entree') IN ('phenomene', 'detection');
@@ -295,7 +316,10 @@ SELECT
   (e.payload ->> 'unite')::TEXT                AS unite,
   (e.payload ->> 'reference')::TEXT            AS reference,
   (e.payload ->> 'dispositif_fiscal')::TEXT    AS dispositif_fiscal,
-  (e.payload ->> 'observations')::TEXT         AS observations
+  (e.payload ->> 'observations')::TEXT         AS observations,
+  jsonb_exists(e.payload, 'reprise')          AS repris,
+  (e.payload -> 'reprise' ->> 'source')       AS reprise_source,
+  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference
 FROM v_entree_courante e
 WHERE e.registre = 7;
 
@@ -388,7 +412,10 @@ SELECT
   (e.payload ->> 'nb_bornes')::INTEGER             AS nb_bornes,
   (e.payload ->> 'surface_ha')::NUMERIC            AS surface_ha,
   (e.payload ->> 'reference_acte')::TEXT           AS reference_acte,
-  (e.payload ->> 'beneficiaire')::TEXT             AS beneficiaire
+  (e.payload ->> 'beneficiaire')::TEXT             AS beneficiaire,
+  jsonb_exists(e.payload, 'reprise')          AS repris,
+  (e.payload -> 'reprise' ->> 'source')       AS reprise_source,
+  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference
 FROM v_entree_courante e
 WHERE e.registre = 2;
 
@@ -410,7 +437,10 @@ SELECT
   (e.payload ->> 'nb_affouagistes')::INTEGER AS nb_affouagistes,
   (e.payload ->> 'volume_m3')::NUMERIC    AS volume_m3,
   (e.payload ->> 'taxe_eur')::NUMERIC     AS taxe_eur,
-  (e.payload ->> 'mode_partage')::TEXT    AS mode_partage
+  (e.payload ->> 'mode_partage')::TEXT    AS mode_partage,
+  jsonb_exists(e.payload, 'reprise')          AS repris,
+  (e.payload -> 'reprise' ->> 'source')       AS reprise_source,
+  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference
 FROM v_entree_courante e
 WHERE e.registre = 3;
 
@@ -442,7 +472,10 @@ SELECT
   (e.payload ->> 'voirie_publique')::BOOLEAN AS voirie_publique,
   (e.payload ->> 'capacite')::NUMERIC        AS capacite,
   (e.payload ->> 'unite')::TEXT              AS unite,
-  (e.payload ->> 'etat')::TEXT               AS etat
+  (e.payload ->> 'etat')::TEXT               AS etat,
+  jsonb_exists(e.payload, 'reprise')          AS repris,
+  (e.payload -> 'reprise' ->> 'source')       AS reprise_source,
+  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference
 FROM v_entree_courante e
 WHERE e.registre = 4;
 
@@ -488,7 +521,10 @@ SELECT
   (e.payload ->> 'effectif')::INTEGER       AS effectif,
   (e.payload ->> 'type_habitat')::TEXT      AS type_habitat,
   (e.payload ->> 'code_natura2000')::TEXT   AS code_natura2000,
-  (e.payload ->> 'etat_conservation')::TEXT AS etat_conservation
+  (e.payload ->> 'etat_conservation')::TEXT AS etat_conservation,
+  jsonb_exists(e.payload, 'reprise')          AS repris,
+  (e.payload -> 'reprise' ->> 'source')       AS reprise_source,
+  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference
 FROM v_entree_courante e
 WHERE e.registre = 9;
 
@@ -537,7 +573,10 @@ SELECT
     e.payload ->> 'type_entree'
   )                                        AS type_objet,
   ST_GeometryType(e.geom)                  AS type_geometrie,
-  e.geom
+  e.geom,
+  jsonb_exists(e.payload, 'reprise')          AS repris,
+  (e.payload -> 'reprise' ->> 'source')       AS reprise_source,
+  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference
 FROM v_entree_courante e
 WHERE e.geom IS NOT NULL;
 

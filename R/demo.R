@@ -68,6 +68,17 @@ SOMMIER_PARCELLES_COUCHEY <- data.frame(
 #' elles servent a montrer ce que la carte sait faire, non a situer quoi que ce
 #' soit sur le terrain.
 #'
+#' Depuis la v0.11.0, la tenue du sommier commence en 2021 - c'est la date du
+#' premier visa annuel. Les faits anterieurs ont bien eu lieu, mais la commune
+#' ne les a pas enregistres ici : quatorze ecritures sont donc **transcrites**
+#' et non constatees, depuis quatre pieces - le registre papier de la serie
+#' A50, une deliberation, la base du gestionnaire, et le souvenir de l'agent
+#' patrimonial pour la secheresse de 2020. Elles portent leur provenance et un
+#' NDP superieur a 0, et forment un bloc contigu en fin de chaine : la
+#' sequence est celle de l'ecriture, seules les dates d'evenement remontent le
+#' temps. Le jeu montre ainsi les deux etats qu'un sommier repris melange, et
+#' ce que le rapport engendre doit en dire. Voir [sommier_reprise()].
+#'
 #' Trois precautions le rendent visible plutot que de compter sur la memoire du
 #' lecteur : le nom de la foret porte la mention, le rapport engendre l'affiche
 #' en tete, et la fonction refuse de s'executer sur une base ou le jeu existe
@@ -158,8 +169,46 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
     ))
   }
 
-  # Registre 2 - foncier.
-  ecrire(2L, registre2_foncier(
+  # La tenue du sommier commence en 2021 - c'est la date du premier visa
+  # annuel. Ce qui precede a bien eu lieu, mais la commune ne l'a pas
+  # enregistre ici : il vient du registre papier, de la base du gestionnaire
+  # ou de la memoire de l'agent. Ces faits entrent donc en transcription,
+  # avec leur piece et un NDP superieur a 0.
+  papier <- reprise_source(
+    "registre_signe",
+    "Sommier papier de Couchey, serie A50, exercices 2016-2020",
+    date_piece = "2021-01-18", detenteur = "Commune de Couchey"
+  )
+  deliberation <- reprise_source(
+    "registre_signe",
+    "Deliberation du conseil municipal du 12 mars 2018 - location de chasse",
+    date_piece = "2018-03-12", detenteur = "Commune de Couchey"
+  )
+  base_gestionnaire <- reprise_source(
+    "base_gestionnaire",
+    "Extrait de la base du gestionnaire, arrete au 31/12/2020",
+    date_piece = "2021-02-04", detenteur = "Gestionnaire de l'epoque"
+  )
+  memoire <- reprise_source(
+    "temoignage",
+    "Secheresse 2020 rapportee par l'agent patrimonial",
+    observations = "Aucune fiche A50K retrouvee ; surface estimee de memoire."
+  )
+
+  # Les transcriptions s'accumulent et s'ecrivent en un seul lot, apres les
+  # constats : la sequence est celle de l'ecriture, et une reprise forme un
+  # bloc contigu. Seules les dates d'evenement remontent le temps.
+  transcrites <- list()
+  transcrire <- function(registre, payload, date, source, unite = NULL) {
+    transcrites[[length(transcrites) + 1L]] <<- sommier_reprise(
+      foret_id = foret, registre = registre, date_evenement = date,
+      auteur = auteur, ug_uuid = unite, payload = payload, source = source
+    )
+    invisible(NULL)
+  }
+
+  # Registre 2 - foncier. Le bornage de 2017 precede la tenue : transcrit.
+  transcrire(2L, registre2_foncier(
     "bornage", "Refection de la limite nord de la section A",
     heures_technicien = 9, nb_bornes = 6, cout_total_eur = 1480,
     charge_proprietaire_eur = 740, charge_riverains_eur = 740,
@@ -167,14 +216,14 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
     geometrie = geom_ligne(rbind(
       c(4.9500, 47.2720), c(4.9530, 47.2720), c(4.9560, 47.2720)
     ))
-  ), "2017-09-14")
+  ), "2017-09-14", papier)
 
   # Registre 3 - bail de chasse et affouage.
-  ecrire(3L, registre3_droit(
+  transcrire(3L, registre3_droit(
     "bail_chasse", "Location de chasse - lot communal", numero = "1",
     date_debut = "2018-04-01", date_expiration = "2027-03-31",
     redevance_eur = 310, surface_ha = surface_totale
-  ), "2018-04-01")
+  ), "2018-04-01", deliberation)
   for (annee in 2021:2025) {
     ecrire(3L, registre3_affouage(
       campagne = paste0(annee, "-", annee + 1L),
@@ -184,36 +233,46 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
     ), paste0(annee, "-10-15"))
   }
 
-  # Registre 4 - desserte.
-  ecrire(4L, registre4_voirie(
+  # Registre 4 - desserte. Relevee en 2016 dans la base du gestionnaire, donc
+  # transcrite : le sommier ne l'a pas constatee.
+  transcrire(4L, registre4_voirie(
     "Chemin de la section A", "empierree", longueur_m = 620,
     largeur_chaussee_m = 3, usage = "exploitation", ouverte_public = FALSE,
     geometrie = geom_ligne(rbind(
       c(4.9502, 47.2703), c(4.9522, 47.2705), c(4.9542, 47.2704)
     ))
-  ), "2016-06-01")
-  ecrire(4L, registre4_voirie(
+  ), "2016-06-01", base_gestionnaire)
+  transcrire(4L, registre4_voirie(
     "Piste de desserte est", "terrain_naturel", longueur_m = 340,
     largeur_chaussee_m = 2.5, usage = "exploitation", ouverte_public = FALSE,
     geometrie = geom_ligne(rbind(
       c(4.9545, 47.2703), c(4.9550, 47.2712), c(4.9552, 47.2718)
     ))
-  ), "2016-06-01")
-  ecrire(4L, registre4_equipement(
+  ), "2016-06-01", base_gestionnaire)
+  transcrire(4L, registre4_equipement(
     "equipement", "Place de depot", nom = "PD-01", capacite = 250,
-    unite = "m2", etat = "bon", date_controle = "2024-05-06",
+    unite = "m2", etat = "bon", date_controle = "2019-05-06",
     geometrie = geom_point(4.9518, 47.2706)
-  ), "2016-06-01")
+  ), "2016-06-01", base_gestionnaire)
 
-  # Registre 5 - un martelage par exercice, plus un chablis.
+  # Registre 5 - un martelage par exercice, plus un chablis. Les exercices
+  # anterieurs a la tenue viennent du registre papier ; les suivants ont ete
+  # portes ici le jour du martelage.
   natures <- c("amelioration", "reguliere", "sanitaire")
   for (i in seq_along(exercices)) {
     annee <- exercices[[i]]
-    ecrire(5L, registre5_coupe(
+    coupe <- registre5_coupe(
       "martelage", annee, natures[[(i %% 3L) + 1L]],
       volume_m3 = 34 + 3 * ((i * 7L) %% 5L),
       surface_ha = parcelles$surface_ha[[(i %% 3L) + 1L]], essence = "CHS"
-    ), paste0(annee, "-03-05"), unite = ug[[(i %% 3L) + 1L]])
+    )
+    date_coupe <- paste0(annee, "-03-05")
+    unite <- ug[[(i %% 3L) + 1L]]
+    if (annee < 2021) {
+      transcrire(5L, coupe, date_coupe, papier, unite)
+    } else {
+      ecrire(5L, coupe, date_coupe, unite)
+    }
   }
   ecrire(5L, registre5_coupe(
     "produit_accidentel", 2022, "chablis", volume_m3 = 22, surface_ha = 0.8,
@@ -271,14 +330,16 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
       c(4.9525, 47.2718)
     ))
   ), "2022-02-17", unite = ug[["55"]])
-  ecrire(8L, registre8_phenomene(
+  # Aucune fiche A50K pour 2020 : le fait est rapporte, pas retrouve. NDP 4,
+  # le plus eloigne de l'echelle - et le rapport le montrera comme tel.
+  transcrire(8L, registre8_phenomene(
     "secheresse", "Deficit hydrique estival, roussissement des cimes",
     surface_ha = 3.1,
     geometrie = geom_polygone(rbind(
       c(4.9505, 47.2708), c(4.9555, 47.2708), c(4.9555, 47.2716),
       c(4.9505, 47.2716)
     ))
-  ), "2020-08-10")
+  ), "2020-08-10", memoire)
   for (annee in 2021:2024) {
     saison <- paste0(annee, "-", annee + 1L)
     ecrire(8L, registre8_tableau_chasse(
@@ -293,12 +354,15 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
   }
 
   # Registre 9 - patrimoine remarquable, dont un sujet revisite.
-  ecrire(9L, registre9_arbre(
+  # Le premier releve du chene vient de l'inventaire du gestionnaire ; celui
+  # de 2024 a ete fait par la commune. Le meme sujet porte donc les deux
+  # provenances, et c'est le releve constate qui fait etat courant.
+  transcrire(9L, registre9_arbre(
     "Chene de la Justice", "CHS",
     "Age estime a 280 ans, port en candelabre, arbre limite historique",
     circonference_cm = 486, hauteur_m = 26, etat_sanitaire = "bon",
     geometrie = geom_point(4.9512, 47.2714)
-  ), "2016-07-12", unite = ug[["54"]])
+  ), "2016-07-12", base_gestionnaire, ug[["54"]])
   ecrire(9L, registre9_arbre(
     "Chene de la Justice", "CHS",
     "Age estime a 280 ans, port en candelabre, arbre limite historique",
@@ -318,26 +382,26 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
     circonference_cm = 118, hauteur_m = 17, etat_sanitaire = "bon",
     geometrie = geom_point(4.9531, 47.2702)
   ), "2022-09-15", unite = ug[["55"]])
-  ecrire(9L, registre9_habitat(
+  transcrire(9L, registre9_habitat(
     "Pelouse calcicole seche", surface_ha = 0.6, code_natura2000 = "6210",
     etat_conservation = "favorable", localisation = "Rebord de plateau, A 56",
     geometrie = geom_polygone(rbind(
       c(4.9543, 47.2707), c(4.9553, 47.2707), c(4.9553, 47.2711),
       c(4.9543, 47.2711)
     ))
-  ), "2019-06-03", unite = ug[["56"]])
+  ), "2019-06-03", base_gestionnaire, ug[["56"]])
   ecrire(9L, registre9_espece(
     "Sabot de Venus", "Cypripedium calceolus",
     statut_protection = "Directive Habitats, annexe II", effectif = 12,
     localisation = "Versant nord, A 56",
     geometrie = geom_point(4.9546, 47.2718)
   ), "2021-05-28", unite = ug[["56"]])
-  ecrire(9L, registre9_vestige(
+  transcrire(9L, registre9_vestige(
     "Charbonniere de la section A", "Charbonniere",
     "Plateforme circulaire de 8 m, charbon de bois affleurant",
     bibliographie = "Inventaire archeologique de la Cote 2018",
     geometrie = geom_point(4.9508, 47.2709)
-  ), "2018-10-04", unite = ug[["54"]])
+  ), "2018-10-04", base_gestionnaire, ug[["54"]])
 
   # Registre 1 - visas annuels de tenue du sommier.
   for (annee in 2021:2024) {
@@ -346,6 +410,11 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
       portee = "sommier"
     ), paste0(annee + 1L, "-02-15"))
   }
+
+  # Le lot de transcriptions, ecrit en une fois et en dernier : quatorze
+  # ecritures, quatre pieces, des faits de 2016 a 2020. Le compte-rendu dit ce
+  # qui est entre ; la sequence, elle, montre un bloc contigu en fin de chaine.
+  sommier_reprendre(con, transcrites)
 
   n <- DBI::dbGetQuery(
     con, "SELECT count(*) AS n FROM entree_sommier WHERE foret_id = $1",

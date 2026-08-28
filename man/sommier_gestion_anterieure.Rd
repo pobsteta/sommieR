@@ -35,6 +35,7 @@ non trois extractions paralleles qui divergeraient a la premiere evolution.
 \details{
 Ce que chaque referentiel retient :\tabular{lccc}{
    Section \tab psg \tab amenagement \tab ct88 \cr
+   Provenance des ecritures \tab oui \tab oui \tab oui \cr
    Coupes realisees et balance \tab oui \tab oui \tab oui \cr
    Travaux realises \tab oui \tab oui \tab oui \cr
    Evenements marquants \tab oui \tab oui \tab oui \cr
@@ -49,6 +50,15 @@ produire au CRPF ; le CT88, tourne vers l'evaluation d'un contrat, ne
 reclame pas l'inventaire du patrimoine remarquable. Restreindre la sortie a
 ce qui est demande evite de diffuser plus que necessaire - les registres 3
 et 7 portent des donnees personnelles.
+
+\strong{Constate et transcrit ne se melent pas.} Les trois referentiels portent
+sur une periode ecoulee ; un sommier ouvert en cours de route ne la couvre
+donc qu'en partie par ses propres constats, le reste ayant ete transcrit de
+l'existant (voir \code{\link[=sommier_reprise]{sommier_reprise()}}). Les tableaux de coupes et de travaux
+portent pour cette raison une colonne \code{provenance}, et la section
+\code{provenance} compte registre par registre ce qui a ete constate et ce qui a
+ete recopie. Un tableau qui les additionnerait sans le dire ferait passer
+la recopie pour de la mesure.
 }
 \seealso{
 \code{\link[=sommier_rapport_markdown]{sommier_rapport_markdown()}}

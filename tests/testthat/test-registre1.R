@@ -42,6 +42,6 @@ test_that("une entree de registre 1 se chaine et se verifie", {
     registre1_validation("visa_annuel", "commune", "Maire", exercice = 2026),
     date_saisie = "2026-08-18T10:00:00Z"
   )
-  expect_equal(e$schema_version, "r1-1.0.0")
+  expect_equal(e$schema_version, "r1-1.1.0")
   expect_true(sommier_verifier_chaine(sommier_chainer(list(e)))$valide)
 })
