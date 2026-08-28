@@ -126,6 +126,19 @@ reference:
     - SOMMIER_TYPES_REMARQUABLE
     - SOMMIER_ETATS_SANITAIRES
     - SOMMIER_SEUIL_TGB_CM
+  - title: "Reprise de l'existant"
+    desc: >
+      Faire entrer ce qui précède le sommier sans faire mentir la chaîne : une
+      transcription cite sa pièce, porte un NDP supérieur à 0, et se date du
+      jour où elle est écrite.
+    contents:
+    - sommier_reprise
+    - sommier_reprendre
+    - reprise_source
+    - valider_reprise
+    - sommier_provenance
+    - SOMMIER_SOURCES_REPRISE
+
   - title: "Jeu de démonstration"
     desc: >
       Un sommier complet et cohérent sur les neuf registres, pour la prise en

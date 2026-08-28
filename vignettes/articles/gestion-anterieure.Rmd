@@ -187,6 +187,72 @@ verif <- sommier_verifier(con, foret)
 verif
 ```
 
+## Ce qui est constaté, ce qui est transcrit
+
+Le sommier de Couchey est tenu depuis 2021 — c'est la date de son premier visa
+annuel. La période couverte par ce document commence, elle, en 2016 : cinq
+exercices de coupes, la desserte, le bornage de la limite nord, le bail de
+chasse et trois fiches de patrimoine sont donc **antérieurs à la tenue**. Ils ont bien eu lieu, mais
+le sommier ne les a pas constatés : il les a **transcrits**, du registre
+papier, d'une délibération, de la base du gestionnaire, et — pour la sécheresse
+de 2020 — du seul souvenir de l'agent patrimonial.
+
+Une transcription n'est pas un constat, et le registre le dit sur trois points
+que `sommier_reprise()` impose plutôt que de les recommander :
+
+- **la source est citée** — sans référence de pièce, une reprise ne se
+  distingue pas d'une invention ;
+- **le NDP est supérieur à 0** — ce niveau désigne le constat de terrain, et
+  recopier n'est pas constater ;
+- **`date_saisie` est l'instant réel de la transcription** — le champ est posé
+  par le constructeur et refuse d'être dicté. Une chaîne qu'on pourrait
+  convaincre d'avoir su plus tôt qu'elle n'a su ne vaudrait rien.
+
+```{r provenance}
+tableau(
+  ga$sections$provenance,
+  "Écritures en vigueur sur la période, par registre et par provenance"
+)
+```
+
+La marque suit jusque dans les vues de consultation : chaque vue métier porte
+`repris`, `reprise_source` et `reprise_reference`.
+
+```{r vue-repris}
+tableau(
+  DBI::dbGetQuery(
+    con,
+    "SELECT exercice, volume_m3, repris, reprise_source, reprise_reference
+       FROM v_coupe
+      WHERE foret_id = $1 AND type_entree = 'martelage'
+      ORDER BY exercice",
+    params = list(foret)
+  ),
+  "Les martelages de la période, et d'où chacun vient"
+)
+```
+
+L'ordre de la chaîne, lui, n'est pas rejoué : les transcriptions forment un
+bloc contigu **à la fin** de la séquence, quelles que soient leurs dates
+d'évènement. Le sommier date l'histoire, il ne la réordonne pas — et sa genèse
+reste sa genèse.
+
+```{r ordre-repris}
+tableau(
+  DBI::dbGetQuery(
+    con,
+    "SELECT seq, registre, date_evenement,
+            jsonb_exists(payload, 'reprise') AS transcrit
+       FROM entree_sommier
+      WHERE foret_id = $1
+      ORDER BY seq DESC
+      LIMIT 6",
+    params = list(foret)
+  ),
+  "Les six dernières écritures de la chaîne : le bloc transcrit"
+)
+```
+
 ## Coupes et récoltes
 
 Imprimés A50E, A50F et A50I.

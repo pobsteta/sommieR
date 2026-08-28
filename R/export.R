@@ -23,6 +23,7 @@ SOMMIER_REFERENTIELS <- c("psg", "amenagement", "ct88")
 #'
 #' | Section | psg | amenagement | ct88 |
 #' | --- | :-: | :-: | :-: |
+#' | Provenance des ecritures | oui | oui | oui |
 #' | Coupes realisees et balance | oui | oui | oui |
 #' | Travaux realises | oui | oui | oui |
 #' | Evenements marquants | oui | oui | oui |
@@ -35,6 +36,15 @@ SOMMIER_REFERENTIELS <- c("psg", "amenagement", "ct88")
 #' reclame pas l'inventaire du patrimoine remarquable. Restreindre la sortie a
 #' ce qui est demande evite de diffuser plus que necessaire - les registres 3
 #' et 7 portent des donnees personnelles.
+#'
+#' **Constate et transcrit ne se melent pas.** Les trois referentiels portent
+#' sur une periode ecoulee ; un sommier ouvert en cours de route ne la couvre
+#' donc qu'en partie par ses propres constats, le reste ayant ete transcrit de
+#' l'existant (voir [sommier_reprise()]). Les tableaux de coupes et de travaux
+#' portent pour cette raison une colonne `provenance`, et la section
+#' `provenance` compte registre par registre ce qui a ete constate et ce qui a
+#' ete recopie. Un tableau qui les additionnerait sans le dire ferait passer
+#' la recopie pour de la mesure.
 #'
 #' @param con Connexion DBI.
 #' @param foret_id UUID de la foret.
@@ -77,14 +87,16 @@ sommier_gestion_anterieure <- function(con, foret_id, debut = NULL, fin = NULL,
   }
 
   sections <- list(
+    provenance = sommier_provenance(con, foret_id, debut = debut, fin = fin),
     coupes = lire(
       "SELECT exercice, type_entree, nature_coupe,
+              CASE WHEN repris THEN 'transcrit' ELSE 'constate' END AS provenance,
               SUM(volume_m3) AS volume_m3, SUM(surface_ha) AS surface_ha,
               count(*) AS n
          FROM v_coupe
         WHERE foret_id = $1 AND date_evenement BETWEEN $2::date AND $3::date
-        GROUP BY exercice, type_entree, nature_coupe
-        ORDER BY exercice, type_entree, nature_coupe"),
+        GROUP BY exercice, type_entree, nature_coupe, repris
+        ORDER BY exercice, type_entree, nature_coupe, repris"),
     balance = lire(
       "SELECT exercice, possibilite_m3_an, volume_martele_m3,
               balance_exercice_m3, balance_cumulee_m3
@@ -94,13 +106,15 @@ sommier_gestion_anterieure <- function(con, foret_id, debut = NULL, fin = NULL,
                            AND EXTRACT(YEAR FROM $3::date)
         ORDER BY exercice"),
     travaux = lire(
-      "SELECT annee, nature_travaux, SUM(quantite) AS quantite,
+      "SELECT annee, nature_travaux,
+              CASE WHEN repris THEN 'transcrit' ELSE 'constate' END AS provenance,
+              SUM(quantite) AS quantite,
               max(unite) AS unite, SUM(montant_eur) AS montant_eur,
               avg(taux_reprise_pct) AS taux_reprise_moyen_pct, count(*) AS n
          FROM v_travaux
         WHERE foret_id = $1 AND date_evenement BETWEEN $2::date AND $3::date
-        GROUP BY annee, nature_travaux
-        ORDER BY annee, nature_travaux"),
+        GROUP BY annee, nature_travaux, repris
+        ORDER BY annee, nature_travaux, repris"),
     evenements = lire(
       "SELECT date_evenement, nature, description, surface_ha,
               volume_impacte_m3, ndp
@@ -182,6 +196,7 @@ sommier_rapport_markdown <- function(x, chemin = NULL) {
     stop("`x` doit venir de sommier_gestion_anterieure().", call. = FALSE)
   }
   titres <- c(
+    provenance = "Provenance des ecritures",
     coupes = "Coupes realisees", balance = "Balance de possibilite",
     travaux = "Travaux realises", evenements = "Evenements marquants",
     finances = "Bilan financier", equilibre_gibier = "Equilibre foret-gibier",

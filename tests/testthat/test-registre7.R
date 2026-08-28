@@ -65,6 +65,6 @@ test_that("une entree de registre 7 se chaine et se verifie", {
   e <- sommier_entree(FORET_TEST, 7L, "2026-03-01", "a1",
                       registre7_ecriture("bois_sur_pied", 2026, 18400),
                       date_saisie = "2026-08-18T10:00:00Z")
-  expect_equal(e$schema_version, "r7-1.0.0")
+  expect_equal(e$schema_version, "r7-1.1.0")
   expect_true(sommier_verifier_chaine(sommier_chainer(list(e)))$valide)
 })

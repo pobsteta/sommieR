@@ -13,7 +13,10 @@ pas se faire passer pour l'ancienne.
 }
 \details{
 Les registres 2, 4, 5, 8 et 9 sont passes en \verb{1.1.0} lorsque la geometrie
-est entree dans leurs payloads. Les entrees anterieures gardent la version
+est entree dans leurs payloads. Les neuf sont passes a la version suivante
+lorsque le bloc \code{reprise} est devenu admissible dans tous les payloads
+(voir \code{\link[=sommier_reprise]{sommier_reprise()}}) : la provenance concerne chaque registre, la
+version le dit pour chacun. Les entrees anterieures gardent la version
 sous laquelle elles ont ete ecrites, et restent valides : le registre est
 append-only, un changement de schema ne se retrofitte pas sur ce qui est
 deja chaine. C'est precisement ce que la version hachee permet de dire -

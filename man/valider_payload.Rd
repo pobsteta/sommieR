@@ -18,3 +18,12 @@ Le payload valide, normalise.
 Revalide un payload deja construit - utile a la relecture d'un export, ou
 les payloads arrivent en JSON sans etre passes par les constructeurs.
 }
+\details{
+La cle \code{reprise} est admise dans le payload de n'importe quel registre :
+elle porte la provenance d'une entree transcrite (voir \code{\link[=sommier_reprise]{sommier_reprise()}}).
+Elle est detachee avant l'appel au constructeur du registre - qui n'a pas a
+la connaitre - validee par \code{\link[=valider_reprise]{valider_reprise()}}, puis rattachee. C'est le
+seul champ commun aux neuf payloads, parce que la question a laquelle il
+repond, celle de savoir d'ou vient cette ecriture, se pose partout de la
+meme facon.
+}

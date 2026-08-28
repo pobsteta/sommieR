@@ -281,6 +281,43 @@ if (!isTRUE(rapport$verification$valide)) {
 }
 ```
 
+## Provenance des écritures {#sec-provenance}
+
+Un sommier ouvert en cours de gestion n'a pas pu constater tout ce que la
+période contient : ce qui la précède y entre par **transcription**, depuis une
+pièce citée, avec un niveau de précision (NDP) supérieur à 0. Les deux ne se
+confondent pas — une recopie n'est pas une mesure, et les tableaux qui suivent
+portent une colonne `provenance` pour le dire ligne à ligne.
+
+```{r provenance, results='asis'}
+prov <- sections$provenance
+if (is.null(prov) || nrow(prov) == 0L) {
+  cat("*Aucune écriture sur la période.*\n\n")
+} else {
+  vide <- function(x) ifelse(is.na(x) | !nzchar(as.character(x)), "—",
+                             as.character(x))
+  print(knitr::kable(data.frame(
+    Registre        = paste0(prov$registre, " — ", prov$nom),
+    `Constaté`      = prov$n_constate,
+    Transcrit       = prov$n_transcrit,
+    `Pièces citées` = prov$n_pieces,
+    `Transcrit du`  = vide(prov$transcrit_du),
+    `au`            = vide(prov$transcrit_au),
+    check.names = FALSE, stringsAsFactors = FALSE
+  ), caption = "Écritures en vigueur sur la période, par registre et par provenance"))
+  cat("\n\n")
+  if (sum(prov$n_transcrit) > 0) {
+    cat("::: {.callout-note}\n## Une partie de ce document est transcrite\n\n",
+        sum(prov$n_transcrit), " écriture(s) sur ",
+        sum(prov$n_constate) + sum(prov$n_transcrit),
+        " ont été recopiées de pièces antérieures au sommier, chacune citant ",
+        "la sienne. Elles sont datées du fait, non de leur saisie : la chaîne ",
+        "les a écrites le jour de la transcription, et le dit.\n:::\n\n",
+        sep = "")
+  }
+}
+```
+
 ## Coupes et récoltes {#sec-coupes}
 
 Imprimés A50E, A50F et A50I.
@@ -322,6 +359,20 @@ if (!is.null(b) && nrow(b) > 1L) {
 }
 ```
 
+```{r balance-provenance, results='asis'}
+# La balance additionne les volumes martelés sans regarder d'où ils viennent —
+# c'est correct, un exercice transcrit compte autant qu'un autre, mais cela ne
+# doit pas se lire comme un relevé homogène.
+r5 <- sections$provenance[sections$provenance$registre == 5, , drop = FALSE]
+if (nrow(r5) == 1L && r5$n_transcrit > 0) {
+  cat("::: {.callout-note}\n",
+      "La balance additionne ", r5$n_transcrit, " écriture(s) transcrite(s) ",
+      "du registre des coupes avec ", r5$n_constate, " constatée(s). Le cumul ",
+      "est juste, sa précision est celle de la pièce la moins précise.\n:::\n\n",
+      sep = "")
+}
+```
+
 ## Travaux {#sec-travaux}
 
 Imprimés A50J, A50J bis et A50H. Le taux de reprise est celui relevé au
@@ -341,7 +392,8 @@ dessiner(carte$montant_travaux_eur,
 ## Évènements marquants {#sec-evenements}
 
 Imprimé A50K. Le niveau de précision (NDP) vaut 0 pour un constat de terrain ;
-une valeur supérieure signale une observation issue de la télédétection.
+une valeur supérieure signale une observation qui n'en est pas un — issue de
+la télédétection, ou transcrite d'une pièce antérieure au sommier.
 
 ```{r evenements, results='asis'}
 tableau("evenements", "Phénomènes intéressant la vie de la forêt")
