@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,73 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.11.0" id="sommier-0110">sommieR 0.11.0<a class="anchor" aria-label="anchor" href="#sommier-0110"></a></h2>
+<p>Lot 1 de la reprise. Le sommier ne savait démarrer qu’à vide ; il sait désormais accueillir trente ans d’histoire sans prétendre les avoir connus.</p>
+<div class="section level3">
+<h3 id="le-problème-tel-quil-se-posait-0-11-0">Le problème, tel qu’il se posait<a class="anchor" aria-label="anchor" href="#le-probl%C3%A8me-tel-quil-se-posait-0-11-0"></a></h3>
+<p>Une forêt qui entre dans le dispositif arrive avec son passé : registres A50 sur papier, base d’un gestionnaire, tableurs d’un CRPF, délibérations de la commune. Deux issues, mauvaises toutes les deux.</p>
+<p><strong>La laisser dehors.</strong> Mais l’un des trois exports du paquet est le <em>bilan de l’aménagement précédent</em>, qui porte sur la période écoulée. Un sommier ouvert en 2027 n’en dirait rien avant 2047.</p>
+<p><strong>La saisir comme si elle arrivait aujourd’hui.</strong> Une coupe de 1998 entrerait avec sa date d’évènement, mais serait pour tout le reste indiscernable d’un constat de terrain. Le sommier dirait qu’il sait, alors qu’il a recopié.</p>
+</div>
+<div class="section level3">
+<h3 id="ce-que-le-modèle-savait-déjà--et-ce-quil-pouvait-faire-dire-de-faux-0-11-0">Ce que le modèle savait déjà — et ce qu’il pouvait faire dire de faux<a class="anchor" aria-label="anchor" href="#ce-que-le-mod%C3%A8le-savait-d%C3%A9j%C3%A0--et-ce-quil-pouvait-faire-dire-de-faux-0-11-0"></a></h3>
+<p>Rien n’a été ajouté au schéma. <code>date_evenement</code> et <code>date_saisie</code> étaient déjà deux champs distincts, tous deux couverts par l’empreinte ; <code>ndp</code> portait déjà la bonne sémantique, appliquée dès la v0.2.0 aux détections FORDEAD. Le modèle savait donc distinguer <em>quand la chose est arrivée</em> de <em>quand on l’a écrite</em>.</p>
+<p>Il savait aussi mentir. <code>date_saisie</code> était librement fixable : une reprise pressée l’aurait antidatée « pour faire propre », et la chaîne aurait alors attesté qu’elle savait depuis 1998. C’était le seul endroit du paquet où l’on pouvait faire dire au registre une chose fausse sans rien casser.</p>
+</div>
+<div class="section level3">
+<h3 id="une-transcription-et-ce-qui-lempêche-de-passer-pour-un-constat-0-11-0">Une transcription, et ce qui l’empêche de passer pour un constat<a class="anchor" aria-label="anchor" href="#une-transcription-et-ce-qui-lemp%C3%AAche-de-passer-pour-un-constat-0-11-0"></a></h3>
+<p><code><a href="../reference/sommier_reprise.html">sommier_reprise()</a></code> construit une entrée transcrite. Trois propriétés y sont <strong>imposées</strong> plutôt que recommandées — une discipline qui repose sur la vigilance de l’appelant n’en est pas une :</p>
+<table class="table"><colgroup><col width="50%"><col width="50%"></colgroup><thead><tr><th>Ce qui est imposé</th>
+<th>Pourquoi</th>
+</tr></thead><tbody><tr><td>
+<code>date_saisie</code> est posée par le constructeur, et le lui dicter est refusé</td>
+<td>une chaîne qu’on peut convaincre d’avoir su plus tôt qu’elle n’a su ne vaut rien</td>
+</tr><tr><td>le NDP est strictement supérieur à 0</td>
+<td>NDP 0 désigne le constat de terrain ; recopier n’est pas constater</td>
+</tr><tr><td>la source est citée, sans valeur par défaut</td>
+<td>sans référence de pièce, une reprise ne se distingue pas d’une invention</td>
+</tr></tbody></table><p>La date du fait, elle, reste libre de remonter aussi loin qu’il le faut — seule une date d’évènement dans l’avenir est refusée : une reprise transcrit ce qui a eu lieu, elle ne l’annonce pas.</p>
+<p><code><a href="../reference/sommier_reprendre.html">sommier_reprendre()</a></code> écrit le lot en une transaction et rend le compte-rendu de ce qui est entré : combien d’entrées, par registre, sur quelle période, depuis quelles pièces. Il n’accepte que des entrées construites par <code><a href="../reference/sommier_reprise.html">sommier_reprise()</a></code> — une transcription qui entrerait par <code><a href="../reference/sommier_entree.html">sommier_entree()</a></code> pourrait être antidatée, et c’est exactement ce que ce lot interdit.</p>
+</div>
+<div class="section level3">
+<h3 id="une-échelle-pas-un-entier-laissé-au-jugement-0-11-0">Une échelle, pas un entier laissé au jugement<a class="anchor" aria-label="anchor" href="#une-%C3%A9chelle-pas-un-entier-laiss%C3%A9-au-jugement-0-11-0"></a></h3>
+<p><code>SOMMIER_SOURCES_REPRISE</code> attache un NDP à chaque provenance usuelle. Le niveau croît avec la distance entre l’écriture et un fait attestable.</p>
+<table class="table"><colgroup><col width="33%"><col width="33%"><col width="33%"></colgroup><thead><tr><th>Provenance</th>
+<th align="center">NDP</th>
+<th>Ce qui la distingue</th>
+</tr></thead><tbody><tr><td><code>registre_signe</code></td>
+<td align="center">1</td>
+<td>une pièce datée et signée, opposable telle quelle</td>
+</tr><tr><td><code>base_gestionnaire</code></td>
+<td align="center">2</td>
+<td>une base tenue, mais sans visa pièce à pièce</td>
+</tr><tr><td><code>tableur</code></td>
+<td align="center">3</td>
+<td>un fichier sans tenue vérifiable ni signature</td>
+</tr><tr><td><code>temoignage</code></td>
+<td align="center">4</td>
+<td>une déclaration recueillie, sans pièce qui la porte</td>
+</tr></tbody></table><p>Deux communes qui transcrivent le même genre de pièce portent ainsi le même niveau. Un appelant peut juger une pièce moins bonne que son type ne le suggère ; il ne peut pas la juger meilleure qu’un constat.</p>
+</div>
+<div class="section level3">
+<h3 id="la-chaîne-ne-rejoue-pas-lhistoire-elle-la-date-0-11-0">La chaîne ne rejoue pas l’histoire, elle la date<a class="anchor" aria-label="anchor" href="#la-cha%C3%AEne-ne-rejoue-pas-lhistoire-elle-la-date-0-11-0"></a></h3>
+<p>Les entrées reprises ne s’insèrent pas « à leur place » : la séquence est celle de l’écriture, et elle le reste. Une reprise de trente ans forme un bloc d’entrées contiguës dont les dates d’évènement remontent le temps. La genèse reste la genèse — aucune réécriture, aucun recalcul.</p>
+</div>
+<div class="section level3">
+<h3 id="la-marque-du-repris-0-11-0">La marque du repris<a class="anchor" aria-label="anchor" href="#la-marque-du-repris-0-11-0"></a></h3>
+<p>Le bloc de provenance voyage dans le payload, sous la clé <code>reprise</code> : il est donc couvert par l’empreinte au même titre que le volume d’une coupe. C’est le seul champ commun aux neuf registres, parce que la question à laquelle il répond — d’où vient cette écriture — se pose partout de la même façon. Les neuf versions de schéma passent en conséquence à la version suivante ; les entrées antérieures gardent la leur, et restent valides.</p>
+<p>Chaque vue métier porte désormais <code>repris</code>, <code>reprise_source</code> et <code>reprise_reference</code>. Le rapport de gestion antérieure gagne une section <code>provenance</code>, qui compte registre par registre ce qui a été constaté et ce qui a été transcrit, et les tableaux de coupes et de travaux portent une colonne <code>provenance</code>. Un tableau qui les additionnerait sans le dire ferait passer la recopie pour de la mesure.</p>
+</div>
+<div class="section level3">
+<h3 id="le-jeu-de-démonstration-raconte-enfin-sa-propre-histoire-0-11-0">Le jeu de démonstration raconte enfin sa propre histoire<a class="anchor" aria-label="anchor" href="#le-jeu-de-d%C3%A9monstration-raconte-enfin-sa-propre-histoire-0-11-0"></a></h3>
+<p>La tenue du sommier de Couchey commence en 2021 — c’est la date de son premier visa annuel. Les faits antérieurs ont eu lieu, mais la commune ne les a pas enregistrés là : quatorze écritures sont donc transcrites, depuis quatre pièces, dont le souvenir de l’agent patrimonial pour la sécheresse de 2020. Le rapport engendré montre le mélange, et le dit.</p>
+</div>
+<div class="section level3">
+<h3 id="ce-que-ce-lot-ne-fait-pas-0-11-0">Ce que ce lot ne fait pas<a class="anchor" aria-label="anchor" href="#ce-que-ce-lot-ne-fait-pas-0-11-0"></a></h3>
+<p>Il ne lit aucun format en particulier. Transformer un tableur communal ou un export ONF en entrées de sommier est un travail propre à chaque source, et l’y enfermer maintenant figerait une supposition sur des données qu’on n’a pas vues. Ce lot pose la discipline de la reprise et le contrat qu’elle doit tenir ; les convertisseurs viendront ensuite, un par source réelle et documentée.</p>
+</div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.10.1" id="sommier-0101">sommieR 0.10.1<a class="anchor" aria-label="anchor" href="#sommier-0101"></a></h2>
 <p>Un hôte injoignable n’est pas un fichier absent.</p>

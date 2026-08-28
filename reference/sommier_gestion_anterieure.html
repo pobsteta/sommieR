@@ -13,7 +13,7 @@ non trois extractions paralleles qui divergeraient a la premiere evolution."></h
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,11 +90,19 @@ chacune un <code>data.frame</code>, plus les metadonnees de periode et de foret.
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Ce que chaque referentiel retient :</p><table class="table table"><tr><td>Section</td><td>psg</td><td>amenagement</td><td>ct88</td></tr><tr><td>Coupes realisees et balance</td><td>oui</td><td>oui</td><td>oui</td></tr><tr><td>Travaux realises</td><td>oui</td><td>oui</td><td>oui</td></tr><tr><td>Evenements marquants</td><td>oui</td><td>oui</td><td>oui</td></tr><tr><td>Bilan financier</td><td>non</td><td>oui</td><td>oui</td></tr><tr><td>Equilibre foret-gibier</td><td>oui</td><td>oui</td><td>non</td></tr><tr><td>Patrimoine remarquable</td><td>oui</td><td>oui</td><td>non</td></tr></table><p>Le PSG ne demande pas le detail financier, que le proprietaire n'a pas a
+    <p>Ce que chaque referentiel retient :</p><table class="table table"><tr><td>Section</td><td>psg</td><td>amenagement</td><td>ct88</td></tr><tr><td>Provenance des ecritures</td><td>oui</td><td>oui</td><td>oui</td></tr><tr><td>Coupes realisees et balance</td><td>oui</td><td>oui</td><td>oui</td></tr><tr><td>Travaux realises</td><td>oui</td><td>oui</td><td>oui</td></tr><tr><td>Evenements marquants</td><td>oui</td><td>oui</td><td>oui</td></tr><tr><td>Bilan financier</td><td>non</td><td>oui</td><td>oui</td></tr><tr><td>Equilibre foret-gibier</td><td>oui</td><td>oui</td><td>non</td></tr><tr><td>Patrimoine remarquable</td><td>oui</td><td>oui</td><td>non</td></tr></table><p>Le PSG ne demande pas le detail financier, que le proprietaire n'a pas a
 produire au CRPF ; le CT88, tourne vers l'evaluation d'un contrat, ne
 reclame pas l'inventaire du patrimoine remarquable. Restreindre la sortie a
 ce qui est demande evite de diffuser plus que necessaire - les registres 3
 et 7 portent des donnees personnelles.</p>
+<p><strong>Constate et transcrit ne se melent pas.</strong> Les trois referentiels portent
+sur une periode ecoulee ; un sommier ouvert en cours de route ne la couvre
+donc qu'en partie par ses propres constats, le reste ayant ete transcrit de
+l'existant (voir <code><a href="sommier_reprise.html">sommier_reprise()</a></code>). Les tableaux de coupes et de travaux
+portent pour cette raison une colonne <code>provenance</code>, et la section
+<code>provenance</code> compte registre par registre ce qui a ete constate et ce qui a
+ete recopie. Un tableau qui les additionnerait sans le dire ferait passer
+la recopie pour de la mesure.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -171,42 +171,48 @@ chaque référentiel ne reçoit que ce qu’il demande.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
+<td align="left">provenance</td>
+<td align="left">oui</td>
+<td align="left">oui</td>
+<td align="left">oui</td>
+</tr>
+<tr class="even">
 <td align="left">coupes</td>
 <td align="left">oui</td>
 <td align="left">oui</td>
 <td align="left">oui</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">balance</td>
 <td align="left">oui</td>
 <td align="left">oui</td>
 <td align="left">oui</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">travaux</td>
 <td align="left">oui</td>
 <td align="left">oui</td>
 <td align="left">oui</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">evenements</td>
 <td align="left">oui</td>
 <td align="left">oui</td>
 <td align="left">oui</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">equilibre_gibier</td>
 <td align="left">oui</td>
 <td align="left">oui</td>
 <td align="left">—</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">patrimoine</td>
 <td align="left">oui</td>
 <td align="left">oui</td>
 <td align="left">—</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">finances</td>
 <td align="left">—</td>
 <td align="left">oui</td>
@@ -231,6 +237,7 @@ le plus complet.</p>
 <span><span class="co">#&gt; &lt;gestion anterieure - amenagement&gt;</span></span>
 <span><span class="co">#&gt;   foret   : Foret communale de Couchey (jeu de demonstration) (communal)</span></span>
 <span><span class="co">#&gt;   periode : 2016-01-01 a 2025-12-31</span></span>
+<span><span class="co">#&gt;   provenance : 9 ligne(s)</span></span>
 <span><span class="co">#&gt;   coupes : 11 ligne(s)</span></span>
 <span><span class="co">#&gt;   balance : 10 ligne(s)</span></span>
 <span><span class="co">#&gt;   travaux : 3 ligne(s)</span></span>
@@ -292,24 +299,348 @@ si le registre a bougé.</p>
 <code class="sourceCode R"><span><span class="va">verif</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_verifier.html">sommier_verifier</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span></span>
 <span><span class="va">verif</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : c679df3d-bd1e-440a-98fb-6cff18bbd51b</span></span>
+<span><span class="co">#&gt;   foret     : f7d324c3-01ec-4938-b5fe-0db21229ad47</span></span>
 <span><span class="co">#&gt;   entrees   : 66</span></span>
 <span><span class="co">#&gt;   seq tete  : 66</span></span>
-<span><span class="co">#&gt;   hash tete : 68bba296b9cefc95d974e347da67f9e22b5abe4532a6e163b0613157b688ec8e</span></span>
+<span><span class="co">#&gt;   hash tete : fd62f99e4210956f48480f60b2ac208f42f1a70cc174a7d648823aea1f32cf5a</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="ce-qui-est-constaté-ce-qui-est-transcrit">Ce qui est constaté, ce qui est transcrit<a class="anchor" aria-label="anchor" href="#ce-qui-est-constat%C3%A9-ce-qui-est-transcrit"></a>
+</h2>
+<p>Le sommier de Couchey est tenu depuis 2021 — c’est la date de son
+premier visa annuel. La période couverte par ce document commence, elle,
+en 2016 : cinq exercices de coupes, la desserte, le bornage de la limite
+nord, le bail de chasse et trois fiches de patrimoine sont donc
+<strong>antérieurs à la tenue</strong>. Ils ont bien eu lieu, mais le
+sommier ne les a pas constatés : il les a <strong>transcrits</strong>,
+du registre papier, d’une délibération, de la base du gestionnaire, et —
+pour la sécheresse de 2020 — du seul souvenir de l’agent
+patrimonial.</p>
+<p>Une transcription n’est pas un constat, et le registre le dit sur
+trois points que <code><a href="../reference/sommier_reprise.html">sommier_reprise()</a></code> impose plutôt que de les
+recommander :</p>
+<ul>
+<li>
+<strong>la source est citée</strong> — sans référence de pièce, une
+reprise ne se distingue pas d’une invention ;</li>
+<li>
+<strong>le NDP est supérieur à 0</strong> — ce niveau désigne le
+constat de terrain, et recopier n’est pas constater ;</li>
+<li>
+<strong><code>date_saisie</code> est l’instant réel de la
+transcription</strong> — le champ est posé par le constructeur et refuse
+d’être dicté. Une chaîne qu’on pourrait convaincre d’avoir su plus tôt
+qu’elle n’a su ne vaudrait rien.</li>
+</ul>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">tableau</span><span class="op">(</span></span>
+<span>  <span class="va">ga</span><span class="op">$</span><span class="va">sections</span><span class="op">$</span><span class="va">provenance</span>,</span>
+<span>  <span class="st">"Écritures en vigueur sur la période, par registre et par provenance"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<table style="width:100%;" class="table">
+<caption>Écritures en vigueur sur la période, par registre et par
+provenance</caption>
+<colgroup>
+<col width="10%">
+<col width="25%">
+<col width="12%">
+<col width="13%">
+<col width="10%">
+<col width="14%">
+<col width="14%">
+</colgroup>
+<thead><tr class="header">
+<th align="right">registre</th>
+<th align="left">nom</th>
+<th align="right">n_constate</th>
+<th align="right">n_transcrit</th>
+<th align="right">n_pieces</th>
+<th align="left">transcrit_du</th>
+<th align="left">transcrit_au</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="left">Validations</td>
+<td align="right">4</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="left">Foncier &amp; limites</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="left">2017-09-14</td>
+<td align="left">2017-09-14</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="left">Droits &amp; concessions</td>
+<td align="right">5</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="left">2018-04-01</td>
+<td align="left">2018-04-01</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="left">Infrastructures</td>
+<td align="right">0</td>
+<td align="right">3</td>
+<td align="right">1</td>
+<td align="left">2016-06-01</td>
+<td align="left">2016-06-01</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="left">Coupes &amp; recoltes</td>
+<td align="right">6</td>
+<td align="right">5</td>
+<td align="right">1</td>
+<td align="left">2016-03-05</td>
+<td align="left">2020-03-05</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="left">Travaux</td>
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="left">Comptabilite</td>
+<td align="right">21</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr class="even">
+<td align="right">8</td>
+<td align="left">Evenements &amp; faune</td>
+<td align="right">9</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="left">2020-08-10</td>
+<td align="left">2020-08-10</td>
+</tr>
+<tr class="odd">
+<td align="right">9</td>
+<td align="left">Patrimoine remarquable</td>
+<td align="right">4</td>
+<td align="right">3</td>
+<td align="right">1</td>
+<td align="left">2016-07-12</td>
+<td align="left">2019-06-03</td>
+</tr>
+</tbody>
+</table>
+<p>La marque suit jusque dans les vues de consultation : chaque vue
+métier porte <code>repris</code>, <code>reprise_source</code> et
+<code>reprise_reference</code>.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">tableau</span><span class="op">(</span></span>
+<span>  <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
+<span>    <span class="va">con</span>,</span>
+<span>    <span class="st">"SELECT exercice, volume_m3, repris, reprise_source, reprise_reference</span></span>
+<span><span class="st">       FROM v_coupe</span></span>
+<span><span class="st">      WHERE foret_id = $1 AND type_entree = 'martelage'</span></span>
+<span><span class="st">      ORDER BY exercice"</span>,</span>
+<span>    params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">foret</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="st">"Les martelages de la période, et d'où chacun vient"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<caption>Les martelages de la période, et d’où chacun vient</caption>
+<colgroup>
+<col width="9%">
+<col width="10%">
+<col width="7%">
+<col width="15%">
+<col width="58%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">exercice</th>
+<th align="right">volume_m3</th>
+<th align="left">repris</th>
+<th align="left">reprise_source</th>
+<th align="left">reprise_reference</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">2016</td>
+<td align="right">40</td>
+<td align="left">TRUE</td>
+<td align="left">registre_signe</td>
+<td align="left">Sommier papier de Couchey, serie A50, exercices
+2016-2020</td>
+</tr>
+<tr class="even">
+<td align="left">2017</td>
+<td align="right">46</td>
+<td align="left">TRUE</td>
+<td align="left">registre_signe</td>
+<td align="left">Sommier papier de Couchey, serie A50, exercices
+2016-2020</td>
+</tr>
+<tr class="odd">
+<td align="left">2018</td>
+<td align="right">37</td>
+<td align="left">TRUE</td>
+<td align="left">registre_signe</td>
+<td align="left">Sommier papier de Couchey, serie A50, exercices
+2016-2020</td>
+</tr>
+<tr class="even">
+<td align="left">2019</td>
+<td align="right">43</td>
+<td align="left">TRUE</td>
+<td align="left">registre_signe</td>
+<td align="left">Sommier papier de Couchey, serie A50, exercices
+2016-2020</td>
+</tr>
+<tr class="odd">
+<td align="left">2020</td>
+<td align="right">34</td>
+<td align="left">TRUE</td>
+<td align="left">registre_signe</td>
+<td align="left">Sommier papier de Couchey, serie A50, exercices
+2016-2020</td>
+</tr>
+<tr class="even">
+<td align="left">2021</td>
+<td align="right">40</td>
+<td align="left">FALSE</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">2022</td>
+<td align="right">46</td>
+<td align="left">FALSE</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr class="even">
+<td align="left">2023</td>
+<td align="right">37</td>
+<td align="left">FALSE</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">2024</td>
+<td align="right">43</td>
+<td align="left">FALSE</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr class="even">
+<td align="left">2025</td>
+<td align="right">34</td>
+<td align="left">FALSE</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+</tbody>
+</table>
+<p>L’ordre de la chaîne, lui, n’est pas rejoué : les transcriptions
+forment un bloc contigu <strong>à la fin</strong> de la séquence,
+quelles que soient leurs dates d’évènement. Le sommier date l’histoire,
+il ne la réordonne pas — et sa genèse reste sa genèse.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">tableau</span><span class="op">(</span></span>
+<span>  <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span></span>
+<span>    <span class="va">con</span>,</span>
+<span>    <span class="st">"SELECT seq, registre, date_evenement,</span></span>
+<span><span class="st">            jsonb_exists(payload, 'reprise') AS transcrit</span></span>
+<span><span class="st">       FROM entree_sommier</span></span>
+<span><span class="st">      WHERE foret_id = $1</span></span>
+<span><span class="st">      ORDER BY seq DESC</span></span>
+<span><span class="st">      LIMIT 6"</span>,</span>
+<span>    params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">foret</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="st">"Les six dernières écritures de la chaîne : le bloc transcrit"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<caption>Les six dernières écritures de la chaîne : le bloc
+transcrit</caption>
+<thead><tr class="header">
+<th align="right">seq</th>
+<th align="right">registre</th>
+<th align="left">date_evenement</th>
+<th align="left">transcrit</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">66</td>
+<td align="right">9</td>
+<td align="left">2018-10-04</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="right">65</td>
+<td align="right">9</td>
+<td align="left">2019-06-03</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="right">64</td>
+<td align="right">9</td>
+<td align="left">2016-07-12</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="right">63</td>
+<td align="right">8</td>
+<td align="left">2020-08-10</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="right">62</td>
+<td align="right">5</td>
+<td align="left">2020-03-05</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="right">61</td>
+<td align="right">5</td>
+<td align="left">2019-03-05</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level2">
 <h2 id="coupes-et-récoltes">Coupes et récoltes<a class="anchor" aria-label="anchor" href="#coupes-et-r%C3%A9coltes"></a>
 </h2>
 <p>Imprimés A50E, A50F et A50I.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">tableau</span><span class="op">(</span><span class="va">ga</span><span class="op">$</span><span class="va">sections</span><span class="op">$</span><span class="va">coupes</span>, <span class="st">"Coupes de la période, par exercice et nature"</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <caption>Coupes de la période, par exercice et nature</caption>
+<colgroup>
+<col width="11%">
+<col width="25%">
+<col width="17%">
+<col width="14%">
+<col width="13%">
+<col width="14%">
+<col width="3%">
+</colgroup>
 <thead><tr class="header">
 <th align="left">exercice</th>
 <th align="left">type_entree</th>
 <th align="left">nature_coupe</th>
+<th align="left">provenance</th>
 <th align="right">volume_m3</th>
 <th align="right">surface_ha</th>
 <th align="right">n</th>
@@ -319,6 +650,7 @@ si le registre a bougé.</p>
 <td align="left">2016</td>
 <td align="left">martelage</td>
 <td align="left">reguliere</td>
+<td align="left">transcrit</td>
 <td align="right">40</td>
 <td align="right">1.8</td>
 <td align="right">1</td>
@@ -327,6 +659,7 @@ si le registre a bougé.</p>
 <td align="left">2017</td>
 <td align="left">martelage</td>
 <td align="left">sanitaire</td>
+<td align="left">transcrit</td>
 <td align="right">46</td>
 <td align="right">3.2</td>
 <td align="right">1</td>
@@ -335,6 +668,7 @@ si le registre a bougé.</p>
 <td align="left">2018</td>
 <td align="left">martelage</td>
 <td align="left">amelioration</td>
+<td align="left">transcrit</td>
 <td align="right">37</td>
 <td align="right">2.5</td>
 <td align="right">1</td>
@@ -343,6 +677,7 @@ si le registre a bougé.</p>
 <td align="left">2019</td>
 <td align="left">martelage</td>
 <td align="left">reguliere</td>
+<td align="left">transcrit</td>
 <td align="right">43</td>
 <td align="right">1.8</td>
 <td align="right">1</td>
@@ -351,6 +686,7 @@ si le registre a bougé.</p>
 <td align="left">2020</td>
 <td align="left">martelage</td>
 <td align="left">sanitaire</td>
+<td align="left">transcrit</td>
 <td align="right">34</td>
 <td align="right">3.2</td>
 <td align="right">1</td>
@@ -359,6 +695,7 @@ si le registre a bougé.</p>
 <td align="left">2021</td>
 <td align="left">martelage</td>
 <td align="left">amelioration</td>
+<td align="left">constate</td>
 <td align="right">40</td>
 <td align="right">2.5</td>
 <td align="right">1</td>
@@ -367,6 +704,7 @@ si le registre a bougé.</p>
 <td align="left">2022</td>
 <td align="left">martelage</td>
 <td align="left">reguliere</td>
+<td align="left">constate</td>
 <td align="right">46</td>
 <td align="right">1.8</td>
 <td align="right">1</td>
@@ -375,6 +713,7 @@ si le registre a bougé.</p>
 <td align="left">2022</td>
 <td align="left">produit_accidentel</td>
 <td align="left">chablis</td>
+<td align="left">constate</td>
 <td align="right">22</td>
 <td align="right">0.8</td>
 <td align="right">1</td>
@@ -383,6 +722,7 @@ si le registre a bougé.</p>
 <td align="left">2023</td>
 <td align="left">martelage</td>
 <td align="left">sanitaire</td>
+<td align="left">constate</td>
 <td align="right">37</td>
 <td align="right">3.2</td>
 <td align="right">1</td>
@@ -391,6 +731,7 @@ si le registre a bougé.</p>
 <td align="left">2024</td>
 <td align="left">martelage</td>
 <td align="left">amelioration</td>
+<td align="left">constate</td>
 <td align="right">43</td>
 <td align="right">2.5</td>
 <td align="right">1</td>
@@ -399,6 +740,7 @@ si le registre a bougé.</p>
 <td align="left">2025</td>
 <td align="left">martelage</td>
 <td align="left">reguliere</td>
+<td align="left">constate</td>
 <td align="right">34</td>
 <td align="right">1.8</td>
 <td align="right">1</td>
@@ -412,7 +754,7 @@ si le registre a bougé.</p>
 possibilité de l’aménagement. Une balance positive signale un excès de
 prélèvement, une négative un déficit ; c’est le cumul qui compte sur la
 durée du plan.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">tableau</span><span class="op">(</span><span class="va">ga</span><span class="op">$</span><span class="va">sections</span><span class="op">$</span><span class="va">balance</span>, <span class="st">"Balance de possibilité (imprimé A50E)"</span><span class="op">)</span></span></code></pre></div>
 <table style="width:100%;" class="table">
 <caption>Balance de possibilité (imprimé A50E)</caption>
@@ -503,7 +845,7 @@ durée du plan.</p>
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">b</span> <span class="op">&lt;-</span> <span class="va">ga</span><span class="op">$</span><span class="va">sections</span><span class="op">$</span><span class="va">balance</span></span>
 <span><span class="va">cumul</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">b</span><span class="op">$</span><span class="va">balance_cumulee_m3</span><span class="op">)</span></span>
 <span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">4.5</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, cex <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span></span>
@@ -520,7 +862,7 @@ durée du plan.</p>
 Balance cumulée — la ligne pointillée marque l’équilibre.
 </p>
 </div>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
@@ -529,22 +871,24 @@ Balance cumulée — la ligne pointillée marque l’équilibre.
 </h2>
 <p>Imprimés A50J, A50J bis et A50H. Le taux de reprise est celui relevé
 au contrôle des plantations.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">tableau</span><span class="op">(</span><span class="va">ga</span><span class="op">$</span><span class="va">sections</span><span class="op">$</span><span class="va">travaux</span>, <span class="st">"Travaux réalisés sur la période"</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <caption>Travaux réalisés sur la période</caption>
 <colgroup>
-<col width="7%">
-<col width="29%">
-<col width="10%">
-<col width="7%">
-<col width="14%">
-<col width="27%">
+<col width="6%">
+<col width="26%">
+<col width="11%">
+<col width="9%">
+<col width="6%">
+<col width="12%">
+<col width="24%">
 <col width="3%">
 </colgroup>
 <thead><tr class="header">
 <th align="left">annee</th>
 <th align="left">nature_travaux</th>
+<th align="left">provenance</th>
 <th align="right">quantite</th>
 <th align="left">unite</th>
 <th align="right">montant_eur</th>
@@ -555,6 +899,7 @@ au contrôle des plantations.</p>
 <tr class="odd">
 <td align="left">2022</td>
 <td align="left">plantation</td>
+<td align="left">constate</td>
 <td align="right">0.80</td>
 <td align="left">ha</td>
 <td align="right">2 350</td>
@@ -564,6 +909,7 @@ au contrôle des plantations.</p>
 <tr class="even">
 <td align="left">2023</td>
 <td align="left">entretien de la desserte</td>
+<td align="left">constate</td>
 <td align="right">0.62</td>
 <td align="left">km</td>
 <td align="right">1 180</td>
@@ -573,6 +919,7 @@ au contrôle des plantations.</p>
 <tr class="odd">
 <td align="left">2024</td>
 <td align="left">degagement</td>
+<td align="left">constate</td>
 <td align="right">0.80</td>
 <td align="left">ha</td>
 <td align="right">640</td>
@@ -588,7 +935,7 @@ au contrôle des plantations.</p>
 <p>Imprimé A50K. Le niveau de précision (NDP) vaut 0 pour un constat de
 terrain ; une valeur supérieure signale une observation issue de la
 télédétection, non encore validée sur place.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">tableau</span><span class="op">(</span><span class="va">ga</span><span class="op">$</span><span class="va">sections</span><span class="op">$</span><span class="va">evenements</span>, <span class="st">"Phénomènes intéressant la vie de la forêt"</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <caption>Phénomènes intéressant la vie de la forêt</caption>
@@ -615,7 +962,7 @@ télédétection, non encore validée sur place.</p>
 <td align="left">Deficit hydrique estival, roussissement des cimes</td>
 <td align="right">3.1</td>
 <td align="right">NA</td>
-<td align="right">0</td>
+<td align="right">4</td>
 </tr>
 <tr class="even">
 <td align="left">2022-02-17</td>
@@ -633,7 +980,7 @@ télédétection, non encore validée sur place.</p>
 </h2>
 <p>Imprimé A50G. Le solde est la différence entre recettes et dépenses
 de l’exercice ; le cumul en donne la tendance.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">tableau</span><span class="op">(</span><span class="va">ga</span><span class="op">$</span><span class="va">sections</span><span class="op">$</span><span class="va">finances</span>, <span class="st">"Recettes, dépenses et solde par exercice"</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <caption>Recettes, dépenses et solde par exercice</caption>
@@ -685,7 +1032,7 @@ de l’exercice ; le cumul en donne la tendance.</p>
 <p>Le registre 7 porte aussi le budget prévisionnel, que le rapport de
 gestion antérieure ne reprend pas mais qui se lit en regard — un poste
 budgété et jamais exécuté est un écart, pas une absence.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">tableau</span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/sommier_execution_budgetaire.html">sommier_execution_budgetaire</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, exercice <span class="op">=</span> <span class="fl">2025</span><span class="op">)</span>,</span>
 <span>  <span class="st">"Exécution budgétaire de l'exercice 2025"</span></span>
@@ -757,7 +1104,7 @@ budgété et jamais exécuté est un écart, pas une absence.</p>
 </h2>
 <p>Obligatoire dans les plans simples de gestion depuis la loi d’avenir
 pour l’agriculture, l’alimentation et la forêt du 13 octobre 2014.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">tableau</span><span class="op">(</span><span class="va">ga</span><span class="op">$</span><span class="va">sections</span><span class="op">$</span><span class="va">equilibre_gibier</span>, <span class="st">"Constats d'équilibre forêt-gibier"</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <caption>Constats d’équilibre forêt-gibier</caption>
@@ -810,7 +1157,7 @@ inventorié plus tôt disparaîtrait de l’inventaire que le document veut
 voir tel qu’il est. Seul le dernier relevé de chaque sujet est retenu —
 le Chêne de la Justice, revisité en 2024, figure avec son état sanitaire
 d’alors.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">tableau</span><span class="op">(</span><span class="va">ga</span><span class="op">$</span><span class="va">sections</span><span class="op">$</span><span class="va">patrimoine</span>, <span class="st">"Arbres, peuplements, vestiges, espèces, habitats"</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <caption>Arbres, peuplements, vestiges, espèces, habitats</caption>
@@ -896,7 +1243,7 @@ d’alors.</p>
 <strong>Ce n’est pas une cotation</strong> : un facteur IBP se cote sur
 placette selon son protocole de terrain, par densité à l’hectare, pas
 par comptage d’un registre qui n’inventorie que le remarquable.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">tableau</span><span class="op">(</span><span class="fu"><a href="../reference/sommier_elements_ibp.html">sommier_elements_ibp</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span>, <span class="st">"Éléments mobilisables pour l'IBP"</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <caption>Éléments mobilisables pour l’IBP</caption>
@@ -960,7 +1307,7 @@ ouvert</td>
 </h2>
 <p>Imprimé A50D. Seule la voirie privée forestière entre dans la densité
 : une route publique traversant la forêt ne dit rien de sa desserte.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">tableau</span><span class="op">(</span><span class="fu"><a href="../reference/sommier_densite_voirie.html">sommier_densite_voirie</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span>, <span class="st">"Longueurs et densités de voirie"</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
 <caption>Longueurs et densités de voirie</caption>
@@ -999,7 +1346,7 @@ unité de gestion un contour daté.</p>
 <p><code><a href="../reference/sommier_couche_ug.html">sommier_couche_ug()</a></code> rassemble ce qu’il faut pour les
 dessiner : les contours et, pour chaque unité, ce que la période y a
 inscrit.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">couche_carte</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_couche_ug.html">sommier_couche_ug</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="st">"2016-01-01"</span>, <span class="st">"2025-12-31"</span><span class="op">)</span></span>
 <span><span class="fu">tableau</span><span class="op">(</span></span>
 <span>  <span class="va">couche_carte</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"numero_affichage"</span>, <span class="st">"surface_ha"</span>, <span class="st">"n_entrees"</span>,</span>
@@ -1071,7 +1418,7 @@ montrer le parcellaire <strong>de cette période</strong>, et non celui
 du jour où le document est édité — c’est pourquoi
 <code><a href="../reference/sommier_couche_ug.html">sommier_couche_ug()</a></code> prend par défaut la borne de fin, non
 <code><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date()</a></code>.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/sommier_geometrie_ug.html">sommier_geometrie_ug</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, a_la_date <span class="op">=</span> <span class="st">"2020-06-30"</span><span class="op">)</span><span class="op">$</span><span class="va">wkt</span>,</span>
 <span>  <span class="fu"><a href="../reference/sommier_geometrie_ug.html">sommier_geometrie_ug</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, a_la_date <span class="op">=</span> <span class="st">"2025-12-31"</span><span class="op">)</span><span class="op">$</span><span class="va">wkt</span></span>
@@ -1088,7 +1435,7 @@ décide.</p>
 <p>Une unité dont le contour est inconnu ne peut pas être dessinée. Elle
 n’est pas pour autant escamotée : la couche la nomme, et le rapport la
 cite sous sa première carte.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">couche_carte</span>, <span class="st">"unites_sans_geometrie"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; character(0)</span></span></code></pre></div>
 <p>Vide ici, puisque les trois parcelles ont leur contour. Sur une forêt
@@ -1103,7 +1450,7 @@ qu’elle montre tout.</p>
 <p>Jusqu’ici la carte s’arrêtait à l’unité de gestion. Depuis la v0.7.0,
 une entrée peut porter sa propre géométrie — et pas n’importe où :
 <strong>dans le payload</strong>, donc dans l’empreinte.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">objets</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_objets_localises.html">sommier_objets_localises</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span></span>
 <span><span class="fu">tableau</span><span class="op">(</span></span>
 <span>  <span class="va">objets</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"registre"</span>, <span class="st">"date_evenement"</span>, <span class="st">"designation"</span>, <span class="st">"type_geometrie"</span><span class="op">)</span><span class="op">]</span>,</span>
@@ -1208,7 +1555,7 @@ une entrée peut porter sa propre géométrie — et pas n’importe où :
 aussi opposable que son volume, la position d’une borne aussi opposable
 que la date de son implantation. Rien de tout cela n’est un attribut
 d’affichage rangé à côté du registre.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># La même écriture, avec et sans contour, ne donne pas la même empreinte.</span></span>
 <span><span class="va">sans</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/registre5_coupe.html">registre5_coupe</a></span><span class="op">(</span><span class="st">"martelage"</span>, <span class="fl">2026</span>, <span class="st">"amelioration"</span>, volume_m3 <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="va">avec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/registre5_coupe.html">registre5_coupe</a></span><span class="op">(</span><span class="st">"martelage"</span>, <span class="fl">2026</span>, <span class="st">"amelioration"</span>, volume_m3 <span class="op">=</span> <span class="fl">100</span>,</span>
@@ -1223,7 +1570,7 @@ un payload doit s’interpréter sans contexte extérieur : une coordonnée
 Lambert-93 nue n’aurait de sens que pour qui connaît la convention du
 producteur. Des coordonnées projetées passées telles quelles sont donc
 refusées à la saisie.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/geometries.html">geom_point</a></span><span class="op">(</span><span class="fl">847490</span>, <span class="fl">6687454</span><span class="op">)</span>   <span class="co"># du Lambert-93 pris pour des degrés</span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;">:</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> `longitude` doit etre &lt;= 180, recu : 847490.</span></span></code></pre></div>
@@ -1232,7 +1579,7 @@ au-delà, deux relevés du même point différeraient sur du bruit
 d’instrument, et le chaînage cesserait d’être reproductible. Arrondir
 n’est pas simplifier : aucun sommet n’est retiré, on cesse seulement
 d’afficher une précision que la mesure n’a pas.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/jcs.html">jcs</a></span><span class="op">(</span><span class="fu"><a href="../reference/geometries.html">geom_point</a></span><span class="op">(</span><span class="fl">4.95123456789</span>, <span class="fl">47.27123456789</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="../reference/jcs.html">jcs</a></span><span class="op">(</span><span class="fu"><a href="../reference/geometries.html">geom_point</a></span><span class="op">(</span><span class="fl">4.95123456123</span>, <span class="fl">47.27123456999</span><span class="op">)</span><span class="op">)</span></span>
@@ -1248,7 +1595,7 @@ rendre obligatoire fermerait le registre à ceux qu’il doit servir.</p>
 <p>Une carte de la forêt seule flotte : le lecteur ne sait pas où elle
 se situe. Le parcellaire cadastral donne ce repère — et c’est tout ce
 qu’il donne.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fond</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_fond_lire.html">sommier_fond_lire</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/sommier_fond_cadastral.html">sommier_fond_cadastral</a></span><span class="op">(</span><span class="st">"21200"</span><span class="op">)</span>,      <span class="co"># Couchey</span></span>
 <span>  emprise <span class="op">=</span> <span class="fu"><a href="../reference/sommier_couche_ug.html">sommier_couche_ug</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span></span>
@@ -1268,7 +1615,7 @@ des mois plus tard ne doit pas changer de fond sans le dire.</p>
 <p><strong>Le cadastre ne porte pas ce qu’on lui prête.</strong> Les
 livraisons publiques exposent les parcelles, les sections, les bâtiments
 et les lieux-dits :</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">SOMMIER_COUCHES_CADASTRE</span></span>
 <span><span class="co">#&gt; [1] "parcelles"  "sections"   "batiments"  "lieux_dits" "feuilles"</span></span></code></pre></div>
 <p>Ni bornes, ni fossés. Ceux-là existent bien — dans la forme EDIGEO du
@@ -1290,7 +1637,7 @@ constate et ce qu’il emprunte.</p>
 disait pas tout : les bornes et les détails topographiques existent,
 dans le <strong>PCI vecteur brut au format EDIGÉO</strong>, publié
 feuille par feuille sur le même site.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">feuilles</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_feuilles_pci.html">sommier_feuilles_pci</a></span><span class="op">(</span><span class="st">"21200"</span>, emprise <span class="op">=</span> <span class="va">couche_carte</span><span class="op">)</span></span>
 <span><span class="va">fond_pci</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_fond_pci_lire.html">sommier_fond_pci_lire</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="../reference/sommier_fond_pci.html">sommier_fond_pci</a></span><span class="op">(</span><span class="st">"21200"</span>, <span class="va">feuilles</span><span class="op">$</span><span class="va">feuille</span><span class="op">)</span>, <span class="st">"bornes"</span></span>
@@ -1342,15 +1689,15 @@ gestionnaire, au registre 2, avec sa géométrie et son empreinte.</p>
 vigueur à une date, enrichies du nombre d’entrées qui s’y rattachent. Le
 GeoJSON n’exige rien de plus que PostGIS et s’ouvre sans rien installer
 ; le GeoPackage passe par <code>sf</code>.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">couche</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".geojson"</span><span class="op">)</span></span>
 <span><span class="va">export</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_exporter_sig.html">sommier_exporter_sig</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">couche</span>, format <span class="op">=</span> <span class="st">"geojson"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">export</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 3</span></span>
-<span><span class="co">#&gt;  $ chemin               : chr "/tmp/RtmpczJKeW/file33bb28517d44.geojson"</span></span>
+<span><span class="co">#&gt;  $ chemin               : chr "/tmp/RtmpCsRNn5/file346d576c9156.geojson"</span></span>
 <span><span class="co">#&gt;  $ n_unites             : int 3</span></span>
 <span><span class="co">#&gt;  $ unites_sans_geometrie: chr(0)</span></span></code></pre></div>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ug</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">read_sf</a></span><span class="op">(</span><span class="va">couche</span><span class="op">)</span></span>
 <span><span class="va">teintes</span> <span class="op">&lt;-</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#E8F5E9"</span>, <span class="st">"#2E7D32"</span><span class="op">)</span><span class="op">)</span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
 <span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
@@ -1366,7 +1713,7 @@ Les trois parcelles du jeu de démonstration, teintées par nombre
 d’entrées.
 </p>
 </div>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p>Le GeoJSON sort en WGS84, comme l’exige la RFC 7946 : le format ne
 déclare pas sa projection, et tout lecteur la suppose. Le GeoPackage,
@@ -1382,7 +1729,7 @@ silence laisserait croire la forêt entièrement cartographiée.</p>
 </h2>
 <p>Tout ce qui précède, <code><a href="../reference/sommier_rapport_quarto.html">sommier_rapport_quarto()</a></code> le
 rassemble et le rend en un document autoportant, HTML ou PDF :</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/sommier_rapport_quarto.html">sommier_rapport_quarto</a></span><span class="op">(</span></span>
 <span>  <span class="va">con</span>, <span class="va">foret</span>, <span class="st">"gestion-anterieure.html"</span>,</span>
 <span>  debut <span class="op">=</span> <span class="st">"2016-01-01"</span>, fin <span class="op">=</span> <span class="st">"2025-12-31"</span>, referentiel <span class="op">=</span> <span class="st">"amenagement"</span></span>
@@ -1402,15 +1749,15 @@ valeur probante tient au registre : l’empreinte de tête donnée plus haut
 scelle toutes les entrées de la chaîne. Ce qui se transporte, c’est le
 manifeste — chaîne, visas et horodatages — vérifiable hors ligne, sans
 base et sans le paquet qui l’a produit.</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">chemin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".json"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/sommier_exporter_manifeste.html">sommier_exporter_manifeste</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/sommier_verifier_manifeste.html">sommier_verifier_manifeste</a></span><span class="op">(</span><span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : c679df3d-bd1e-440a-98fb-6cff18bbd51b</span></span>
+<span><span class="co">#&gt;   foret     : f7d324c3-01ec-4938-b5fe-0db21229ad47</span></span>
 <span><span class="co">#&gt;   entrees   : 66</span></span>
 <span><span class="co">#&gt;   seq tete  : 66</span></span>
-<span><span class="co">#&gt;   hash tete : 68bba296b9cefc95d974e347da67f9e22b5abe4532a6e163b0613157b688ec8e</span></span>
+<span><span class="co">#&gt;   hash tete : fd62f99e4210956f48480f60b2ac208f42f1a70cc174a7d648823aea1f32cf5a</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span>
 <span><span class="co">#&gt;   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau</span></span></code></pre></div>
 <p>Toute entrée modifiée, retirée ou insérée après coup invalide
@@ -1425,14 +1772,14 @@ l’émetteur.</p>
 les mêmes variables d’environnement que la suite de tests
 (<code>SOMMIER_ARTICLE_*</code> d’abord, <code>SOMMIER_TEST_*</code> en
 repli) :</p>
-<div class="sourceCode" id="cb34"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="at">--name</span> sommier-pg <span class="at">-p</span> 5432:5432 <span class="dt">\</span></span>
-<span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a>  <span class="at">-e</span> POSTGRES_PASSWORD=postgres <span class="at">-e</span> POSTGRES_DB=sommier_article <span class="dt">\</span></span>
-<span id="cb34-3"><a href="#cb34-3" tabindex="-1"></a>  postgis/postgis:16-3.4</span>
-<span id="cb34-4"><a href="#cb34-4" tabindex="-1"></a></span>
-<span id="cb34-5"><a href="#cb34-5" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_DB</span><span class="op">=</span>sommier_article <span class="dt">\</span></span>
-<span id="cb34-6"><a href="#cb34-6" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_USER</span><span class="op">=</span>postgres <span class="dt">\</span></span>
-<span id="cb34-7"><a href="#cb34-7" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_PASSWORD</span><span class="op">=</span>postgres <span class="dt">\</span></span>
-<span id="cb34-8"><a href="#cb34-8" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'pkgdown::build_article("gestion-anterieure")'</span></span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-d</span> <span class="at">--name</span> sommier-pg <span class="at">-p</span> 5432:5432 <span class="dt">\</span></span>
+<span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a>  <span class="at">-e</span> POSTGRES_PASSWORD=postgres <span class="at">-e</span> POSTGRES_DB=sommier_article <span class="dt">\</span></span>
+<span id="cb37-3"><a href="#cb37-3" tabindex="-1"></a>  postgis/postgis:16-3.4</span>
+<span id="cb37-4"><a href="#cb37-4" tabindex="-1"></a></span>
+<span id="cb37-5"><a href="#cb37-5" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_DB</span><span class="op">=</span>sommier_article <span class="dt">\</span></span>
+<span id="cb37-6"><a href="#cb37-6" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_USER</span><span class="op">=</span>postgres <span class="dt">\</span></span>
+<span id="cb37-7"><a href="#cb37-7" tabindex="-1"></a><span class="va">SOMMIER_ARTICLE_PASSWORD</span><span class="op">=</span>postgres <span class="dt">\</span></span>
+<span id="cb37-8"><a href="#cb37-8" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'pkgdown::build_article("gestion-anterieure")'</span></span></code></pre></div>
 <p>Sans base joignable, l’article se rend quand même : le code reste
 lisible, les tableaux manquent, et l’avertissement en tête le dit. Un
 site qui se construit n’est pas la preuve que les chiffres ont été

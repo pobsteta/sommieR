@@ -342,6 +342,53 @@ sommier_valider_detection(
 voir. Une détection tranchée en sort — qu’elle soit confirmée ou écartée
 — sans sortir de la chaîne.
 
+## Reprendre l’existant
+
+Une forêt qui entre dans le dispositif a trente ans d’histoire :
+registres A50 sur papier, base d’un gestionnaire, tableurs,
+délibérations. Elle entre par **transcription**, jamais comme si elle
+arrivait aujourd’hui.
+
+``` r
+
+piece <- reprise_source(
+  "registre_signe",
+  "Sommier papier, imprimé A50E, exercice 1998, folio 12",
+  date_piece = "1999-01-15", detenteur = "Commune de Couchey"
+)
+
+lot <- list(
+  sommier_reprise(
+    foret_id = foret, registre = 5L, date_evenement = "1998-03-12",
+    auteur = "agent-01", source = piece,
+    payload = registre5_coupe("martelage", 1998, "amélioration", volume_m3 = 210)
+  )
+  # ... des milliers d'autres, écrites en un lot
+)
+
+sommier_reprendre(con, lot)   # rend le compte-rendu : combien, par registre,
+                              # sur quelle période, depuis quelles pièces
+```
+
+Trois propriétés sont **imposées**, non recommandées :
+
+| Ce qui est imposé | Pourquoi |
+|----|----|
+| `date_saisie` est posée par le constructeur, et le lui dicter est refusé | une chaîne qu’on peut convaincre d’avoir su plus tôt qu’elle n’a su ne vaut rien |
+| le NDP est strictement supérieur à 0 | NDP 0 désigne le constat de terrain ; recopier n’est pas constater |
+| la source est citée, sans valeur par défaut | sans référence de pièce, une reprise ne se distingue pas d’une invention |
+
+Le NDP suit une échelle documentée plutôt que le jugement de l’appelant
+— `SOMMIER_SOURCES_REPRISE` : registre signé 1, base d’un gestionnaire
+2, tableur sans visa 3, témoignage 4.
+
+La séquence, elle, n’est pas rejouée : une reprise forme un bloc
+d’entrées contiguës dont les dates d’évènement remontent le temps. La
+genèse reste la genèse. Les vues portent `repris`, `reprise_source` et
+`reprise_reference`, et le rapport de gestion antérieure compte registre
+par registre ce qui a été constaté et ce qui a été transcrit —
+[`sommier_provenance()`](https://pobsteta.github.io/sommieR/reference/sommier_provenance.md).
+
 ## Deux points de conception à connaître
 
 ### L’empreinte couvre plus que le payload
@@ -407,11 +454,13 @@ plutôt qu’échoués.
 | 0.7.0 | Géométrie dans les payloads, donc dans l’empreinte ; fond cadastral |
 | 0.8.0 | PCI vecteur EDIGÉO : bornes et détails topographiques |
 | 0.9.0 | `ES256` ; ce qu’un jeton d’horodatage atteste — date certifiée, empreinte couverte, nonce |
-| **0.10.0** | Chaîne de certification des jetons ; le visa porte son certificat et se vérifie seul |
+| 0.10.0 | Chaîne de certification des jetons ; le visa porte son certificat et se vérifie seul |
+| **0.11.0** | Reprise de l’existant : transcrire sans faire mentir la chaîne ; provenance dans les vues et les rapports |
 
 Les cinq priorités du brief de synthèse sont couvertes, ainsi que les
-quatre lots de la série cartographique et les deux lots de la couche
-probante (`specs/brief_probant-1` et `-2`).
+quatre lots de la série cartographique, les deux lots de la couche
+probante (`specs/brief_probant-1` et `-2`) et le premier lot de reprise
+(`specs/brief_reprise-1`).
 
 **Ce qui reste hors périmètre, et y reste franchement : la révocation.**
 CRL et OCSP demandent le réseau, ce que la vérification hors ligne

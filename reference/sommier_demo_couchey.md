@@ -60,6 +60,19 @@ coordonnees sont posees dans l'emprise des trois parcelles et
 **inventees comme le reste** - elles servent a montrer ce que la carte
 sait faire, non a situer quoi que ce soit sur le terrain.
 
+Depuis la v0.11.0, la tenue du sommier commence en 2021 - c'est la date
+du premier visa annuel. Les faits anterieurs ont bien eu lieu, mais la
+commune ne les a pas enregistres ici : quatorze ecritures sont donc
+**transcrites** et non constatees, depuis quatre pieces - le registre
+papier de la serie A50, une deliberation, la base du gestionnaire, et le
+souvenir de l'agent patrimonial pour la secheresse de 2020. Elles
+portent leur provenance et un NDP superieur a 0, et forment un bloc
+contigu en fin de chaine : la sequence est celle de l'ecriture, seules
+les dates d'evenement remontent le temps. Le jeu montre ainsi les deux
+etats qu'un sommier repris melange, et ce que le rapport engendre doit
+en dire. Voir
+[`sommier_reprise()`](https://pobsteta.github.io/sommieR/reference/sommier_reprise.md).
+
 Trois precautions le rendent visible plutot que de compter sur la
 memoire du lecteur : le nom de la foret porte la mention, le rapport
 engendre l'affiche en tete, et la fonction refuse de s'executer sur une

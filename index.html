@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -375,6 +375,57 @@
 <p><code>v_detection_en_attente</code> est la liste de travail : ce qui reste à aller voir. Une détection tranchée en sort — qu’elle soit confirmée ou écartée — sans sortir de la chaîne.</p>
 </div>
 <div class="section level2">
+<h2 id="reprendre-lexistant">Reprendre l’existant<a class="anchor" aria-label="anchor" href="#reprendre-lexistant"></a>
+</h2>
+<p>Une forêt qui entre dans le dispositif a trente ans d’histoire : registres A50 sur papier, base d’un gestionnaire, tableurs, délibérations. Elle entre par <strong>transcription</strong>, jamais comme si elle arrivait aujourd’hui.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">piece</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/reprise_source.html">reprise_source</a></span><span class="op">(</span></span>
+<span>  <span class="st">"registre_signe"</span>,</span>
+<span>  <span class="st">"Sommier papier, imprimé A50E, exercice 1998, folio 12"</span>,</span>
+<span>  date_piece <span class="op">=</span> <span class="st">"1999-01-15"</span>, detenteur <span class="op">=</span> <span class="st">"Commune de Couchey"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">lot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="reference/sommier_reprise.html">sommier_reprise</a></span><span class="op">(</span></span>
+<span>    foret_id <span class="op">=</span> <span class="va">foret</span>, registre <span class="op">=</span> <span class="fl">5L</span>, date_evenement <span class="op">=</span> <span class="st">"1998-03-12"</span>,</span>
+<span>    auteur <span class="op">=</span> <span class="st">"agent-01"</span>, source <span class="op">=</span> <span class="va">piece</span>,</span>
+<span>    payload <span class="op">=</span> <span class="fu"><a href="reference/registre5_coupe.html">registre5_coupe</a></span><span class="op">(</span><span class="st">"martelage"</span>, <span class="fl">1998</span>, <span class="st">"amélioration"</span>, volume_m3 <span class="op">=</span> <span class="fl">210</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="co"># ... des milliers d'autres, écrites en un lot</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/sommier_reprendre.html">sommier_reprendre</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">lot</span><span class="op">)</span>   <span class="co"># rend le compte-rendu : combien, par registre,</span></span>
+<span>                              <span class="co"># sur quelle période, depuis quelles pièces</span></span></code></pre></div>
+<p>Trois propriétés sont <strong>imposées</strong>, non recommandées :</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th>Ce qui est imposé</th>
+<th>Pourquoi</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>
+<code>date_saisie</code> est posée par le constructeur, et le lui dicter est refusé</td>
+<td>une chaîne qu’on peut convaincre d’avoir su plus tôt qu’elle n’a su ne vaut rien</td>
+</tr>
+<tr>
+<td>le NDP est strictement supérieur à 0</td>
+<td>NDP 0 désigne le constat de terrain ; recopier n’est pas constater</td>
+</tr>
+<tr>
+<td>la source est citée, sans valeur par défaut</td>
+<td>sans référence de pièce, une reprise ne se distingue pas d’une invention</td>
+</tr>
+</tbody>
+</table>
+<p>Le NDP suit une échelle documentée plutôt que le jugement de l’appelant — <code>SOMMIER_SOURCES_REPRISE</code> : registre signé 1, base d’un gestionnaire 2, tableur sans visa 3, témoignage 4.</p>
+<p>La séquence, elle, n’est pas rejouée : une reprise forme un bloc d’entrées contiguës dont les dates d’évènement remontent le temps. La genèse reste la genèse. Les vues portent <code>repris</code>, <code>reprise_source</code> et <code>reprise_reference</code>, et le rapport de gestion antérieure compte registre par registre ce qui a été constaté et ce qui a été transcrit — <code><a href="reference/sommier_provenance.html">sommier_provenance()</a></code>.</p>
+</div>
+<div class="section level2">
 <h2 id="deux-points-de-conception-à-connaître">Deux points de conception à connaître<a class="anchor" aria-label="anchor" href="#deux-points-de-conception-%C3%A0-conna%C3%AEtre"></a>
 </h2>
 <div class="section level3">
@@ -394,14 +445,14 @@
 <div class="section level2">
 <h2 id="développement">Développement<a class="anchor" aria-label="anchor" href="#d%C3%A9veloppement"></a>
 </h2>
-<div class="sourceCode" id="cb12"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL .</span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a></span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a><span class="co"># Tests hors base (le noyau se teste entièrement sans serveur)</span></span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local()'</span></span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a></span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a><span class="co"># Tests complets, base comprise</span></span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a><span class="ex">createdb</span> sommier_test</span>
-<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a><span class="va">SOMMIER_TEST_DB</span><span class="op">=</span>sommier_test <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local()'</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="ex">R</span> CMD INSTALL .</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="co"># Tests hors base (le noyau se teste entièrement sans serveur)</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local()'</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="co"># Tests complets, base comprise</span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="ex">createdb</span> sommier_test</span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a><span class="va">SOMMIER_TEST_DB</span><span class="op">=</span>sommier_test <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local()'</span></span></code></pre></div>
 <p>Sans <code>SOMMIER_TEST_DB</code>, les tests de la couche d’accès sont ignorés plutôt qu’échoués.</p>
 </div>
 <div class="section level2">
@@ -455,12 +506,16 @@
 <code>ES256</code> ; ce qu’un jeton d’horodatage atteste — date certifiée, empreinte couverte, nonce</td>
 </tr>
 <tr>
-<td><strong>0.10.0</strong></td>
+<td>0.10.0</td>
 <td>Chaîne de certification des jetons ; le visa porte son certificat et se vérifie seul</td>
+</tr>
+<tr>
+<td><strong>0.11.0</strong></td>
+<td>Reprise de l’existant : transcrire sans faire mentir la chaîne ; provenance dans les vues et les rapports</td>
 </tr>
 </tbody>
 </table>
-<p>Les cinq priorités du brief de synthèse sont couvertes, ainsi que les quatre lots de la série cartographique et les deux lots de la couche probante (<code>specs/brief_probant-1</code> et <code>-2</code>).</p>
+<p>Les cinq priorités du brief de synthèse sont couvertes, ainsi que les quatre lots de la série cartographique, les deux lots de la couche probante (<code>specs/brief_probant-1</code> et <code>-2</code>) et le premier lot de reprise (<code>specs/brief_reprise-1</code>).</p>
 <p><strong>Ce qui reste hors périmètre, et y reste franchement : la révocation.</strong> CRL et OCSP demandent le réseau, ce que la vérification hors ligne exclut par construction. Un certificat révoqué mais non expiré passe donc. C’est écrit dans la documentation et rendu en réserve dans chaque rapport, plutôt que passé sous silence.</p>
 </div>
 <div class="section level2">

@@ -163,6 +163,25 @@ habitats — et ce qu’ils apportent à l’IBP.
 - [`SOMMIER_SEUIL_TGB_CM`](https://pobsteta.github.io/sommieR/reference/SOMMIER_SEUIL_TGB_CM.md)
   : Seuil de circonference des tres gros bois
 
+## Reprise de l’existant
+
+Faire entrer ce qui précède le sommier sans faire mentir la chaîne : une
+transcription cite sa pièce, porte un NDP supérieur à 0, et se date du
+jour où elle est écrite.
+
+- [`sommier_reprise()`](https://pobsteta.github.io/sommieR/reference/sommier_reprise.md)
+  : Construction d'une entree transcrite depuis l'existant
+- [`sommier_reprendre()`](https://pobsteta.github.io/sommieR/reference/sommier_reprendre.md)
+  : Ecriture d'une reprise dans le sommier
+- [`reprise_source()`](https://pobsteta.github.io/sommieR/reference/reprise_source.md)
+  : Piece dont une reprise est tiree
+- [`valider_reprise()`](https://pobsteta.github.io/sommieR/reference/valider_reprise.md)
+  : Validation d'un bloc de reprise
+- [`sommier_provenance()`](https://pobsteta.github.io/sommieR/reference/sommier_provenance.md)
+  : Ce qui a ete constate, ce qui a ete transcrit
+- [`SOMMIER_SOURCES_REPRISE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_SOURCES_REPRISE.md)
+  : Provenances usuelles d'une reprise, et le NDP qu'elles portent
+
 ## Jeu de démonstration
 
 Un sommier complet et cohérent sur les neuf registres, pour la prise en

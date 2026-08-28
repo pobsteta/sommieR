@@ -50,6 +50,7 @@ Ce que chaque referentiel retient :
 |                             |     |             |      |
 |-----------------------------|-----|-------------|------|
 | Section                     | psg | amenagement | ct88 |
+| Provenance des ecritures    | oui | oui         | oui  |
 | Coupes realisees et balance | oui | oui         | oui  |
 | Travaux realises            | oui | oui         | oui  |
 | Evenements marquants        | oui | oui         | oui  |
@@ -62,6 +63,17 @@ produire au CRPF ; le CT88, tourne vers l'evaluation d'un contrat, ne
 reclame pas l'inventaire du patrimoine remarquable. Restreindre la
 sortie a ce qui est demande evite de diffuser plus que necessaire - les
 registres 3 et 7 portent des donnees personnelles.
+
+**Constate et transcrit ne se melent pas.** Les trois referentiels
+portent sur une periode ecoulee ; un sommier ouvert en cours de route ne
+la couvre donc qu'en partie par ses propres constats, le reste ayant ete
+transcrit de l'existant (voir
+[`sommier_reprise()`](https://pobsteta.github.io/sommieR/reference/sommier_reprise.md)).
+Les tableaux de coupes et de travaux portent pour cette raison une
+colonne `provenance`, et la section `provenance` compte registre par
+registre ce qui a ete constate et ce qui a ete recopie. Un tableau qui
+les additionnerait sans le dire ferait passer la recopie pour de la
+mesure.
 
 ## See also
 

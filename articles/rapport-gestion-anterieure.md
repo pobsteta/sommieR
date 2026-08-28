@@ -38,25 +38,56 @@ document.
 | **État de la chaîne** | intacte |
 | **Entrées** | 66 |
 | **Séquence de tête** | 3.3^{-322} |
-| **Empreinte de tête** | `68bba296b9cefc95d974e347da67f9e22b5abe4532a6e163b0613157b688ec8e` |
+| **Empreinte de tête** | `fd62f99e4210956f48480f60b2ac208f42f1a70cc174a7d648823aea1f32cf5a` |
 
-## 2 Coupes et récoltes
+## 2 Provenance des écritures
+
+Un sommier ouvert en cours de gestion n’a pas pu constater tout ce que
+la période contient : ce qui la précède y entre par **transcription**,
+depuis une pièce citée, avec un niveau de précision (NDP) supérieur à 0.
+Les deux ne se confondent pas — une recopie n’est pas une mesure, et les
+tableaux qui suivent portent une colonne `provenance` pour le dire ligne
+à ligne.
+
+| Registre | Constaté | Transcrit | Pièces citées | Transcrit du | au |
+|:---|---:|---:|---:|:---|:---|
+| 1 — Validations | 4 | 0 | 0 | — | — |
+| 2 — Foncier & limites | 0 | 1 | 1 | 2017-09-14 | 2017-09-14 |
+| 3 — Droits & concessions | 5 | 1 | 1 | 2018-04-01 | 2018-04-01 |
+| 4 — Infrastructures | 0 | 3 | 1 | 2016-06-01 | 2016-06-01 |
+| 5 — Coupes & recoltes | 6 | 5 | 1 | 2016-03-05 | 2020-03-05 |
+| 6 — Travaux | 3 | 0 | 0 | — | — |
+| 7 — Comptabilite | 21 | 0 | 0 | — | — |
+| 8 — Evenements & faune | 9 | 1 | 1 | 2020-08-10 | 2020-08-10 |
+| 9 — Patrimoine remarquable | 4 | 3 | 1 | 2016-07-12 | 2019-06-03 |
+
+Écritures en vigueur sur la période, par registre et par provenance
+{.caption-top .table}
+
+NoteUne partie de ce document est transcrite
+
+14 écriture(s) sur 66 ont été recopiées de pièces antérieures au
+sommier, chacune citant la sienne. Elles sont datées du fait, non de
+leur saisie : la chaîne les a écrites le jour de la transcription, et le
+dit.
+
+## 3 Coupes et récoltes
 
 Imprimés A50E, A50F et A50I.
 
-| exercice | type_entree        | nature_coupe | volume_m3 | surface_ha |             n |
-|:---------|:-------------------|:-------------|----------:|-----------:|--------------:|
-| 2016     | martelage          | reguliere    |        40 |        1.8 | 4.940656e-324 |
-| 2017     | martelage          | sanitaire    |        46 |        3.2 | 4.940656e-324 |
-| 2018     | martelage          | amelioration |        37 |        2.5 | 4.940656e-324 |
-| 2019     | martelage          | reguliere    |        43 |        1.8 | 4.940656e-324 |
-| 2020     | martelage          | sanitaire    |        34 |        3.2 | 4.940656e-324 |
-| 2021     | martelage          | amelioration |        40 |        2.5 | 4.940656e-324 |
-| 2022     | martelage          | reguliere    |        46 |        1.8 | 4.940656e-324 |
-| 2022     | produit_accidentel | chablis      |        22 |        0.8 | 4.940656e-324 |
-| 2023     | martelage          | sanitaire    |        37 |        3.2 | 4.940656e-324 |
-| 2024     | martelage          | amelioration |        43 |        2.5 | 4.940656e-324 |
-| 2025     | martelage          | reguliere    |        34 |        1.8 | 4.940656e-324 |
+| exercice | type_entree | nature_coupe | provenance | volume_m3 | surface_ha | n |
+|:---|:---|:---|:---|---:|---:|---:|
+| 2016 | martelage | reguliere | transcrit | 40 | 1.8 | 4.940656e-324 |
+| 2017 | martelage | sanitaire | transcrit | 46 | 3.2 | 4.940656e-324 |
+| 2018 | martelage | amelioration | transcrit | 37 | 2.5 | 4.940656e-324 |
+| 2019 | martelage | reguliere | transcrit | 43 | 1.8 | 4.940656e-324 |
+| 2020 | martelage | sanitaire | transcrit | 34 | 3.2 | 4.940656e-324 |
+| 2021 | martelage | amelioration | constate | 40 | 2.5 | 4.940656e-324 |
+| 2022 | martelage | reguliere | constate | 46 | 1.8 | 4.940656e-324 |
+| 2022 | produit_accidentel | chablis | constate | 22 | 0.8 | 4.940656e-324 |
+| 2023 | martelage | sanitaire | constate | 37 | 3.2 | 4.940656e-324 |
+| 2024 | martelage | amelioration | constate | 43 | 2.5 | 4.940656e-324 |
+| 2025 | martelage | reguliere | constate | 34 | 1.8 | 4.940656e-324 |
 
 Coupes enregistrées sur la période, par exercice et nature {.caption-top
 .table}
@@ -65,7 +96,7 @@ Coupes enregistrées sur la période, par exercice et nature {.caption-top
 
 Volume martelé par unité de gestion sur la période.
 
-### 2.1 Balance de possibilité
+### 3.1 Balance de possibilité
 
 La balance confronte les volumes **martelés** à la possibilité de
 l’aménagement. Une balance positive signale un excès de prélèvement, une
@@ -91,16 +122,22 @@ Balance de possibilité (imprimé A50E) {.caption-top .table}
 
 Balance cumulée sur la période — la ligne pointillée marque l’équilibre.
 
-## 3 Travaux
+Note
+
+La balance additionne 5 écriture(s) transcrite(s) du registre des coupes
+avec 6 constatée(s). Le cumul est juste, sa précision est celle de la
+pièce la moins précise.
+
+## 4 Travaux
 
 Imprimés A50J, A50J bis et A50H. Le taux de reprise est celui relevé au
 contrôle des plantations.
 
-| annee | nature_travaux | quantite | unite | montant_eur | taux_reprise_moyen_pct | n |
-|:---|:---|---:|:---|---:|---:|---:|
-| 2022 | plantation | 0.80 | ha | 2 350 | 78 | 4.940656e-324 |
-| 2023 | entretien de la desserte | 0.62 | km | 1 180 | NA | 4.940656e-324 |
-| 2024 | degagement | 0.80 | ha | 640 | 84 | 4.940656e-324 |
+| annee | nature_travaux | provenance | quantite | unite | montant_eur | taux_reprise_moyen_pct | n |
+|:---|:---|:---|---:|:---|---:|---:|---:|
+| 2022 | plantation | constate | 0.80 | ha | 2 350 | 78 | 4.940656e-324 |
+| 2023 | entretien de la desserte | constate | 0.62 | km | 1 180 | NA | 4.940656e-324 |
+| 2024 | degagement | constate | 0.80 | ha | 640 | 84 | 4.940656e-324 |
 
 Travaux réalisés sur la période {.caption-top .table}
 
@@ -109,15 +146,16 @@ Travaux réalisés sur la période {.caption-top .table}
 Montant des travaux par unité de gestion. Les travaux hors unité de
 gestion (imprimé A50H) n’y figurent pas : ils ne se localisent pas.
 
-## 4 Évènements marquants
+## 5 Évènements marquants
 
 Imprimé A50K. Le niveau de précision (NDP) vaut 0 pour un constat de
-terrain ; une valeur supérieure signale une observation issue de la
-télédétection.
+terrain ; une valeur supérieure signale une observation qui n’en est pas
+un — issue de la télédétection, ou transcrite d’une pièce antérieure au
+sommier.
 
 | date_evenement | nature | description | surface_ha | volume_impacte_m3 | ndp |
 |:---|:---|:---|---:|---:|---:|
-| 2020-08-10 | secheresse | Deficit hydrique estival, roussissement des cimes | 3.1 | NA | 0 |
+| 2020-08-10 | secheresse | Deficit hydrique estival, roussissement des cimes | 3.1 | NA | 4 |
 | 2022-02-17 | tempete | Coup de vent du 17 fevrier | 0.8 | 22 | 0 |
 
 Phénomènes intéressant la vie de la forêt {.caption-top .table}
@@ -127,7 +165,7 @@ Phénomènes intéressant la vie de la forêt {.caption-top .table}
 Emprises des phénomènes constatés. Seuls ceux dont le relevé a été porté
 au registre y figurent.
 
-## 5 Bilan financier
+## 6 Bilan financier
 
 Imprimé A50G. Le solde est la différence entre recettes et dépenses de
 l’exercice ; le cumul en donne la tendance.
@@ -142,7 +180,7 @@ l’exercice ; le cumul en donne la tendance.
 
 Recettes, dépenses et solde par exercice {.caption-top .table}
 
-## 6 Équilibre forêt-gibier
+## 7 Équilibre forêt-gibier
 
 Obligatoire dans les plans simples de gestion depuis la loi d’avenir
 pour l’agriculture, l’alimentation et la forêt du 13 octobre 2014.
@@ -160,7 +198,7 @@ Constats d’équilibre forêt-gibier {.caption-top .table}
 
 Patrimoine remarquable localisé : arbres, vestiges, espèces, habitats.
 
-## 7 Patrimoine remarquable
+## 8 Patrimoine remarquable
 
 Série A50 r/\*. Dernier relevé connu de chaque sujet : le patrimoine est
 un état courant, il n’est pas borné par la période du rapport.
@@ -176,7 +214,7 @@ un état courant, il n’est pas borné par la période du rapport.
 
 Arbres, peuplements, vestiges, espèces et habitats {.caption-top .table}
 
-### 7.1 Éléments utiles à l’IBP
+### 8.1 Éléments utiles à l’IBP
 
 Ce que le registre 9 apporte à l’Indice de Biodiversité Potentielle.
 **Ce n’est pas une cotation** : un facteur IBP se cote sur placette
@@ -193,7 +231,7 @@ n’inventorie que le remarquable.
 
 Éléments mobilisables pour l’IBP {.caption-top .table}
 
-## 8 Desserte
+## 9 Desserte
 
 Imprimé A50D. Seule la voirie privée forestière entre dans la densité :
 une route publique traversant la forêt ne dit rien de sa desserte.
@@ -211,7 +249,7 @@ Longueurs et densités de voirie {.caption-top .table}
 Voirie et équipements portés au registre 4, et limites relevées au
 registre 2.
 
-## 9 Vérifier ce document
+## 10 Vérifier ce document
 
 Ce rapport est une **mise en forme**, pas la preuve. La valeur probante
 tient au registre lui-même : l’empreinte de tête donnée plus haut scelle
@@ -229,5 +267,5 @@ l’empreinte de tête, et la vérification le dit.
 
 ------------------------------------------------------------------------
 
-*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.10.1 le
+*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.11.0 le
 28/08/2026.*

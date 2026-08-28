@@ -24,5 +24,5 @@ Un vecteur de caracteres.
 
 ``` r
 uuid_v4()
-#> [1] "8b4424d8-06f6-4e90-8e29-859e0ae724f1"
+#> [1] "58eede08-4dc7-4f11-92c7-2f18ffb90783"
 ```

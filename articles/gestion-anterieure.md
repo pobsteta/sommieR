@@ -87,6 +87,7 @@ tableau(presence, "Ce que chaque référentiel retient de l'assemblage")
 
 | section          | psg | amenagement | ct88 |
 |:-----------------|:----|:------------|:-----|
+| provenance       | oui | oui         | oui  |
 | coupes           | oui | oui         | oui  |
 | balance          | oui | oui         | oui  |
 | travaux          | oui | oui         | oui  |
@@ -117,6 +118,7 @@ ga
 #> <gestion anterieure - amenagement>
 #>   foret   : Foret communale de Couchey (jeu de demonstration) (communal)
 #>   periode : 2016-01-01 a 2025-12-31
+#>   provenance : 9 ligne(s)
 #>   coupes : 11 ligne(s)
 #>   balance : 10 ligne(s)
 #>   travaux : 3 ligne(s)
@@ -161,12 +163,126 @@ registre a bougé.
 verif <- sommier_verifier(con, foret)
 verif
 #> Verification de chaine - sommier
-#>   foret     : c679df3d-bd1e-440a-98fb-6cff18bbd51b
+#>   foret     : f7d324c3-01ec-4938-b5fe-0db21229ad47
 #>   entrees   : 66
 #>   seq tete  : 66
-#>   hash tete : 68bba296b9cefc95d974e347da67f9e22b5abe4532a6e163b0613157b688ec8e
+#>   hash tete : fd62f99e4210956f48480f60b2ac208f42f1a70cc174a7d648823aea1f32cf5a
 #>   etat      : chaine intacte
 ```
+
+## Ce qui est constaté, ce qui est transcrit
+
+Le sommier de Couchey est tenu depuis 2021 — c’est la date de son
+premier visa annuel. La période couverte par ce document commence, elle,
+en 2016 : cinq exercices de coupes, la desserte, le bornage de la limite
+nord, le bail de chasse et trois fiches de patrimoine sont donc
+**antérieurs à la tenue**. Ils ont bien eu lieu, mais le sommier ne les
+a pas constatés : il les a **transcrits**, du registre papier, d’une
+délibération, de la base du gestionnaire, et — pour la sécheresse de
+2020 — du seul souvenir de l’agent patrimonial.
+
+Une transcription n’est pas un constat, et le registre le dit sur trois
+points que
+[`sommier_reprise()`](https://pobsteta.github.io/sommieR/reference/sommier_reprise.md)
+impose plutôt que de les recommander :
+
+- **la source est citée** — sans référence de pièce, une reprise ne se
+  distingue pas d’une invention ;
+- **le NDP est supérieur à 0** — ce niveau désigne le constat de
+  terrain, et recopier n’est pas constater ;
+- **`date_saisie` est l’instant réel de la transcription** — le champ
+  est posé par le constructeur et refuse d’être dicté. Une chaîne qu’on
+  pourrait convaincre d’avoir su plus tôt qu’elle n’a su ne vaudrait
+  rien.
+
+``` r
+
+tableau(
+  ga$sections$provenance,
+  "Écritures en vigueur sur la période, par registre et par provenance"
+)
+```
+
+| registre | nom | n_constate | n_transcrit | n_pieces | transcrit_du | transcrit_au |
+|---:|:---|---:|---:|---:|:---|:---|
+| 1 | Validations | 4 | 0 | 0 | NA | NA |
+| 2 | Foncier & limites | 0 | 1 | 1 | 2017-09-14 | 2017-09-14 |
+| 3 | Droits & concessions | 5 | 1 | 1 | 2018-04-01 | 2018-04-01 |
+| 4 | Infrastructures | 0 | 3 | 1 | 2016-06-01 | 2016-06-01 |
+| 5 | Coupes & recoltes | 6 | 5 | 1 | 2016-03-05 | 2020-03-05 |
+| 6 | Travaux | 3 | 0 | 0 | NA | NA |
+| 7 | Comptabilite | 21 | 0 | 0 | NA | NA |
+| 8 | Evenements & faune | 9 | 1 | 1 | 2020-08-10 | 2020-08-10 |
+| 9 | Patrimoine remarquable | 4 | 3 | 1 | 2016-07-12 | 2019-06-03 |
+
+Écritures en vigueur sur la période, par registre et par provenance
+{.table style="width:100%;"}
+
+La marque suit jusque dans les vues de consultation : chaque vue métier
+porte `repris`, `reprise_source` et `reprise_reference`.
+
+``` r
+
+tableau(
+  DBI::dbGetQuery(
+    con,
+    "SELECT exercice, volume_m3, repris, reprise_source, reprise_reference
+       FROM v_coupe
+      WHERE foret_id = $1 AND type_entree = 'martelage'
+      ORDER BY exercice",
+    params = list(foret)
+  ),
+  "Les martelages de la période, et d'où chacun vient"
+)
+```
+
+| exercice | volume_m3 | repris | reprise_source | reprise_reference |
+|:---|---:|:---|:---|:---|
+| 2016 | 40 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
+| 2017 | 46 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
+| 2018 | 37 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
+| 2019 | 43 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
+| 2020 | 34 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
+| 2021 | 40 | FALSE | NA | NA |
+| 2022 | 46 | FALSE | NA | NA |
+| 2023 | 37 | FALSE | NA | NA |
+| 2024 | 43 | FALSE | NA | NA |
+| 2025 | 34 | FALSE | NA | NA |
+
+Les martelages de la période, et d’où chacun vient {.table}
+
+L’ordre de la chaîne, lui, n’est pas rejoué : les transcriptions forment
+un bloc contigu **à la fin** de la séquence, quelles que soient leurs
+dates d’évènement. Le sommier date l’histoire, il ne la réordonne pas —
+et sa genèse reste sa genèse.
+
+``` r
+
+tableau(
+  DBI::dbGetQuery(
+    con,
+    "SELECT seq, registre, date_evenement,
+            jsonb_exists(payload, 'reprise') AS transcrit
+       FROM entree_sommier
+      WHERE foret_id = $1
+      ORDER BY seq DESC
+      LIMIT 6",
+    params = list(foret)
+  ),
+  "Les six dernières écritures de la chaîne : le bloc transcrit"
+)
+```
+
+| seq | registre | date_evenement | transcrit |
+|----:|---------:|:---------------|:----------|
+|  66 |        9 | 2018-10-04     | TRUE      |
+|  65 |        9 | 2019-06-03     | TRUE      |
+|  64 |        9 | 2016-07-12     | TRUE      |
+|  63 |        8 | 2020-08-10     | TRUE      |
+|  62 |        5 | 2020-03-05     | TRUE      |
+|  61 |        5 | 2019-03-05     | TRUE      |
+
+Les six dernières écritures de la chaîne : le bloc transcrit {.table}
 
 ## Coupes et récoltes
 
@@ -177,19 +293,19 @@ Imprimés A50E, A50F et A50I.
 tableau(ga$sections$coupes, "Coupes de la période, par exercice et nature")
 ```
 
-| exercice | type_entree        | nature_coupe | volume_m3 | surface_ha |   n |
-|:---------|:-------------------|:-------------|----------:|-----------:|----:|
-| 2016     | martelage          | reguliere    |        40 |        1.8 |   1 |
-| 2017     | martelage          | sanitaire    |        46 |        3.2 |   1 |
-| 2018     | martelage          | amelioration |        37 |        2.5 |   1 |
-| 2019     | martelage          | reguliere    |        43 |        1.8 |   1 |
-| 2020     | martelage          | sanitaire    |        34 |        3.2 |   1 |
-| 2021     | martelage          | amelioration |        40 |        2.5 |   1 |
-| 2022     | martelage          | reguliere    |        46 |        1.8 |   1 |
-| 2022     | produit_accidentel | chablis      |        22 |        0.8 |   1 |
-| 2023     | martelage          | sanitaire    |        37 |        3.2 |   1 |
-| 2024     | martelage          | amelioration |        43 |        2.5 |   1 |
-| 2025     | martelage          | reguliere    |        34 |        1.8 |   1 |
+| exercice | type_entree        | nature_coupe | provenance | volume_m3 | surface_ha |   n |
+|:---------|:-------------------|:-------------|:-----------|----------:|-----------:|----:|
+| 2016     | martelage          | reguliere    | transcrit  |        40 |        1.8 |   1 |
+| 2017     | martelage          | sanitaire    | transcrit  |        46 |        3.2 |   1 |
+| 2018     | martelage          | amelioration | transcrit  |        37 |        2.5 |   1 |
+| 2019     | martelage          | reguliere    | transcrit  |        43 |        1.8 |   1 |
+| 2020     | martelage          | sanitaire    | transcrit  |        34 |        3.2 |   1 |
+| 2021     | martelage          | amelioration | constate   |        40 |        2.5 |   1 |
+| 2022     | martelage          | reguliere    | constate   |        46 |        1.8 |   1 |
+| 2022     | produit_accidentel | chablis      | constate   |        22 |        0.8 |   1 |
+| 2023     | martelage          | sanitaire    | constate   |        37 |        3.2 |   1 |
+| 2024     | martelage          | amelioration | constate   |        43 |        2.5 |   1 |
+| 2025     | martelage          | reguliere    | constate   |        34 |        1.8 |   1 |
 
 Coupes de la période, par exercice et nature {.table}
 
@@ -254,11 +370,11 @@ contrôle des plantations.
 tableau(ga$sections$travaux, "Travaux réalisés sur la période")
 ```
 
-| annee | nature_travaux | quantite | unite | montant_eur | taux_reprise_moyen_pct | n |
-|:---|:---|---:|:---|---:|---:|---:|
-| 2022 | plantation | 0.80 | ha | 2 350 | 78 | 1 |
-| 2023 | entretien de la desserte | 0.62 | km | 1 180 | NA | 1 |
-| 2024 | degagement | 0.80 | ha | 640 | 84 | 1 |
+| annee | nature_travaux | provenance | quantite | unite | montant_eur | taux_reprise_moyen_pct | n |
+|:---|:---|:---|---:|:---|---:|---:|---:|
+| 2022 | plantation | constate | 0.80 | ha | 2 350 | 78 | 1 |
+| 2023 | entretien de la desserte | constate | 0.62 | km | 1 180 | NA | 1 |
+| 2024 | degagement | constate | 0.80 | ha | 640 | 84 | 1 |
 
 Travaux réalisés sur la période {.table}
 
@@ -275,7 +391,7 @@ tableau(ga$sections$evenements, "Phénomènes intéressant la vie de la forêt")
 
 | date_evenement | nature | description | surface_ha | volume_impacte_m3 | ndp |
 |:---|:---|:---|---:|---:|---:|
-| 2020-08-10 | secheresse | Deficit hydrique estival, roussissement des cimes | 3.1 | NA | 0 |
+| 2020-08-10 | secheresse | Deficit hydrique estival, roussissement des cimes | 3.1 | NA | 4 |
 | 2022-02-17 | tempete | Coup de vent du 17 fevrier | 0.8 | 22 | 0 |
 
 Phénomènes intéressant la vie de la forêt {.table}
@@ -702,7 +818,7 @@ couche <- tempfile(fileext = ".geojson")
 export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
 str(export)
 #> List of 3
-#>  $ chemin               : chr "/tmp/RtmpczJKeW/file33bb28517d44.geojson"
+#>  $ chemin               : chr "/tmp/RtmpCsRNn5/file346d576c9156.geojson"
 #>  $ n_unites             : int 3
 #>  $ unites_sans_geometrie: chr(0)
 ```
@@ -775,10 +891,10 @@ chemin <- tempfile(fileext = ".json")
 sommier_exporter_manifeste(con, foret, chemin)
 sommier_verifier_manifeste(chemin)
 #> Verification de chaine - sommier
-#>   foret     : c679df3d-bd1e-440a-98fb-6cff18bbd51b
+#>   foret     : f7d324c3-01ec-4938-b5fe-0db21229ad47
 #>   entrees   : 66
 #>   seq tete  : 66
-#>   hash tete : 68bba296b9cefc95d974e347da67f9e22b5abe4532a6e163b0613157b688ec8e
+#>   hash tete : fd62f99e4210956f48480f60b2ac208f42f1a70cc174a7d648823aea1f32cf5a
 #>   etat      : chaine intacte
 #>   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau
 ```

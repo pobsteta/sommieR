@@ -32,6 +32,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_REVETEMENTS.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_SCHEMA_VERSIONS.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_SEUIL_TGB_CM.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_SOURCES_REPRISE.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_STATUTS_TSA.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_COUPE.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_DROIT.html</loc></url>
@@ -87,6 +88,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/registre9_habitat.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/registre9_peuplement.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/registre9_vestige.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/reprise_source.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/signataire_cle.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/signataire_keycloak.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommieR-package.html</loc></url>
@@ -118,8 +120,11 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_init_schema.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_lire.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_objets_localises.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_provenance.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_rapport_markdown.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_rapport_quarto.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_reprendre.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_reprise.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_revoquer_mutations.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_signataire.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_valider_detection.html</loc></url>
@@ -141,5 +146,6 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/uuid_v4.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/valider_geometrie.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/valider_payload.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/valider_reprise.html</loc></url>
 </urlset>
 

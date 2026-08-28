@@ -1,5 +1,123 @@
 # Changelog
 
+## sommieR 0.11.0
+
+Lot 1 de la reprise. Le sommier ne savait démarrer qu’à vide ; il sait
+désormais accueillir trente ans d’histoire sans prétendre les avoir
+connus.
+
+### Le problème, tel qu’il se posait
+
+Une forêt qui entre dans le dispositif arrive avec son passé : registres
+A50 sur papier, base d’un gestionnaire, tableurs d’un CRPF,
+délibérations de la commune. Deux issues, mauvaises toutes les deux.
+
+**La laisser dehors.** Mais l’un des trois exports du paquet est le
+*bilan de l’aménagement précédent*, qui porte sur la période écoulée. Un
+sommier ouvert en 2027 n’en dirait rien avant 2047.
+
+**La saisir comme si elle arrivait aujourd’hui.** Une coupe de 1998
+entrerait avec sa date d’évènement, mais serait pour tout le reste
+indiscernable d’un constat de terrain. Le sommier dirait qu’il sait,
+alors qu’il a recopié.
+
+### Ce que le modèle savait déjà — et ce qu’il pouvait faire dire de faux
+
+Rien n’a été ajouté au schéma. `date_evenement` et `date_saisie` étaient
+déjà deux champs distincts, tous deux couverts par l’empreinte ; `ndp`
+portait déjà la bonne sémantique, appliquée dès la v0.2.0 aux détections
+FORDEAD. Le modèle savait donc distinguer *quand la chose est arrivée*
+de *quand on l’a écrite*.
+
+Il savait aussi mentir. `date_saisie` était librement fixable : une
+reprise pressée l’aurait antidatée « pour faire propre », et la chaîne
+aurait alors attesté qu’elle savait depuis 1998. C’était le seul endroit
+du paquet où l’on pouvait faire dire au registre une chose fausse sans
+rien casser.
+
+### Une transcription, et ce qui l’empêche de passer pour un constat
+
+[`sommier_reprise()`](https://pobsteta.github.io/sommieR/reference/sommier_reprise.md)
+construit une entrée transcrite. Trois propriétés y sont **imposées**
+plutôt que recommandées — une discipline qui repose sur la vigilance de
+l’appelant n’en est pas une :
+
+| Ce qui est imposé | Pourquoi |
+|----|----|
+| `date_saisie` est posée par le constructeur, et le lui dicter est refusé | une chaîne qu’on peut convaincre d’avoir su plus tôt qu’elle n’a su ne vaut rien |
+| le NDP est strictement supérieur à 0 | NDP 0 désigne le constat de terrain ; recopier n’est pas constater |
+| la source est citée, sans valeur par défaut | sans référence de pièce, une reprise ne se distingue pas d’une invention |
+
+La date du fait, elle, reste libre de remonter aussi loin qu’il le faut
+— seule une date d’évènement dans l’avenir est refusée : une reprise
+transcrit ce qui a eu lieu, elle ne l’annonce pas.
+
+[`sommier_reprendre()`](https://pobsteta.github.io/sommieR/reference/sommier_reprendre.md)
+écrit le lot en une transaction et rend le compte-rendu de ce qui est
+entré : combien d’entrées, par registre, sur quelle période, depuis
+quelles pièces. Il n’accepte que des entrées construites par
+[`sommier_reprise()`](https://pobsteta.github.io/sommieR/reference/sommier_reprise.md)
+— une transcription qui entrerait par
+[`sommier_entree()`](https://pobsteta.github.io/sommieR/reference/sommier_entree.md)
+pourrait être antidatée, et c’est exactement ce que ce lot interdit.
+
+### Une échelle, pas un entier laissé au jugement
+
+`SOMMIER_SOURCES_REPRISE` attache un NDP à chaque provenance usuelle. Le
+niveau croît avec la distance entre l’écriture et un fait attestable.
+
+| Provenance | NDP | Ce qui la distingue |
+|----|:--:|----|
+| `registre_signe` | 1 | une pièce datée et signée, opposable telle quelle |
+| `base_gestionnaire` | 2 | une base tenue, mais sans visa pièce à pièce |
+| `tableur` | 3 | un fichier sans tenue vérifiable ni signature |
+| `temoignage` | 4 | une déclaration recueillie, sans pièce qui la porte |
+
+Deux communes qui transcrivent le même genre de pièce portent ainsi le
+même niveau. Un appelant peut juger une pièce moins bonne que son type
+ne le suggère ; il ne peut pas la juger meilleure qu’un constat.
+
+### La chaîne ne rejoue pas l’histoire, elle la date
+
+Les entrées reprises ne s’insèrent pas « à leur place » : la séquence
+est celle de l’écriture, et elle le reste. Une reprise de trente ans
+forme un bloc d’entrées contiguës dont les dates d’évènement remontent
+le temps. La genèse reste la genèse — aucune réécriture, aucun recalcul.
+
+### La marque du repris
+
+Le bloc de provenance voyage dans le payload, sous la clé `reprise` : il
+est donc couvert par l’empreinte au même titre que le volume d’une
+coupe. C’est le seul champ commun aux neuf registres, parce que la
+question à laquelle il répond — d’où vient cette écriture — se pose
+partout de la même façon. Les neuf versions de schéma passent en
+conséquence à la version suivante ; les entrées antérieures gardent la
+leur, et restent valides.
+
+Chaque vue métier porte désormais `repris`, `reprise_source` et
+`reprise_reference`. Le rapport de gestion antérieure gagne une section
+`provenance`, qui compte registre par registre ce qui a été constaté et
+ce qui a été transcrit, et les tableaux de coupes et de travaux portent
+une colonne `provenance`. Un tableau qui les additionnerait sans le dire
+ferait passer la recopie pour de la mesure.
+
+### Le jeu de démonstration raconte enfin sa propre histoire
+
+La tenue du sommier de Couchey commence en 2021 — c’est la date de son
+premier visa annuel. Les faits antérieurs ont eu lieu, mais la commune
+ne les a pas enregistrés là : quatorze écritures sont donc transcrites,
+depuis quatre pièces, dont le souvenir de l’agent patrimonial pour la
+sécheresse de 2020. Le rapport engendré montre le mélange, et le dit.
+
+### Ce que ce lot ne fait pas
+
+Il ne lit aucun format en particulier. Transformer un tableur communal
+ou un export ONF en entrées de sommier est un travail propre à chaque
+source, et l’y enfermer maintenant figerait une supposition sur des
+données qu’on n’a pas vues. Ce lot pose la discipline de la reprise et
+le contrat qu’elle doit tenir ; les convertisseurs viendront ensuite, un
+par source réelle et documentée.
+
 ## sommieR 0.10.1
 
 Un hôte injoignable n’est pas un fichier absent.

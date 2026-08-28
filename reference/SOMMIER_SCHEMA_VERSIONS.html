@@ -11,7 +11,7 @@ pas se faire passer pour l'ancienne."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,7 +56,10 @@ pas se faire passer pour l'ancienne.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Les registres 2, 4, 5, 8 et 9 sont passes en <code>1.1.0</code> lorsque la geometrie
-est entree dans leurs payloads. Les entrees anterieures gardent la version
+est entree dans leurs payloads. Les neuf sont passes a la version suivante
+lorsque le bloc <code>reprise</code> est devenu admissible dans tous les payloads
+(voir <code><a href="sommier_reprise.html">sommier_reprise()</a></code>) : la provenance concerne chaque registre, la
+version le dit pour chacun. Les entrees anterieures gardent la version
 sous laquelle elles ont ete ecrites, et restent valides : le registre est
 append-only, un changement de schema ne se retrofitte pas sur ce qui est
 deja chaine. C'est precisement ce que la version hachee permet de dire -
