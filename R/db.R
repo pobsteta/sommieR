@@ -119,20 +119,22 @@ foret_creer <- function(con, nom, regime,
 ug_creer <- function(con, foret_id, numero_affichage, date_debut,
                      serie_id = NULL, parent_uuid = NULL, uuid = uuid_v4()) {
   uuid <- valider_uuid(uuid, "uuid")
+  # Valide avant d'ouvrir un resultat : voir budget_definir().
+  valeurs <- list(
+    uuid,
+    valider_uuid(foret_id, "foret_id"),
+    if (est_vide(serie_id)) "" else valider_uuid(serie_id, "serie_id"),
+    valider_texte(numero_affichage, "numero_affichage"),
+    format_date(date_debut, "date_debut"),
+    if (est_vide(parent_uuid)) "" else valider_uuid(parent_uuid, "parent_uuid")
+  )
   DBI::dbExecute(
     con,
     "INSERT INTO ug (uuid, foret_id, serie_id, numero_affichage,
                      date_debut, parent_uuid)
      VALUES ($1, $2, NULLIF($3, '')::uuid, $4, $5::date,
              NULLIF($6, '')::uuid)",
-    params = list(
-      uuid,
-      valider_uuid(foret_id, "foret_id"),
-      if (est_vide(serie_id)) "" else valider_uuid(serie_id, "serie_id"),
-      valider_texte(numero_affichage, "numero_affichage"),
-      format_date(date_debut, "date_debut"),
-      if (est_vide(parent_uuid)) "" else valider_uuid(parent_uuid, "parent_uuid")
-    )
+    params = valeurs
   )
   uuid
 }
@@ -345,6 +347,30 @@ regler_profondeur <- function(con, profondeur) {
 
 nom_point_reprise <- function(profondeur) paste0("sommier_sp_", profondeur)
 
+# Un ordre SQL qui echoue laisse son resultat ouvert cote pilote, et le coup
+# suivant sur la connexion annonce qu'il l'annule. Le coup suivant, dans un
+# retour arriere, est le ROLLBACK lui-meme : c'est-a-dire exactement le moment
+# ou ce resultat n'a plus a vivre. Le message est donc attendu, et il n'apprend
+# rien - mais il paraissait a chaque transaction avortee, c'est-a-dire aux
+# moments qu'un exploitant lit avec attention. Un avertissement qu'on prend
+# l'habitude d'ignorer est un avertissement qui masquera le suivant.
+#
+# Ce seul message est tu, reconnu sur son texte ; tout autre avertissement emis
+# pendant l'annulation passe. Eteindre le bloc entier supprimerait le symptome
+# et le signal ensemble.
+BRUIT_DE_MENAGE_PILOTE <- "open result set"
+
+sans_bruit_de_menage <- function(code) {
+  withCallingHandlers(
+    code,
+    warning = function(w) {
+      if (grepl(BRUIT_DE_MENAGE_PILOTE, conditionMessage(w), fixed = TRUE)) {
+        invokeRestart("muffleWarning")
+      }
+    }
+  )
+}
+
 transaction <- function(con, code) {
   profondeur <- profondeur_transaction(con)
   imbriquee <- profondeur > 0L
@@ -360,13 +386,15 @@ transaction <- function(con, code) {
   on.exit({
     regler_profondeur(con, profondeur)
     if (!succes) {
-      if (imbriquee) {
-        try(DBI::dbExecute(con, paste0("ROLLBACK TO SAVEPOINT ",
-                                       nom_point_reprise(profondeur))),
-            silent = TRUE)
-      } else {
-        try(DBI::dbRollback(con), silent = TRUE)
-      }
+      sans_bruit_de_menage(
+        if (imbriquee) {
+          try(DBI::dbExecute(con, paste0("ROLLBACK TO SAVEPOINT ",
+                                         nom_point_reprise(profondeur))),
+              silent = TRUE)
+        } else {
+          try(DBI::dbRollback(con), silent = TRUE)
+        }
+      )
     }
   }, add = TRUE)
 

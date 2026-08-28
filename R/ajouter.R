@@ -217,17 +217,19 @@ sommier_balance_possibilite <- function(con, foret_id, tolerance_ans = NULL) {
 #'
 #' @export
 exercice_definir <- function(con, foret_id, annee, possibilite_m3_an) {
+  # Valide avant d'ouvrir un resultat : voir budget_definir().
+  valeurs <- list(
+    valider_uuid(foret_id, "foret_id"),
+    valider_entier(annee, "annee", min = 1500, max = 2999),
+    valider_nombre(possibilite_m3_an, "possibilite_m3_an", min = 0)
+  )
   invisible(DBI::dbExecute(
     con,
     "INSERT INTO exercice (foret_id, annee, possibilite_m3_an)
      VALUES ($1, $2, $3)
      ON CONFLICT (foret_id, annee)
      DO UPDATE SET possibilite_m3_an = EXCLUDED.possibilite_m3_an",
-    params = list(
-      valider_uuid(foret_id, "foret_id"),
-      valider_entier(annee, "annee", min = 1500, max = 2999),
-      valider_nombre(possibilite_m3_an, "possibilite_m3_an", min = 0)
-    )
+    params = valeurs
   ))
 }
 
