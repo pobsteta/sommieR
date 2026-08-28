@@ -21,18 +21,24 @@
 #' @seealso [sommier_execution_budgetaire()]
 #' @export
 budget_definir <- function(con, foret_id, annee, poste, montant_eur) {
+  # Les validations precedent l'appel plutot que d'habiter sa liste
+  # d'arguments : R les evaluerait alors paresseusement, c'est-a-dire apres
+  # que le pilote a ouvert son objet de resultat. Un argument refuse laissait
+  # ainsi la connexion sale, et l'ordre suivant - quel qu'il fut - annulait la
+  # requete morte en le signalant.
+  valeurs <- parametres(list(
+    valider_uuid(foret_id, "foret_id"),
+    valider_entier(annee, "annee", min = 1500, max = 2999),
+    valider_choix(poste, "poste", SOMMIER_POSTES_COMPTABLES$poste),
+    valider_nombre(montant_eur, "montant_eur", min = 0)
+  ))
   invisible(DBI::dbExecute(
     con,
     "INSERT INTO budget_previsionnel (foret_id, annee, poste, montant_eur)
      VALUES ($1, $2, $3, $4)
      ON CONFLICT (foret_id, annee, poste)
      DO UPDATE SET montant_eur = EXCLUDED.montant_eur, revise_le = now()",
-    params = parametres(list(
-      valider_uuid(foret_id, "foret_id"),
-      valider_entier(annee, "annee", min = 1500, max = 2999),
-      valider_choix(poste, "poste", SOMMIER_POSTES_COMPTABLES$poste),
-      valider_nombre(montant_eur, "montant_eur", min = 0)
-    ))
+    params = valeurs
   ))
 }
 
@@ -55,6 +61,8 @@ budget_definir <- function(con, foret_id, annee, poste, montant_eur) {
 #'
 #' @export
 sommier_bilan_financier <- function(con, foret_id) {
+  # Valide avant d'ouvrir un resultat : voir budget_definir().
+  valeurs <- parametres(list(valider_uuid(foret_id, "foret_id")))
   DBI::dbGetQuery(
     con,
     "SELECT exercice, recettes_eur, depenses_eur, travaux_entretien_eur,
@@ -63,7 +71,7 @@ sommier_bilan_financier <- function(con, foret_id) {
        FROM v_bilan_financier
       WHERE foret_id = $1
       ORDER BY exercice",
-    params = parametres(list(valider_uuid(foret_id, "foret_id")))
+    params = valeurs
   )
 }
 
