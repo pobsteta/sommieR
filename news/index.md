@@ -1,5 +1,150 @@
 # Changelog
 
+## sommieR 0.11.1
+
+Éprouver ce qui tient la chaîne. Aucune fonction nouvelle : ce lot porte
+sur l’écart entre ce que la documentation affirme et ce que la suite
+démontrait.
+
+### Ce que le paquet affirmait sans l’avoir montré
+
+Trois phrases portent le noyau, et aucune des trois n’était éprouvée.
+
+Le verrou consultatif de
+[`sommier_ajouter()`](https://pobsteta.github.io/sommieR/reference/sommier_ajouter.md)
+est la seule chose qui empêche deux écritures concurrentes de forker la
+chaîne — et **aucun test ne faisait écrire deux connexions à la fois**.
+Le paquet documentait longuement pourquoi il prend un verrou, sans avoir
+jamais vérifié qu’il le prend.
+
+`UNIQUE (foret_id, seq)` est annoncé comme « le filet de sécurité si le
+verrou venait à manquer ». Une phrase pareille n’engage à rien tant
+qu’on ne l’a pas provoquée.
+
+Le tri des clés par unités de code UTF-16 est ce qui rend l’empreinte
+reproductible chez un tiers. Il était couvert par treize cas choisis à
+la main — c’est-à-dire par ce à quoi l’auteur avait pensé.
+
+### Le verrou s’éprouve par le blocage qu’il produit
+
+Le réflexe serait de lancer N processus qui écrivent ensemble. C’est le
+mauvais choix : forker un processus R qui détient une connexion libpq
+est instable, cela demanderait une dépendance de plus, et un tel test
+échouerait un jour sans qu’on sache si le verrou ou l’ordonnanceur est
+en cause. **Un test de concurrence qui n’échoue pas de façon
+reproductible ne démontre rien.**
+
+La propriété qui porte la correction n’est pas « N processus écrivent »
+mais « le verrou est exclusif, et tenu pendant toute la transaction ».
+Elle s’observe depuis une seconde connexion, sans parallélisme : B prend
+le verrou et le garde, A borne son attente et doit expirer dessus — donc
+l’attendre au lieu de lire la tête —, puis réussir dès que B relâche.
+S’y ajoutent le relâchement en fin de transaction, et le fait que deux
+forêts distinctes ne s’attendent pas.
+
+Le filet, lui, se teste en le faisant travailler : deux branches
+chaînées depuis la même tête, exactement ce qu’un verrou absent
+produirait, et la seconde insertion doit être refusée par la contrainte,
+la chaîne restant vérifiable.
+
+Ces tests mordent, et c’est vérifié plutôt que supposé : retirer le
+`pg_advisory_xact_lock` du code en fait échouer deux, retirer la
+contrainte du schéma en fait échouer cinq.
+
+### Ce qu’une valeur engendrée démontre qu’un cas choisi ne démontre pas
+
+La propriété dont dépend la vérification par un tiers est universelle :
+**l’empreinte ne doit pas dépendre de l’ordre dans lequel les clés du
+payload ont été écrites.** Un destinataire qui reconstruit un payload
+champ par champ, dans son ordre à lui, doit retrouver la même empreinte.
+
+Les propriétés sont désormais éprouvées sur des valeurs engendrées à
+graine fixe — un test qui change de verdict d’une exécution à l’autre ne
+se corrige pas, il se subit. L’alphabet de tirage est choisi pour ce
+qu’il casse : caractères de contrôle, accentués à deux octets,
+idéogrammes à trois, et un emoji hors du plan multilingue de base, qui
+compte donc pour deux unités de code UTF-16 — ce dont dépend précisément
+l’ordre des clés.
+
+- La canonisation est invariante par permutation des clés, à toute
+  profondeur.
+- Recanoniser une forme canonique ne la change pas, et cette forme est
+  du JSON qu’un analyseur quelconque relit — sans quoi la chaîne se
+  refermerait sur elle-même.
+- Le rendu ne dépend pas de la locale de collation de la session.
+- Tout nombre engendré se relit exactement à travers
+  [`jcs_nombre()`](https://pobsteta.github.io/sommieR/reference/jcs_nombre.md)
+  : un arrondi silencieux ferait diverger deux vérificateurs sur un
+  volume de bois.
+- L’empreinte est invariante par permutation des clés du payload **et**
+  des champs de l’entrée, et elle change dès qu’un seul des onze champs
+  annoncés comme couverts change — l’écart assumé par rapport au brief,
+  hacher l’enregistrement complet plutôt que le seul payload, n’a de
+  valeur que si chaque champ pèse vraiment.
+
+### Le silence ne se gagne pas en se bouchant les oreilles
+
+Faire tourner la suite contre une vraie base sortait quatre
+avertissements du pilote, tous de la même forme :
+`Closing open result set, cancelling previous query`. Un ordre SQL qui
+échoue laisse son résultat ouvert côté RPostgres, et le coup suivant sur
+la connexion annonce qu’il l’annule. Dans un retour arrière, ce coup
+suivant est le `ROLLBACK` — c’est-à-dire exactement le moment où ce
+résultat n’a plus à vivre.
+
+Le message était donc attendu et correct, et nuisible malgré cela : il
+apparaissait à chaque transaction avortée, aux moments qu’un exploitant
+lit avec attention, et il n’apprenait rien. Un avertissement qu’on prend
+l’habitude d’ignorer est un avertissement qui masquera le suivant.
+
+Le retour arrière de `transaction()` tait désormais **ce seul message**,
+reconnu sur son texte. Éteindre le bloc entier supprimerait le symptôme
+et le signal ensemble : un test veille donc à ce qu’un avertissement
+d’une autre nature, émis au même endroit, passe toujours.
+
+### Et sous le bruit, un vrai défaut
+
+Deux avertissements ont survécu à ce nettoyage, sur
+[`budget_definir()`](https://pobsteta.github.io/sommieR/reference/budget_definir.md)
+— dont les deux arguments refusés n’atteignent jamais la base. La trace
+remonte à une validation écrite **dans** la liste `params` de
+[`dbExecute()`](https://dbi.r-dbi.org/reference/dbExecute.html) :
+
+``` r
+DBI::dbExecute(con, "INSERT INTO budget_previsionnel …",
+  params = parametres(list(
+    valider_choix(poste, "poste", SOMMIER_POSTES_COMPTABLES$poste),  # <- ici
+    …
+  )))
+```
+
+R évalue les arguments paresseusement : cette validation ne s’exécute
+pas avant l’appel mais **pendant**, c’est-à-dire après que le pilote a
+ouvert son objet de résultat. Un argument refusé laissait donc une
+requête morte sur la connexion, et l’ordre suivant — *n’importe où
+ailleurs dans le programme* — en héritait : une requête silencieusement
+annulée, et un avertissement à un endroit sans rapport avec la faute.
+
+Ce n’était pas du bruit, mais une connexion laissée sale par un chemin
+d’erreur. Quatre appels partageaient le défaut :
+[`budget_definir()`](https://pobsteta.github.io/sommieR/reference/budget_definir.md),
+[`sommier_bilan_financier()`](https://pobsteta.github.io/sommieR/reference/sommier_bilan_financier.md),
+[`exercice_definir()`](https://pobsteta.github.io/sommieR/reference/exercice_definir.md)
+et
+[`ug_creer()`](https://pobsteta.github.io/sommieR/reference/ug_creer.md).
+Les validations remontent avant l’appel, où elles auraient toujours dû
+être.
+
+C’est la trouvaille du lot, et elle en dit l’intérêt : le bruit qu’on
+s’habituait à ignorer cachait exactement ce qu’on redoutait qu’il cache.
+
+### Ce que ce lot ne fait pas
+
+Il ne teste pas la concurrence à N écrivains réels, et ne prétend pas le
+faire. Il démontre la propriété dont la correction dépend — l’exclusion
+mutuelle — et laisse la montée en charge à une campagne de tenue, qui
+relève de l’exploitation et non de la suite unitaire.
+
 ## sommieR 0.11.0
 
 Lot 1 de la reprise. Le sommier ne savait démarrer qu’à vide ; il sait
