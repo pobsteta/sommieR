@@ -1,3 +1,92 @@
+# sommieR 0.12.0
+
+Le jeu de démonstration reposait sur un parcellaire qui n'existe pas. Ce lot
+lui rend le vrai.
+
+## Un contour faux dans un paquet qui vend la valeur probante
+
+`SOMMIER_PARCELLES_COUCHEY` reprenait la fixture « mock » de `nemetonshiny` :
+trois carrés de 0,002 degré, portant les références `21200000A0054` à `56`.
+Trois choses n'allaient pas, et la troisième est celle qui gêne.
+
+Les parcelles **n'existent pas** — la section A de Couchey passe de 38 à 61.
+La référence était **mal formée** : le cadastre écrit `212000000A0054`, sur
+quatorze caractères et non treize. Et surtout, un paquet dont l'objet est
+d'empêcher qu'une écriture plausible passe pour une écriture vraie livrait en
+exemple une géométrie plausible et fausse. L'argument ne survit pas à sa
+propre démonstration.
+
+## Ce que le jeu porte désormais
+
+Trois parcelles réelles de la forêt communale de Couchey, prises au cadastre
+de la DGFiP par le projet Couchey de nemeton (`20260828_140251_hwuy`), qui
+porte le même parcellaire :
+
+| Parcelle | Référence | Contenance |
+|---|---|--:|
+| A 15 | `212000000A0015` | 4,875 ha |
+| A 35 | `212000000A0035` | 7,19 ha |
+| A 102 | `212000000A0102` | 4,3095 ha |
+
+Le recoupement avec la livraison etalab du 1er juin 2026 donne un
+recouvrement de 1,0000 : la géométrie de nemeton **est** celle de la DGFiP.
+
+Les contours sont simplifiés à 1 mètre, ce qui coûte 55 m² sur 16,4 hectares —
+0,03 %. La tolérance de 5 mètres, essayée, en coûtait 866, dont 1 % sur la
+seule A 15. Pour trois parcelles et 54 sommets, la simplification n'économise
+pas assez de code pour qu'on abîme une surface.
+
+## Trois blocs, et ce que ça change
+
+Les parcelles ne se touchent pas : A 102 est à 485 mètres de A 35, A 15 à
+1,7 kilomètre à l'est. Une forêt communale en plusieurs blocs est la règle
+plutôt que l'exception, et les treize géométries du jeu s'y logent au lieu de
+flotter dans un carré : chaque arbre tombe dans la parcelle qui le porte,
+l'emprise du chablis tient **entièrement** dans A 35 — une emprise rattachée à
+une unité ne peut pas déborder de l'unité — le chemin relie les deux blocs de
+l'ouest, la piste « est » dessert réellement le bloc est, et la limite bornée
+suit le côté nord-est de A 102.
+
+Les longueurs suivent le dessin au lieu d'être posées à côté : le chemin
+déclare 1 040 mètres parce que son tracé en mesure 1 040. Une desserte dont
+l'attribut et la géométrie se contredisent ne renseigne ni la carte ni
+l'imprimé A50D.
+
+## Les écritures recalibrées
+
+La surface passe de 7,5 à 16,37 hectares : les écritures suivent, à ~5 m³/ha/an
+de possibilité. Possibilité 38 → 82 m³/an, martelages 34–46 → 74–98 m³,
+chablis 22 → 48 m³ sur 1,75 ha, plantation 480 → 1 050 plants, recettes et
+budgets à l'avenant. Les grandeurs qui ne dépendent pas de la surface ne
+bougent pas : circonférences des arbres remarquables, taux de reprise, taxe
+d'affouage à la corde.
+
+**Les écritures restent fictives, et c'est maintenant la seule chose qui le
+soit.** La distinction porte : un contour faux se voit à la première
+superposition, une écriture fausse ne se voit jamais. C'est donc elle, et elle
+seule, que le nom de la forêt et le rapport engendré signalent.
+
+## Le fond de carte, rattrapé par les trois blocs
+
+Le passage aux contours réels a mis au jour un défaut que le tenant unique
+masquait. `boite_emprise()` prenait la **boîte englobante** des contours avant
+de la tamponner : sur une forêt d'un seul tenant, c'est sans conséquence ; sur
+trois blocs distants de 485 mètres et de 1,7 kilomètre, la boîte couvre
+396 hectares — le village compris — pour 16 hectares de forêt. Le fond
+cadastral des cartes passait de 20 à 65 parcelles, c'est-à-dire exactement le
+« fond illisible » que `sommier_fond_lire()` documente vouloir éviter.
+
+La fonction, renommée `emprise_tamponnee()`, tamponne désormais l'**union** des
+contours. Une forêt en plusieurs blocs est la règle plutôt que l'exception, et
+la boîte ne se trompait que sur le cas général. Le changement porte sur les
+trois découpes qui partagent la règle : parcellaire, feuilles du PCI et objets
+EDIGEO.
+
+Au passage, une emprise dont tous les contours sont inconnus le dit au lieu
+d'échouer sur une « OGR error » muette — `sommier_couche_ug()` rend une unité
+sans géométrie avec un `wkt` à `NA`, et rien ne l'écartait avant l'union. Une
+unité sans contour parmi d'autres n'empêche plus les autres de servir.
+
 # sommieR 0.11.1
 
 Éprouver ce qui tient la chaîne. Aucune fonction nouvelle : ce lot porte sur

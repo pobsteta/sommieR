@@ -114,12 +114,15 @@ tableau <- function(x, legende = NULL) {
 }
 ```
 
-Les trois parcelles ancrent le sommier sur un terrain réel :
+Les trois parcelles ancrent le sommier sur un terrain réel — contours et
+références viennent du cadastre de la DGFiP, par le projet Couchey de nemeton
+qui porte le même parcellaire. Seules les écritures posées dessus sont
+fictives :
 
 ```{r parcelles}
 tableau(
   SOMMIER_PARCELLES_COUCHEY[, c("numero", "geo_parcelle", "surface_ha")],
-  "Les trois parcelles de la fixture Couchey"
+  "Les trois parcelles cadastrales de Couchey"
 )
 ```
 

@@ -13,11 +13,16 @@ base_demo <- function() {
   con
 }
 
-test_that("les parcelles de demonstration reprennent la fixture Couchey", {
+test_that("les parcelles de demonstration sont celles du cadastre", {
   p <- SOMMIER_PARCELLES_COUCHEY
   expect_equal(nrow(p), 3L)
+  # Quatorze caracteres, et non treize : la fixture « mock » d'origine portait
+  # `21200000A0054`, une reference mal formee designant qui plus est une
+  # parcelle inexistante. Le format est ce qui se verifie sans acces au
+  # cadastre - on le verifie donc ici.
+  expect_true(all(nchar(p$geo_parcelle) == 14L))
   expect_equal(p$geo_parcelle,
-               c("21200000A0054", "21200000A0055", "21200000A0056"))
+               c("212000000A0015", "212000000A0035", "212000000A0102"))
   # La surface en hectares doit s'accorder avec la contenance en metres
   # carres : deux facons de dire la meme chose ne doivent pas diverger.
   expect_equal(p$surface_ha, p$contenance_m2 / 10000)
@@ -34,7 +39,7 @@ test_that("le jeu de demonstration ecrit les neuf registres et se verifie", {
   demo <- sommier_demo_couchey(con, suffixe = suffixe_test("neuf-registres"))
 
   expect_length(demo$ug, 3L)
-  expect_setequal(names(demo$ug), c("54", "55", "56"))
+  expect_setequal(names(demo$ug), c("15", "35", "102"))
   expect_gt(demo$n_entrees, 50L)
 
   entrees <- sommier_lire(con, demo$foret_id)
@@ -64,10 +69,14 @@ test_that("les geometries sont posees et reprojetees en Lambert-93", {
   )
   expect_equal(nrow(geo), 3L)
   expect_true(all(geo$srid == 2154))
-  # Les contours de la fixture font environ 0,02 x 0,002 degre : en
-  # Lambert-93 cela donne des aires de l'ordre de quelques hectares. On
-  # verifie l'ordre de grandeur, pas une valeur exacte de reprojection.
+  # Les trois parcelles font 4,3 a 7,2 hectares au cadastre. On borne
+  # largement : ce test porte sur la reprojection, pas sur la contenance.
   expect_true(all(geo$aire_m2 > 10000 & geo$aire_m2 < 1e7))
+  # Le dessin ne doit pas s'ecarter de la contenance cadastrale de plus de
+  # 1 % - la simplification a 1 metre coute 0,03 %, un decalage plus grand
+  # signalerait une reprojection fautive et non un arrondi.
+  attendu <- sort(SOMMIER_PARCELLES_COUCHEY$contenance_m2)
+  expect_equal(sort(geo$aire_m2), attendu, tolerance = 0.01)
 })
 
 test_that("le jeu de demonstration alimente les vues metier", {

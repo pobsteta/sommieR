@@ -167,10 +167,11 @@ test_that("le GeoJSON sort en WGS84, comme l'exige la RFC 7946", {
   longitudes <- vapply(sommets, function(p) p[[1]], numeric(1))
   latitudes <- vapply(sommets, function(p) p[[2]], numeric(1))
 
-  # La parcelle est a Couchey (Cote-d'Or) : ~4,95 E et ~47,27 N. La tolerance
-  # couvre l'aller-retour de reprojection, pas un changement de systeme.
-  expect_equal(mean(longitudes), 4.951, tolerance = 1e-3)
-  expect_equal(mean(latitudes), 47.271, tolerance = 1e-3)
+  # La parcelle A 15 est a Couchey (Cote-d'Or) : ~4,96 E et ~47,26 N. La
+  # tolerance couvre l'aller-retour de reprojection, pas un changement de
+  # systeme.
+  expect_equal(mean(longitudes), 4.9608, tolerance = 1e-3)
+  expect_equal(mean(latitudes), 47.2551, tolerance = 1e-3)
 })
 
 test_that("une unite sans geometrie est signalee plutot qu'inventee", {

@@ -35,17 +35,20 @@ registres sur dix exercices, ancre sur les trois parcelles de
 et la prise en main sans rien saisir.
 }
 \details{
-\strong{Les ecritures sont fictives.} Couchey est une commune reelle, et la
-geometrie vient d'une fixture qui se declare elle-meme « mock » ; mais aucun
-des volumes, montants, dates, coupes ou visas qui suivent ne provient de ses
-registres. Ils sont construits pour la demonstration, a une echelle
-coherente avec les 7,5 hectares des trois parcelles.
+\strong{Les ecritures sont fictives, le terrain ne l'est pas.} Couchey est une
+commune reelle et les contours viennent du cadastre (voir
+\link{SOMMIER_PARCELLES_COUCHEY}) ; mais aucun des volumes, montants, dates,
+coupes ou visas qui suivent ne provient de ses registres. Ils sont
+construits pour la demonstration, a une echelle coherente avec les 16,4
+hectares des trois parcelles.
 
 Depuis la v0.7.0, treize ecritures portent une geometrie : voirie, bornage,
-emprises de phenomene, arbres et habitats remarquables. Les coordonnees sont
-posees dans l'emprise des trois parcelles et \strong{inventees comme le reste} -
-elles servent a montrer ce que la carte sait faire, non a situer quoi que ce
-soit sur le terrain.
+emprises de phenomene, arbres et habitats remarquables. Depuis la v0.12.0,
+elles sont \strong{posees dans les contours reels} : chaque arbre tombe dans la
+parcelle qui le porte, l'emprise de la tempete tient dans A 35, le chemin
+relie les deux blocs de l'ouest et la limite bornee suit le cote nord-est
+de A 102. Les objets restent inventes ; leurs positions, elles, ne
+contredisent plus le parcellaire.
 
 Depuis la v0.11.0, la tenue du sommier commence en 2021 - c'est la date du
 premier visa annuel. Les faits anterieurs ont bien eu lieu, mais la commune

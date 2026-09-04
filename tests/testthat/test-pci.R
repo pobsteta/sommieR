@@ -184,15 +184,53 @@ test_that("une emprise appliquee a un tableau vide ne le casse pas", {
   expect_equal(nrow(restreindre_emprise(vide, emprise_test(), 100)), 0L)
 })
 
-test_that("l'emprise est la boite englobante, tamponnee", {
+test_that("l'emprise deborde le contour, sans le remplacer", {
   # Decouper au contour exact retirerait les objets qui bordent la foret, et
   # ceux-la interessent justement le gestionnaire.
   skip_if_not_installed("sf")
-  boite <- boite_emprise(emprise_test(), marge_m = 100)
-  limites <- sf::st_bbox(boite)
+  emprise <- emprise_tamponnee(emprise_test(), marge_m = 100)
+  limites <- sf::st_bbox(emprise)
   expect_equal(as.numeric(limites["xmin"]), 847300)
   expect_equal(as.numeric(limites["xmax"]), 847700)
-  expect_equal(sf::st_crs(boite)$epsg, 2154L)
+  expect_equal(sf::st_crs(emprise)$epsg, 2154L)
+})
+
+test_that("une foret en plusieurs blocs n'avale pas ce qui les separe", {
+  # La boite englobante d'une foret en blocs couvre tout l'entre-deux. Sur
+  # Couchey - trois parcelles distantes de 485 m et de 1,7 km - elle couvrait
+  # 396 hectares pour 16 de foret, et le fond cadastral passait de 20 a 65
+  # parcelles, village compris. Sur un seul tenant, boite et union se valent :
+  # ce test est donc le seul endroit ou la difference se voit.
+  skip_if_not_installed("sf")
+  deux_blocs <- data.frame(wkt = c(
+    emprise_test()$wkt,
+    paste0("POLYGON((849400 6687300, 849600 6687300, 849600 6687500, ",
+           "849400 6687500, 849400 6687300))")
+  ), stringsAsFactors = FALSE)
+
+  emprise <- emprise_tamponnee(deux_blocs, marge_m = 100)
+  entre_deux <- sf::st_sfc(sf::st_point(c(848500, 6687400)), crs = 2154)
+  expect_false(sf::st_intersects(entre_deux, emprise, sparse = FALSE)[[1L]])
+  # Les deux blocs, eux, sont bien couverts.
+  expect_true(all(sf::st_intersects(
+    sf::st_as_sfc(deux_blocs$wkt, crs = 2154), emprise, sparse = FALSE
+  )[, 1L]))
+})
+
+test_that("une emprise sans aucun contour connu se dit", {
+  # `sommier_couche_ug()` rend une unite sans geometrie avec un `wkt` a NA.
+  # Sans garde, `st_as_sfc()` echouait dessus sur une « OGR error » qui
+  # n'apprend rien a qui la lit.
+  skip_if_not_installed("sf")
+  expect_error(
+    emprise_tamponnee(data.frame(wkt = NA_character_), marge_m = 100),
+    "aucun contour connu"
+  )
+  # Une unite sans contour parmi d'autres n'empeche pas les autres de servir :
+  # une foret partiellement cartographiee garde une emprise.
+  melange <- data.frame(wkt = c(emprise_test()$wkt, NA_character_),
+                        stringsAsFactors = FALSE)
+  expect_s3_class(emprise_tamponnee(melange, marge_m = 100), "sfc")
 })
 
 test_that("un dossier sans .THF se dit, plutot que de rendre un chemin faux", {
