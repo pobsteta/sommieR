@@ -309,6 +309,111 @@ dessiner(etiquettes = paste0(carte$numero_affichage, "\n",
 mention_fond()
 ```
 
+```{r recapitulatif-parcellaire, results='asis', eval=cartographiable}
+# Un ténement est la part d'une parcelle cadastrale comprise dans une unité de
+# gestion. Le sommier ne les enregistre pas : ils se calculent au rendu, en
+# croisant les contours des unités avec le fond cadastral fourni. C'est une
+# lecture du parcellaire, pas une écriture — elle n'entre pas dans la chaîne.
+#
+# Le fond déborde de la forêt, et deux contours tracés par deux mains ne se
+# superposent jamais au mètre : une limite commune produit un liseré de
+# quelques mètres carrés. Un ténement n'est retenu qu'à partir de 100 m² et
+# de 5 % de sa parcelle ; en deçà, c'est le trait qui parle, pas le terrain.
+# Le seuil relatif compte plus que l'absolu : à Loury, une parcelle de
+# 0,67 ha enclavée entre deux unités y laissait 1,5 et 2,4 % de liseré.
+seuil_tenement_m2 <- 100
+seuil_tenement_part <- 0.05
+
+cat("### Récapitulatif du parcellaire\n\n")
+
+unites <- sf::st_sf(ug = carte$numero_affichage,
+                    surface_sig_ha = as.numeric(carte$surface_ha),
+                    geometry = contours)
+
+if (!fond_pose) {
+  cat("*Fond cadastral non fourni : les ténements ne peuvent pas être ",
+      "calculés. Seules les unités de gestion sont récapitulées.*\n\n",
+      sep = "")
+  ordre <- order(sub("\\s*[0-9]+$", "", unites$ug),
+                 suppressWarnings(as.numeric(sub("^.*?([0-9]+)$", "\\1", unites$ug))))
+  print(knitr::kable(data.frame(
+    `Unité de gestion` = unites$ug[ordre],
+    `Surface SIG (ha)` = nombre(unites$surface_sig_ha[ordre], 2L),
+    check.names = FALSE, stringsAsFactors = FALSE
+  ), caption = "Unités de gestion en vigueur", align = "lr"))
+  cat("\n\n")
+} else {
+  parcelles <- sf::st_sf(reference = fond$reference, section = fond$section,
+                         numero = fond$numero,
+                         contenance_m2 = as.numeric(fond$contenance_m2),
+                         geometry = parcelles_fond)
+  parcelles$aire_sig_m2 <- as.numeric(sf::st_area(parcelles))
+  croisement <- suppressWarnings(sf::st_intersection(
+    sf::st_make_valid(unites), sf::st_make_valid(parcelles)
+  ))
+  croisement$aire_m2 <- as.numeric(sf::st_area(croisement))
+  tenements <- sf::st_drop_geometry(croisement)
+  tenements <- tenements[tenements$aire_m2 >= seuil_tenement_m2 &
+                           tenements$aire_m2 >=
+                             seuil_tenement_part * tenements$aire_sig_m2, ,
+                         drop = FALSE]
+  # Ordre du cadastre et non de l'alphabet : B 2 avant B 11.
+  rang <- function(designation) {
+    partie <- regmatches(designation, regexec("^(.*?)\\s*([0-9]+)$", designation))
+    section <- vapply(partie, function(p) if (length(p) == 3L) p[[2L]] else "", "")
+    numero <- vapply(partie, function(p) if (length(p) == 3L) as.numeric(p[[3L]])
+                     else NA_real_, 0)
+    order(section, numero, designation)
+  }
+  ordre_ug <- unique(unites$ug[rang(unites$ug)])
+  tenements <- tenements[order(match(tenements$ug, ordre_ug),
+                               tenements$section,
+                               suppressWarnings(as.numeric(tenements$numero))), ,
+                         drop = FALSE]
+
+  # Une parcelle se désigne comme le cadastre l'affiche : section et numéro,
+  # sans les zéros de remplissage de la référence.
+  designation <- paste(sub("^0+", "", tenements$section),
+                       sub("^0+", "", tenements$numero))
+  sans_tenement <- setdiff(unites$ug, tenements$ug)
+
+  cat(nrow(unites), " unité(s) de gestion, ",
+      length(unique(tenements$reference)), " parcelle(s) cadastrale(s), ",
+      nrow(tenements), " ténement(s). Surface SIG des unités : ",
+      nombre(sum(unites$surface_sig_ha, na.rm = TRUE), 2L),
+      " ha ; contenance cadastrale des parcelles concernées : ",
+      nombre(sum(unique(tenements[c("reference", "contenance_m2")])$contenance_m2,
+                 na.rm = TRUE) / 10000, 2L), " ha.\n\n", sep = "")
+
+  print(knitr::kable(data.frame(
+    `Unité de gestion`       = tenements$ug,
+    `Parcelle cadastrale`    = designation,
+    `Référence`              = tenements$reference,
+    `Contenance (ha)`        = nombre(tenements$contenance_m2 / 10000, 4L),
+    `Ténement SIG (ha)`      = nombre(tenements$aire_m2 / 10000, 2L),
+    `Part de la parcelle`    = paste0(nombre(100 * tenements$aire_m2 /
+                                               tenements$aire_sig_m2), " %"),
+    check.names = FALSE, stringsAsFactors = FALSE
+  ), caption = "Unités de gestion et ténements des parcelles cadastrales",
+  align = "lllrrr"))
+  cat("\n\n")
+
+  cat("*La contenance est celle du cadastre, la surface du ténement celle ",
+      "du dessin : les deux ne coïncident pas au mètre carré, et l'écart ",
+      "dit la précision du tracé, non une erreur de l'une ou de l'autre. ",
+      "Ténements calculés au rendu, hors registre et hors chaîne ; seuil de ",
+      seuil_tenement_m2, " m² et ", 100 * seuil_tenement_part,
+      " % de la parcelle.*\n\n", sep = "")
+
+  if (length(sans_tenement) > 0L) {
+    cat("::: {.callout-note}\n",
+        "Unité(s) sans parcelle cadastrale dans le fond fourni : ",
+        paste(sans_tenement, collapse = ", "),
+        ". Le fond ne couvre peut-être pas toute la forêt.\n:::\n\n", sep = "")
+  }
+}
+```
+
 ### Intégrité du registre
 
 Le sommier est un journal à chaînage de hachages : chaque entrée scelle la

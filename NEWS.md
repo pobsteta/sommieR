@@ -1,3 +1,38 @@
+# sommieR 0.14.0
+
+Le rapport récapitule désormais le parcellaire : les unités de gestion, les
+parcelles cadastrales qu'elles recouvrent, et les ténements qui les relient.
+
+## Un ténement se calcule, il ne s'enregistre pas
+
+Un ténement est la part d'une parcelle cadastrale comprise dans une unité de
+gestion. Le sommier n'en garde pas trace, et n'a pas à le faire : c'est une
+lecture du parcellaire, pas un fait advenu. Le rapport les calcule au rendu,
+en croisant les contours des unités avec le fond cadastral déjà passé à
+`sommier_rapport_quarto()` par `fond`. Aucun appel réseau de plus, aucune
+écriture dans la chaîne.
+
+Le tableau suit la carte du parcellaire. Une ligne par ténement : l'unité, la
+parcelle telle que le cadastre l'affiche, sa référence, sa contenance
+cadastrale, la surface du ténement mesurée sur le dessin, et la part de la
+parcelle qu'il représente. L'en-tête compte les unités, les parcelles et les
+ténements, et confronte la surface SIG des unités à la contenance des
+parcelles. Sans fond, le récapitulatif ne liste que les unités et dit
+pourquoi.
+
+## Un seuil, parce que deux traits ne se superposent jamais
+
+Le fond déborde de la forêt, et une limite commune tracée par deux mains
+laisse un liseré de quelques mètres carrés. Sur Loury, le premier essai, à
+1 % de la parcelle, annonçait 33 ténements pour 30 unités : trois liserés de
+0,01 à 0,02 ha, dont deux sur une parcelle de 0,67 ha enclavée entre deux
+unités. Le seuil est de 100 m² **et** 5 % de la parcelle. Loury retombe à
+30 unités, 30 parcelles, 30 ténements — et la contenance des parcelles
+concernées, 554,93 ha, est exactement la surface déclarée de la forêt.
+
+Le tableau suit l'ordre du cadastre et non celui de l'alphabet : B 2 avant
+B 11.
+
 # sommieR 0.13.0
 
 Le rapport de gestion antérieure ne voyait pas les détections. Ce lot les lui
