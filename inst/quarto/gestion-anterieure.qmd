@@ -368,8 +368,6 @@ if (is.null(prov) || nrow(prov) == 0L) {
 
 ## Coupes et récoltes {#sec-coupes}
 
-Imprimés A50E, A50F et A50I.
-
 ```{r coupes, results='asis'}
 tableau("coupes", "Coupes enregistrées sur la période, par exercice et nature")
 ```
@@ -388,7 +386,7 @@ l'aménagement. Une balance positive signale un excès de prélèvement, une
 balance négative un déficit ; c'est le cumul qui compte sur la durée du plan.
 
 ```{r balance, results='asis'}
-tableau("balance", "Balance de possibilité (imprimé A50E)")
+tableau("balance", "Balance de possibilité")
 ```
 
 ```{r balance-cumul, fig.height=3.2, fig.width=7, fig.cap="Balance cumulée sur la période — la ligne pointillée marque l'équilibre."}
@@ -423,14 +421,13 @@ if (nrow(r5) == 1L && r5$n_transcrit > 0) {
 
 ## Travaux {#sec-travaux}
 
-Imprimés A50J, A50J bis et A50H. Le taux de reprise est celui relevé au
-contrôle des plantations.
+Le taux de reprise est celui relevé au contrôle des plantations.
 
 ```{r travaux, results='asis'}
 tableau("travaux", "Travaux réalisés sur la période")
 ```
 
-```{r carte-travaux, fig.height=3.6, fig.width=7, fig.cap="Montant des travaux par unité de gestion. Les travaux hors unité de gestion (imprimé A50H) n'y figurent pas : ils ne se localisent pas.", eval=cartographiable && porte_valeur(carte$montant_travaux_eur)}
+```{r carte-travaux, fig.height=3.6, fig.width=7, fig.cap="Montant des travaux par unité de gestion. Les travaux hors unité de gestion n'y figurent pas : ils ne se localisent pas.", eval=cartographiable && porte_valeur(carte$montant_travaux_eur)}
 dessiner(carte$montant_travaux_eur,
          etiquettes = paste0(carte$numero_affichage, "\n",
                              euros(carte$montant_travaux_eur), " ",
@@ -440,8 +437,8 @@ dessiner(carte$montant_travaux_eur,
 
 ## Évènements marquants {#sec-evenements}
 
-Imprimé A50K. Le niveau de précision (NDP) vaut 0 pour un constat de terrain ;
-une valeur supérieure signale une observation qui n'en est pas un — issue de
+Le niveau de précision (NDP) vaut 0 pour un constat de terrain ; une
+valeur supérieure signale une observation qui n'en est pas un — issue de
 la télédétection, ou transcrite d'une pièce antérieure au sommier.
 
 ```{r evenements, results='asis'}
@@ -561,7 +558,7 @@ cat("\n")
 
 ```{r finances, results='asis', eval=!is.null(sections$finances)}
 cat("## Bilan financier {#sec-finances}\n\n")
-cat("Imprimé A50G. Le solde est la différence entre recettes et dépenses ",
+cat("Le solde est la différence entre recettes et dépenses ",
     "de l'exercice ; le cumul en donne la tendance.\n\n", sep = "")
 tableau("finances", "Recettes, dépenses et solde par exercice")
 ```
@@ -580,7 +577,7 @@ dessiner_objets(9L)
 
 ```{r patrimoine, results='asis', eval=!is.null(sections$patrimoine)}
 cat("## Patrimoine remarquable {#sec-patrimoine}\n\n")
-cat("Série A50 r/*. Dernier relevé connu de chaque sujet : le patrimoine est ",
+cat("Dernier relevé connu de chaque sujet : le patrimoine est ",
     "un état courant, il n'est pas borné par la période du rapport.\n\n",
     sep = "")
 tableau("patrimoine", "Arbres, peuplements, vestiges, espèces et habitats")
@@ -598,7 +595,7 @@ cat("\n\n")
 
 ```{r desserte, results='asis', eval=!is.null(rapport$densite_voirie)}
 cat("## Desserte {#sec-desserte}\n\n")
-cat("Imprimé A50D. Seule la voirie privée forestière entre dans la densité : ",
+cat("Seule la voirie privée forestière entre dans la densité : ",
     "une route publique traversant la forêt ne dit rien de sa desserte.\n\n",
     sep = "")
 print(knitr::kable(rapport$densite_voirie,

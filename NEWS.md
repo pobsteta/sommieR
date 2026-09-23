@@ -55,6 +55,15 @@ visibles d'un coup :
   absence d'écriture est une information — et le PDF écrit « EUR » ;
 - les surfaces sont arrondies et écrites à la française (554,93 ha).
 
+## Le rapport ne renvoie plus aux imprimés A50
+
+Les sections du rapport Quarto s'ouvraient sur l'imprimé de la série A50
+qu'elles transposent — « Imprimés A50E, A50F et A50I », « Imprimé A50K »,
+« Série A50 r/* ». Ces renvois sont retirés, légendes comprises : ils parlent
+au gestionnaire qui tient le classeur, pas au lecteur du rapport, et une forêt
+privée sous PSG n'a jamais connu ces imprimés. Les registres, eux, restent
+calqués sur la série.
+
 ## Un rendu qui échoue le dit
 
 `sommier_rapport_quarto()` copiait le document produit vers sa destination
