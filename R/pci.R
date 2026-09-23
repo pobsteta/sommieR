@@ -81,7 +81,8 @@ sommier_feuilles_pci <- function(code_insee, emprise = NULL, marge_m = 100,
     sf::read_sf(paste0("/vsigzip/", normalizePath(fond$chemin))), 2154
   )
   if (!is.null(emprise) && nrow(emprise) > 0L && !is.null(emprise$wkt)) {
-    couche <- couche[sf::st_intersects(couche, boite_emprise(emprise, marge_m),
+    couche <- couche[sf::st_intersects(couche,
+                                       emprise_tamponnee(emprise, marge_m),
                                        sparse = FALSE)[, 1L], , drop = FALSE]
   }
 
@@ -273,26 +274,47 @@ assembler_objets <- function(morceaux) {
 
 # Restreint un tableau a colonne `wkt` a l'emprise tamponnee d'un autre. La
 # regle sert au parcellaire, aux feuilles et aux objets PCI : trois endroits ou
-# la meme boite se calculait, donc trois occasions de diverger.
+# la meme emprise se calculait, donc trois occasions de diverger.
 restreindre_emprise <- function(objets, emprise, marge_m) {
   if (is.null(emprise) || nrow(objets) == 0L || nrow(emprise) == 0L ||
       is.null(emprise$wkt)) {
     return(objets)
   }
   dedans <- sf::st_intersects(sf::st_as_sfc(objets$wkt, crs = 2154),
-                              boite_emprise(emprise, marge_m),
+                              emprise_tamponnee(emprise, marge_m),
                               sparse = FALSE)[, 1L]
   objets[dedans, , drop = FALSE]
 }
 
-# La boite englobante tamponnee, et non le contour exact : une foret collee au
-# bord de sa carte se lit mal, et decouper au contour retirerait les objets qui
-# la bordent - ceux-la interessent justement le gestionnaire.
-boite_emprise <- function(emprise, marge_m) {
-  sf::st_buffer(
-    sf::st_as_sfc(sf::st_bbox(sf::st_as_sfc(emprise$wkt, crs = 2154))),
-    marge_m
-  )
+# L'union des contours, tamponnee.
+#
+# Tamponnee, et non decoupee au contour exact : une foret collee au bord de sa
+# carte se lit mal, et decouper au ras retirerait les objets qui la bordent -
+# ceux-la interessent justement le gestionnaire.
+#
+# L'union et non la boite englobante. Tant qu'une foret tient d'un seul tenant,
+# les deux se valent ; des qu'elle est en plusieurs blocs, la boite avale tout
+# ce qui les separe. Les trois parcelles de Couchey sont distantes de 485 m et
+# de 1,7 km : leur boite couvre 396 hectares - le village compris - pour 16 ha
+# de foret, et le fond passait de 20 a 65 parcelles. C'est exactement ce que
+# `sommier_fond_lire()` promet d'eviter, un fond illisible ne renseignant
+# personne. Une foret en blocs est la regle plutot que l'exception, et la
+# boite ne se trompait que sur le cas general.
+#
+# Les contours inconnus sont ecartes avant l'union : `sommier_couche_ug()` rend
+# une unite sans geometrie avec un `wkt` a `NA`, et `st_as_sfc()` echoue dessus
+# sur une « OGR error » qui n'apprend rien. Si aucun contour ne reste, il n'y a
+# pas d'emprise a tamponner - et restreindre a une emprise qu'on ignore rendrait
+# soit toute la commune, soit rien, deux reponses egalement trompeuses. On le
+# dit donc plutot que d'en choisir une.
+emprise_tamponnee <- function(emprise, marge_m) {
+  contours <- emprise$wkt[!is.na(emprise$wkt)]
+  if (length(contours) == 0L) {
+    stop("L'emprise ne porte aucun contour connu : toutes ses unites ont un ",
+         "`wkt` a NA. Restreindre a une emprise inconnue n'aurait pas de sens.",
+         call. = FALSE)
+  }
+  sf::st_buffer(sf::st_union(sf::st_as_sfc(contours, crs = 2154)), marge_m)
 }
 
 # Sans table fournie, la nature reste inconnue plutot qu'inventee : une

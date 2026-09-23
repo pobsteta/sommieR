@@ -39,6 +39,7 @@ Ce que chaque referentiel retient :\tabular{lccc}{
    Coupes realisees et balance \tab oui \tab oui \tab oui \cr
    Travaux realises \tab oui \tab oui \tab oui \cr
    Evenements marquants \tab oui \tab oui \tab oui \cr
+   Detections en attente et suites donnees \tab oui \tab oui \tab oui \cr
    Bilan financier \tab non \tab oui \tab oui \cr
    Equilibre foret-gibier \tab oui \tab oui \tab non \cr
    Patrimoine remarquable \tab oui \tab oui \tab non \cr
@@ -50,6 +51,13 @@ produire au CRPF ; le CT88, tourne vers l'evaluation d'un contrat, ne
 reclame pas l'inventaire du patrimoine remarquable. Restreindre la sortie a
 ce qui est demande evite de diffuser plus que necessaire - les registres 3
 et 7 portent des donnees personnelles.
+
+\strong{Une detection n'est pas un evenement.} Les propositions d'une chaine de
+teledetection (voir \code{\link[=sommier_importer_detections]{sommier_importer_detections()}}) ne figurent pas parmi
+les evenements marquants : la section \code{detections} les liste a part, sans
+borne de periode - une detection en attente l'est aujourd'hui - et la
+section \code{suites_detection} compte, sur la periode, celles que le terrain a
+confirmees ou ecartees.
 
 \strong{Constate et transcrit ne se melent pas.} Les trois referentiels portent
 sur une periode ecoulee ; un sommier ouvert en cours de route ne la couvre

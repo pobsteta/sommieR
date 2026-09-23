@@ -73,11 +73,20 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
          "format demande (", format, ").", call. = FALSE)
   }
 
+  # La sequence arrive en `integer64` (bigint) : relue par un R qui n'a pas
+  # charge `bit64`, elle s'imprime comme le double dont elle partage les
+  # octets - 16 devient 8e-323. Le RDS la porte donc en texte, et reste
+  # lisible sans `bit64`.
+  verification <- sommier_verifier(con, foret_id)
+  if (!is.null(verification$seq_tete)) {
+    verification$seq_tete <- format(verification$seq_tete, scientific = FALSE)
+  }
+
   rapport <- list(
     gestion_anterieure = sommier_gestion_anterieure(
       con, foret_id, debut = debut, fin = fin, referentiel = referentiel
     ),
-    verification    = sommier_verifier(con, foret_id),
+    verification    = verification,
     carte           = essayer_section(sommier_couche_ug(
       con, foret_id, debut = debut, fin = fin
     )),
@@ -127,7 +136,11 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
   if (!dir.exists(dossier)) {
     dir.create(dossier, recursive = TRUE)
   }
-  file.copy(produit, chemin, overwrite = TRUE)
+  # `file.copy()` ne signale un echec que par un avertissement : sans ce
+  # controle, la fonction rendrait le chemin d'un document qui n'existe pas.
+  if (!isTRUE(file.copy(produit, chemin, overwrite = TRUE))) {
+    stop("Impossible d'ecrire le document dans ", chemin, ".", call. = FALSE)
+  }
   invisible(chemin)
 }
 

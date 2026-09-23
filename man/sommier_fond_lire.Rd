@@ -30,6 +30,13 @@ territoire communal : Couchey compte pres de trois mille parcelles, une
 foret n'en couvre qu'une poignee, et un fond illisible ne renseigne
 personne.
 
+\strong{L'emprise est l'union des contours, non leur boite englobante.} La
+nuance est sans effet sur une foret d'un seul tenant et decisive des qu'il
+y en a plusieurs : les trois parcelles de Couchey sont distantes de 485
+metres et de 1,7 kilometre, et leur boite couvre 396 hectares - le village
+compris - pour 16 hectares de foret. Le fond y gagnait 45 parcelles qui ne
+bordent rien.
+
 La sortie est en Lambert-93, comme les couches du sommier : une carte se
 mesure en metres, et melanger deux systemes sur le meme dessin les
 decalerait.

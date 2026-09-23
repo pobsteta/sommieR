@@ -43,7 +43,47 @@ tableau <- function(nom, legende = NULL) {
   cat("\n\n")
 }
 
-euros <- function(x) formatC(x, format = "f", digits = 0, big.mark = " ")
+# Une unité sans travaux n'a pas un montant inconnu : elle a zéro.
+euros <- function(x) {
+  x[is.na(x)] <- 0
+  formatC(x, format = "f", digits = 0, big.mark = " ")
+}
+
+# Nombre à la française : virgule décimale, espace des milliers.
+nombre <- function(x, decimales = 1L) {
+  formatC(as.numeric(x), format = "f", digits = decimales, big.mark = " ",
+          decimal.mark = ",")
+}
+
+# Les bornes par défaut de `sommier_gestion_anterieure()` sont des sentinelles,
+# pas des dates : « 0001-01-01 » se lit comme une erreur.
+periode <- function(debut, fin) {
+  paste(if (identical(debut, "0001-01-01")) "Depuis l'ouverture du sommier"
+        else paste("Du", debut),
+        if (identical(fin, "9999-12-31")) "à ce jour" else paste("au", fin))
+}
+
+# L'empreinte fait 64 caractères d'un tenant : en PDF elle sort de la page.
+# Elle y est coupée en quatre blocs de seize, qu'on recolle à l'œil ; en HTML
+# elle reste entière, pour qu'on puisse la copier et la chercher.
+empreinte <- function(hash) {
+  if (is.null(hash) || is.na(hash)) return("—")
+  if (knitr::is_latex_output()) {
+    blocs <- substring(hash, seq(1L, nchar(hash), 16L),
+                       pmin(seq(16L, nchar(hash) + 15L, 16L), nchar(hash)))
+    paste0("`", blocs, "`", collapse = " ")
+  } else {
+    paste0("`", hash, "`")
+  }
+}
+
+# Une carte dont toutes les valeurs sont nulles ne montre rien que le tableau
+# n'ait déjà dit par « Aucun enregistrement ».
+porte_valeur <- function(x) any(as.numeric(x) > 0, na.rm = TRUE)
+
+# Le périphérique `pdf()` de R ne connaît que le Latin-1 : « ³ » passe, « € »
+# sort en point. Les cartes du PDF écrivent donc l'unité en toutes lettres.
+symbole_euro <- if (knitr::is_latex_output()) "EUR" else "€"
 
 # Cartes. `sf` est facultatif et la géométrie peut manquer : un rapport de
 # gestion ne doit pas échouer parce qu'une illustration manque. On teste donc
@@ -229,11 +269,19 @@ mention_carte <- function() {
 }
 ```
 
-::: {.callout-important}
-## Données de démonstration
-
-`r if (grepl("démonstration|demonstration", ga$foret, fixed = FALSE)) "Ce document est engendré à partir d'un **jeu de démonstration**. La commune et la géométrie cadastrale sont réelles, mais **aucune écriture — volume, montant, date, coupe ou visa — ne provient de registres authentiques**. Il illustre la mise en forme, pas la gestion d'une forêt existante." else "Document engendré depuis le sommier de la forêt nommée ci-dessous."`
-:::
+```{r bandeau-demonstration, results='asis'}
+# Le bandeau se pose sur un jeu d'essai, et sur lui seul : un titre « Données
+# de démonstration » laissé sur une forêt réelle ferait douter de tout le
+# reste du document.
+if (grepl("démonstration|demonstration", ga$foret)) {
+  cat("::: {.callout-important}\n## Données de démonstration\n\n",
+      "Ce document est engendré à partir d'un **jeu de démonstration**. La ",
+      "commune et la géométrie cadastrale sont réelles, mais **aucune écriture ",
+      "— volume, montant, date, coupe ou visa — ne provient de registres ",
+      "authentiques**. Il illustre la mise en forme, pas la gestion d'une ",
+      "forêt existante.\n:::\n\n", sep = "")
+}
+```
 
 ## Identification
 
@@ -241,8 +289,8 @@ mention_carte <- function() {
 |---|---|
 | **Forêt** | `r ga$foret` |
 | **Régime** | `r ga$regime` |
-| **Surface** | `r if (is.na(ga$surface_ha)) "non renseignée" else paste(ga$surface_ha, "ha")` |
-| **Période couverte** | `r ga$debut` au `r ga$fin` |
+| **Surface** | `r if (is.na(ga$surface_ha)) "non renseignée" else paste(nombre(ga$surface_ha, 2L), "ha")` |
+| **Période couverte** | `r periode(ga$debut, ga$fin)` |
 | **Référentiel** | `r ga$referentiel` |
 | **Édité le** | `r rapport$edite_le` |
 
@@ -254,7 +302,7 @@ mention_carte()
 
 ```{r carte-identification, fig.height=3.6, fig.width=7, fig.cap="Unités de gestion en vigueur à la fin de la période, avec leur surface."}
 dessiner(etiquettes = paste0(carte$numero_affichage, "\n",
-                             carte$surface_ha, " ha"))
+                             nombre(carte$surface_ha, 2L), " ha"))
 ```
 
 ```{r carte-identification-fond, results='asis'}
@@ -271,7 +319,7 @@ précédente. L'état ci-dessous est celui constaté à l'édition de ce documen
 | **État de la chaîne** | `r if (isTRUE(rapport$verification$valide)) "intacte" else paste(nrow(rapport$verification$anomalies), "anomalie(s) — voir ci-dessous")` |
 | **Entrées** | `r rapport$verification$n_entrees` |
 | **Séquence de tête** | `r rapport$verification$seq_tete` |
-| **Empreinte de tête** | `` `r rapport$verification$hash_tete` `` |
+| **Empreinte de tête** | `r empreinte(rapport$verification$hash_tete)` |
 
 ```{r anomalies, results='asis'}
 if (!isTRUE(rapport$verification$valide)) {
@@ -320,13 +368,11 @@ if (is.null(prov) || nrow(prov) == 0L) {
 
 ## Coupes et récoltes {#sec-coupes}
 
-Imprimés A50E, A50F et A50I.
-
 ```{r coupes, results='asis'}
 tableau("coupes", "Coupes enregistrées sur la période, par exercice et nature")
 ```
 
-```{r carte-coupes, fig.height=3.6, fig.width=7, fig.cap="Volume martelé par unité de gestion sur la période."}
+```{r carte-coupes, fig.height=3.6, fig.width=7, fig.cap="Volume martelé par unité de gestion sur la période.", eval=cartographiable && porte_valeur(carte$volume_martele_m3)}
 dessiner(carte$volume_martele_m3,
          etiquettes = paste0(carte$numero_affichage, "\n",
                              round(carte$volume_martele_m3), " m³"),
@@ -340,7 +386,7 @@ l'aménagement. Une balance positive signale un excès de prélèvement, une
 balance négative un déficit ; c'est le cumul qui compte sur la durée du plan.
 
 ```{r balance, results='asis'}
-tableau("balance", "Balance de possibilité (imprimé A50E)")
+tableau("balance", "Balance de possibilité")
 ```
 
 ```{r balance-cumul, fig.height=3.2, fig.width=7, fig.cap="Balance cumulée sur la période — la ligne pointillée marque l'équilibre."}
@@ -375,24 +421,24 @@ if (nrow(r5) == 1L && r5$n_transcrit > 0) {
 
 ## Travaux {#sec-travaux}
 
-Imprimés A50J, A50J bis et A50H. Le taux de reprise est celui relevé au
-contrôle des plantations.
+Le taux de reprise est celui relevé au contrôle des plantations.
 
 ```{r travaux, results='asis'}
 tableau("travaux", "Travaux réalisés sur la période")
 ```
 
-```{r carte-travaux, fig.height=3.6, fig.width=7, fig.cap="Montant des travaux par unité de gestion. Les travaux hors unité de gestion (imprimé A50H) n'y figurent pas : ils ne se localisent pas."}
+```{r carte-travaux, fig.height=3.6, fig.width=7, fig.cap="Montant des travaux par unité de gestion. Les travaux hors unité de gestion n'y figurent pas : ils ne se localisent pas.", eval=cartographiable && porte_valeur(carte$montant_travaux_eur)}
 dessiner(carte$montant_travaux_eur,
          etiquettes = paste0(carte$numero_affichage, "\n",
-                             euros(carte$montant_travaux_eur), " €"),
-         legende = "Travaux", unite = "€")
+                             euros(carte$montant_travaux_eur), " ",
+                             symbole_euro),
+         legende = "Travaux", unite = symbole_euro)
 ```
 
 ## Évènements marquants {#sec-evenements}
 
-Imprimé A50K. Le niveau de précision (NDP) vaut 0 pour un constat de terrain ;
-une valeur supérieure signale une observation qui n'en est pas un — issue de
+Le niveau de précision (NDP) vaut 0 pour un constat de terrain ; une
+valeur supérieure signale une observation qui n'en est pas un — issue de
 la télédétection, ou transcrite d'une pièce antérieure au sommier.
 
 ```{r evenements, results='asis'}
@@ -403,9 +449,116 @@ tableau("evenements", "Phénomènes intéressant la vie de la forêt")
 dessiner_objets(8L)
 ```
 
+```{r detections-preparation}
+detections <- sections$detections
+suites <- sections$suites_detection
+a_detections <- !is.null(detections) && nrow(detections) > 0L
+a_suites <- !is.null(suites) && nrow(suites) > 0L
+```
+
+```{r detections, results='asis', eval=a_detections || a_suites}
+cat("## Détections à vérifier sur le terrain {#sec-detections}\n\n")
+cat("Registre 8. Une chaîne de télédétection ne constate rien : elle ",
+    "**propose**. Ses détections entrent au sommier avec le niveau de ",
+    "précision de leur source, jamais NDP 0, et y restent en attente jusqu'à ",
+    "ce qu'un passage sur le terrain les confirme ou les écarte. La liste ",
+    "ci-dessous est un état courant : elle n'est pas bornée par la période du ",
+    "rapport.\n\n", sep = "")
+
+if (a_detections) {
+  # Une colonne qui porte la même valeur sur toutes les lignes se dit une fois,
+  # dans l'encadré ; le tableau garde ce qui distingue les détections.
+  colonnes <- list(
+    Source        = toupper(detections$source),
+    NDP           = as.character(detections$ndp),
+    Nature        = gsub("_", " ", detections$nature, fixed = TRUE),
+    `Détectée le` = as.character(detections$date_evenement)
+  )
+  constantes <- vapply(colonnes, function(v) length(unique(v)) == 1L,
+                       logical(1))
+  libelles <- c(Source = "source", NDP = "NDP", Nature = "nature",
+                `Détectée le` = "détectée le")
+  communs <- vapply(names(colonnes)[constantes], function(nom) {
+    paste0(libelles[[nom]], " ", colonnes[[nom]][[1L]])
+  }, character(1))
+  cat("::: {.callout-warning}\n## ", nrow(detections),
+      " détection(s) en attente de constat\n\n",
+      "Elles couvrent ", nombre(sum(detections$surface_ha, na.rm = TRUE)),
+      " ha au total, sur ", length(unique(stats::na.omit(detections$ug))),
+      " unité(s) de gestion",
+      if (length(communs) > 0L) paste0(" (", paste(communs, collapse = ", "), ")"),
+      ". Ce sont des hypothèses à vérifier, pas des faits : aucune ne vaut ",
+      "constat tant que le registre ne porte pas sa suite.\n:::\n\n", sep = "")
+  tableau_detections <- data.frame(
+    `Unité` = ifelse(is.na(detections$ug), "hors UG", detections$ug),
+    check.names = FALSE, stringsAsFactors = FALSE
+  )
+  for (nom in names(colonnes)[!constantes]) {
+    tableau_detections[[nom]] <- colonnes[[nom]]
+  }
+  tableau_detections[["Surface (ha)"]] <- nombre(detections$surface_ha)
+  tableau_detections[["Indice"]] <- ifelse(is.na(detections$indice), "—",
+                                           nombre(detections$indice))
+  print(knitr::kable(tableau_detections,
+                     caption = "Détections en attente, par surface décroissante",
+                     align = c(rep("l", ncol(tableau_detections) - 2L), "r", "r")))
+  cat("\n\n")
+} else {
+  cat("*Aucune détection en attente.*\n\n")
+}
+
+if (a_suites) {
+  compte <- function(statut) sum(suites$n[suites$statut_detection == statut])
+  cat("Suites données sur la période : ", compte("confirme"),
+      " détection(s) confirmée(s), ", compte("ecarte"),
+      " écartée(s). Les confirmées figurent parmi les évènements marquants, ",
+      "avec leur constat de terrain.\n\n", sep = "")
+}
+```
+
+```{r carte-detections, fig.height=3.6, fig.width=7, fig.cap="Surface proposée par les détections en attente, par unité de gestion. Une proposition, pas un constat.", eval=a_detections && cartographiable}
+par_ug <- tapply(detections$surface_ha, detections$ug, sum, na.rm = TRUE)
+surface_detectee <- unname(par_ug[carte$numero_affichage])
+surface_detectee[is.na(surface_detectee)] <- 0
+dessiner(surface_detectee,
+         etiquettes = ifelse(surface_detectee > 0,
+                             paste0(carte$numero_affichage, "\n",
+                                    nombre(surface_detectee), " ha"),
+                             carte$numero_affichage),
+         legende = "Détecté", unite = "ha")
+```
+
+```{r detections-libelles, results='asis', eval=a_detections}
+# Le libellé de chaque détection est reproduit tel que le registre le porte :
+# c'est là que la chaîne a écrit ses propres réserves - domaine de
+# calibration, masque, signaux concordants. Les résumer serait les réécrire.
+cat("### Libellés portés au registre\n\n")
+# Une chaîne répète ses réserves de méthode sur chaque détection. Les phrases
+# que portent toutes les observations sont données une fois, en tête ; chaque
+# détection garde ensuite ce qui lui est propre. Rien n'est reformulé : le
+# texte reste celui du registre, découpé à ses points.
+phrases <- lapply(detections$observations, function(o) {
+  if (is.na(o) || !nzchar(o)) return(character())
+  trimws(strsplit(o, "(?<=\\.)\\s+", perl = TRUE)[[1L]])
+})
+communes <- if (nrow(detections) > 1L) Reduce(intersect, phrases) else character()
+if (length(communes) > 0L) {
+  cat("Réserves communes à toutes les détections, telles que la chaîne les a ",
+      "écrites : *", paste(communes, collapse = " "), "*\n\n", sep = "")
+}
+for (i in seq_len(nrow(detections))) {
+  propres <- setdiff(phrases[[i]], communes)
+  cat("- **", if (is.na(detections$ug[i])) "hors UG" else detections$ug[i],
+      "** — ", detections$description[i],
+      if (length(propres) > 0L) paste0(" *", paste(propres, collapse = " "), "*"),
+      "\n", sep = "")
+}
+cat("\n")
+```
+
 ```{r finances, results='asis', eval=!is.null(sections$finances)}
 cat("## Bilan financier {#sec-finances}\n\n")
-cat("Imprimé A50G. Le solde est la différence entre recettes et dépenses ",
+cat("Le solde est la différence entre recettes et dépenses ",
     "de l'exercice ; le cumul en donne la tendance.\n\n", sep = "")
 tableau("finances", "Recettes, dépenses et solde par exercice")
 ```
@@ -424,7 +577,7 @@ dessiner_objets(9L)
 
 ```{r patrimoine, results='asis', eval=!is.null(sections$patrimoine)}
 cat("## Patrimoine remarquable {#sec-patrimoine}\n\n")
-cat("Série A50 r/*. Dernier relevé connu de chaque sujet : le patrimoine est ",
+cat("Dernier relevé connu de chaque sujet : le patrimoine est ",
     "un état courant, il n'est pas borné par la période du rapport.\n\n",
     sep = "")
 tableau("patrimoine", "Arbres, peuplements, vestiges, espèces et habitats")
@@ -442,7 +595,7 @@ cat("\n\n")
 
 ```{r desserte, results='asis', eval=!is.null(rapport$densite_voirie)}
 cat("## Desserte {#sec-desserte}\n\n")
-cat("Imprimé A50D. Seule la voirie privée forestière entre dans la densité : ",
+cat("Seule la voirie privée forestière entre dans la densité : ",
     "une route publique traversant la forêt ne dit rien de sa desserte.\n\n",
     sep = "")
 print(knitr::kable(rapport$densite_voirie,

@@ -27,6 +27,7 @@ SOMMIER_REFERENTIELS <- c("psg", "amenagement", "ct88")
 #' | Coupes realisees et balance | oui | oui | oui |
 #' | Travaux realises | oui | oui | oui |
 #' | Evenements marquants | oui | oui | oui |
+#' | Detections en attente et suites donnees | oui | oui | oui |
 #' | Bilan financier | non | oui | oui |
 #' | Equilibre foret-gibier | oui | oui | non |
 #' | Patrimoine remarquable | oui | oui | non |
@@ -36,6 +37,13 @@ SOMMIER_REFERENTIELS <- c("psg", "amenagement", "ct88")
 #' reclame pas l'inventaire du patrimoine remarquable. Restreindre la sortie a
 #' ce qui est demande evite de diffuser plus que necessaire - les registres 3
 #' et 7 portent des donnees personnelles.
+#'
+#' **Une detection n'est pas un evenement.** Les propositions d'une chaine de
+#' teledetection (voir [sommier_importer_detections()]) ne figurent pas parmi
+#' les evenements marquants : la section `detections` les liste a part, sans
+#' borne de periode - une detection en attente l'est aujourd'hui - et la
+#' section `suites_detection` compte, sur la periode, celles que le terrain a
+#' confirmees ou ecartees.
 #'
 #' **Constate et transcrit ne se melent pas.** Les trois referentiels portent
 #' sur une periode ecoulee ; un sommier ouvert en cours de route ne la couvre
@@ -121,7 +129,27 @@ sommier_gestion_anterieure <- function(con, foret_id, debut = NULL, fin = NULL,
          FROM v_evenement
         WHERE foret_id = $1 AND date_evenement BETWEEN $2::date AND $3::date
           AND type_entree = 'phenomene'
-        ORDER BY date_evenement")
+        ORDER BY date_evenement"),
+    # Sans bornes, comme le patrimoine : une detection en attente l'est
+    # aujourd'hui, quelle que soit la periode du rapport. La borner la ferait
+    # disparaitre d'un bilan alors que personne n'est encore alle voir.
+    detections = lire_etat(
+      "SELECT u.numero_affichage AS ug, d.date_evenement, d.source, d.ndp,
+              d.nature, d.surface_ha, d.indice, d.description,
+              ev.observations
+         FROM v_detection_en_attente d
+         JOIN v_evenement ev ON ev.id = d.id
+         LEFT JOIN ug u ON u.uuid = d.ug_uuid
+        WHERE d.foret_id = $1
+        ORDER BY d.surface_ha DESC NULLS LAST, d.seq"),
+    # Les suites donnees, elles, sont des constats dates : elles se bornent.
+    suites_detection = lire(
+      "SELECT statut_detection, count(*) AS n
+         FROM v_evenement
+        WHERE foret_id = $1 AND date_evenement BETWEEN $2::date AND $3::date
+          AND statut_detection IS NOT NULL
+        GROUP BY statut_detection
+        ORDER BY statut_detection")
   )
 
   if (referentiel %in% c("amenagement", "ct88")) {
@@ -199,6 +227,8 @@ sommier_rapport_markdown <- function(x, chemin = NULL) {
     provenance = "Provenance des ecritures",
     coupes = "Coupes realisees", balance = "Balance de possibilite",
     travaux = "Travaux realises", evenements = "Evenements marquants",
+    detections = "Detections a verifier sur le terrain",
+    suites_detection = "Suites donnees aux detections",
     finances = "Bilan financier", equilibre_gibier = "Equilibre foret-gibier",
     patrimoine = "Patrimoine remarquable"
   )
