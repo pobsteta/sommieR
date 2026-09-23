@@ -1,5 +1,186 @@
 # Changelog
 
+## sommieR 0.13.0
+
+Le rapport de gestion antérieure ne voyait pas les détections. Ce lot
+les lui montre, et corrige ce qu’un premier rendu sur une forêt réelle a
+mis au jour.
+
+### Seize détections, et un rapport qui disait « aucun enregistrement »
+
+Le sommier de la forêt de Loury, versé depuis le projet RECONFORT de
+nemeton, porte seize détections de dépérissement du chêne au registre 8
+— NDP 1, toutes en attente de constat. Son rapport PDF n’en montrait
+aucune :
+[`sommier_gestion_anterieure()`](https://pobsteta.github.io/sommieR/reference/sommier_gestion_anterieure.md)
+ne lisait que les phénomènes, et la section « Évènements marquants »
+concluait « Aucun enregistrement sur la période » sur un sommier dont
+c’étaient les seules écritures.
+
+Ne pas les mêler aux évènements était juste : une détection n’est pas un
+constat. Ne les montrer nulle part ne l’était pas. Deux sections
+s’ajoutent :
+
+- `detections` : les détections en attente, avec le numéro de l’unité,
+  la source, le NDP, la surface, l’indice et les observations de la
+  chaîne. **Sans borne de période**, comme le patrimoine remarquable :
+  une détection en attente l’est aujourd’hui, et un bilan borné qui la
+  ferait disparaître cacherait justement ce que personne n’est encore
+  allé voir ;
+- `suites_detection` : sur la période, le nombre de détections
+  confirmées et écartées par
+  [`sommier_valider_detection()`](https://pobsteta.github.io/sommieR/reference/sommier_valider_detection.md).
+  Celles-là sont des constats datés, elles se bornent.
+
+Le rapport Quarto leur consacre une section « Détections à vérifier sur
+le terrain » : un encadré qui dit ce qu’est une proposition, le tableau,
+une carte des surfaces proposées par unité, et les libellés du registre.
+Les réserves de méthode que la chaîne répète sur chaque détection —
+domaine de calibration, masque feuillus — sont données une fois ; chaque
+détection garde ce qui lui est propre. Rien n’est reformulé : le texte
+est celui du registre, découpé à ses points.
+
+### Ce que le premier rendu réel a montré
+
+Le jeu de démonstration masquait six défauts, qu’une forêt réelle rend
+visibles d’un coup :
+
+- **la séquence de tête s’imprimait `8 × 10⁻³²³`**. Elle arrive de
+  PostgreSQL en `integer64` ; relue par le document sans `bit64`, elle
+  s’affichait comme le double qui partage ses octets. Elle voyage
+  désormais en texte dans le RDS ;
+- **le titre « Données de démonstration » s’affichait sur toute forêt**
+  : seul le corps de l’encadré était conditionnel. Le bandeau entier
+  l’est devenu ;
+- **la période s’écrivait « 0001-01-01 au 9999-12-31 »** faute de
+  bornes. Ces dates sont des sentinelles : le rapport écrit « depuis
+  l’ouverture du sommier » et « à ce jour » ;
+- **l’empreinte de tête sortait de la page** en PDF. Elle y est coupée
+  en quatre blocs de seize caractères ; en HTML elle reste d’un tenant,
+  pour qu’on puisse la copier ;
+- **les cartes des coupes et des travaux se dessinaient toutes à zéro**
+  quand le registre était vide, et le symbole « € » sortait en point
+  sous le périphérique [`pdf()`](https://rdrr.io/r/grDevices/pdf.html),
+  qui ne connaît que le Latin-1. Une carte sans valeur ne se dessine
+  plus — le « Aucun enregistrement » de la section reste, une absence
+  d’écriture est une information — et le PDF écrit « EUR » ;
+- les surfaces sont arrondies et écrites à la française (554,93 ha).
+
+### Le rapport ne renvoie plus aux imprimés A50
+
+Les sections du rapport Quarto s’ouvraient sur l’imprimé de la série A50
+qu’elles transposent — « Imprimés A50E, A50F et A50I », « Imprimé A50K
+», « Série A50 r/\* ». Ces renvois sont retirés, légendes comprises :
+ils parlent au gestionnaire qui tient le classeur, pas au lecteur du
+rapport, et une forêt privée sous PSG n’a jamais connu ces imprimés. Les
+registres, eux, restent calqués sur la série.
+
+### Un rendu qui échoue le dit
+
+[`sommier_rapport_quarto()`](https://pobsteta.github.io/sommieR/reference/sommier_rapport_quarto.md)
+copiait le document produit vers sa destination sans regarder le
+résultat : [`file.copy()`](https://rdrr.io/r/base/files.html) ne signale
+un échec que par un avertissement, et la fonction rendait le chemin d’un
+fichier qui n’existait pas. Elle échoue désormais, en nommant la
+destination.
+
+## sommieR 0.12.0
+
+Le jeu de démonstration reposait sur un parcellaire qui n’existe pas. Ce
+lot lui rend le vrai.
+
+### Un contour faux dans un paquet qui vend la valeur probante
+
+`SOMMIER_PARCELLES_COUCHEY` reprenait la fixture « mock » de
+`nemetonshiny` : trois carrés de 0,002 degré, portant les références
+`21200000A0054` à `56`. Trois choses n’allaient pas, et la troisième est
+celle qui gêne.
+
+Les parcelles **n’existent pas** — la section A de Couchey passe de 38 à
+61. La référence était **mal formée** : le cadastre écrit
+`212000000A0054`, sur quatorze caractères et non treize. Et surtout, un
+paquet dont l’objet est d’empêcher qu’une écriture plausible passe pour
+une écriture vraie livrait en exemple une géométrie plausible et fausse.
+L’argument ne survit pas à sa propre démonstration.
+
+### Ce que le jeu porte désormais
+
+Trois parcelles réelles de la forêt communale de Couchey, prises au
+cadastre de la DGFiP par le projet Couchey de nemeton
+(`20260828_140251_hwuy`), qui porte le même parcellaire :
+
+| Parcelle | Référence        | Contenance |
+|----------|------------------|-----------:|
+| A 15     | `212000000A0015` |   4,875 ha |
+| A 35     | `212000000A0035` |    7,19 ha |
+| A 102    | `212000000A0102` |  4,3095 ha |
+
+Le recoupement avec la livraison etalab du 1er juin 2026 donne un
+recouvrement de 1,0000 : la géométrie de nemeton **est** celle de la
+DGFiP.
+
+Les contours sont simplifiés à 1 mètre, ce qui coûte 55 m² sur 16,4
+hectares — 0,03 %. La tolérance de 5 mètres, essayée, en coûtait 866,
+dont 1 % sur la seule A 15. Pour trois parcelles et 54 sommets, la
+simplification n’économise pas assez de code pour qu’on abîme une
+surface.
+
+### Trois blocs, et ce que ça change
+
+Les parcelles ne se touchent pas : A 102 est à 485 mètres de A 35, A 15
+à 1,7 kilomètre à l’est. Une forêt communale en plusieurs blocs est la
+règle plutôt que l’exception, et les treize géométries du jeu s’y logent
+au lieu de flotter dans un carré : chaque arbre tombe dans la parcelle
+qui le porte, l’emprise du chablis tient **entièrement** dans A 35 — une
+emprise rattachée à une unité ne peut pas déborder de l’unité — le
+chemin relie les deux blocs de l’ouest, la piste « est » dessert
+réellement le bloc est, et la limite bornée suit le côté nord-est de A
+102.
+
+Les longueurs suivent le dessin au lieu d’être posées à côté : le chemin
+déclare 1 040 mètres parce que son tracé en mesure 1 040. Une desserte
+dont l’attribut et la géométrie se contredisent ne renseigne ni la carte
+ni l’imprimé A50D.
+
+### Les écritures recalibrées
+
+La surface passe de 7,5 à 16,37 hectares : les écritures suivent, à ~5
+m³/ha/an de possibilité. Possibilité 38 → 82 m³/an, martelages 34–46 →
+74–98 m³, chablis 22 → 48 m³ sur 1,75 ha, plantation 480 → 1 050 plants,
+recettes et budgets à l’avenant. Les grandeurs qui ne dépendent pas de
+la surface ne bougent pas : circonférences des arbres remarquables, taux
+de reprise, taxe d’affouage à la corde.
+
+**Les écritures restent fictives, et c’est maintenant la seule chose qui
+le soit.** La distinction porte : un contour faux se voit à la première
+superposition, une écriture fausse ne se voit jamais. C’est donc elle,
+et elle seule, que le nom de la forêt et le rapport engendré signalent.
+
+### Le fond de carte, rattrapé par les trois blocs
+
+Le passage aux contours réels a mis au jour un défaut que le tenant
+unique masquait. `boite_emprise()` prenait la **boîte englobante** des
+contours avant de la tamponner : sur une forêt d’un seul tenant, c’est
+sans conséquence ; sur trois blocs distants de 485 mètres et de 1,7
+kilomètre, la boîte couvre 396 hectares — le village compris — pour 16
+hectares de forêt. Le fond cadastral des cartes passait de 20 à 65
+parcelles, c’est-à-dire exactement le « fond illisible » que
+[`sommier_fond_lire()`](https://pobsteta.github.io/sommieR/reference/sommier_fond_lire.md)
+documente vouloir éviter.
+
+La fonction, renommée `emprise_tamponnee()`, tamponne désormais
+l’**union** des contours. Une forêt en plusieurs blocs est la règle
+plutôt que l’exception, et la boîte ne se trompait que sur le cas
+général. Le changement porte sur les trois découpes qui partagent la
+règle : parcellaire, feuilles du PCI et objets EDIGEO.
+
+Au passage, une emprise dont tous les contours sont inconnus le dit au
+lieu d’échouer sur une « OGR error » muette —
+[`sommier_couche_ug()`](https://pobsteta.github.io/sommieR/reference/sommier_couche_ug.md)
+rend une unité sans géométrie avec un `wkt` à `NA`, et rien ne
+l’écartait avant l’union. Une unité sans contour parmi d’autres
+n’empêche plus les autres de servir.
+
 ## sommieR 0.11.1
 
 Éprouver ce qui tient la chaîne. Aucune fonction nouvelle : ce lot porte

@@ -42,23 +42,26 @@ foret <- if (nrow(deja) > 0L) {
 }
 ```
 
-Les trois parcelles ancrent le sommier sur un terrain réel :
+Les trois parcelles ancrent le sommier sur un terrain réel — contours et
+références viennent du cadastre de la DGFiP, par le projet Couchey de
+nemeton qui porte le même parcellaire. Seules les écritures posées
+dessus sont fictives :
 
 ``` r
 
 tableau(
   SOMMIER_PARCELLES_COUCHEY[, c("numero", "geo_parcelle", "surface_ha")],
-  "Les trois parcelles de la fixture Couchey"
+  "Les trois parcelles cadastrales de Couchey"
 )
 ```
 
-| numero | geo_parcelle  | surface_ha |
-|:-------|:--------------|-----------:|
-| 54     | 21200000A0054 |        2.5 |
-| 55     | 21200000A0055 |        1.8 |
-| 56     | 21200000A0056 |        3.2 |
+| numero | geo_parcelle   | surface_ha |
+|:-------|:---------------|-----------:|
+| 15     | 212000000A0015 |     4.8750 |
+| 35     | 212000000A0035 |     7.1900 |
+| 102    | 212000000A0102 |     4.3095 |
 
-Les trois parcelles de la fixture Couchey {.table}
+Les trois parcelles cadastrales de Couchey {.table}
 
 ## Un assemblage, trois présentations
 
@@ -92,6 +95,8 @@ tableau(presence, "Ce que chaque référentiel retient de l'assemblage")
 | balance          | oui | oui         | oui  |
 | travaux          | oui | oui         | oui  |
 | evenements       | oui | oui         | oui  |
+| detections       | oui | oui         | oui  |
+| suites_detection | oui | oui         | oui  |
 | equilibre_gibier | oui | oui         | —    |
 | patrimoine       | oui | oui         | —    |
 | finances         | —   | oui         | oui  |
@@ -123,6 +128,8 @@ ga
 #>   balance : 10 ligne(s)
 #>   travaux : 3 ligne(s)
 #>   evenements : 2 ligne(s)
+#>   detections : 0 ligne(s)
+#>   suites_detection : 0 ligne(s)
 #>   finances : 5 ligne(s)
 #>   equilibre_gibier : 4 ligne(s)
 #>   patrimoine : 6 ligne(s)
@@ -147,7 +154,7 @@ tableau(data.frame(
 |:------------|:--------------------------------------------------|
 | Forêt       | Foret communale de Couchey (jeu de demonstration) |
 | Régime      | communal                                          |
-| Surface     | 7.5 ha                                            |
+| Surface     | 16.3745 ha                                        |
 | Période     | 2016-01-01 au 2025-12-31                          |
 | Référentiel | amenagement                                       |
 
@@ -163,10 +170,10 @@ registre a bougé.
 verif <- sommier_verifier(con, foret)
 verif
 #> Verification de chaine - sommier
-#>   foret     : a5060848-d63c-4062-ba69-c5af3349eb86
+#>   foret     : f30e6ab6-0024-4a0f-ac2f-9a1c1fe21374
 #>   entrees   : 66
 #>   seq tete  : 66
-#>   hash tete : 89448e3b92f82184d62cba3777599c9227f33321ab2ff6fcce7055adf6eccc84
+#>   hash tete : 6d4727f1d6a8eb45b938838593bb29f3551c99fd67480fc874d207ada5b1c6e8
 #>   etat      : chaine intacte
 ```
 
@@ -238,16 +245,16 @@ tableau(
 
 | exercice | volume_m3 | repris | reprise_source | reprise_reference |
 |:---|---:|:---|:---|:---|
-| 2016 | 40 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
-| 2017 | 46 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
-| 2018 | 37 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
-| 2019 | 43 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
-| 2020 | 34 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
-| 2021 | 40 | FALSE | NA | NA |
-| 2022 | 46 | FALSE | NA | NA |
-| 2023 | 37 | FALSE | NA | NA |
-| 2024 | 43 | FALSE | NA | NA |
-| 2025 | 34 | FALSE | NA | NA |
+| 2016 | 86 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
+| 2017 | 98 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
+| 2018 | 80 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
+| 2019 | 92 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
+| 2020 | 74 | TRUE | registre_signe | Sommier papier de Couchey, serie A50, exercices 2016-2020 |
+| 2021 | 86 | FALSE | NA | NA |
+| 2022 | 98 | FALSE | NA | NA |
+| 2023 | 80 | FALSE | NA | NA |
+| 2024 | 92 | FALSE | NA | NA |
+| 2025 | 74 | FALSE | NA | NA |
 
 Les martelages de la période, et d’où chacun vient {.table}
 
@@ -295,17 +302,17 @@ tableau(ga$sections$coupes, "Coupes de la période, par exercice et nature")
 
 | exercice | type_entree        | nature_coupe | provenance | volume_m3 | surface_ha |   n |
 |:---------|:-------------------|:-------------|:-----------|----------:|-----------:|----:|
-| 2016     | martelage          | reguliere    | transcrit  |        40 |        1.8 |   1 |
-| 2017     | martelage          | sanitaire    | transcrit  |        46 |        3.2 |   1 |
-| 2018     | martelage          | amelioration | transcrit  |        37 |        2.5 |   1 |
-| 2019     | martelage          | reguliere    | transcrit  |        43 |        1.8 |   1 |
-| 2020     | martelage          | sanitaire    | transcrit  |        34 |        3.2 |   1 |
-| 2021     | martelage          | amelioration | constate   |        40 |        2.5 |   1 |
-| 2022     | martelage          | reguliere    | constate   |        46 |        1.8 |   1 |
-| 2022     | produit_accidentel | chablis      | constate   |        22 |        0.8 |   1 |
-| 2023     | martelage          | sanitaire    | constate   |        37 |        3.2 |   1 |
-| 2024     | martelage          | amelioration | constate   |        43 |        2.5 |   1 |
-| 2025     | martelage          | reguliere    | constate   |        34 |        1.8 |   1 |
+| 2016     | martelage          | reguliere    | transcrit  |        86 |     7.1900 |   1 |
+| 2017     | martelage          | sanitaire    | transcrit  |        98 |     4.3095 |   1 |
+| 2018     | martelage          | amelioration | transcrit  |        80 |     4.8750 |   1 |
+| 2019     | martelage          | reguliere    | transcrit  |        92 |     7.1900 |   1 |
+| 2020     | martelage          | sanitaire    | transcrit  |        74 |     4.3095 |   1 |
+| 2021     | martelage          | amelioration | constate   |        86 |     4.8750 |   1 |
+| 2022     | martelage          | reguliere    | constate   |        98 |     7.1900 |   1 |
+| 2022     | produit_accidentel | chablis      | constate   |        48 |     1.7500 |   1 |
+| 2023     | martelage          | sanitaire    | constate   |        80 |     4.3095 |   1 |
+| 2024     | martelage          | amelioration | constate   |        92 |     4.8750 |   1 |
+| 2025     | martelage          | reguliere    | constate   |        74 |     7.1900 |   1 |
 
 Coupes de la période, par exercice et nature {.table}
 
@@ -322,16 +329,16 @@ tableau(ga$sections$balance, "Balance de possibilité (imprimé A50E)")
 
 | exercice | possibilite_m3_an | volume_martele_m3 | balance_exercice_m3 | balance_cumulee_m3 |
 |:---|---:|---:|---:|---:|
-| 2016 | 38 | 40 | 2 | 2 |
-| 2017 | 38 | 46 | 8 | 10 |
-| 2018 | 38 | 37 | -1 | 9 |
-| 2019 | 38 | 43 | 5 | 14 |
-| 2020 | 38 | 34 | -4 | 10 |
-| 2021 | 38 | 40 | 2 | 12 |
-| 2022 | 38 | 68 | 30 | 42 |
-| 2023 | 38 | 37 | -1 | 41 |
-| 2024 | 38 | 43 | 5 | 46 |
-| 2025 | 38 | 34 | -4 | 42 |
+| 2016 | 82 | 86 | 4 | 4 |
+| 2017 | 82 | 98 | 16 | 20 |
+| 2018 | 82 | 80 | -2 | 18 |
+| 2019 | 82 | 92 | 10 | 28 |
+| 2020 | 82 | 74 | -8 | 20 |
+| 2021 | 82 | 86 | 4 | 24 |
+| 2022 | 82 | 146 | 64 | 88 |
+| 2023 | 82 | 80 | -2 | 86 |
+| 2024 | 82 | 92 | 10 | 96 |
+| 2025 | 82 | 74 | -8 | 88 |
 
 Balance de possibilité (imprimé A50E) {.table style="width:100%;"}
 
@@ -372,9 +379,9 @@ tableau(ga$sections$travaux, "Travaux réalisés sur la période")
 
 | annee | nature_travaux | provenance | quantite | unite | montant_eur | taux_reprise_moyen_pct | n |
 |:---|:---|:---|---:|:---|---:|---:|---:|
-| 2022 | plantation | constate | 0.80 | ha | 2 350 | 78 | 1 |
-| 2023 | entretien de la desserte | constate | 0.62 | km | 1 180 | NA | 1 |
-| 2024 | degagement | constate | 0.80 | ha | 640 | 84 | 1 |
+| 2022 | plantation | constate | 1.75 | ha | 5 130 | 78 | 1 |
+| 2023 | entretien de la desserte | constate | 1.04 | km | 1 980 | NA | 1 |
+| 2024 | degagement | constate | 1.75 | ha | 1 400 | 84 | 1 |
 
 Travaux réalisés sur la période {.table}
 
@@ -391,8 +398,8 @@ tableau(ga$sections$evenements, "Phénomènes intéressant la vie de la forêt")
 
 | date_evenement | nature | description | surface_ha | volume_impacte_m3 | ndp |
 |:---|:---|:---|---:|---:|---:|
-| 2020-08-10 | secheresse | Deficit hydrique estival, roussissement des cimes | 3.1 | NA | 4 |
-| 2022-02-17 | tempete | Coup de vent du 17 fevrier | 0.8 | 22 | 0 |
+| 2020-08-10 | secheresse | Deficit hydrique estival, roussissement des cimes | 6.80 | NA | 4 |
+| 2022-02-17 | tempete | Coup de vent du 17 fevrier | 1.75 | 48 | 0 |
 
 Phénomènes intéressant la vie de la forêt {.table}
 
@@ -408,11 +415,11 @@ tableau(ga$sections$finances, "Recettes, dépenses et solde par exercice")
 
 | exercice | recettes_eur | depenses_eur | solde_eur | solde_cumule_eur |
 |:---------|-------------:|-------------:|----------:|-----------------:|
-| 2021     |        2 740 |          240 |     2 500 |            2 500 |
-| 2022     |        2 900 |        2 590 |       310 |            2 810 |
-| 2023     |        3 060 |          240 |     2 820 |            5 630 |
-| 2024     |        3 220 |          240 |     2 980 |            8 610 |
-| 2025     |        3 380 |          240 |     3 140 |           11 750 |
+| 2021     |        5 990 |          520 |     5 470 |            5 470 |
+| 2022     |        6 340 |        5 650 |       690 |            6 160 |
+| 2023     |        6 690 |          520 |     6 170 |           12 330 |
+| 2024     |        7 040 |          520 |     6 520 |           18 850 |
+| 2025     |        7 390 |          520 |     6 870 |           25 720 |
 
 Recettes, dépenses et solde par exercice {.table}
 
@@ -430,11 +437,11 @@ tableau(
 
 | exercice | poste          | prevu_eur | realise_eur | ecart_eur | execution_pct |
 |:---------|:---------------|----------:|------------:|----------:|--------------:|
-| 2025     | bois_delivres  |         0 |         690 |       690 |            NA |
-| 2025     | bois_sur_pied  |     2 000 |       2 380 |       380 |         119.0 |
-| 2025     | chasse_peche   |       300 |         310 |        10 |         103.3 |
-| 2025     | equipement     |     1 200 |           0 |    -1 200 |           0.0 |
-| 2025     | frais_garderie |       250 |         240 |       -10 |          96.0 |
+| 2025     | bois_delivres  |         0 |       1 520 |     1 520 |            NA |
+| 2025     | bois_sur_pied  |     4 400 |       5 190 |       790 |         118.0 |
+| 2025     | chasse_peche   |       650 |         680 |        30 |         104.6 |
+| 2025     | equipement     |     2 600 |           0 |    -2 600 |           0.0 |
+| 2025     | frais_garderie |       550 |         520 |       -30 |          94.5 |
 
 Exécution budgétaire de l’exercice 2025 {.table}
 
@@ -450,10 +457,10 @@ tableau(ga$sections$equilibre_gibier, "Constats d'équilibre forêt-gibier")
 
 | saison    | surface_sensible_ha | taux_abroutissement_pct | diagnostic         |
 |:----------|--------------------:|------------------------:|:-------------------|
-| 2021-2022 |                 1.4 |                      31 | desequilibre_leger |
-| 2022-2023 |                 1.4 |                      29 | desequilibre_leger |
-| 2023-2024 |                 1.4 |                      27 | desequilibre_leger |
-| 2024-2025 |                 1.4 |                      25 | desequilibre_leger |
+| 2021-2022 |                 3.1 |                      31 | desequilibre_leger |
+| 2022-2023 |                 3.1 |                      29 | desequilibre_leger |
+| 2023-2024 |                 3.1 |                      27 | desequilibre_leger |
+| 2024-2025 |                 3.1 |                      25 | desequilibre_leger |
 
 Constats d’équilibre forêt-gibier {.table}
 
@@ -476,7 +483,7 @@ tableau(ga$sections$patrimoine, "Arbres, peuplements, vestiges, espèces, habita
 | arbre | Chandelle du talus est | NA | NA | NA | mort | NA |
 | arbre | Chene de la Justice | NA | NA | NA | moyen | NA |
 | espece | NA | Cypripedium calceolus | NA | NA | NA | Directive Habitats, annexe II |
-| habitat | NA | NA | Pelouse calcicole seche | 0.6 | NA | NA |
+| habitat | NA | NA | Pelouse calcicole seche | 1.3 | NA | NA |
 | vestige | Charbonniere de la section A | NA | NA | NA | NA | NA |
 
 Arbres, peuplements, vestiges, espèces, habitats {.table}
@@ -498,7 +505,7 @@ tableau(sommier_elements_ibp(con, foret), "Éléments mobilisables pour l'IBP")
 | F - arbres a microhabitats | Arbres remarquables vivants au registre 9 | 2.0 | arbres | 3 |
 | C - bois mort sur pied | Arbres remarquables releves morts sur pied | 1.0 | arbres | 3 |
 | E - tres gros bois vivants | Arbres vivants de circonference \>= 220 cm | 1.0 | arbres | 3 |
-| G - milieux ouverts | Habitats remarquables au libelle evoquant un milieu ouvert | 0.6 | ha | 1 |
+| G - milieux ouverts | Habitats remarquables au libelle evoquant un milieu ouvert | 1.3 | ha | 1 |
 | contexte - especes protegees | Especes protegees inventoriees | 1.0 | especes | 1 |
 
 Éléments mobilisables pour l’IBP {.table}
@@ -515,9 +522,9 @@ tableau(sommier_densite_voirie(con, foret), "Longueurs et densités de voirie")
 
 | revetement      | longueur_km | densite_km_100ha |
 |:----------------|------------:|-----------------:|
-| empierree       |        0.62 |             8.27 |
-| terrain_naturel |        0.34 |             4.53 |
-| total           |        0.96 |            12.80 |
+| empierree       |        1.04 |             6.35 |
+| terrain_naturel |        0.48 |             2.93 |
+| total           |        1.52 |             9.28 |
 
 Longueurs et densités de voirie {.table}
 
@@ -545,9 +552,9 @@ tableau(
 
 | numero_affichage | surface_ha | n_entrees | volume_martele_m3 | montant_travaux_eur |
 |:-----------------|-----------:|----------:|------------------:|--------------------:|
-| 54               |       3.36 |         6 |               120 |                   0 |
-| 55               |       3.36 |         9 |               185 |               2 990 |
-| 56               |       3.36 |         6 |               117 |                   0 |
+| 102              |       4.28 |         6 |               252 |                   0 |
+| 15               |       4.88 |         6 |               258 |                   0 |
+| 35               |       7.17 |         9 |               398 |               6 530 |
 
 Ce que chaque unité porte sur la période {.table}
 
@@ -818,7 +825,7 @@ couche <- tempfile(fileext = ".geojson")
 export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
 str(export)
 #> List of 3
-#>  $ chemin               : chr "/tmp/RtmpkXjwuk/file333b2e90feaa.geojson"
+#>  $ chemin               : chr "/tmp/RtmpNuvOMp/file33dc76af1cb4.geojson"
 #>  $ n_unites             : int 3
 #>  $ unites_sans_geometrie: chr(0)
 ```
@@ -891,10 +898,10 @@ chemin <- tempfile(fileext = ".json")
 sommier_exporter_manifeste(con, foret, chemin)
 sommier_verifier_manifeste(chemin)
 #> Verification de chaine - sommier
-#>   foret     : a5060848-d63c-4062-ba69-c5af3349eb86
+#>   foret     : f30e6ab6-0024-4a0f-ac2f-9a1c1fe21374
 #>   entrees   : 66
 #>   seq tete  : 66
-#>   hash tete : 89448e3b92f82184d62cba3777599c9227f33321ab2ff6fcce7055adf6eccc84
+#>   hash tete : 6d4727f1d6a8eb45b938838593bb29f3551c99fd67480fc874d207ada5b1c6e8
 #>   etat      : chaine intacte
 #>   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau
 ```

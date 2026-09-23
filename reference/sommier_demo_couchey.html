@@ -13,7 +13,7 @@ et la prise en main sans rien saisir."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,16 +92,19 @@ parcelle), <code>n_entrees</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><strong>Les ecritures sont fictives.</strong> Couchey est une commune reelle, et la
-geometrie vient d'une fixture qui se declare elle-meme « mock » ; mais aucun
-des volumes, montants, dates, coupes ou visas qui suivent ne provient de ses
-registres. Ils sont construits pour la demonstration, a une echelle
-coherente avec les 7,5 hectares des trois parcelles.</p>
+    <p><strong>Les ecritures sont fictives, le terrain ne l'est pas.</strong> Couchey est une
+commune reelle et les contours viennent du cadastre (voir
+<a href="SOMMIER_PARCELLES_COUCHEY.html">SOMMIER_PARCELLES_COUCHEY</a>) ; mais aucun des volumes, montants, dates,
+coupes ou visas qui suivent ne provient de ses registres. Ils sont
+construits pour la demonstration, a une echelle coherente avec les 16,4
+hectares des trois parcelles.</p>
 <p>Depuis la v0.7.0, treize ecritures portent une geometrie : voirie, bornage,
-emprises de phenomene, arbres et habitats remarquables. Les coordonnees sont
-posees dans l'emprise des trois parcelles et <strong>inventees comme le reste</strong> -
-elles servent a montrer ce que la carte sait faire, non a situer quoi que ce
-soit sur le terrain.</p>
+emprises de phenomene, arbres et habitats remarquables. Depuis la v0.12.0,
+elles sont <strong>posees dans les contours reels</strong> : chaque arbre tombe dans la
+parcelle qui le porte, l'emprise de la tempete tient dans A 35, le chemin
+relie les deux blocs de l'ouest et la limite bornee suit le cote nord-est
+de A 102. Les objets restent inventes ; leurs positions, elles, ne
+contredisent plus le parcellaire.</p>
 <p>Depuis la v0.11.0, la tenue du sommier commence en 2021 - c'est la date du
 premier visa annuel. Les faits anterieurs ont bien eu lieu, mais la commune
 ne les a pas enregistres ici : quatorze ecritures sont donc <strong>transcrites</strong>

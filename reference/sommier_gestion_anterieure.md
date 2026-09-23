@@ -47,22 +47,31 @@ chacune un `data.frame`, plus les metadonnees de periode et de foret.
 
 Ce que chaque referentiel retient :
 
-|                             |     |             |      |
-|-----------------------------|-----|-------------|------|
-| Section                     | psg | amenagement | ct88 |
-| Provenance des ecritures    | oui | oui         | oui  |
-| Coupes realisees et balance | oui | oui         | oui  |
-| Travaux realises            | oui | oui         | oui  |
-| Evenements marquants        | oui | oui         | oui  |
-| Bilan financier             | non | oui         | oui  |
-| Equilibre foret-gibier      | oui | oui         | non  |
-| Patrimoine remarquable      | oui | oui         | non  |
+|                                         |     |             |      |
+|-----------------------------------------|-----|-------------|------|
+| Section                                 | psg | amenagement | ct88 |
+| Provenance des ecritures                | oui | oui         | oui  |
+| Coupes realisees et balance             | oui | oui         | oui  |
+| Travaux realises                        | oui | oui         | oui  |
+| Evenements marquants                    | oui | oui         | oui  |
+| Detections en attente et suites donnees | oui | oui         | oui  |
+| Bilan financier                         | non | oui         | oui  |
+| Equilibre foret-gibier                  | oui | oui         | non  |
+| Patrimoine remarquable                  | oui | oui         | non  |
 
 Le PSG ne demande pas le detail financier, que le proprietaire n'a pas a
 produire au CRPF ; le CT88, tourne vers l'evaluation d'un contrat, ne
 reclame pas l'inventaire du patrimoine remarquable. Restreindre la
 sortie a ce qui est demande evite de diffuser plus que necessaire - les
 registres 3 et 7 portent des donnees personnelles.
+
+**Une detection n'est pas un evenement.** Les propositions d'une chaine
+de teledetection (voir
+[`sommier_importer_detections()`](https://pobsteta.github.io/sommieR/reference/sommier_importer_detections.md))
+ne figurent pas parmi les evenements marquants : la section `detections`
+les liste a part, sans borne de periode - une detection en attente l'est
+aujourd'hui - et la section `suites_detection` compte, sur la periode,
+celles que le terrain a confirmees ou ecartees.
 
 **Constate et transcrit ne se melent pas.** Les trois referentiels
 portent sur une periode ecoulee ; un sommier ouvert en cours de route ne

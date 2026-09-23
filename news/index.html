@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,86 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.13.0" id="sommier-0130">sommieR 0.13.0<a class="anchor" aria-label="anchor" href="#sommier-0130"></a></h2>
+<p>Le rapport de gestion antérieure ne voyait pas les détections. Ce lot les lui montre, et corrige ce qu’un premier rendu sur une forêt réelle a mis au jour.</p>
+<div class="section level3">
+<h3 id="seize-détections-et-un-rapport-qui-disait--aucun-enregistrement--0-13-0">Seize détections, et un rapport qui disait « aucun enregistrement »<a class="anchor" aria-label="anchor" href="#seize-d%C3%A9tections-et-un-rapport-qui-disait--aucun-enregistrement--0-13-0"></a></h3>
+<p>Le sommier de la forêt de Loury, versé depuis le projet RECONFORT de nemeton, porte seize détections de dépérissement du chêne au registre 8 — NDP 1, toutes en attente de constat. Son rapport PDF n’en montrait aucune : <code><a href="../reference/sommier_gestion_anterieure.html">sommier_gestion_anterieure()</a></code> ne lisait que les phénomènes, et la section « Évènements marquants » concluait « Aucun enregistrement sur la période » sur un sommier dont c’étaient les seules écritures.</p>
+<p>Ne pas les mêler aux évènements était juste : une détection n’est pas un constat. Ne les montrer nulle part ne l’était pas. Deux sections s’ajoutent :</p>
+<ul><li>
+<code>detections</code> : les détections en attente, avec le numéro de l’unité, la source, le NDP, la surface, l’indice et les observations de la chaîne. <strong>Sans borne de période</strong>, comme le patrimoine remarquable : une détection en attente l’est aujourd’hui, et un bilan borné qui la ferait disparaître cacherait justement ce que personne n’est encore allé voir ;</li>
+<li>
+<code>suites_detection</code> : sur la période, le nombre de détections confirmées et écartées par <code><a href="../reference/sommier_valider_detection.html">sommier_valider_detection()</a></code>. Celles-là sont des constats datés, elles se bornent.</li>
+</ul><p>Le rapport Quarto leur consacre une section « Détections à vérifier sur le terrain » : un encadré qui dit ce qu’est une proposition, le tableau, une carte des surfaces proposées par unité, et les libellés du registre. Les réserves de méthode que la chaîne répète sur chaque détection — domaine de calibration, masque feuillus — sont données une fois ; chaque détection garde ce qui lui est propre. Rien n’est reformulé : le texte est celui du registre, découpé à ses points.</p>
+</div>
+<div class="section level3">
+<h3 id="ce-que-le-premier-rendu-réel-a-montré-0-13-0">Ce que le premier rendu réel a montré<a class="anchor" aria-label="anchor" href="#ce-que-le-premier-rendu-r%C3%A9el-a-montr%C3%A9-0-13-0"></a></h3>
+<p>Le jeu de démonstration masquait six défauts, qu’une forêt réelle rend visibles d’un coup :</p>
+<ul><li>
+<strong>la séquence de tête s’imprimait <code>8 × 10⁻³²³</code></strong>. Elle arrive de PostgreSQL en <code>integer64</code> ; relue par le document sans <code>bit64</code>, elle s’affichait comme le double qui partage ses octets. Elle voyage désormais en texte dans le RDS ;</li>
+<li>
+<strong>le titre « Données de démonstration » s’affichait sur toute forêt</strong> : seul le corps de l’encadré était conditionnel. Le bandeau entier l’est devenu ;</li>
+<li>
+<strong>la période s’écrivait « 0001-01-01 au 9999-12-31 »</strong> faute de bornes. Ces dates sont des sentinelles : le rapport écrit « depuis l’ouverture du sommier » et « à ce jour » ;</li>
+<li>
+<strong>l’empreinte de tête sortait de la page</strong> en PDF. Elle y est coupée en quatre blocs de seize caractères ; en HTML elle reste d’un tenant, pour qu’on puisse la copier ;</li>
+<li>
+<strong>les cartes des coupes et des travaux se dessinaient toutes à zéro</strong> quand le registre était vide, et le symbole « € » sortait en point sous le périphérique <code><a href="https://rdrr.io/r/grDevices/pdf.html" class="external-link">pdf()</a></code>, qui ne connaît que le Latin-1. Une carte sans valeur ne se dessine plus — le « Aucun enregistrement » de la section reste, une absence d’écriture est une information — et le PDF écrit « EUR » ;</li>
+<li>les surfaces sont arrondies et écrites à la française (554,93 ha).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="le-rapport-ne-renvoie-plus-aux-imprimés-a50-0-13-0">Le rapport ne renvoie plus aux imprimés A50<a class="anchor" aria-label="anchor" href="#le-rapport-ne-renvoie-plus-aux-imprim%C3%A9s-a50-0-13-0"></a></h3>
+<p>Les sections du rapport Quarto s’ouvraient sur l’imprimé de la série A50 qu’elles transposent — « Imprimés A50E, A50F et A50I », « Imprimé A50K », « Série A50 r/* ». Ces renvois sont retirés, légendes comprises : ils parlent au gestionnaire qui tient le classeur, pas au lecteur du rapport, et une forêt privée sous PSG n’a jamais connu ces imprimés. Les registres, eux, restent calqués sur la série.</p>
+</div>
+<div class="section level3">
+<h3 id="un-rendu-qui-échoue-le-dit-0-13-0">Un rendu qui échoue le dit<a class="anchor" aria-label="anchor" href="#un-rendu-qui-%C3%A9choue-le-dit-0-13-0"></a></h3>
+<p><code><a href="../reference/sommier_rapport_quarto.html">sommier_rapport_quarto()</a></code> copiait le document produit vers sa destination sans regarder le résultat : <code><a href="https://rdrr.io/r/base/files.html" class="external-link">file.copy()</a></code> ne signale un échec que par un avertissement, et la fonction rendait le chemin d’un fichier qui n’existait pas. Elle échoue désormais, en nommant la destination.</p>
+</div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.12.0" id="sommier-0120">sommieR 0.12.0<a class="anchor" aria-label="anchor" href="#sommier-0120"></a></h2>
+<p>Le jeu de démonstration reposait sur un parcellaire qui n’existe pas. Ce lot lui rend le vrai.</p>
+<div class="section level3">
+<h3 id="un-contour-faux-dans-un-paquet-qui-vend-la-valeur-probante-0-12-0">Un contour faux dans un paquet qui vend la valeur probante<a class="anchor" aria-label="anchor" href="#un-contour-faux-dans-un-paquet-qui-vend-la-valeur-probante-0-12-0"></a></h3>
+<p><code>SOMMIER_PARCELLES_COUCHEY</code> reprenait la fixture « mock » de <code>nemetonshiny</code> : trois carrés de 0,002 degré, portant les références <code>21200000A0054</code> à <code>56</code>. Trois choses n’allaient pas, et la troisième est celle qui gêne.</p>
+<p>Les parcelles <strong>n’existent pas</strong> — la section A de Couchey passe de 38 à 61. La référence était <strong>mal formée</strong> : le cadastre écrit <code>212000000A0054</code>, sur quatorze caractères et non treize. Et surtout, un paquet dont l’objet est d’empêcher qu’une écriture plausible passe pour une écriture vraie livrait en exemple une géométrie plausible et fausse. L’argument ne survit pas à sa propre démonstration.</p>
+</div>
+<div class="section level3">
+<h3 id="ce-que-le-jeu-porte-désormais-0-12-0">Ce que le jeu porte désormais<a class="anchor" aria-label="anchor" href="#ce-que-le-jeu-porte-d%C3%A9sormais-0-12-0"></a></h3>
+<p>Trois parcelles réelles de la forêt communale de Couchey, prises au cadastre de la DGFiP par le projet Couchey de nemeton (<code>20260828_140251_hwuy</code>), qui porte le même parcellaire :</p>
+<table class="table"><thead><tr><th>Parcelle</th>
+<th>Référence</th>
+<th align="right">Contenance</th>
+</tr></thead><tbody><tr><td>A 15</td>
+<td><code>212000000A0015</code></td>
+<td align="right">4,875 ha</td>
+</tr><tr><td>A 35</td>
+<td><code>212000000A0035</code></td>
+<td align="right">7,19 ha</td>
+</tr><tr><td>A 102</td>
+<td><code>212000000A0102</code></td>
+<td align="right">4,3095 ha</td>
+</tr></tbody></table><p>Le recoupement avec la livraison etalab du 1er juin 2026 donne un recouvrement de 1,0000 : la géométrie de nemeton <strong>est</strong> celle de la DGFiP.</p>
+<p>Les contours sont simplifiés à 1 mètre, ce qui coûte 55 m² sur 16,4 hectares — 0,03 %. La tolérance de 5 mètres, essayée, en coûtait 866, dont 1 % sur la seule A 15. Pour trois parcelles et 54 sommets, la simplification n’économise pas assez de code pour qu’on abîme une surface.</p>
+</div>
+<div class="section level3">
+<h3 id="trois-blocs-et-ce-que-ça-change-0-12-0">Trois blocs, et ce que ça change<a class="anchor" aria-label="anchor" href="#trois-blocs-et-ce-que-%C3%A7a-change-0-12-0"></a></h3>
+<p>Les parcelles ne se touchent pas : A 102 est à 485 mètres de A 35, A 15 à 1,7 kilomètre à l’est. Une forêt communale en plusieurs blocs est la règle plutôt que l’exception, et les treize géométries du jeu s’y logent au lieu de flotter dans un carré : chaque arbre tombe dans la parcelle qui le porte, l’emprise du chablis tient <strong>entièrement</strong> dans A 35 — une emprise rattachée à une unité ne peut pas déborder de l’unité — le chemin relie les deux blocs de l’ouest, la piste « est » dessert réellement le bloc est, et la limite bornée suit le côté nord-est de A 102.</p>
+<p>Les longueurs suivent le dessin au lieu d’être posées à côté : le chemin déclare 1 040 mètres parce que son tracé en mesure 1 040. Une desserte dont l’attribut et la géométrie se contredisent ne renseigne ni la carte ni l’imprimé A50D.</p>
+</div>
+<div class="section level3">
+<h3 id="les-écritures-recalibrées-0-12-0">Les écritures recalibrées<a class="anchor" aria-label="anchor" href="#les-%C3%A9critures-recalibr%C3%A9es-0-12-0"></a></h3>
+<p>La surface passe de 7,5 à 16,37 hectares : les écritures suivent, à ~5 m³/ha/an de possibilité. Possibilité 38 → 82 m³/an, martelages 34–46 → 74–98 m³, chablis 22 → 48 m³ sur 1,75 ha, plantation 480 → 1 050 plants, recettes et budgets à l’avenant. Les grandeurs qui ne dépendent pas de la surface ne bougent pas : circonférences des arbres remarquables, taux de reprise, taxe d’affouage à la corde.</p>
+<p><strong>Les écritures restent fictives, et c’est maintenant la seule chose qui le soit.</strong> La distinction porte : un contour faux se voit à la première superposition, une écriture fausse ne se voit jamais. C’est donc elle, et elle seule, que le nom de la forêt et le rapport engendré signalent.</p>
+</div>
+<div class="section level3">
+<h3 id="le-fond-de-carte-rattrapé-par-les-trois-blocs-0-12-0">Le fond de carte, rattrapé par les trois blocs<a class="anchor" aria-label="anchor" href="#le-fond-de-carte-rattrap%C3%A9-par-les-trois-blocs-0-12-0"></a></h3>
+<p>Le passage aux contours réels a mis au jour un défaut que le tenant unique masquait. <code>boite_emprise()</code> prenait la <strong>boîte englobante</strong> des contours avant de la tamponner : sur une forêt d’un seul tenant, c’est sans conséquence ; sur trois blocs distants de 485 mètres et de 1,7 kilomètre, la boîte couvre 396 hectares — le village compris — pour 16 hectares de forêt. Le fond cadastral des cartes passait de 20 à 65 parcelles, c’est-à-dire exactement le « fond illisible » que <code><a href="../reference/sommier_fond_lire.html">sommier_fond_lire()</a></code> documente vouloir éviter.</p>
+<p>La fonction, renommée <code>emprise_tamponnee()</code>, tamponne désormais l’<strong>union</strong> des contours. Une forêt en plusieurs blocs est la règle plutôt que l’exception, et la boîte ne se trompait que sur le cas général. Le changement porte sur les trois découpes qui partagent la règle : parcellaire, feuilles du PCI et objets EDIGEO.</p>
+<p>Au passage, une emprise dont tous les contours sont inconnus le dit au lieu d’échouer sur une « OGR error » muette — <code><a href="../reference/sommier_couche_ug.html">sommier_couche_ug()</a></code> rend une unité sans géométrie avec un <code>wkt</code> à <code>NA</code>, et rien ne l’écartait avant l’union. Une unité sans contour parmi d’autres n’empêche plus les autres de servir.</p>
+</div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.11.1" id="sommier-0111">sommieR 0.11.1<a class="anchor" aria-label="anchor" href="#sommier-0111"></a></h2>
 <p>Éprouver ce qui tient la chaîne. Aucune fonction nouvelle : ce lot porte sur l’écart entre ce que la documentation affirme et ce que la suite démontrait.</p>

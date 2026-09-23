@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -107,14 +107,17 @@ tenter de le recréer.</p>
 <span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="../reference/sommier_demo_couchey.html">sommier_demo_couchey</a></span><span class="op">(</span><span class="va">con</span><span class="op">)</span><span class="op">$</span><span class="va">foret_id</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>Les trois parcelles ancrent le sommier sur un terrain réel :</p>
+<p>Les trois parcelles ancrent le sommier sur un terrain réel — contours
+et références viennent du cadastre de la DGFiP, par le projet Couchey de
+nemeton qui porte le même parcellaire. Seules les écritures posées
+dessus sont fictives :</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">tableau</span><span class="op">(</span></span>
 <span>  <span class="va">SOMMIER_PARCELLES_COUCHEY</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"numero"</span>, <span class="st">"geo_parcelle"</span>, <span class="st">"surface_ha"</span><span class="op">)</span><span class="op">]</span>,</span>
-<span>  <span class="st">"Les trois parcelles de la fixture Couchey"</span></span>
+<span>  <span class="st">"Les trois parcelles cadastrales de Couchey"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <table class="table">
-<caption>Les trois parcelles de la fixture Couchey</caption>
+<caption>Les trois parcelles cadastrales de Couchey</caption>
 <thead><tr class="header">
 <th align="left">numero</th>
 <th align="left">geo_parcelle</th>
@@ -122,19 +125,19 @@ tenter de le recréer.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="left">54</td>
-<td align="left">21200000A0054</td>
-<td align="right">2.5</td>
+<td align="left">15</td>
+<td align="left">212000000A0015</td>
+<td align="right">4.8750</td>
 </tr>
 <tr class="even">
-<td align="left">55</td>
-<td align="left">21200000A0055</td>
-<td align="right">1.8</td>
+<td align="left">35</td>
+<td align="left">212000000A0035</td>
+<td align="right">7.1900</td>
 </tr>
 <tr class="odd">
-<td align="left">56</td>
-<td align="left">21200000A0056</td>
-<td align="right">3.2</td>
+<td align="left">102</td>
+<td align="left">212000000A0102</td>
+<td align="right">4.3095</td>
 </tr>
 </tbody>
 </table>
@@ -201,6 +204,18 @@ chaque référentiel ne reçoit que ce qu’il demande.</p>
 <td align="left">oui</td>
 </tr>
 <tr class="even">
+<td align="left">detections</td>
+<td align="left">oui</td>
+<td align="left">oui</td>
+<td align="left">oui</td>
+</tr>
+<tr class="odd">
+<td align="left">suites_detection</td>
+<td align="left">oui</td>
+<td align="left">oui</td>
+<td align="left">oui</td>
+</tr>
+<tr class="even">
 <td align="left">equilibre_gibier</td>
 <td align="left">oui</td>
 <td align="left">oui</td>
@@ -242,6 +257,8 @@ le plus complet.</p>
 <span><span class="co">#&gt;   balance : 10 ligne(s)</span></span>
 <span><span class="co">#&gt;   travaux : 3 ligne(s)</span></span>
 <span><span class="co">#&gt;   evenements : 2 ligne(s)</span></span>
+<span><span class="co">#&gt;   detections : 0 ligne(s)</span></span>
+<span><span class="co">#&gt;   suites_detection : 0 ligne(s)</span></span>
 <span><span class="co">#&gt;   finances : 5 ligne(s)</span></span>
 <span><span class="co">#&gt;   equilibre_gibier : 4 ligne(s)</span></span>
 <span><span class="co">#&gt;   patrimoine : 6 ligne(s)</span></span></code></pre></div>
@@ -275,7 +292,7 @@ le plus complet.</p>
 </tr>
 <tr class="odd">
 <td align="left">Surface</td>
-<td align="left">7.5 ha</td>
+<td align="left">16.3745 ha</td>
 </tr>
 <tr class="even">
 <td align="left">Période</td>
@@ -299,10 +316,10 @@ si le registre a bougé.</p>
 <code class="sourceCode R"><span><span class="va">verif</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_verifier.html">sommier_verifier</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span></span>
 <span><span class="va">verif</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : a5060848-d63c-4062-ba69-c5af3349eb86</span></span>
+<span><span class="co">#&gt;   foret     : f30e6ab6-0024-4a0f-ac2f-9a1c1fe21374</span></span>
 <span><span class="co">#&gt;   entrees   : 66</span></span>
 <span><span class="co">#&gt;   seq tete  : 66</span></span>
-<span><span class="co">#&gt;   hash tete : 89448e3b92f82184d62cba3777599c9227f33321ab2ff6fcce7055adf6eccc84</span></span>
+<span><span class="co">#&gt;   hash tete : 6d4727f1d6a8eb45b938838593bb29f3551c99fd67480fc874d207ada5b1c6e8</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -477,7 +494,7 @@ métier porte <code>repris</code>, <code>reprise_source</code> et
 <tbody>
 <tr class="odd">
 <td align="left">2016</td>
-<td align="right">40</td>
+<td align="right">86</td>
 <td align="left">TRUE</td>
 <td align="left">registre_signe</td>
 <td align="left">Sommier papier de Couchey, serie A50, exercices
@@ -485,7 +502,7 @@ métier porte <code>repris</code>, <code>reprise_source</code> et
 </tr>
 <tr class="even">
 <td align="left">2017</td>
-<td align="right">46</td>
+<td align="right">98</td>
 <td align="left">TRUE</td>
 <td align="left">registre_signe</td>
 <td align="left">Sommier papier de Couchey, serie A50, exercices
@@ -493,7 +510,7 @@ métier porte <code>repris</code>, <code>reprise_source</code> et
 </tr>
 <tr class="odd">
 <td align="left">2018</td>
-<td align="right">37</td>
+<td align="right">80</td>
 <td align="left">TRUE</td>
 <td align="left">registre_signe</td>
 <td align="left">Sommier papier de Couchey, serie A50, exercices
@@ -501,7 +518,7 @@ métier porte <code>repris</code>, <code>reprise_source</code> et
 </tr>
 <tr class="even">
 <td align="left">2019</td>
-<td align="right">43</td>
+<td align="right">92</td>
 <td align="left">TRUE</td>
 <td align="left">registre_signe</td>
 <td align="left">Sommier papier de Couchey, serie A50, exercices
@@ -509,7 +526,7 @@ métier porte <code>repris</code>, <code>reprise_source</code> et
 </tr>
 <tr class="odd">
 <td align="left">2020</td>
-<td align="right">34</td>
+<td align="right">74</td>
 <td align="left">TRUE</td>
 <td align="left">registre_signe</td>
 <td align="left">Sommier papier de Couchey, serie A50, exercices
@@ -517,35 +534,35 @@ métier porte <code>repris</code>, <code>reprise_source</code> et
 </tr>
 <tr class="even">
 <td align="left">2021</td>
-<td align="right">40</td>
+<td align="right">86</td>
 <td align="left">FALSE</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
 </tr>
 <tr class="odd">
 <td align="left">2022</td>
-<td align="right">46</td>
+<td align="right">98</td>
 <td align="left">FALSE</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
 </tr>
 <tr class="even">
 <td align="left">2023</td>
-<td align="right">37</td>
+<td align="right">80</td>
 <td align="left">FALSE</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
 </tr>
 <tr class="odd">
 <td align="left">2024</td>
-<td align="right">43</td>
+<td align="right">92</td>
 <td align="left">FALSE</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
 </tr>
 <tr class="even">
 <td align="left">2025</td>
-<td align="right">34</td>
+<td align="right">74</td>
 <td align="left">FALSE</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
@@ -651,8 +668,8 @@ transcrit</caption>
 <td align="left">martelage</td>
 <td align="left">reguliere</td>
 <td align="left">transcrit</td>
-<td align="right">40</td>
-<td align="right">1.8</td>
+<td align="right">86</td>
+<td align="right">7.1900</td>
 <td align="right">1</td>
 </tr>
 <tr class="even">
@@ -660,8 +677,8 @@ transcrit</caption>
 <td align="left">martelage</td>
 <td align="left">sanitaire</td>
 <td align="left">transcrit</td>
-<td align="right">46</td>
-<td align="right">3.2</td>
+<td align="right">98</td>
+<td align="right">4.3095</td>
 <td align="right">1</td>
 </tr>
 <tr class="odd">
@@ -669,8 +686,8 @@ transcrit</caption>
 <td align="left">martelage</td>
 <td align="left">amelioration</td>
 <td align="left">transcrit</td>
-<td align="right">37</td>
-<td align="right">2.5</td>
+<td align="right">80</td>
+<td align="right">4.8750</td>
 <td align="right">1</td>
 </tr>
 <tr class="even">
@@ -678,8 +695,8 @@ transcrit</caption>
 <td align="left">martelage</td>
 <td align="left">reguliere</td>
 <td align="left">transcrit</td>
-<td align="right">43</td>
-<td align="right">1.8</td>
+<td align="right">92</td>
+<td align="right">7.1900</td>
 <td align="right">1</td>
 </tr>
 <tr class="odd">
@@ -687,8 +704,8 @@ transcrit</caption>
 <td align="left">martelage</td>
 <td align="left">sanitaire</td>
 <td align="left">transcrit</td>
-<td align="right">34</td>
-<td align="right">3.2</td>
+<td align="right">74</td>
+<td align="right">4.3095</td>
 <td align="right">1</td>
 </tr>
 <tr class="even">
@@ -696,8 +713,8 @@ transcrit</caption>
 <td align="left">martelage</td>
 <td align="left">amelioration</td>
 <td align="left">constate</td>
-<td align="right">40</td>
-<td align="right">2.5</td>
+<td align="right">86</td>
+<td align="right">4.8750</td>
 <td align="right">1</td>
 </tr>
 <tr class="odd">
@@ -705,8 +722,8 @@ transcrit</caption>
 <td align="left">martelage</td>
 <td align="left">reguliere</td>
 <td align="left">constate</td>
-<td align="right">46</td>
-<td align="right">1.8</td>
+<td align="right">98</td>
+<td align="right">7.1900</td>
 <td align="right">1</td>
 </tr>
 <tr class="even">
@@ -714,8 +731,8 @@ transcrit</caption>
 <td align="left">produit_accidentel</td>
 <td align="left">chablis</td>
 <td align="left">constate</td>
-<td align="right">22</td>
-<td align="right">0.8</td>
+<td align="right">48</td>
+<td align="right">1.7500</td>
 <td align="right">1</td>
 </tr>
 <tr class="odd">
@@ -723,8 +740,8 @@ transcrit</caption>
 <td align="left">martelage</td>
 <td align="left">sanitaire</td>
 <td align="left">constate</td>
-<td align="right">37</td>
-<td align="right">3.2</td>
+<td align="right">80</td>
+<td align="right">4.3095</td>
 <td align="right">1</td>
 </tr>
 <tr class="even">
@@ -732,8 +749,8 @@ transcrit</caption>
 <td align="left">martelage</td>
 <td align="left">amelioration</td>
 <td align="left">constate</td>
-<td align="right">43</td>
-<td align="right">2.5</td>
+<td align="right">92</td>
+<td align="right">4.8750</td>
 <td align="right">1</td>
 </tr>
 <tr class="odd">
@@ -741,8 +758,8 @@ transcrit</caption>
 <td align="left">martelage</td>
 <td align="left">reguliere</td>
 <td align="left">constate</td>
-<td align="right">34</td>
-<td align="right">1.8</td>
+<td align="right">74</td>
+<td align="right">7.1900</td>
 <td align="right">1</td>
 </tr>
 </tbody>
@@ -775,73 +792,73 @@ durée du plan.</p>
 <tbody>
 <tr class="odd">
 <td align="left">2016</td>
-<td align="right">38</td>
-<td align="right">40</td>
-<td align="right">2</td>
-<td align="right">2</td>
+<td align="right">82</td>
+<td align="right">86</td>
+<td align="right">4</td>
+<td align="right">4</td>
 </tr>
 <tr class="even">
 <td align="left">2017</td>
-<td align="right">38</td>
-<td align="right">46</td>
-<td align="right">8</td>
-<td align="right">10</td>
+<td align="right">82</td>
+<td align="right">98</td>
+<td align="right">16</td>
+<td align="right">20</td>
 </tr>
 <tr class="odd">
 <td align="left">2018</td>
-<td align="right">38</td>
-<td align="right">37</td>
-<td align="right">-1</td>
-<td align="right">9</td>
+<td align="right">82</td>
+<td align="right">80</td>
+<td align="right">-2</td>
+<td align="right">18</td>
 </tr>
 <tr class="even">
 <td align="left">2019</td>
-<td align="right">38</td>
-<td align="right">43</td>
-<td align="right">5</td>
-<td align="right">14</td>
+<td align="right">82</td>
+<td align="right">92</td>
+<td align="right">10</td>
+<td align="right">28</td>
 </tr>
 <tr class="odd">
 <td align="left">2020</td>
-<td align="right">38</td>
-<td align="right">34</td>
-<td align="right">-4</td>
-<td align="right">10</td>
+<td align="right">82</td>
+<td align="right">74</td>
+<td align="right">-8</td>
+<td align="right">20</td>
 </tr>
 <tr class="even">
 <td align="left">2021</td>
-<td align="right">38</td>
-<td align="right">40</td>
-<td align="right">2</td>
-<td align="right">12</td>
+<td align="right">82</td>
+<td align="right">86</td>
+<td align="right">4</td>
+<td align="right">24</td>
 </tr>
 <tr class="odd">
 <td align="left">2022</td>
-<td align="right">38</td>
-<td align="right">68</td>
-<td align="right">30</td>
-<td align="right">42</td>
+<td align="right">82</td>
+<td align="right">146</td>
+<td align="right">64</td>
+<td align="right">88</td>
 </tr>
 <tr class="even">
 <td align="left">2023</td>
-<td align="right">38</td>
-<td align="right">37</td>
-<td align="right">-1</td>
-<td align="right">41</td>
+<td align="right">82</td>
+<td align="right">80</td>
+<td align="right">-2</td>
+<td align="right">86</td>
 </tr>
 <tr class="odd">
 <td align="left">2024</td>
-<td align="right">38</td>
-<td align="right">43</td>
-<td align="right">5</td>
-<td align="right">46</td>
+<td align="right">82</td>
+<td align="right">92</td>
+<td align="right">10</td>
+<td align="right">96</td>
 </tr>
 <tr class="even">
 <td align="left">2025</td>
-<td align="right">38</td>
-<td align="right">34</td>
-<td align="right">-4</td>
-<td align="right">42</td>
+<td align="right">82</td>
+<td align="right">74</td>
+<td align="right">-8</td>
+<td align="right">88</td>
 </tr>
 </tbody>
 </table>
@@ -900,9 +917,9 @@ au contrôle des plantations.</p>
 <td align="left">2022</td>
 <td align="left">plantation</td>
 <td align="left">constate</td>
-<td align="right">0.80</td>
+<td align="right">1.75</td>
 <td align="left">ha</td>
-<td align="right">2 350</td>
+<td align="right">5 130</td>
 <td align="right">78</td>
 <td align="right">1</td>
 </tr>
@@ -910,9 +927,9 @@ au contrôle des plantations.</p>
 <td align="left">2023</td>
 <td align="left">entretien de la desserte</td>
 <td align="left">constate</td>
-<td align="right">0.62</td>
+<td align="right">1.04</td>
 <td align="left">km</td>
-<td align="right">1 180</td>
+<td align="right">1 980</td>
 <td align="right">NA</td>
 <td align="right">1</td>
 </tr>
@@ -920,9 +937,9 @@ au contrôle des plantations.</p>
 <td align="left">2024</td>
 <td align="left">degagement</td>
 <td align="left">constate</td>
-<td align="right">0.80</td>
+<td align="right">1.75</td>
 <td align="left">ha</td>
-<td align="right">640</td>
+<td align="right">1 400</td>
 <td align="right">84</td>
 <td align="right">1</td>
 </tr>
@@ -960,7 +977,7 @@ télédétection, non encore validée sur place.</p>
 <td align="left">2020-08-10</td>
 <td align="left">secheresse</td>
 <td align="left">Deficit hydrique estival, roussissement des cimes</td>
-<td align="right">3.1</td>
+<td align="right">6.80</td>
 <td align="right">NA</td>
 <td align="right">4</td>
 </tr>
@@ -968,8 +985,8 @@ télédétection, non encore validée sur place.</p>
 <td align="left">2022-02-17</td>
 <td align="left">tempete</td>
 <td align="left">Coup de vent du 17 fevrier</td>
-<td align="right">0.8</td>
-<td align="right">22</td>
+<td align="right">1.75</td>
+<td align="right">48</td>
 <td align="right">0</td>
 </tr>
 </tbody>
@@ -994,38 +1011,38 @@ de l’exercice ; le cumul en donne la tendance.</p>
 <tbody>
 <tr class="odd">
 <td align="left">2021</td>
-<td align="right">2 740</td>
-<td align="right">240</td>
-<td align="right">2 500</td>
-<td align="right">2 500</td>
+<td align="right">5 990</td>
+<td align="right">520</td>
+<td align="right">5 470</td>
+<td align="right">5 470</td>
 </tr>
 <tr class="even">
 <td align="left">2022</td>
-<td align="right">2 900</td>
-<td align="right">2 590</td>
-<td align="right">310</td>
-<td align="right">2 810</td>
+<td align="right">6 340</td>
+<td align="right">5 650</td>
+<td align="right">690</td>
+<td align="right">6 160</td>
 </tr>
 <tr class="odd">
 <td align="left">2023</td>
-<td align="right">3 060</td>
-<td align="right">240</td>
-<td align="right">2 820</td>
-<td align="right">5 630</td>
+<td align="right">6 690</td>
+<td align="right">520</td>
+<td align="right">6 170</td>
+<td align="right">12 330</td>
 </tr>
 <tr class="even">
 <td align="left">2024</td>
-<td align="right">3 220</td>
-<td align="right">240</td>
-<td align="right">2 980</td>
-<td align="right">8 610</td>
+<td align="right">7 040</td>
+<td align="right">520</td>
+<td align="right">6 520</td>
+<td align="right">18 850</td>
 </tr>
 <tr class="odd">
 <td align="left">2025</td>
-<td align="right">3 380</td>
-<td align="right">240</td>
-<td align="right">3 140</td>
-<td align="right">11 750</td>
+<td align="right">7 390</td>
+<td align="right">520</td>
+<td align="right">6 870</td>
+<td align="right">25 720</td>
 </tr>
 </tbody>
 </table>
@@ -1060,41 +1077,41 @@ budgété et jamais exécuté est un écart, pas une absence.</p>
 <td align="left">2025</td>
 <td align="left">bois_delivres</td>
 <td align="right">0</td>
-<td align="right">690</td>
-<td align="right">690</td>
+<td align="right">1 520</td>
+<td align="right">1 520</td>
 <td align="right">NA</td>
 </tr>
 <tr class="even">
 <td align="left">2025</td>
 <td align="left">bois_sur_pied</td>
-<td align="right">2 000</td>
-<td align="right">2 380</td>
-<td align="right">380</td>
-<td align="right">119.0</td>
+<td align="right">4 400</td>
+<td align="right">5 190</td>
+<td align="right">790</td>
+<td align="right">118.0</td>
 </tr>
 <tr class="odd">
 <td align="left">2025</td>
 <td align="left">chasse_peche</td>
-<td align="right">300</td>
-<td align="right">310</td>
-<td align="right">10</td>
-<td align="right">103.3</td>
+<td align="right">650</td>
+<td align="right">680</td>
+<td align="right">30</td>
+<td align="right">104.6</td>
 </tr>
 <tr class="even">
 <td align="left">2025</td>
 <td align="left">equipement</td>
-<td align="right">1 200</td>
+<td align="right">2 600</td>
 <td align="right">0</td>
-<td align="right">-1 200</td>
+<td align="right">-2 600</td>
 <td align="right">0.0</td>
 </tr>
 <tr class="odd">
 <td align="left">2025</td>
 <td align="left">frais_garderie</td>
-<td align="right">250</td>
-<td align="right">240</td>
-<td align="right">-10</td>
-<td align="right">96.0</td>
+<td align="right">550</td>
+<td align="right">520</td>
+<td align="right">-30</td>
+<td align="right">94.5</td>
 </tr>
 </tbody>
 </table>
@@ -1123,25 +1140,25 @@ pour l’agriculture, l’alimentation et la forêt du 13 octobre 2014.</p>
 <tbody>
 <tr class="odd">
 <td align="left">2021-2022</td>
-<td align="right">1.4</td>
+<td align="right">3.1</td>
 <td align="right">31</td>
 <td align="left">desequilibre_leger</td>
 </tr>
 <tr class="even">
 <td align="left">2022-2023</td>
-<td align="right">1.4</td>
+<td align="right">3.1</td>
 <td align="right">29</td>
 <td align="left">desequilibre_leger</td>
 </tr>
 <tr class="odd">
 <td align="left">2023-2024</td>
-<td align="right">1.4</td>
+<td align="right">3.1</td>
 <td align="right">27</td>
 <td align="left">desequilibre_leger</td>
 </tr>
 <tr class="even">
 <td align="left">2024-2025</td>
-<td align="right">1.4</td>
+<td align="right">3.1</td>
 <td align="right">25</td>
 <td align="left">desequilibre_leger</td>
 </tr>
@@ -1221,7 +1238,7 @@ d’alors.</p>
 <td align="left">NA</td>
 <td align="left">NA</td>
 <td align="left">Pelouse calcicole seche</td>
-<td align="right">0.6</td>
+<td align="right">1.3</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
 </tr>
@@ -1287,7 +1304,7 @@ par comptage d’un registre qui n’inventorie que le remarquable.</p>
 <td align="left">G - milieux ouverts</td>
 <td align="left">Habitats remarquables au libelle evoquant un milieu
 ouvert</td>
-<td align="right">0.6</td>
+<td align="right">1.3</td>
 <td align="left">ha</td>
 <td align="right">1</td>
 </tr>
@@ -1319,18 +1336,18 @@ ouvert</td>
 <tbody>
 <tr class="odd">
 <td align="left">empierree</td>
-<td align="right">0.62</td>
-<td align="right">8.27</td>
+<td align="right">1.04</td>
+<td align="right">6.35</td>
 </tr>
 <tr class="even">
 <td align="left">terrain_naturel</td>
-<td align="right">0.34</td>
-<td align="right">4.53</td>
+<td align="right">0.48</td>
+<td align="right">2.93</td>
 </tr>
 <tr class="odd">
 <td align="left">total</td>
-<td align="right">0.96</td>
-<td align="right">12.80</td>
+<td align="right">1.52</td>
+<td align="right">9.28</td>
 </tr>
 </tbody>
 </table>
@@ -1371,25 +1388,25 @@ inscrit.</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td align="left">54</td>
-<td align="right">3.36</td>
+<td align="left">102</td>
+<td align="right">4.28</td>
 <td align="right">6</td>
-<td align="right">120</td>
+<td align="right">252</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="left">55</td>
-<td align="right">3.36</td>
-<td align="right">9</td>
-<td align="right">185</td>
-<td align="right">2 990</td>
+<td align="left">15</td>
+<td align="right">4.88</td>
+<td align="right">6</td>
+<td align="right">258</td>
+<td align="right">0</td>
 </tr>
 <tr class="odd">
-<td align="left">56</td>
-<td align="right">3.36</td>
-<td align="right">6</td>
-<td align="right">117</td>
-<td align="right">0</td>
+<td align="left">35</td>
+<td align="right">7.17</td>
+<td align="right">9</td>
+<td align="right">398</td>
+<td align="right">6 530</td>
 </tr>
 </tbody>
 </table>
@@ -1694,7 +1711,7 @@ GeoJSON n’exige rien de plus que PostGIS et s’ouvre sans rien installer
 <span><span class="va">export</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_exporter_sig.html">sommier_exporter_sig</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">couche</span>, format <span class="op">=</span> <span class="st">"geojson"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">export</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 3</span></span>
-<span><span class="co">#&gt;  $ chemin               : chr "/tmp/RtmpkXjwuk/file333b2e90feaa.geojson"</span></span>
+<span><span class="co">#&gt;  $ chemin               : chr "/tmp/RtmpNuvOMp/file33dc76af1cb4.geojson"</span></span>
 <span><span class="co">#&gt;  $ n_unites             : int 3</span></span>
 <span><span class="co">#&gt;  $ unites_sans_geometrie: chr(0)</span></span></code></pre></div>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
@@ -1754,10 +1771,10 @@ base et sans le paquet qui l’a produit.</p>
 <span><span class="fu"><a href="../reference/sommier_exporter_manifeste.html">sommier_exporter_manifeste</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/sommier_verifier_manifeste.html">sommier_verifier_manifeste</a></span><span class="op">(</span><span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : a5060848-d63c-4062-ba69-c5af3349eb86</span></span>
+<span><span class="co">#&gt;   foret     : f30e6ab6-0024-4a0f-ac2f-9a1c1fe21374</span></span>
 <span><span class="co">#&gt;   entrees   : 66</span></span>
 <span><span class="co">#&gt;   seq tete  : 66</span></span>
-<span><span class="co">#&gt;   hash tete : 89448e3b92f82184d62cba3777599c9227f33321ab2ff6fcce7055adf6eccc84</span></span>
+<span><span class="co">#&gt;   hash tete : 6d4727f1d6a8eb45b938838593bb29f3551c99fd67480fc874d207ada5b1c6e8</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span>
 <span><span class="co">#&gt;   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau</span></span></code></pre></div>
 <p>Toute entrée modifiée, retirée ou insérée après coup invalide
