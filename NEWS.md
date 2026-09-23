@@ -1,3 +1,67 @@
+# sommieR 0.13.0
+
+Le rapport de gestion antérieure ne voyait pas les détections. Ce lot les lui
+montre, et corrige ce qu'un premier rendu sur une forêt réelle a mis au jour.
+
+## Seize détections, et un rapport qui disait « aucun enregistrement »
+
+Le sommier de la forêt de Loury, versé depuis le projet RECONFORT de nemeton,
+porte seize détections de dépérissement du chêne au registre 8 — NDP 1, toutes
+en attente de constat. Son rapport PDF n'en montrait aucune :
+`sommier_gestion_anterieure()` ne lisait que les phénomènes, et la section
+« Évènements marquants » concluait « Aucun enregistrement sur la période » sur
+un sommier dont c'étaient les seules écritures.
+
+Ne pas les mêler aux évènements était juste : une détection n'est pas un
+constat. Ne les montrer nulle part ne l'était pas. Deux sections s'ajoutent :
+
+- `detections` : les détections en attente, avec le numéro de l'unité, la
+  source, le NDP, la surface, l'indice et les observations de la chaîne.
+  **Sans borne de période**, comme le patrimoine remarquable : une détection
+  en attente l'est aujourd'hui, et un bilan borné qui la ferait disparaître
+  cacherait justement ce que personne n'est encore allé voir ;
+- `suites_detection` : sur la période, le nombre de détections confirmées et
+  écartées par `sommier_valider_detection()`. Celles-là sont des constats
+  datés, elles se bornent.
+
+Le rapport Quarto leur consacre une section « Détections à vérifier sur le
+terrain » : un encadré qui dit ce qu'est une proposition, le tableau, une
+carte des surfaces proposées par unité, et les libellés du registre. Les
+réserves de méthode que la chaîne répète sur chaque détection — domaine de
+calibration, masque feuillus — sont données une fois ; chaque détection garde
+ce qui lui est propre. Rien n'est reformulé : le texte est celui du registre,
+découpé à ses points.
+
+## Ce que le premier rendu réel a montré
+
+Le jeu de démonstration masquait six défauts, qu'une forêt réelle rend
+visibles d'un coup :
+
+- **la séquence de tête s'imprimait `8 × 10⁻³²³`**. Elle arrive de PostgreSQL
+  en `integer64` ; relue par le document sans `bit64`, elle s'affichait comme
+  le double qui partage ses octets. Elle voyage désormais en texte dans le RDS ;
+- **le titre « Données de démonstration » s'affichait sur toute forêt** : seul
+  le corps de l'encadré était conditionnel. Le bandeau entier l'est devenu ;
+- **la période s'écrivait « 0001-01-01 au 9999-12-31 »** faute de bornes. Ces
+  dates sont des sentinelles : le rapport écrit « depuis l'ouverture du
+  sommier » et « à ce jour » ;
+- **l'empreinte de tête sortait de la page** en PDF. Elle y est coupée en
+  quatre blocs de seize caractères ; en HTML elle reste d'un tenant, pour
+  qu'on puisse la copier ;
+- **les cartes des coupes et des travaux se dessinaient toutes à zéro** quand
+  le registre était vide, et le symbole « € » sortait en point sous le
+  périphérique `pdf()`, qui ne connaît que le Latin-1. Une carte sans valeur
+  ne se dessine plus — le « Aucun enregistrement » de la section reste, une
+  absence d'écriture est une information — et le PDF écrit « EUR » ;
+- les surfaces sont arrondies et écrites à la française (554,93 ha).
+
+## Un rendu qui échoue le dit
+
+`sommier_rapport_quarto()` copiait le document produit vers sa destination
+sans regarder le résultat : `file.copy()` ne signale un échec que par un
+avertissement, et la fonction rendait le chemin d'un fichier qui n'existait
+pas. Elle échoue désormais, en nommant la destination.
+
 # sommieR 0.12.0
 
 Le jeu de démonstration reposait sur un parcellaire qui n'existe pas. Ce lot

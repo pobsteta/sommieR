@@ -258,3 +258,90 @@ test_that("un format inconnu est refuse", {
     "format"
   )
 })
+
+# Deux detections RECONFORT sur deux unites, dont une datee bien avant toute
+# periode de rapport : c'est elle qui dit si la liste est un etat courant.
+foret_detectee_sur <- function(con, foret) {
+  ug_a <- ug_creer(con, foret, "B 12", "2010-01-01")
+  ug_b <- ug_creer(con, foret, "A 568", "2010-01-01")
+  sommier_importer_detections(
+    con, foret,
+    detections = data.frame(
+      nature = c("crise_sanitaire", "crise_sanitaire"),
+      description = c("Deperissement du chene, 24,93 ha",
+                      "Deperissement du chene, 24,39 ha"),
+      date_evenement = c("2026-07-14", "2019-07-14"),
+      ug_uuid = c(ug_a, ug_b),
+      surface_ha = c(24.93, 24.39),
+      indice = c(51.61, 51.6),
+      observations = c("Modele calibre en Centre-Val de Loire. SUFOSAT signale 12,1 ha.",
+                       "Modele calibre en Centre-Val de Loire. FORDEAD classe 4,2 ha."),
+      stringsAsFactors = FALSE
+    ),
+    source = "reconfort", ndp = 1L, auteur = "chaine-reconfort"
+  )
+}
+
+test_that("les detections en attente forment une section a part", {
+  con <- base_export()
+  foret <- foret_creer(con, "Foret de Loury (essai)", "communal")
+  entrees <- foret_detectee_sur(con, foret)
+  ga <- sommier_gestion_anterieure(con, foret)
+
+  d <- ga$sections$detections
+  expect_equal(nrow(d), 2L)
+  # Par surface decroissante, le numero d'unite joint et non son uuid.
+  expect_equal(d$ug, c("B 12", "A 568"))
+  expect_equal(unique(d$source), "reconfort")
+  expect_true(all(d$ndp == 1))
+  expect_match(d$observations[[1L]], "SUFOSAT", fixed = TRUE)
+
+  # Une detection n'est pas un evenement marquant.
+  expect_equal(nrow(ga$sections$evenements), 0L)
+  expect_equal(nrow(ga$sections$suites_detection), 0L)
+})
+
+test_that("une detection en attente reste listee hors de la periode", {
+  con <- base_export()
+  foret <- foret_creer(con, "Foret de Loury (essai)", "communal")
+  foret_detectee_sur(con, foret)
+  # Periode 2026 : la detection de 2019 n'y tombe pas, mais personne n'est
+  # encore alle la voir. Elle doit rester sous les yeux du lecteur.
+  ga <- sommier_gestion_anterieure(con, foret, "2026-01-01", "2026-12-31")
+  expect_equal(nrow(ga$sections$detections), 2L)
+})
+
+test_that("une detection suivie sort de l'attente et compte parmi les suites", {
+  con <- base_export()
+  foret <- foret_creer(con, "Foret de Loury (essai)", "communal")
+  entrees <- foret_detectee_sur(con, foret)
+
+  sommier_valider_detection(
+    con, entrees[[1L]]$id, auteur = "agent-01", statut = "confirme",
+    description = "Deperissement confirme", date_evenement = "2026-08-01"
+  )
+  sommier_valider_detection(
+    con, entrees[[2L]]$id, auteur = "agent-01", statut = "ecarte",
+    description = "Coupe rase de 2022, pas un deperissement",
+    date_evenement = "2026-08-02"
+  )
+
+  ga <- sommier_gestion_anterieure(con, foret)
+  expect_equal(nrow(ga$sections$detections), 0L)
+  suites <- ga$sections$suites_detection
+  expect_equal(suites$n[suites$statut_detection == "confirme"], 1)
+  expect_equal(suites$n[suites$statut_detection == "ecarte"], 1)
+
+  # Les suites sont des constats dates : hors periode, elles ne comptent pas.
+  avant <- sommier_gestion_anterieure(con, foret, "2020-01-01", "2020-12-31")
+  expect_equal(nrow(avant$sections$suites_detection), 0L)
+})
+
+test_that("le rendu Markdown titre la section des detections", {
+  con <- base_export()
+  foret <- foret_creer(con, "Foret de Loury (essai)", "communal")
+  foret_detectee_sur(con, foret)
+  md <- sommier_rapport_markdown(sommier_gestion_anterieure(con, foret))
+  expect_match(md, "## Detections a verifier sur le terrain", fixed = TRUE)
+  expect_match(md, "B 12", fixed = TRUE)
+})

@@ -156,3 +156,55 @@ test_that("le rapport Quarto se rend et porte l'empreinte de tete", {
   # inapercu.
   expect_no_match(html, "&lt;U\\+[0-9A-F]{4}&gt;")
 })
+
+test_that("le rapport Quarto d'une foret reelle montre ses detections", {
+  skip_if(!nzchar(Sys.which("quarto")), "Quarto n'est pas installe.")
+  con <- base_demo()
+  foret <- foret_creer(con, suffixe_test("Foret de Loury"), "communal",
+                       surface_ha = 554.9321)
+  ug <- ug_creer(con, foret, "B 12", "2010-01-01")
+  sommier_importer_detections(
+    con, foret,
+    detections = data.frame(
+      nature = "crise_sanitaire", description = "Deperissement du chene",
+      date_evenement = "2026-07-14", ug_uuid = ug, surface_ha = 24.93,
+      indice = 51.61, observations = "Modele calibre en Centre-Val de Loire.",
+      stringsAsFactors = FALSE
+    ),
+    source = "reconfort", ndp = 1L, auteur = "chaine-reconfort"
+  )
+  chemin <- withr::local_tempfile(fileext = ".html")
+  sommier_rapport_quarto(con, foret, chemin, format = "html")
+  html <- paste(readLines(chemin, warn = FALSE, encoding = "UTF-8"),
+                collapse = "\n")
+
+  expect_match(html, "Détections à vérifier sur le terrain", fixed = TRUE)
+  expect_match(html, "B 12", fixed = TRUE)
+  expect_match(html, "Centre-Val de Loire", fixed = TRUE)
+  # Le bandeau de demonstration est reserve au jeu d'essai.
+  expect_no_match(html, "Données de démonstration", fixed = TRUE)
+  # Les bornes par defaut ne s'impriment pas comme des dates.
+  expect_no_match(html, "0001-01-01", fixed = TRUE)
+  expect_match(html, "554,93 ha", fixed = TRUE)
+  # La sequence de tete est un bigint : relue sans bit64, elle sortait en
+  # 5e-324 au lieu de 1.
+  expect_no_match(html, "e-32[0-9]")
+  expect_match(html, sommier_verifier(con, foret)$hash_tete, fixed = TRUE)
+})
+
+test_that("un document qui ne peut etre ecrit fait echouer le rendu", {
+  skip_if(!nzchar(Sys.which("quarto")), "Quarto n'est pas installe.")
+  con <- base_demo()
+  foret <- foret_creer(con, suffixe_test("Foret non ecrite"), "communal")
+  dossier <- withr::local_tempdir()
+  Sys.chmod(dossier, "0555")
+  withr::defer(Sys.chmod(dossier, "0755"))
+  skip_if(file.access(dossier, 2L) == 0L, "Le dossier reste inscriptible.")
+  # `file.copy()` avertit en plus d'echouer : seul l'echec nous interesse.
+  expect_error(
+    suppressWarnings(
+      sommier_rapport_quarto(con, foret, file.path(dossier, "r.html"))
+    ),
+    "Impossible d'ecrire"
+  )
+})
