@@ -19,7 +19,7 @@ existante.
 | **Surface**          | 16,37 ha                                          |
 | **Période couverte** | Du 2016-01-01 au 2025-12-31                       |
 | **Référentiel**      | amenagement                                       |
-| **Édité le**         | 23/09/2026                                        |
+| **Édité le**         | 25/09/2026                                        |
 
 ### 1.1 Parcellaire
 
@@ -27,7 +27,20 @@ existante.
 
 Unités de gestion en vigueur à la fin de la période, avec leur surface.
 
-### 1.2 Intégrité du registre
+### 1.2 Récapitulatif du parcellaire
+
+*Fond cadastral non fourni : les ténements ne peuvent pas être calculés.
+Seules les unités de gestion sont récapitulées.*
+
+| Unité de gestion | Surface SIG (ha) |
+|:-----------------|-----------------:|
+| 15               |             4,88 |
+| 35               |             7,17 |
+| 102              |             4,28 |
+
+Unités de gestion en vigueur {.caption-top .table}
+
+### 1.3 Intégrité du registre
 
 Le sommier est un journal à chaînage de hachages : chaque entrée scelle
 la précédente. L’état ci-dessous est celui constaté à l’édition de ce
@@ -38,7 +51,7 @@ document.
 | **État de la chaîne** | intacte |
 | **Entrées** | 66 |
 | **Séquence de tête** | 66 |
-| **Empreinte de tête** | `6d4727f1d6a8eb45b938838593bb29f3551c99fd67480fc874d207ada5b1c6e8` |
+| **Empreinte de tête** | `3afeeb36d1dfed79b6139ea4824188c3078c183860272ac263b8a4fcbb280190` |
 
 ## 2 Provenance des écritures
 
@@ -73,19 +86,19 @@ dit.
 
 ## 3 Coupes et récoltes
 
-| exercice | type_entree | nature_coupe | provenance | volume_m3 | surface_ha | n |
+| Exercice | Type | Nature | Provenance | Volume (m³) | Surface (ha) | Entrées |
 |:---|:---|:---|:---|---:|---:|---:|
-| 2016 | martelage | reguliere | transcrit | 86 | 7.1900 | 4.940656e-324 |
-| 2017 | martelage | sanitaire | transcrit | 98 | 4.3095 | 4.940656e-324 |
-| 2018 | martelage | amelioration | transcrit | 80 | 4.8750 | 4.940656e-324 |
-| 2019 | martelage | reguliere | transcrit | 92 | 7.1900 | 4.940656e-324 |
-| 2020 | martelage | sanitaire | transcrit | 74 | 4.3095 | 4.940656e-324 |
-| 2021 | martelage | amelioration | constate | 86 | 4.8750 | 4.940656e-324 |
-| 2022 | martelage | reguliere | constate | 98 | 7.1900 | 4.940656e-324 |
-| 2022 | produit_accidentel | chablis | constate | 48 | 1.7500 | 4.940656e-324 |
-| 2023 | martelage | sanitaire | constate | 80 | 4.3095 | 4.940656e-324 |
-| 2024 | martelage | amelioration | constate | 92 | 4.8750 | 4.940656e-324 |
-| 2025 | martelage | reguliere | constate | 74 | 7.1900 | 4.940656e-324 |
+| 2016 | martelage | reguliere | transcrit | 86 | 7,2 | 1 |
+| 2017 | martelage | sanitaire | transcrit | 98 | 4,3 | 1 |
+| 2018 | martelage | amelioration | transcrit | 80 | 4,9 | 1 |
+| 2019 | martelage | reguliere | transcrit | 92 | 7,2 | 1 |
+| 2020 | martelage | sanitaire | transcrit | 74 | 4,3 | 1 |
+| 2021 | martelage | amelioration | constate | 86 | 4,9 | 1 |
+| 2022 | martelage | reguliere | constate | 98 | 7,2 | 1 |
+| 2022 | produit accidentel | chablis | constate | 48 | 1,8 | 1 |
+| 2023 | martelage | sanitaire | constate | 80 | 4,3 | 1 |
+| 2024 | martelage | amelioration | constate | 92 | 4,9 | 1 |
+| 2025 | martelage | reguliere | constate | 74 | 7,2 | 1 |
 
 Coupes enregistrées sur la période, par exercice et nature {.caption-top
 .table}
@@ -101,18 +114,18 @@ l’aménagement. Une balance positive signale un excès de prélèvement, une
 balance négative un déficit ; c’est le cumul qui compte sur la durée du
 plan.
 
-| exercice | possibilite_m3_an | volume_martele_m3 | balance_exercice_m3 | balance_cumulee_m3 |
-|:---|---:|---:|---:|---:|
-| 2016 | 82 | 86 | 4 | 4 |
-| 2017 | 82 | 98 | 16 | 20 |
-| 2018 | 82 | 80 | -2 | 18 |
-| 2019 | 82 | 92 | 10 | 28 |
-| 2020 | 82 | 74 | -8 | 20 |
-| 2021 | 82 | 86 | 4 | 24 |
-| 2022 | 82 | 146 | 64 | 88 |
-| 2023 | 82 | 80 | -2 | 86 |
-| 2024 | 82 | 92 | 10 | 96 |
-| 2025 | 82 | 74 | -8 | 88 |
+| Exercice | Possibilité (m³/an) | Martelé (m³) | Balance (m³) | Balance cumulée (m³) |
+|:---------|--------------------:|-------------:|-------------:|---------------------:|
+| 2016     |                  82 |           86 |            4 |                    4 |
+| 2017     |                  82 |           98 |           16 |                   20 |
+| 2018     |                  82 |           80 |           -2 |                   18 |
+| 2019     |                  82 |           92 |           10 |                   28 |
+| 2020     |                  82 |           74 |           -8 |                   20 |
+| 2021     |                  82 |           86 |            4 |                   24 |
+| 2022     |                  82 |          146 |           64 |                   88 |
+| 2023     |                  82 |           80 |           -2 |                   86 |
+| 2024     |                  82 |           92 |           10 |                   96 |
+| 2025     |                  82 |           74 |           -8 |                   88 |
 
 Balance de possibilité {.caption-top .table}
 
@@ -130,11 +143,11 @@ pièce la moins précise.
 
 Le taux de reprise est celui relevé au contrôle des plantations.
 
-| annee | nature_travaux | provenance | quantite | unite | montant_eur | taux_reprise_moyen_pct | n |
+| Année | Nature | Provenance | Quantité | Unité | Montant (€) | Reprise moyenne (%) | Entrées |
 |:---|:---|:---|---:|:---|---:|---:|---:|
-| 2022 | plantation | constate | 1.75 | ha | 5 130 | 78 | 4.940656e-324 |
-| 2023 | entretien de la desserte | constate | 1.04 | km | 1 980 | NA | 4.940656e-324 |
-| 2024 | degagement | constate | 1.75 | ha | 1 400 | 84 | 4.940656e-324 |
+| 2022 | plantation | constate | 1,8 | ha | 5 130 | 78 | 1 |
+| 2023 | entretien de la desserte | constate | 1,0 | km | 1 980 | — | 1 |
+| 2024 | degagement | constate | 1,8 | ha | 1 400 | 84 | 1 |
 
 Travaux réalisés sur la période {.caption-top .table}
 
@@ -149,10 +162,10 @@ Le niveau de précision (NDP) vaut 0 pour un constat de terrain ; une
 valeur supérieure signale une observation qui n’en est pas un — issue de
 la télédétection, ou transcrite d’une pièce antérieure au sommier.
 
-| date_evenement | nature | description | surface_ha | volume_impacte_m3 | ndp |
+| Date | Nature | Description | Surface (ha) | Volume impacté (m³) | NDP |
 |:---|:---|:---|---:|---:|---:|
-| 2020-08-10 | secheresse | Deficit hydrique estival, roussissement des cimes | 6.80 | NA | 4 |
-| 2022-02-17 | tempete | Coup de vent du 17 fevrier | 1.75 | 48 | 0 |
+| 2020-08-10 | secheresse | Deficit hydrique estival, roussissement des cimes | 6,8 | — | 4 |
+| 2022-02-17 | tempete | Coup de vent du 17 fevrier | 1,8 | 48 | 0 |
 
 Phénomènes intéressant la vie de la forêt {.caption-top .table}
 
@@ -166,7 +179,7 @@ au registre y figurent.
 Le solde est la différence entre recettes et dépenses de l’exercice ; le
 cumul en donne la tendance.
 
-| exercice | recettes_eur | depenses_eur | solde_eur | solde_cumule_eur |
+| Exercice | Recettes (€) | Dépenses (€) | Solde (€) | Solde cumulé (€) |
 |:---------|-------------:|-------------:|----------:|-----------------:|
 | 2021     |        5 990 |          520 |     5 470 |            5 470 |
 | 2022     |        6 340 |        5 650 |       690 |            6 160 |
@@ -181,12 +194,12 @@ Recettes, dépenses et solde par exercice {.caption-top .table}
 Obligatoire dans les plans simples de gestion depuis la loi d’avenir
 pour l’agriculture, l’alimentation et la forêt du 13 octobre 2014.
 
-| saison    | surface_sensible_ha | taux_abroutissement_pct | diagnostic         |
-|:----------|--------------------:|------------------------:|:-------------------|
-| 2021-2022 |                 3.1 |                      31 | desequilibre_leger |
-| 2022-2023 |                 3.1 |                      29 | desequilibre_leger |
-| 2023-2024 |                 3.1 |                      27 | desequilibre_leger |
-| 2024-2025 |                 3.1 |                      25 | desequilibre_leger |
+| Saison    | Surface sensible (ha) | Abroutissement (%) | Diagnostic         |
+|:----------|----------------------:|-------------------:|:-------------------|
+| 2021-2022 |                   3,1 |                 31 | desequilibre leger |
+| 2022-2023 |                   3,1 |                 29 | desequilibre leger |
+| 2023-2024 |                   3,1 |                 27 | desequilibre leger |
+| 2024-2025 |                   3,1 |                 25 | desequilibre leger |
 
 Constats d’équilibre forêt-gibier {.caption-top .table}
 
@@ -199,14 +212,14 @@ Patrimoine remarquable localisé : arbres, vestiges, espèces, habitats.
 Dernier relevé connu de chaque sujet : le patrimoine est un état
 courant, il n’est pas borné par la période du rapport.
 
-| type_fiche | appellation | nom_latin | type_habitat | surface_ha | etat_sanitaire | statut_protection |
+| Fiche | Appellation | Nom latin | Habitat | Surface (ha) | État sanitaire | Protection |
 |:---|:---|:---|:---|---:|:---|:---|
-| arbre | Alisier de la lisiere sud | NA | NA | NA | bon | NA |
-| arbre | Chandelle du talus est | NA | NA | NA | mort | NA |
-| arbre | Chene de la Justice | NA | NA | NA | moyen | NA |
-| espece | NA | Cypripedium calceolus | NA | NA | NA | Directive Habitats, annexe II |
-| habitat | NA | NA | Pelouse calcicole seche | 1.3 | NA | NA |
-| vestige | Charbonniere de la section A | NA | NA | NA | NA | NA |
+| arbre | Alisier de la lisiere sud | — | — | — | bon | — |
+| arbre | Chandelle du talus est | — | — | — | mort | — |
+| arbre | Chene de la Justice | — | — | — | moyen | — |
+| espece | — | Cypripedium calceolus | — | — | — | Directive Habitats, annexe II |
+| habitat | — | — | Pelouse calcicole seche | 1,3 | — | — |
+| vestige | Charbonniere de la section A | — | — | — | — | — |
 
 Arbres, peuplements, vestiges, espèces et habitats {.caption-top .table}
 
@@ -263,5 +276,5 @@ l’empreinte de tête, et la vérification le dit.
 
 ------------------------------------------------------------------------
 
-*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.13.0 le
-23/09/2026.*
+*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.14.0 le
+25/09/2026.*
