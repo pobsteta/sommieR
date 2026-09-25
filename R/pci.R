@@ -89,7 +89,7 @@ sommier_feuilles_pci <- function(code_insee, emprise = NULL, marge_m = 100,
   data.frame(
     feuille = couche[["id"]], section = couche[["section"]] %||% NA_character_,
     echelle = suppressWarnings(as.numeric(couche[["echelle"]] %||% NA)),
-    wkt = sf::st_as_text(sf::st_geometry(couche)),
+    wkt = wkt_plein(sf::st_geometry(couche)),
     stringsAsFactors = FALSE
   )
 }
@@ -243,7 +243,7 @@ sommier_fond_pci_lire <- function(fond, couche = "bornes", emprise = NULL,
       feuille = fond$feuilles$feuille[[i]],
       objet = objets[["OBJECT_RID"]] %||% NA_character_,
       sym = as.character(objets[["SYM"]] %||% NA_character_),
-      wkt = sf::st_as_text(poser_projection(sf::st_geometry(objets), thf)),
+      wkt = wkt_plein(poser_projection(sf::st_geometry(objets), thf)),
       stringsAsFactors = FALSE
     )
   })

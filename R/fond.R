@@ -170,7 +170,7 @@ sommier_fond_lire <- function(fond, emprise = NULL, marge_m = 100) {
     section       = couche$section %||% NA_character_,
     numero        = couche$numero %||% NA_character_,
     contenance_m2 = suppressWarnings(as.numeric(couche$contenance %||% NA)),
-    wkt           = sf::st_as_text(sf::st_geometry(couche)),
+    wkt           = wkt_plein(sf::st_geometry(couche)),
     stringsAsFactors = FALSE
   )
   attr(resultat, "source") <- fond$source

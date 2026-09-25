@@ -1,3 +1,22 @@
+# sommieR 0.14.1
+
+Les contours lus depuis le cadastre gardent leur précision.
+
+## Un arrondi au mètre que rien ne signalait
+
+`sommier_fond_lire()`, `sommier_fond_pci_lire()` et la lecture des objets
+EDIGEO passaient leurs géométries en WKT par `sf::st_as_text()` sans lui dire
+combien de chiffres garder. La fonction suit alors `getOption("digits")`,
+soit sept chiffres significatifs : en Lambert-93, une ordonnée comme
+6 768 263,2 perd ses décimales, et le contour est ramené au mètre. Sur la
+fixture du paquet, l'écart atteint 0,29 m.
+
+Le défaut s'est vu sur la forêt domaniale d'Orléans, où l'union des ténements
+d'une unité, valide avant l'écriture, en ressortait auto-intersectée. Les
+trois lectures passent désormais par un même utilitaire à quinze chiffres,
+qui rend le double tel qu'il a été lu. Les surfaces de ténements du
+récapitulatif du parcellaire, calculées sur ce fond, en gagnent autant.
+
 # sommieR 0.14.0
 
 Le rapport récapitule désormais le parcellaire : les unités de gestion, les
