@@ -85,10 +85,16 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
     verification$seq_tete <- format(verification$seq_tete, scientific = FALSE)
   }
 
+  # Meme piege pour les tableaux : un `count(*)` arrive en bigint, et une
+  # entree comptee sortait « 4.940656e-324 ». Les colonnes `integer64` des
+  # sections passent en numerique avant d'entrer dans le RDS.
+  gestion <- sommier_gestion_anterieure(
+    con, foret_id, debut = debut, fin = fin, referentiel = referentiel
+  )
+  gestion$sections <- lapply(gestion$sections, sans_integer64)
+
   rapport <- list(
-    gestion_anterieure = sommier_gestion_anterieure(
-      con, foret_id, debut = debut, fin = fin, referentiel = referentiel
-    ),
+    gestion_anterieure = gestion,
     verification    = verification,
     carte           = essayer_section(sommier_couche_ug(
       con, foret_id, debut = debut, fin = fin
@@ -145,6 +151,18 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
     stop("Impossible d'ecrire le document dans ", chemin, ".", call. = FALSE)
   }
   invisible(chemin)
+}
+
+# Les compteurs sont petits : les passer en double ne perd rien, et le RDS
+# se relit alors sans `bit64`.
+sans_integer64 <- function(df) {
+  if (!is.data.frame(df)) return(df)
+  for (colonne in names(df)) {
+    if (inherits(df[[colonne]], "integer64")) {
+      df[[colonne]] <- as.numeric(df[[colonne]])
+    }
+  }
+  df
 }
 
 # Une section facultative absente ne doit pas faire echouer tout le rapport :

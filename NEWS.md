@@ -33,6 +33,18 @@ concernées, 554,93 ha, est exactement la surface déclarée de la forêt.
 Le tableau suit l'ordre du cadastre et non celui de l'alphabet : B 2 avant
 B 11.
 
+## Des tableaux qui se lisent
+
+Le premier martelage réel porté au sommier de la forêt domaniale d'Orléans
+a rendu la section des coupes pour la première fois ailleurs que sur la
+démonstration, et deux défauts avec elle. Le compte d'entrées sortait
+« 4.940656e-324 » : c'est le `count(*)` de PostgreSQL, un bigint, relu par le
+document sans `bit64` — le même piège que la séquence de tête, que la 0.13.0
+n'avait refermé que pour elle. Les colonnes `integer64` de toutes les sections
+passent désormais en numérique avant le RDS. Et les tableaux parlaient SQL :
+`type_entree`, `volume_m3`, `151.4036`, `NA`. Ils portent maintenant des
+libellés, des nombres à la française, et « — » pour une valeur absente.
+
 # sommieR 0.13.0
 
 Le rapport de gestion antérieure ne voyait pas les détections. Ce lot les lui

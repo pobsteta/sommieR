@@ -28,6 +28,41 @@ rapport <- readRDS(params$donnees)
 ga <- rapport$gestion_anterieure
 sections <- ga$sections
 
+# Les colonnes des vues parlent SQL ; le lecteur du rapport, non. Une colonne
+# absente du dictionnaire garde son nom plutôt que d'en recevoir un inventé.
+libelles_colonnes <- c(
+  exercice = "Exercice", annee = "Année", type_entree = "Type",
+  nature_coupe = "Nature", nature_travaux = "Nature", provenance = "Provenance",
+  volume_m3 = "Volume (m³)", surface_ha = "Surface (ha)", n = "Entrées",
+  quantite = "Quantité", unite = "Unité", montant_eur = "Montant (€)",
+  taux_reprise_moyen_pct = "Reprise moyenne (%)",
+  possibilite_m3_an = "Possibilité (m³/an)",
+  volume_martele_m3 = "Martelé (m³)", balance_exercice_m3 = "Balance (m³)",
+  balance_cumulee_m3 = "Balance cumulée (m³)", date_evenement = "Date",
+  nature = "Nature", description = "Description",
+  volume_impacte_m3 = "Volume impacté (m³)", ndp = "NDP",
+  recettes_eur = "Recettes (€)", depenses_eur = "Dépenses (€)",
+  solde_eur = "Solde (€)", solde_cumule_eur = "Solde cumulé (€)",
+  saison = "Saison", surface_sensible_ha = "Surface sensible (ha)",
+  taux_abroutissement_pct = "Abroutissement (%)", diagnostic = "Diagnostic",
+  type_fiche = "Fiche", appellation = "Appellation", nom_latin = "Nom latin",
+  type_habitat = "Habitat", etat_sanitaire = "État sanitaire",
+  statut_protection = "Protection"
+)
+
+# Une valeur absente s'écrit « — » et non « NA » ; un nombre s'écrit à la
+# française, entier s'il l'est, à une décimale sinon ; un code garde ses
+# tirets bas remplacés par des espaces.
+cellule <- function(x) {
+  if (inherits(x, "Date")) return(ifelse(is.na(x), "—", format(x)))
+  if (is.numeric(x)) {
+    entier <- all(is.na(x) | x == round(x))
+    return(ifelse(is.na(x), "—", nombre(x, if (entier) 0L else 1L)))
+  }
+  x <- as.character(x)
+  ifelse(is.na(x) | !nzchar(x), "—", gsub("_", " ", x, fixed = TRUE))
+}
+
 tableau <- function(nom, legende = NULL) {
   df <- sections[[nom]]
   if (is.null(df) || nrow(df) == 0L) {
@@ -39,7 +74,17 @@ tableau <- function(nom, legende = NULL) {
   for (colonne in intersect(c("exercice", "annee"), names(df))) {
     df[[colonne]] <- as.character(df[[colonne]])
   }
-  print(knitr::kable(df, caption = legende, format.args = list(big.mark = " ")))
+  numeriques <- vapply(df, is.numeric, logical(1))
+  sortie <- as.data.frame(lapply(df, cellule), stringsAsFactors = FALSE,
+                          check.names = FALSE)
+  noms <- names(df)
+  names(sortie) <- ifelse(noms %in% names(libelles_colonnes),
+                          libelles_colonnes[noms], noms)
+  if (knitr::is_latex_output()) {
+    names(sortie) <- gsub("€", "EUR", names(sortie), fixed = TRUE)
+  }
+  print(knitr::kable(sortie, caption = legende,
+                     align = ifelse(numeriques, "r", "l")))
   cat("\n\n")
 }
 
