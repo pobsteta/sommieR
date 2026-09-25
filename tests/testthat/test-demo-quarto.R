@@ -151,6 +151,10 @@ test_that("le rapport Quarto se rend et porte l'empreinte de tete", {
   # qui ne se signale pas est exactement ce qu'on veut eviter.
   expect_match(html, "monstration", fixed = TRUE)
 
+  # Sans fond cadastral, le recapitulatif dit pourquoi il n'a pas de tenements.
+  expect_match(html, "Récapitulatif du parcellaire", fixed = TRUE)
+  expect_match(html, "Fond cadastral non fourni", fixed = TRUE)
+
   # Aucun caractere ne doit sortir echappe : sous une locale non UTF-8, R
   # rendrait les accents en <U+00E9> sans echouer, et le defaut passerait
   # inapercu.
@@ -207,4 +211,47 @@ test_that("un document qui ne peut etre ecrit fait echouer le rendu", {
     ),
     "Impossible d'ecrire"
   )
+})
+
+test_that("le recapitulatif croise les unites et les parcelles du fond", {
+  skip_if(!nzchar(Sys.which("quarto")), "Quarto n'est pas installe.")
+  skip_if_not_installed("sf")
+  con <- base_demo()
+  demo <- sommier_demo_couchey(con, suffixe = suffixe_test("tenements"))
+  couche <- sommier_couche_ug(con, demo$foret_id)
+  p <- SOMMIER_PARCELLES_COUCHEY
+  # La couche est triee par numero en texte (102, 15, 35) : on apparie par
+  # numero, sans quoi chaque reference porterait le contour d'une autre.
+  wkt <- couche$wkt[match(p$numero, couche$numero_affichage)]
+  contours <- sf::st_as_sfc(wkt, crs = 2154)
+
+  # Le fond reprend les trois parcelles de la demonstration, et y ajoute une
+  # voisine qui mord de 3 metres sur la premiere unite : un liseré de trace,
+  # qui ne doit pas passer pour un tenement.
+  boite <- sf::st_bbox(contours[1L])
+  voisine <- sf::st_as_sfc(sf::st_bbox(c(
+    xmin = boite[["xmax"]] - 3, ymin = boite[["ymin"]],
+    xmax = boite[["xmax"]] + 200, ymax = boite[["ymax"]]
+  ), crs = 2154))
+  fond <- data.frame(
+    reference     = c(p$geo_parcelle, "212000000A0999"),
+    section       = c(p$section, "A"),
+    numero        = c(sprintf("%04d", as.integer(p$numero)), "0999"),
+    contenance_m2 = c(p$contenance_m2, 99999),
+    wkt           = c(wkt, sf::st_as_text(voisine)),
+    stringsAsFactors = FALSE
+  )
+  attr(fond, "source") <- "fond d'essai"
+  attr(fond, "millesime") <- NA_character_
+
+  chemin <- withr::local_tempfile(fileext = ".html")
+  sommier_rapport_quarto(con, demo$foret_id, chemin, format = "html",
+                         fond = fond)
+  html <- paste(readLines(chemin, warn = FALSE, encoding = "UTF-8"),
+                collapse = "\n")
+
+  expect_match(html, "3 ténement(s)", fixed = TRUE)
+  expect_match(html, "212000000A0035", fixed = TRUE)
+  expect_no_match(html, "212000000A0999", fixed = TRUE)
+  expect_no_match(html, "Fond cadastral non fourni", fixed = TRUE)
 })

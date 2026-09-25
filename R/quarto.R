@@ -40,7 +40,10 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 #'   [sommier_fond_lire()] ; `NULL` pour s'en passer. Il se fournit et ne se
 #'   telecharge pas : le rendu ne doit declencher aucun appel reseau, sans
 #'   quoi un rapport cesserait d'etre editable hors ligne - et le meme rapport
-#'   rejoue plus tard changerait de fond sans le dire.
+#'   rejoue plus tard changerait de fond sans le dire. C'est aussi lui qui
+#'   donne les tenements du recapitulatif du parcellaire - la part de chaque
+#'   parcelle cadastrale comprise dans une unite : sans fond, le recapitulatif
+#'   ne liste que les unites.
 #' @param fond_pci Bornes du PCI vecteur a poser sur la carte de la desserte,
 #'   telles que les rend [sommier_fond_pci_lire()] ; `NULL` pour s'en passer.
 #'   Meme regle que `fond` : fourni, jamais telecharge au rendu.
@@ -82,10 +85,16 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
     verification$seq_tete <- format(verification$seq_tete, scientific = FALSE)
   }
 
+  # Meme piege pour les tableaux : un `count(*)` arrive en bigint, et une
+  # entree comptee sortait « 4.940656e-324 ». Les colonnes `integer64` des
+  # sections passent en numerique avant d'entrer dans le RDS.
+  gestion <- sommier_gestion_anterieure(
+    con, foret_id, debut = debut, fin = fin, referentiel = referentiel
+  )
+  gestion$sections <- lapply(gestion$sections, sans_integer64)
+
   rapport <- list(
-    gestion_anterieure = sommier_gestion_anterieure(
-      con, foret_id, debut = debut, fin = fin, referentiel = referentiel
-    ),
+    gestion_anterieure = gestion,
     verification    = verification,
     carte           = essayer_section(sommier_couche_ug(
       con, foret_id, debut = debut, fin = fin
@@ -142,6 +151,18 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
     stop("Impossible d'ecrire le document dans ", chemin, ".", call. = FALSE)
   }
   invisible(chemin)
+}
+
+# Les compteurs sont petits : les passer en double ne perd rien, et le RDS
+# se relit alors sans `bit64`.
+sans_integer64 <- function(df) {
+  if (!is.data.frame(df)) return(df)
+  for (colonne in names(df)) {
+    if (inherits(df[[colonne]], "integer64")) {
+      df[[colonne]] <- as.numeric(df[[colonne]])
+    }
+  }
+  df
 }
 
 # Une section facultative absente ne doit pas faire echouer tout le rapport :

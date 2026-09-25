@@ -35,7 +35,10 @@ sommier_rapport_quarto(
 \code{\link[=sommier_fond_lire]{sommier_fond_lire()}} ; \code{NULL} pour s'en passer. Il se fournit et ne se
 telecharge pas : le rendu ne doit declencher aucun appel reseau, sans
 quoi un rapport cesserait d'etre editable hors ligne - et le meme rapport
-rejoue plus tard changerait de fond sans le dire.}
+rejoue plus tard changerait de fond sans le dire. C'est aussi lui qui
+donne les tenements du recapitulatif du parcellaire - la part de chaque
+parcelle cadastrale comprise dans une unite : sans fond, le recapitulatif
+ne liste que les unites.}
 
 \item{fond_pci}{Bornes du PCI vecteur a poser sur la carte de la desserte,
 telles que les rend \code{\link[=sommier_fond_pci_lire]{sommier_fond_pci_lire()}} ; \code{NULL} pour s'en passer.
