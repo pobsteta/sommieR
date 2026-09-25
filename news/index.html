@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,15 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.14.1" id="sommier-0141">sommieR 0.14.1<a class="anchor" aria-label="anchor" href="#sommier-0141"></a></h2>
+<p>Les contours lus depuis le cadastre gardent leur précision.</p>
+<div class="section level3">
+<h3 id="un-arrondi-au-mètre-que-rien-ne-signalait-0-14-1">Un arrondi au mètre que rien ne signalait<a class="anchor" aria-label="anchor" href="#un-arrondi-au-m%C3%A8tre-que-rien-ne-signalait-0-14-1"></a></h3>
+<p><code><a href="../reference/sommier_fond_lire.html">sommier_fond_lire()</a></code>, <code><a href="../reference/sommier_fond_pci_lire.html">sommier_fond_pci_lire()</a></code> et la lecture des objets EDIGEO passaient leurs géométries en WKT par <code><a href="https://r-spatial.github.io/sf/reference/st_as_text.html" class="external-link">sf::st_as_text()</a></code> sans lui dire combien de chiffres garder. La fonction suit alors <code>getOption("digits")</code>, soit sept chiffres significatifs : en Lambert-93, une ordonnée comme 6 768 263,2 perd ses décimales, et le contour est ramené au mètre. Sur la fixture du paquet, l’écart atteint 0,29 m.</p>
+<p>Le défaut s’est vu sur la forêt domaniale d’Orléans, où l’union des ténements d’une unité, valide avant l’écriture, en ressortait auto-intersectée. Les trois lectures passent désormais par un même utilitaire à quinze chiffres, qui rend le double tel qu’il a été lu. Les surfaces de ténements du récapitulatif du parcellaire, calculées sur ce fond, en gagnent autant.</p>
+</div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.14.0" id="sommier-0140">sommieR 0.14.0<a class="anchor" aria-label="anchor" href="#sommier-0140"></a></h2>
 <p>Le rapport récapitule désormais le parcellaire : les unités de gestion, les parcelles cadastrales qu’elles recouvrent, et les ténements qui les relient.</p>

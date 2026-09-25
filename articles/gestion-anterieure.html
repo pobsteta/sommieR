@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -316,10 +316,10 @@ si le registre a bougé.</p>
 <code class="sourceCode R"><span><span class="va">verif</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_verifier.html">sommier_verifier</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span></span>
 <span><span class="va">verif</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : 812457f0-a93d-4ea2-9d44-beea58129c79</span></span>
+<span><span class="co">#&gt;   foret     : a7d11c4f-2f1f-463a-85bb-c573ff11eb8e</span></span>
 <span><span class="co">#&gt;   entrees   : 66</span></span>
 <span><span class="co">#&gt;   seq tete  : 66</span></span>
-<span><span class="co">#&gt;   hash tete : 3afeeb36d1dfed79b6139ea4824188c3078c183860272ac263b8a4fcbb280190</span></span>
+<span><span class="co">#&gt;   hash tete : e678ff7cea23c8ca7da6ec0e52e032c83258a25bbdd7ede153f1c4f012c8de3b</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -1711,7 +1711,7 @@ GeoJSON n’exige rien de plus que PostGIS et s’ouvre sans rien installer
 <span><span class="va">export</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_exporter_sig.html">sommier_exporter_sig</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">couche</span>, format <span class="op">=</span> <span class="st">"geojson"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">export</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 3</span></span>
-<span><span class="co">#&gt;  $ chemin               : chr "/tmp/Rtmpi3Tb00/file32b21a1548ed.geojson"</span></span>
+<span><span class="co">#&gt;  $ chemin               : chr "/tmp/RtmpsXLss3/file3257618c0bef.geojson"</span></span>
 <span><span class="co">#&gt;  $ n_unites             : int 3</span></span>
 <span><span class="co">#&gt;  $ unites_sans_geometrie: chr(0)</span></span></code></pre></div>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
@@ -1771,10 +1771,10 @@ base et sans le paquet qui l’a produit.</p>
 <span><span class="fu"><a href="../reference/sommier_exporter_manifeste.html">sommier_exporter_manifeste</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/sommier_verifier_manifeste.html">sommier_verifier_manifeste</a></span><span class="op">(</span><span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : 812457f0-a93d-4ea2-9d44-beea58129c79</span></span>
+<span><span class="co">#&gt;   foret     : a7d11c4f-2f1f-463a-85bb-c573ff11eb8e</span></span>
 <span><span class="co">#&gt;   entrees   : 66</span></span>
 <span><span class="co">#&gt;   seq tete  : 66</span></span>
-<span><span class="co">#&gt;   hash tete : 3afeeb36d1dfed79b6139ea4824188c3078c183860272ac263b8a4fcbb280190</span></span>
+<span><span class="co">#&gt;   hash tete : e678ff7cea23c8ca7da6ec0e52e032c83258a25bbdd7ede153f1c4f012c8de3b</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span>
 <span><span class="co">#&gt;   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau</span></span></code></pre></div>
 <p>Toute entrée modifiée, retirée ou insérée après coup invalide
