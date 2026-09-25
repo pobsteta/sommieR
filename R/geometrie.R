@@ -166,6 +166,14 @@ couple <- function(lon, lat) {
 
 arrondir_coord <- function(x) round(x, SOMMIER_DECIMALES_COORD)
 
+# WKT a pleine precision. Sans `digits`, `sf::st_as_text()` suit
+# `getOption("digits")`, soit 7 chiffres significatifs : en Lambert-93, une
+# ordonnee comme 6768263,2 perd ses decimales, et le contour est ramene au
+# metre sans que rien ne le dise. Deux parcelles voisines arrondies chacune
+# de leur cote se chevauchent ou s'ecartent, et un contour valide peut en
+# sortir auto-intersecte. Quinze chiffres rendent le double tel qu'il est lu.
+wkt_plein <- function(geometrie) sf::st_as_text(geometrie, digits = 15L)
+
 # Accepte matrice, data.frame ou liste de couples ; rend une liste de couples.
 normaliser_sommets <- function(coords, nom, minimum) {
   if (is.data.frame(coords)) {

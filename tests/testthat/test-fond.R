@@ -274,3 +274,21 @@ test_that("un fond en cache sans millesime enregistre le dit inconnu", {
   # Et l'affichage le dit plutot que de laisser un `NA` nu.
   expect_output(print(fond), "millesime : inconnu")
 })
+
+test_that("le fond garde ses coordonnees a pleine precision", {
+  # Sans `digits`, st_as_text() rend 7 chiffres significatifs : une ordonnee
+  # Lambert-93 de 6 687 300 perdait ses decimales, et le contour etait ramene
+  # au metre. Sur la foret domaniale d'Orleans, l'arrondi rendait
+  # auto-intersecte un contour qui ne l'etait pas.
+  fond <- fond_fixture()
+  parcelles <- sommier_fond_lire(fond)
+  lu <- sf::st_coordinates(sf::st_as_sfc(parcelles$wkt, crs = 2154))
+
+  source <- sf::read_sf(paste0("/vsigzip/", normalizePath(fond$chemin)))
+  attendu <- sf::st_coordinates(sf::st_transform(sf::st_geometry(source), 2154))
+
+  expect_equal(dim(lu), dim(attendu))
+  expect_lt(max(abs(lu[, c("X", "Y")] - attendu[, c("X", "Y")])), 1e-6)
+  # Et l'ordonnee porte bien des decimales : c'est elle que l'arrondi mangeait.
+  expect_true(any(attendu[, "Y"] != round(attendu[, "Y"])))
+})
