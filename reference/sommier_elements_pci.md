@@ -40,7 +40,8 @@ sommier_elements_pci(fond, emprise, tampon_m = 20, symboles = NULL)
 Un `data.frame` : `id`, `numero`, `categorie`, `couche`, `feuille`,
 `objet`, `sym`, `texte`, `texte_morcele`, `nature`, `nature_source`,
 `situation`, `distance_limite_m`, `orientation`, `cree_le`,
-`modifie_le`, `millesime`, `x`, `y` (point d'ancrage en Lambert-93) et
+`modifie_le`, `millesime`, `echelle` (echelle d'origine du plan de la
+feuille, lue dans `EOR`), `x`, `y` (point d'ancrage en Lambert-93) et
 `wkt`. Attributs `tampon_m` et `source`.
 
 ## Details

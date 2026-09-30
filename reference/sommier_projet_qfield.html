@@ -15,7 +15,7 @@ element visite, avec ses photos."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.17.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.18.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,8 @@ element visite, avec ses photos.</p>
 <span>  <span class="va">dossier</span>,</span>
 <span>  <span class="va">operateur</span>,</span>
 <span>  fond <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  anciennete_ans <span class="op">=</span> <span class="fl">10</span></span>
+<span>  anciennete_ans <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  ortho <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -101,6 +102,13 @@ rapatriee ne doit jamais etre ecrasee.</p></dd>
 <dd><p>Au-dela de ce nombre d'annees, une visite est dite
 ancienne.</p></dd>
 
+
+<dt id="arg-ortho">ortho<a class="anchor" aria-label="anchor" href="#arg-ortho"></a></dt>
+<dd><p>GeoTIFF d'orthophotographie a joindre au projet, tel que
+l'ecrit <code><a href="sommier_ortho_ign.html">sommier_ortho_ign()</a></code> (facultatif). Il est copie, jamais
+telecharge ici. Sans lui, la couche d'ortho hors ligne est retiree du
+projet plutot que laissee pointer vers un fichier absent.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -115,8 +123,10 @@ le copie, remplit les couches de donnees et pose quelques valeurs : titre,
 operateur, emprise d'ouverture.</p>
 <p><strong>Aucun service en ligne n'est requis.</strong> Le dossier se copie par cable ou
 par un partage de fichiers, et revient de la meme facon ; QFieldCloud reste
-possible, le dossier etant un projet QGIS ordinaire. Seul le fond
-d'orthophotographie de l'IGN demande du reseau pour s'afficher.</p>
+possible, le dossier etant un projet QGIS ordinaire. En foret, le reseau
+manque souvent : <code>ortho</code> joint au projet une orthophotographie que QField
+affiche hors ligne (voir <code><a href="sommier_ortho_ign.html">sommier_ortho_ign()</a></code>). La couche de l'IGN en
+ligne reste dessous, pour qui a du reseau.</p>
 <p><strong>Le formulaire en fait le plus possible.</strong> Un nouveau constat propose
 l'element du plan le plus proche a moins de 30 m, et remplit la date,
 l'operateur, la precision et la source GNSS. L'etat, lui, doit etre choisi :

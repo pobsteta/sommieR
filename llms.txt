@@ -753,6 +753,8 @@ par leur empreinte.
   : Projet QGIS/QField pour verifier les limites sur le terrain
 - [`sommier_importer_qfield()`](https://pobsteta.github.io/sommieR/reference/sommier_importer_qfield.md)
   : Import des constats d'un projet QField
+- [`sommier_ortho_ign()`](https://pobsteta.github.io/sommieR/reference/sommier_ortho_ign.md)
+  : Orthophotographie de l'IGN sur l'emprise d'une foret
 - [`sommier_deposer_photo()`](https://pobsteta.github.io/sommieR/reference/sommier_deposer_photo.md)
   : Depot d'une photo, sous son empreinte
 - [`sommier_verifier_photos()`](https://pobsteta.github.io/sommieR/reference/sommier_verifier_photos.md)

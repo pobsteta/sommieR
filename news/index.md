@@ -1,5 +1,46 @@
 # Changelog
 
+## sommieR 0.18.0
+
+Trois retouches au suivi des limites, tirées de la recette sur le
+terrain.
+
+### Une ortho qui s’affiche sans réseau
+
+En forêt, le réseau manque souvent, et l’orthophotographie en ligne de
+l’IGN restait alors blanche dans QField.
+[`sommier_ortho_ign()`](https://pobsteta.github.io/sommieR/reference/sommier_ortho_ign.md)
+télécharge, sur demande explicite, un extrait de l’ortho de la
+Géoplateforme sur l’emprise de la forêt, en GeoTIFF Lambert-93. À 0,5 m,
+une forêt de trois kilomètres tient en une dizaine de mégaoctets.
+`sommier_projet_qfield(ortho = )` le joint au projet : QField l’affiche
+hors ligne, sous la couche en ligne. Sans ortho fournie, la couche est
+retirée du projet, pour que QField ne signale pas un fichier absent.
+
+Le service a des ratés : un bloc refusé (« layer unknown ») passe au
+suivant. Or GDAL n’en fait qu’un avertissement, et écrivait un fichier
+troué que la fonction rendait comme un succès. Tout avertissement de
+téléchargement fait désormais échouer l’essai. L’essai est retenté une
+fois, et un refus qui se répète échoue avec la réponse du service, sans
+laisser de fichier. `couche = "ORTHOIMAGERY.ORTHOPHOTOS.IRC"` donne
+l’infrarouge, qui distingue mieux feuillus et résineux.
+
+### « Hors plan » vide l’élément proposé
+
+La valeur par défaut de l’élément est réévaluée à chaque changement.
+Choisir « Hors plan » la vide, alors qu’elle proposait jusque-là la
+borne voisine. Le choix manuel de l’agent est gardé.
+
+### La tolérance à l’échelle de la feuille
+
+[`sommier_elements_pci()`](https://pobsteta.github.io/sommieR/reference/sommier_elements_pci.md)
+lit l’échelle d’origine du plan de chaque feuille (attribut `EOR` de la
+subdivision de section) : 2000 pour ZK01 à Loury, 5000 pour A01 à
+Couchey. Dans le rapport, un écart au plan est dans la tolérance sous la
+précision du relevé augmentée de 0,2 mm à cette échelle, soit 0,4 m au
+1/2000 et 1 m au 1/5000. Faute d’éléments du plan, la tolérance reste de
+1 m, et le rapport le dit.
+
 ## sommieR 0.17.0
 
 Le rapport montre ce que le terrain a vu. Les reconnaissances de limite

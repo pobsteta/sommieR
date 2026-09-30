@@ -16,7 +16,8 @@ sommier_projet_qfield(
   dossier,
   operateur,
   fond = NULL,
-  anciennete_ans = 10
+  anciennete_ans = 10,
+  ortho = NULL
 )
 ```
 
@@ -54,6 +55,14 @@ sommier_projet_qfield(
 
   Au-dela de ce nombre d'annees, une visite est dite ancienne.
 
+- ortho:
+
+  GeoTIFF d'orthophotographie a joindre au projet, tel que l'ecrit
+  [`sommier_ortho_ign()`](https://pobsteta.github.io/sommieR/reference/sommier_ortho_ign.md)
+  (facultatif). Il est copie, jamais telecharge ici. Sans lui, la couche
+  d'ortho hors ligne est retiree du projet plutot que laissee pointer
+  vers un fichier absent.
+
 ## Value
 
 Invisiblement, le chemin du projet `.qgs`.
@@ -68,8 +77,11 @@ valeurs : titre, operateur, emprise d'ouverture.
 
 **Aucun service en ligne n'est requis.** Le dossier se copie par cable
 ou par un partage de fichiers, et revient de la meme facon ; QFieldCloud
-reste possible, le dossier etant un projet QGIS ordinaire. Seul le fond
-d'orthophotographie de l'IGN demande du reseau pour s'afficher.
+reste possible, le dossier etant un projet QGIS ordinaire. En foret, le
+reseau manque souvent : `ortho` joint au projet une orthophotographie
+que QField affiche hors ligne (voir
+[`sommier_ortho_ign()`](https://pobsteta.github.io/sommieR/reference/sommier_ortho_ign.md)).
+La couche de l'IGN en ligne reste dessous, pour qui a du reseau.
 
 **Le formulaire en fait le plus possible.** Un nouveau constat propose
 l'element du plan le plus proche a moins de 30 m, et remplit la date,

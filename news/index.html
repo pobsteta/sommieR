@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.17.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.18.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,23 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.18.0" id="sommier-0180">sommieR 0.18.0<a class="anchor" aria-label="anchor" href="#sommier-0180"></a></h2>
+<p>Trois retouches au suivi des limites, tirées de la recette sur le terrain.</p>
+<div class="section level3">
+<h3 id="une-ortho-qui-saffiche-sans-réseau-0-18-0">Une ortho qui s’affiche sans réseau<a class="anchor" aria-label="anchor" href="#une-ortho-qui-saffiche-sans-r%C3%A9seau-0-18-0"></a></h3>
+<p>En forêt, le réseau manque souvent, et l’orthophotographie en ligne de l’IGN restait alors blanche dans QField. <code><a href="../reference/sommier_ortho_ign.html">sommier_ortho_ign()</a></code> télécharge, sur demande explicite, un extrait de l’ortho de la Géoplateforme sur l’emprise de la forêt, en GeoTIFF Lambert-93. À 0,5 m, une forêt de trois kilomètres tient en une dizaine de mégaoctets. <code>sommier_projet_qfield(ortho = )</code> le joint au projet : QField l’affiche hors ligne, sous la couche en ligne. Sans ortho fournie, la couche est retirée du projet, pour que QField ne signale pas un fichier absent.</p>
+<p>Le service a des ratés : un bloc refusé (« layer unknown ») passe au suivant. Or GDAL n’en fait qu’un avertissement, et écrivait un fichier troué que la fonction rendait comme un succès. Tout avertissement de téléchargement fait désormais échouer l’essai. L’essai est retenté une fois, et un refus qui se répète échoue avec la réponse du service, sans laisser de fichier. <code>couche = "ORTHOIMAGERY.ORTHOPHOTOS.IRC"</code> donne l’infrarouge, qui distingue mieux feuillus et résineux.</p>
+</div>
+<div class="section level3">
+<h3 id="id_-hors-plan--vide-lélément-proposé-0-18-0">« Hors plan » vide l’élément proposé<a class="anchor" aria-label="anchor" href="#id_-hors-plan--vide-l%C3%A9l%C3%A9ment-propos%C3%A9-0-18-0"></a></h3>
+<p>La valeur par défaut de l’élément est réévaluée à chaque changement. Choisir « Hors plan » la vide, alors qu’elle proposait jusque-là la borne voisine. Le choix manuel de l’agent est gardé.</p>
+</div>
+<div class="section level3">
+<h3 id="la-tolérance-à-léchelle-de-la-feuille-0-18-0">La tolérance à l’échelle de la feuille<a class="anchor" aria-label="anchor" href="#la-tol%C3%A9rance-%C3%A0-l%C3%A9chelle-de-la-feuille-0-18-0"></a></h3>
+<p><code><a href="../reference/sommier_elements_pci.html">sommier_elements_pci()</a></code> lit l’échelle d’origine du plan de chaque feuille (attribut <code>EOR</code> de la subdivision de section) : 2000 pour ZK01 à Loury, 5000 pour A01 à Couchey. Dans le rapport, un écart au plan est dans la tolérance sous la précision du relevé augmentée de 0,2 mm à cette échelle, soit 0,4 m au 1/2000 et 1 m au 1/5000. Faute d’éléments du plan, la tolérance reste de 1 m, et le rapport le dit.</p>
+</div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.17.0" id="sommier-0170">sommieR 0.17.0<a class="anchor" aria-label="anchor" href="#sommier-0170"></a></h2>
 <p>Le rapport montre ce que le terrain a vu. Les reconnaissances de limite rapportées de QField ont désormais leur section, avec une carte, un tableau et une planche de photos. Une version publique la rend sans les photos.</p>
