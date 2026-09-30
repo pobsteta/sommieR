@@ -16,8 +16,10 @@
 #'
 #' **Aucun service en ligne n'est requis.** Le dossier se copie par cable ou
 #' par un partage de fichiers, et revient de la meme facon ; QFieldCloud reste
-#' possible, le dossier etant un projet QGIS ordinaire. Seul le fond
-#' d'orthophotographie de l'IGN demande du reseau pour s'afficher.
+#' possible, le dossier etant un projet QGIS ordinaire. En foret, le reseau
+#' manque souvent : `ortho` joint au projet une orthophotographie que QField
+#' affiche hors ligne (voir [sommier_ortho_ign()]). La couche de l'IGN en
+#' ligne reste dessous, pour qui a du reseau.
 #'
 #' **Le formulaire en fait le plus possible.** Un nouveau constat propose
 #' l'element du plan le plus proche a moins de 30 m, et remplit la date,
@@ -40,6 +42,10 @@
 #'   [sommier_fond_lire()] (facultatif).
 #' @param anciennete_ans Au-dela de ce nombre d'annees, une visite est dite
 #'   ancienne.
+#' @param ortho GeoTIFF d'orthophotographie a joindre au projet, tel que
+#'   l'ecrit [sommier_ortho_ign()] (facultatif). Il est copie, jamais
+#'   telecharge ici. Sans lui, la couche d'ortho hors ligne est retiree du
+#'   projet plutot que laissee pointer vers un fichier absent.
 #'
 #' @return Invisiblement, le chemin du projet `.qgs`.
 #'
@@ -51,10 +57,19 @@
 #'
 #' @export
 sommier_projet_qfield <- function(con, foret_id, elements, dossier, operateur,
-                                  fond = NULL, anciennete_ans = 10) {
-  if (!requireNamespace("sf", quietly = TRUE)) {
-    stop("Le paquet `sf` est requis pour ecrire le projet QField.",
-         call. = FALSE)
+                                  fond = NULL, anciennete_ans = 10,
+                                  ortho = NULL) {
+  for (paquet in c("sf", "xml2")) {
+    if (!requireNamespace(paquet, quietly = TRUE)) {
+      stop("Le paquet `", paquet, "` est requis pour ecrire le projet ",
+           "QField.", call. = FALSE)
+    }
+  }
+  if (!est_vide(ortho)) {
+    ortho <- valider_texte(ortho, "ortho")
+    if (!file.exists(ortho)) {
+      stop("Ortho introuvable : ", ortho, ".", call. = FALSE)
+    }
   }
   foret_id <- valider_uuid(foret_id, "foret_id")
   dossier <- valider_texte(dossier, "dossier")
@@ -118,6 +133,11 @@ sommier_projet_qfield <- function(con, foret_id, elements, dossier, operateur,
   }
 
   qgs <- file.path(dossier, "limites.qgs")
+  if (est_vide(ortho)) {
+    retirer_couche_projet(qgs, "limites_ortho")
+  } else if (!file.copy(ortho, file.path(dossier, "ortho.tif"))) {
+    stop("Impossible de copier l'ortho dans le projet.", call. = FALSE)
+  }
   cadre <- sf::st_bbox(sf::st_buffer(tampon, 50))
   poser_valeurs_projet(qgs, c(
     "@@TITRE@@" = paste0("Limites - ", foret$nom[[1L]]),
@@ -332,6 +352,118 @@ poser_valeurs_projet <- function(qgs, valeurs) {
   }
   writeLines(enc2utf8(xml), qgs, useBytes = TRUE)
 }
+
+# Retire une couche du projet : sa definition, sa place dans l'arbre des
+# couches et dans l'ordre de dessin. Tout ce qui porte son identifiant.
+retirer_couche_projet <- function(qgs, identifiant) {
+  xml <- xml2::read_xml(qgs)
+  xml2::xml_remove(xml2::xml_find_all(
+    xml, sprintf("//maplayer[id='%s']", identifiant)
+  ))
+  xml2::xml_remove(xml2::xml_find_all(
+    xml, sprintf("//*[@id='%s']", identifiant)
+  ))
+  xml2::write_xml(xml, qgs)
+}
+
+#' Orthophotographie de l'IGN sur l'emprise d'une foret
+#'
+#' @description
+#' Telecharge, sur l'emprise de la foret elargie de `marge_m`, un extrait de
+#' l'orthophotographie de l'IGN (Geoplateforme, service WMS), et l'ecrit en
+#' GeoTIFF Lambert-93. C'est le fond hors ligne du projet QField : en foret,
+#' le reseau manque souvent.
+#'
+#' @details
+#' Le telechargement est explicite, comme celui du fond cadastral : ni le
+#' projet ni le rapport n'en declenchent. La couche est
+#' `ORTHOIMAGERY.ORTHOPHOTOS`, la mosaique la plus recente ; le service ne
+#' dit pas la date de prise de vue de chaque dalle. Donnee de l'IGN, sous
+#' Licence Ouverte ; un decor, jamais une ecriture.
+#'
+#' A 0,5 m, une foret de trois kilometres de cote tient en une dizaine de
+#' megaoctets (compression JPEG). GDAL, deja la par `sf`, decoupe la requete
+#' en dalles.
+#'
+#' @param emprise Couche des unites de gestion ([sommier_couche_ug()]), ou
+#'   `data.frame` a colonne `wkt` en Lambert-93.
+#' @param chemin Fichier `.tif` a ecrire. Il ne doit pas exister.
+#' @param resolution_m Taille du pixel, en metres.
+#' @param marge_m Marge autour de l'emprise, en metres.
+#'
+#' @return Invisiblement, `chemin`.
+#'
+#' @seealso [sommier_projet_qfield()]
+#'
+#' @examples
+#' # Necessite un acces reseau :
+#' # sommier_ortho_ign(sommier_couche_ug(con, foret), "ortho.tif")
+#'
+#' @export
+sommier_ortho_ign <- function(emprise, chemin, resolution_m = 0.5,
+                              marge_m = 100) {
+  if (!requireNamespace("sf", quietly = TRUE)) {
+    stop("Le paquet `sf` est requis pour ecrire l'ortho.", call. = FALSE)
+  }
+  chemin <- valider_texte(chemin, "chemin")
+  resolution_m <- valider_nombre(resolution_m, "resolution_m", min = 0.1)
+  marge_m <- valider_nombre(marge_m, "marge_m", min = 0)
+  if (!identical(tolower(tools::file_ext(chemin)), "tif")) {
+    stop("`chemin` doit porter l'extension .tif.", call. = FALSE)
+  }
+  if (file.exists(chemin)) {
+    stop("Le fichier existe deja : ", chemin, ".", call. = FALSE)
+  }
+  boite <- sf::st_bbox(emprise_tamponnee(emprise, marge_m))
+  boite <- c(floor(boite[["xmin"]]), floor(boite[["ymin"]]),
+             ceiling(boite[["xmax"]]), ceiling(boite[["ymax"]]))
+  source <- paste0(
+    "WMS:", SOMMIER_SOURCE_ORTHO,
+    "?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&STYLES=",
+    "&LAYERS=ORTHOIMAGERY.ORTHOPHOTOS&CRS=EPSG:2154&FORMAT=image/jpeg",
+    "&BBOX=", paste(boite, collapse = ",")
+  )
+  # Le service de la Geoplateforme a des rates : un bloc refuse a un appel
+  # (« layer unknown ») passe au suivant. On retente donc une fois ; un refus
+  # qui se repete echoue, avec la reponse du service.
+  for (essai in 1:2) {
+    motif <- telecharger_ortho(source, chemin, boite, resolution_m)
+    if (is.null(motif)) {
+      return(invisible(chemin))
+    }
+  }
+  stop("Le telechargement de l'ortho a echoue, rien n'est ecrit : ",
+       substr(motif, 1L, 300L), call. = FALSE)
+}
+
+# Un essai de telechargement. Rend NULL s'il aboutit, le motif sinon. Un bloc
+# que le service refuse n'est pour GDAL qu'un avertissement : le fichier
+# s'ecrit quand meme, avec un trou. On retient donc les avertissements, et le
+# moindre echec de telechargement fait echouer l'essai.
+telecharger_ortho <- function(source, chemin, boite, resolution_m) {
+  alertes <- character(0)
+  fait <- withCallingHandlers(try(sf::gdal_utils(
+    "translate", source, chemin, quiet = TRUE,
+    options = c("-projwin", boite[[1L]], boite[[4L]], boite[[3L]], boite[[2L]],
+                "-tr", resolution_m, resolution_m, "-of", "GTiff",
+                "-co", "COMPRESS=JPEG", "-co", "PHOTOMETRIC=YCBCR",
+                "-co", "TILED=YES")
+  ), silent = TRUE), warning = function(w) {
+    alertes <<- c(alertes, conditionMessage(w))
+    invokeRestart("muffleWarning")
+  })
+  unlink(paste0(chemin, ".aux.xml"))
+  refus <- grep("Unable to download|IReadBlock failed", alertes, value = TRUE)
+  if (!inherits(fait, "try-error") && file.exists(chemin) &&
+      length(refus) == 0L) {
+    return(NULL)
+  }
+  unlink(chemin)
+  if (length(refus) > 0L) refus[[1L]] else
+    conditionMessage(attr(fait, "condition"))
+}
+
+SOMMIER_SOURCE_ORTHO <- "https://data.geopf.fr/wms-r"
 
 echapper_xml <- function(x) {
   x <- gsub("&", "&amp;", x, fixed = TRUE)

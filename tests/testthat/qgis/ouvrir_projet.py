@@ -29,14 +29,20 @@ constats = projet.mapLayer("limites_constats")
 if constats is not None:
     expression = QgsExpression(constats.defaultValueDefinition(
         constats.fields().indexOf("element_id")).expression())
-    for saisi in constats.getFeatures():
-        nouveau = QgsFeature(constats.fields())
-        nouveau.setGeometry(saisi.geometry())
+    def evaluer(entite):
         contexte = QgsExpressionContext(
             QgsExpressionContextUtils.globalProjectLayerScopes(constats))
-        contexte.setFeature(nouveau)
-        propose = expression.evaluate(contexte)
-        resultat["propositions"].append(
-            {"uuid": saisi["uuid"], "propose": propose if propose else None})
+        contexte.setFeature(entite)
+        valeur = expression.evaluate(contexte)
+        return valeur if valeur else None
+
+    for saisi in constats.getFeatures():
+        # Un constat neuf a cet endroit, puis le constat tel qu'il a ete saisi
+        # (la valeur est reevaluee a chaque changement d'attribut).
+        nouveau = QgsFeature(constats.fields())
+        nouveau.setGeometry(saisi.geometry())
+        resultat["propositions"].append({
+            "uuid": saisi["uuid"], "propose": evaluer(nouveau),
+            "reevalue": evaluer(saisi)})
 application.exitQgis()
 print("JSON:" + json.dumps(resultat))

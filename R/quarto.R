@@ -122,7 +122,9 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
     densite_voirie  = essayer_section(sommier_densite_voirie(con, foret_id)),
     # Sans bornes, comme le patrimoine : la derniere visite d'une borne est un
     # etat courant, quelle que soit la periode du rapport.
-    limites         = essayer_section(lire_reconnaissances(con, foret_id)),
+    limites         = essayer_section(lire_reconnaissances(
+      con, foret_id, elements = if (!is.null(fond_pci$categorie)) fond_pci
+    )),
     public          = isTRUE(public),
     version_sommier = as.character(utils::packageVersion("sommieR")),
     edite_le        = format(Sys.Date(), "%d/%m/%Y")

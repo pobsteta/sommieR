@@ -1,6 +1,6 @@
 Package: sommieR
 Title: Sommier Forestier Unifie a Valeur Probante
-Version: 0.17.0
+Version: 0.18.0
 Authors@R:
     person("Pascal", "Obstetar", email = "pascal.obstetar@gmail.com",
            role = c("aut", "cre"))
@@ -33,7 +33,8 @@ Suggests:
     RPostgres,
     RPostgreSQL,
     testthat (>= 3.1.5),
-    withr
+    withr,
+    xml2
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

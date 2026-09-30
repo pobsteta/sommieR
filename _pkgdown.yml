@@ -205,6 +205,7 @@ reference:
     contents:
     - sommier_projet_qfield
     - sommier_importer_qfield
+    - sommier_ortho_ign
     - sommier_deposer_photo
     - sommier_verifier_photos
     - SOMMIER_TYPES_PHOTO

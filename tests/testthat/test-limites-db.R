@@ -127,6 +127,48 @@ test_that("le projet QField s'engendre, s'ouvre et propose l'element proche", {
   expect_equal(ouvert$variables$operateur, "P. & O.")
   # A 50 cm de la borne, le formulaire la propose.
   expect_equal(ouvert$propositions[[1L]]$propose, bornes$id[[1L]])
+  # Sans ortho fournie, la couche hors ligne est retiree, pas laissee cassee.
+  expect_false("limites_ortho" %in% names(ouvert$couches))
+  expect_false(file.exists(file.path(dossier, "ortho.tif")))
+})
+
+test_that("l'ortho hors ligne voyage avec le projet, et « hors plan » vide l'element", {
+  con <- base_limites()
+  fond <- fond_zk01()
+  foret <- foret_zk01(con, fond)
+  ug <- sommier_couche_ug(con, foret)
+  elements <- sommier_elements_pci(fond, ug)
+  b <- elements[elements$couche == "bornes", ][1:2, ]
+
+  # Une ortho de trois bandes, rasterisee sur la foret : sans reseau, elle
+  # tient lieu de celle de l'IGN.
+  gpkg <- withr::local_tempfile(fileext = ".gpkg")
+  sf::st_write(sf::st_sf(v = 1, geometry = sf::st_as_sfc(ug$wkt, crs = 2154)),
+               gpkg, quiet = TRUE)
+  ortho <- withr::local_tempfile(fileext = ".tif")
+  sf::gdal_utils("rasterize", gpkg, ortho, options = c(
+    "-burn", "90", "-burn", "120", "-burn", "60", "-tr", "5", "5",
+    "-ot", "Byte", "-init", "0"))
+  expect_error(sommier_projet_qfield(con, foret, elements,
+                                     file.path(withr::local_tempdir(), "x"),
+                                     operateur = "P. O.", ortho = "absente.tif"),
+               "introuvable")
+
+  dossier <- file.path(withr::local_tempdir(), "limites")
+  qgs <- sommier_projet_qfield(con, foret, elements, dossier,
+                               operateur = "P. O.", ortho = ortho)
+  expect_true(file.exists(file.path(dossier, "ortho.tif")))
+  saisir(dossier, rbind(
+    # Hors plan, pose sur une borne : le formulaire ne doit rien garder.
+    constat(uuid_v4(), NA_character_, "hors_plan", b$x[[1L]], b$y[[1L]]),
+    # Pose pres de la premiere borne, mais l'agent a choisi la seconde.
+    constat(uuid_v4(), b$id[[2L]], "en_place", b$x[[1L]], b$y[[1L]])
+  ))
+  ouvert <- ouvrir_dans_qgis(qgs)
+  expect_true(ouvert$couches$limites_ortho$valide)
+  expect_null(ouvert$propositions[[1L]]$reevalue)
+  expect_equal(ouvert$propositions[[1L]]$propose, b$id[[1L]])
+  expect_equal(ouvert$propositions[[2L]]$reevalue, b$id[[2L]])
 })
 
 test_that("le retour du terrain s'importe, une fois, photos comprises", {
@@ -298,7 +340,14 @@ test_that("le rapport montre ce que le terrain a vu, et la version publique le t
   # Au centimetre pres : le payload porte la position en WGS84 a sept
   # decimales, et l'element a ses coordonnees au centimetre.
   expect_equal(lus$ecart_m[lus$id == u[[1L]]], 0.5, tolerance = 0.02)
+  # Sans les elements du plan, l'echelle est inconnue : tolerance de 1 m.
   expect_true(lus$compatible[lus$id == u[[1L]]])
+  # Avec eux, la feuille ZK01 est au 1/2000 : 0,4 m de precision graphique,
+  # et 50 cm depassent 0,42 m.
+  a_echelle <- lire_reconnaissances(con, foret, elements = elements)$constats
+  expect_equal(unique(a_echelle$tolerance_plan_m[!is.na(a_echelle$element_id)]),
+               0.4)
+  expect_false(a_echelle$compatible[a_echelle$id == u[[1L]]])
   expect_false(lus$compatible[lus$id == u[[2L]]])
   expect_false(lus$mesure[lus$id == u[[3L]]])
   expect_true(is.na(lus$ecart_m[lus$id == u[[3L]]]))

@@ -204,3 +204,14 @@ test_that("l'export GeoPackage ecrit une couche par type de geometrie", {
   expect_error(sommier_exporter_elements_pci(data.frame(x = 1), chemin),
                "sommier_elements_pci")
 })
+
+test_that("l'echelle d'origine de chaque feuille se lit dans le lot", {
+  # `EOR` de la subdivision de section : c'est elle qui fixe la precision
+  # graphique du trace, et donc la tolerance d'un ecart au terrain.
+  zk01 <- fond_fixture("45188000ZK01")
+  expect_true(all(sommier_elements_pci(zk01, emprise_feuille(zk01))$echelle ==
+                    2000))
+  a01 <- fond_fixture("212000000A01")
+  expect_true(all(sommier_elements_pci(a01, emprise_feuille(a01))$echelle ==
+                    5000))
+})

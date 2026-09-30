@@ -821,9 +821,13 @@ if (!a_limites) {
       "l'appareil.\n\n",
       "Un écart au plan n'est calculé que pour une position mesurée au GNSS ; ",
       "une position pointée sur la carte n'en a pas. Il est dit dans la ",
-      "tolérance sous la précision déclarée du relevé augmentée d'un mètre, ",
-      "la précision graphique d'un plan au 1/5000. Aucun écart ne vaut ",
-      "déplacement : c'est au géomètre d'en juger.\n:::\n\n", sep = "")
+      "tolérance sous la précision déclarée du relevé augmentée de la ",
+      "précision graphique du plan : 0,2 mm à l'échelle d'origine de la ",
+      "feuille, soit 0,4 m au 1/2000 et 1 m au 1/5000",
+      if (any(is.na(constats$echelle) & constats$mesure))
+        " (1 m quand l'échelle n'est pas connue)",
+      ". Aucun écart ne vaut déplacement : c'est au géomètre d'en ",
+      "juger.\n:::\n\n", sep = "")
 }
 ```
 
