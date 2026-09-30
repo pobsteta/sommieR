@@ -22,9 +22,10 @@ embarque aucun tant qu'une source n'est pas citable.}
 \value{
 Un \code{data.frame} : \code{id}, \code{numero}, \code{categorie}, \code{couche}, \code{feuille},
 \code{objet}, \code{sym}, \code{texte}, \code{texte_morcele}, \code{nature}, \code{nature_source},
-\code{situation},
-\code{distance_limite_m}, \code{orientation}, \code{cree_le}, \code{modifie_le}, \code{millesime}, \code{x}, \code{y} (point
-d'ancrage en Lambert-93) et \code{wkt}. Attributs \code{tampon_m} et \code{source}.
+\code{situation}, \code{distance_limite_m}, \code{orientation}, \code{cree_le},
+\code{modifie_le}, \code{millesime}, \code{echelle} (echelle d'origine du plan de la
+feuille, lue dans \code{EOR}), \code{x}, \code{y} (point d'ancrage en Lambert-93) et
+\code{wkt}. Attributs \code{tampon_m} et \code{source}.
 }
 \description{
 Rassemble tous les elements physiques du PCI vecteur - bornes, signes de

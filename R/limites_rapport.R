@@ -1,13 +1,14 @@
 # Lecture des reconnaissances de limite pour le rapport : les constats, leur
 # ecart au plan, et les photos qu'ils referencent.
 
-# Precision graphique du plan, en metres : 0,2 mm a l'echelle de la feuille,
-# soit 1 m au 1/5000. On retient la valeur de la plus petite echelle courante
-# en foret ; au 1/2000, elle surestime la tolerance de 60 cm, ce qui ne fait
-# dire « compatible » qu'a un ecart deja petit.
-PRECISION_PLAN_M <- 1
+# Precision graphique du plan : 0,2 mm a l'echelle d'origine de la feuille,
+# soit 0,4 m au 1/2000 et 1 m au 1/5000. L'echelle vient des elements du plan
+# passes au rapport ; faute de quoi on retient 1 m, la valeur de la plus
+# petite echelle courante en foret, et le rapport le dit.
+PRECISION_GRAPHIQUE_M <- 0.0002
+PRECISION_PLAN_DEFAUT_M <- 1
 
-lire_reconnaissances <- function(con, foret_id) {
+lire_reconnaissances <- function(con, foret_id, elements = NULL) {
   lignes <- DBI::dbGetQuery(
     con,
     "SELECT r.id::text AS id, r.seq, r.date_evenement, r.date_saisie,
@@ -61,9 +62,17 @@ lire_reconnaissances <- function(con, foret_id) {
            (constats$y_releve - constats$y_plan)^2),
     NA_real_
   )
+  echelle <- if (!is.null(elements) && !is.null(elements$echelle)) {
+    elements$echelle[match(constats$element_id, elements$id)]
+  } else {
+    rep(NA_real_, nrow(constats))
+  }
+  constats$echelle <- echelle
+  constats$tolerance_plan_m <- ifelse(is.na(echelle), PRECISION_PLAN_DEFAUT_M,
+                                      echelle * PRECISION_GRAPHIQUE_M)
   constats$compatible <- ifelse(
     is.na(constats$ecart_m), NA,
-    constats$ecart_m <= constats$precision_m + PRECISION_PLAN_M
+    constats$ecart_m <= constats$precision_m + constats$tolerance_plan_m
   )
   constats$delai_h <- as.numeric(difftime(constats$date_saisie,
                                           constats$visite_le, units = "hours"))

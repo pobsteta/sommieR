@@ -87,9 +87,10 @@ SOMMIER_CATEGORIES_PCI <- data.frame(
 #'
 #' @return Un `data.frame` : `id`, `numero`, `categorie`, `couche`, `feuille`,
 #'   `objet`, `sym`, `texte`, `texte_morcele`, `nature`, `nature_source`,
-#'   `situation`,
-#'   `distance_limite_m`, `orientation`, `cree_le`, `modifie_le`, `millesime`, `x`, `y` (point
-#'   d'ancrage en Lambert-93) et `wkt`. Attributs `tampon_m` et `source`.
+#'   `situation`, `distance_limite_m`, `orientation`, `cree_le`,
+#'   `modifie_le`, `millesime`, `echelle` (echelle d'origine du plan de la
+#'   feuille, lue dans `EOR`), `x`, `y` (point d'ancrage en Lambert-93) et
+#'   `wkt`. Attributs `tampon_m` et `source`.
 #'
 #' @seealso [sommier_exporter_elements_pci()], [sommier_rapport_quarto()]
 #'
@@ -206,10 +207,11 @@ COLONNES_ELEMENTS <- c("id", "numero", "categorie", "couche", "feuille",
                        "nature_source",
                        "situation", "distance_limite_m", "orientation",
                        "cree_le", "modifie_le",
-                       "millesime", "x", "y", "wkt")
+                       "millesime", "echelle", "x", "y", "wkt")
 
 lire_elements_feuille <- function(thf, feuille, millesime) {
   presentes <- sf::st_layers(thf)$name
+  echelle <- echelle_feuille(thf, presentes)
   morceaux <- lapply(SOMMIER_CATEGORIES_PCI$couche, function(couche) {
     edigeo <- SOMMIER_COUCHES_PCI[[couche]]
     if (!edigeo %in% presentes) {
@@ -240,13 +242,28 @@ lire_elements_feuille <- function(thf, feuille, millesime) {
       ),
       cree_le = date_edigeo(objets[["CREAT_DATE"]]),
       modifie_le = date_edigeo(objets[["UPDATE_DATE"]]),
-      millesime = millesime,
+      millesime = millesime, echelle = echelle,
       wkt = wkt_plein(poser_projection(sf::st_geometry(objets), thf)),
       stringsAsFactors = FALSE
     )
   })
   garde <- morceaux[!vapply(morceaux, is.null, logical(1))]
   if (length(garde) == 0L) NULL else do.call(rbind, garde)
+}
+
+# L'echelle d'origine du plan, que la subdivision de section declare dans
+# `EOR` : 2000 pour la feuille ZK01 de Loury, 5000 pour la A01 de Couchey.
+# Elle fixe la precision graphique du trace - 0,2 mm a cette echelle - et donc
+# ce qu'un ecart entre le terrain et le plan peut signifier. Absente, elle
+# reste inconnue.
+echelle_feuille <- function(thf, presentes) {
+  if (!"SUBDSECT_id" %in% presentes) {
+    return(NA_real_)
+  }
+  eor <- sf::read_sf(thf, layer = "SUBDSECT_id", quiet = TRUE)[["EOR"]]
+  eor <- suppressWarnings(as.numeric(eor))
+  eor <- eor[!is.na(eor) & eor > 0]
+  if (length(eor) == 0L) NA_real_ else max(eor)
 }
 
 # Le texte d'un objet. Le plan pose le nom d'une voie ou d'un cours d'eau

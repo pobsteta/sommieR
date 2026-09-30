@@ -179,3 +179,34 @@ test_that("le modele QGIS est livre, avec ses reperes et ses couches", {
                              "elements_surfaces", "elements", "constats",
                              "photos", "foret", "tampon", "ug", "parcelles"))
 })
+
+test_that("l'ortho IGN se demande explicitement, et n'ecrase rien", {
+  emprise <- data.frame(wkt = paste0(
+    "POLYGON((633800 6768950, 634100 6768950, 634100 6769250, ",
+    "633800 6769250, 633800 6768950))"), stringsAsFactors = FALSE)
+  expect_error(sommier_ortho_ign(emprise, "ortho.png"), ".tif")
+  existant <- withr::local_tempfile(fileext = ".tif")
+  writeLines("x", existant)
+  expect_error(sommier_ortho_ign(emprise, existant), "existe deja")
+
+  # Un service qui ne repond pas : deux essais, un echec dit, et rien d'ecrit
+  # - pas meme un fichier troue.
+  skip_if_not_installed("sf")
+  chemin <- file.path(withr::local_tempdir(), "ortho.tif")
+  expect_error(sommier_ortho_ign(emprise, chemin, resolution_m = 10,
+                                 marge_m = 0,
+                                 service = "http://127.0.0.1:9/wms"),
+               "rien n'est ecrit")
+  expect_false(file.exists(chemin))
+
+  skip_on_cran()
+  testthat::skip_if_offline()
+  sauter_si_source_indisponible(sommier_ortho_ign(emprise, chemin,
+                                                  resolution_m = 2,
+                                                  marge_m = 0))
+  info <- sf::gdal_utils("info", chemin, quiet = TRUE)
+  expect_match(info, "Size is 150, 150", fixed = TRUE)
+  expect_match(info, "Lambert-93", fixed = TRUE)
+  expect_equal(lengths(regmatches(info, gregexpr("Band [0-9]", info))), 3L)
+})
+

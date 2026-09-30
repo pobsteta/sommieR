@@ -115,6 +115,19 @@ def ecrire_gpkg():
 IDENTIFIANTS = {"ug": "unites"}
 
 
+def ecrire_leurre(chemin):
+    """Un GeoTIFF de 2 x 2 pixels en Lambert-93, trois bandes."""
+    from osgeo import gdal, osr
+    gdal.UseExceptions()
+    pilote = gdal.GetDriverByName("GTiff")
+    image = pilote.Create(chemin, 2, 2, 3, gdal.GDT_Byte)
+    image.SetGeoTransform((600000, 1, 0, 6700000, 0, -1))
+    systeme = osr.SpatialReference()
+    systeme.ImportFromEPSG(2154)
+    image.SetProjection(systeme.ExportToWkt())
+    image = None
+
+
 def couche(nom, titre=None):
     c = QgsVectorLayer("%s|layername=%s" % (GPKG, nom), titre or nom, "ogr")
     if not c.isValid():
@@ -222,12 +235,17 @@ def principal():
         "Key": "id", "Value": "libelle", "OrderByValue": True,
         "AllowNull": True, "UseCompleter": True})
     # L'element le plus proche, a 30 m au plus : les bornes d'abord, puis les
-    # lignes, puis les surfaces. L'agent peut en choisir un autre.
+    # lignes, puis les surfaces. L'agent peut en choisir un autre : son choix
+    # est garde (coalesce sur la valeur deja saisie). Reevaluee a chaque
+    # changement, la valeur se vide quand l'etat passe a « Hors plan » - la
+    # recette de terrain montrait sinon un element propose a un constat qui
+    # n'en a pas.
     defaut(constats, "element_id", (
-        "coalesce("
+        "if(\"etat\" = 'hors_plan', NULL, coalesce(\"element_id\","
         "array_first(overlay_nearest('limites_elements_points', \"id\", limit:=1, max_distance:=30)),"
         "array_first(overlay_nearest('limites_elements_lignes', \"id\", limit:=1, max_distance:=30)),"
-        "array_first(overlay_nearest('limites_elements_surfaces', \"id\", limit:=1, max_distance:=30)))"))
+        "array_first(overlay_nearest('limites_elements_surfaces', \"id\", limit:=1, max_distance:=30))))"),
+        a_la_mise_a_jour=True)
     widget(constats, "etat", "ValueMap",
            {"map": [{libelle: valeur} for libelle, valeur in ETATS]})
     i = constats.fields().indexOf("etat")
@@ -332,16 +350,30 @@ def principal():
         "Orthophotographie IGN (réseau)", "wms")
     projet.addMapLayer(ortho)
 
+    # L'ortho hors ligne : un GeoTIFF que sommier_projet_qfield() copie a cote
+    # du projet (voir sommier_ortho_ign()). Un leurre de trois bandes sert a
+    # construire la couche ici ; R retire la couche quand aucune ortho n'est
+    # fournie, plutot que de laisser QField signaler un fichier absent.
+    leurre = os.path.join(SORTIE, "ortho.tif")
+    ecrire_leurre(leurre)
+    locale = QgsRasterLayer(leurre, "Orthophotographie (hors ligne)", "gdal")
+    if not locale.isValid():
+        sys.exit("Ortho locale invalide.")
+    locale.setId("limites_ortho")
+    projet.addMapLayer(locale)
+
     racine_arbre = projet.layerTreeRoot()
     for c in (ancres, photos):
         noeud = racine_arbre.findLayer(c.id())
         if noeud is not None:
             noeud.setItemVisibilityChecked(False)
-    # L'ortho en dessous de tout.
-    noeud = racine_arbre.findLayer(ortho.id())
-    clone = noeud.clone()
-    racine_arbre.insertChildNode(-1, clone)
-    racine_arbre.removeChildNode(noeud)
+    # Les orthos en dessous de tout, la locale au-dessus de celle du reseau :
+    # sans reseau, la seconde reste vide et laisse voir la premiere.
+    for couche_fond in (locale, ortho):
+        noeud = racine_arbre.findLayer(couche_fond.id())
+        clone = noeud.clone()
+        racine_arbre.insertChildNode(-1, clone)
+        racine_arbre.removeChildNode(noeud)
 
     projet.setCustomVariables({
         "operateur": "@@OPERATEUR@@",
@@ -365,6 +397,9 @@ def principal():
     # faire dans le paquet.
     if os.path.exists(QGS + "~"):
         os.remove(QGS + "~")
+    for reste in (leurre, leurre + ".aux.xml"):
+        if os.path.exists(reste):
+            os.remove(reste)
     print("Ecrit :", QGS, "et", GPKG)
 
 
