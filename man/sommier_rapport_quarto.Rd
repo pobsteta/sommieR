@@ -14,6 +14,8 @@ sommier_rapport_quarto(
   referentiel = "psg",
   fond = NULL,
   fond_pci = NULL,
+  photos = NULL,
+  public = FALSE,
   quarto = Sys.which("quarto")
 )
 }
@@ -47,6 +49,16 @@ avec une carte et un tableau par categorie. Les bornes seules, telles que
 les rend \code{\link[=sommier_fond_pci_lire]{sommier_fond_pci_lire()}}, se posent en croix sur la carte de la
 desserte. \code{NULL} pour s'en passer. Meme regle que \code{fond} : fourni, jamais
 telecharge au rendu.}
+
+\item{photos}{Depot des photos des reconnaissances de limite (voir
+\code{\link[=sommier_deposer_photo]{sommier_deposer_photo()}}) ; \code{NULL} pour s'en passer. Fourni, jamais
+telecharge. Les vignettes de la planche photographique sont reduites au
+rendu ; une photo dont l'empreinte ne tient plus n'est pas montree.}
+
+\item{public}{\code{TRUE} pour un document a diffuser : la planche
+photographique est retiree, le tableau garde le nombre de photos, et le
+document dit qu'elles existent. Une photo peut montrer un riverain ou une
+plaque d'immatriculation.}
 
 \item{quarto}{Chemin de l'executable Quarto.}
 }
