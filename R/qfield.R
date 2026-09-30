@@ -376,7 +376,7 @@ retirer_couche_projet <- function(qgs, identifiant) {
 #'
 #' @details
 #' Le telechargement est explicite, comme celui du fond cadastral : ni le
-#' projet ni le rapport n'en declenchent. La couche est
+#' projet ni le rapport n'en declenchent. La couche par defaut est
 #' `ORTHOIMAGERY.ORTHOPHOTOS`, la mosaique la plus recente ; le service ne
 #' dit pas la date de prise de vue de chaque dalle. Donnee de l'IGN, sous
 #' Licence Ouverte ; un decor, jamais une ecriture.
@@ -390,6 +390,10 @@ retirer_couche_projet <- function(qgs, identifiant) {
 #' @param chemin Fichier `.tif` a ecrire. Il ne doit pas exister.
 #' @param resolution_m Taille du pixel, en metres.
 #' @param marge_m Marge autour de l'emprise, en metres.
+#' @param couche Couche WMS a extraire : l'ortho en couleurs par defaut,
+#'   `"ORTHOIMAGERY.ORTHOPHOTOS.IRC"` pour l'infrarouge, qui distingue mieux
+#'   feuillus et resineux.
+#' @param service Adresse du service WMS.
 #'
 #' @return Invisiblement, `chemin`.
 #'
@@ -401,13 +405,17 @@ retirer_couche_projet <- function(qgs, identifiant) {
 #'
 #' @export
 sommier_ortho_ign <- function(emprise, chemin, resolution_m = 0.5,
-                              marge_m = 100) {
+                              marge_m = 100,
+                              couche = "ORTHOIMAGERY.ORTHOPHOTOS",
+                              service = SOMMIER_SOURCE_ORTHO) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Le paquet `sf` est requis pour ecrire l'ortho.", call. = FALSE)
   }
   chemin <- valider_texte(chemin, "chemin")
   resolution_m <- valider_nombre(resolution_m, "resolution_m", min = 0.1)
   marge_m <- valider_nombre(marge_m, "marge_m", min = 0)
+  couche <- valider_texte(couche, "couche")
+  service <- valider_texte(service, "service")
   if (!identical(tolower(tools::file_ext(chemin)), "tif")) {
     stop("`chemin` doit porter l'extension .tif.", call. = FALSE)
   }
@@ -418,9 +426,9 @@ sommier_ortho_ign <- function(emprise, chemin, resolution_m = 0.5,
   boite <- c(floor(boite[["xmin"]]), floor(boite[["ymin"]]),
              ceiling(boite[["xmax"]]), ceiling(boite[["ymax"]]))
   source <- paste0(
-    "WMS:", SOMMIER_SOURCE_ORTHO,
+    "WMS:", service,
     "?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&STYLES=",
-    "&LAYERS=ORTHOIMAGERY.ORTHOPHOTOS&CRS=EPSG:2154&FORMAT=image/jpeg",
+    "&LAYERS=", couche, "&CRS=EPSG:2154&FORMAT=image/jpeg",
     "&BBOX=", paste(boite, collapse = ",")
   )
   # Le service de la Geoplateforme a des rates : un bloc refuse a un appel

@@ -4,7 +4,14 @@
 \alias{sommier_ortho_ign}
 \title{Orthophotographie de l'IGN sur l'emprise d'une foret}
 \usage{
-sommier_ortho_ign(emprise, chemin, resolution_m = 0.5, marge_m = 100)
+sommier_ortho_ign(
+  emprise,
+  chemin,
+  resolution_m = 0.5,
+  marge_m = 100,
+  couche = "ORTHOIMAGERY.ORTHOPHOTOS",
+  service = SOMMIER_SOURCE_ORTHO
+)
 }
 \arguments{
 \item{emprise}{Couche des unites de gestion (\code{\link[=sommier_couche_ug]{sommier_couche_ug()}}), ou
@@ -15,6 +22,12 @@ sommier_ortho_ign(emprise, chemin, resolution_m = 0.5, marge_m = 100)
 \item{resolution_m}{Taille du pixel, en metres.}
 
 \item{marge_m}{Marge autour de l'emprise, en metres.}
+
+\item{couche}{Couche WMS a extraire : l'ortho en couleurs par defaut,
+\code{"ORTHOIMAGERY.ORTHOPHOTOS.IRC"} pour l'infrarouge, qui distingue mieux
+feuillus et resineux.}
+
+\item{service}{Adresse du service WMS.}
 }
 \value{
 Invisiblement, \code{chemin}.
@@ -27,7 +40,7 @@ le reseau manque souvent.
 }
 \details{
 Le telechargement est explicite, comme celui du fond cadastral : ni le
-projet ni le rapport n'en declenchent. La couche est
+projet ni le rapport n'en declenchent. La couche par defaut est
 \code{ORTHOIMAGERY.ORTHOPHOTOS}, la mosaique la plus recente ; le service ne
 dit pas la date de prise de vue de chaque dalle. Donnee de l'IGN, sous
 Licence Ouverte ; un decor, jamais une ecriture.

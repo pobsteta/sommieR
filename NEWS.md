@@ -17,7 +17,9 @@ Le service a des ratés : un bloc refusé (« layer unknown ») passe au
 suivant. Or GDAL n'en fait qu'un avertissement, et écrivait un fichier troué
 que la fonction rendait comme un succès. Tout avertissement de téléchargement
 fait désormais échouer l'essai. L'essai est retenté une fois, et un refus qui
-se répète échoue avec la réponse du service.
+se répète échoue avec la réponse du service, sans laisser de fichier.
+`couche = "ORTHOIMAGERY.ORTHOPHOTOS.IRC"` donne l'infrarouge, qui distingue
+mieux feuillus et résineux.
 
 ## « Hors plan » vide l'élément proposé
 

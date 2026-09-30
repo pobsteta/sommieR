@@ -189,10 +189,18 @@ test_that("l'ortho IGN se demande explicitement, et n'ecrase rien", {
   writeLines("x", existant)
   expect_error(sommier_ortho_ign(emprise, existant), "existe deja")
 
-  skip_on_cran()
-  testthat::skip_if_offline()
+  # Un service qui ne repond pas : deux essais, un echec dit, et rien d'ecrit
+  # - pas meme un fichier troue.
   skip_if_not_installed("sf")
   chemin <- file.path(withr::local_tempdir(), "ortho.tif")
+  expect_error(sommier_ortho_ign(emprise, chemin, resolution_m = 10,
+                                 marge_m = 0,
+                                 service = "http://127.0.0.1:9/wms"),
+               "rien n'est ecrit")
+  expect_false(file.exists(chemin))
+
+  skip_on_cran()
+  testthat::skip_if_offline()
   sauter_si_source_indisponible(sommier_ortho_ign(emprise, chemin,
                                                   resolution_m = 2,
                                                   marge_m = 0))
