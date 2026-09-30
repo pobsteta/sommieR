@@ -15,7 +15,8 @@ registre1_validation(
   reference = NULL,
   date_effet = NULL,
   portee = NULL,
-  observations = NULL
+  observations = NULL,
+  amenagement = NULL
 )
 ```
 
@@ -55,6 +56,15 @@ registre1_validation(
 - observations:
 
   Observations libres (facultatif).
+
+- amenagement:
+
+  Pour un `arrete`, un `agrement` ou un `avenant`, le contenu du
+  document de gestion qui fixe la possibilite : voir
+  [`sommier_amenagement()`](https://pobsteta.github.io/sommieR/reference/sommier_amenagement.md)
+  et
+  [`sommier_avenant_possibilite()`](https://pobsteta.github.io/sommieR/reference/sommier_avenant_possibilite.md),
+  qui le construisent (facultatif).
 
 ## Value
 

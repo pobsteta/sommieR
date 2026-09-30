@@ -1,6 +1,16 @@
-# Fixation de la possibilite d'un exercice
+# Fixation de la possibilite d'un exercice (obsolete)
 
-Fixation de la possibilite d'un exercice
+Ecrit la possibilite d'un exercice dans la table `exercice`, hors de la
+chaine. **La balance ne la lit plus** depuis sommieR 0.19.0 : la
+possibilite est portee par l'acte d'amenagement, au registre 1 (voir
+[`sommier_amenagement()`](https://pobsteta.github.io/sommieR/reference/sommier_amenagement.md)),
+et une table reecrivable sans trace n'a pas a fixer ce a quoi des
+prelevements attestes se comparent.
+
+La fonction avertit a chaque appel, et refuse d'ecrire une fois la table
+reprise par
+[`sommier_reprendre_exercices()`](https://pobsteta.github.io/sommieR/reference/sommier_reprendre_exercices.md)
+: une possibilite ne se modifie plus alors que par avenant.
 
 ## Usage
 

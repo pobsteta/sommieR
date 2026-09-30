@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.18.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.19.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -1214,17 +1214,68 @@
 
         <dt>
 
-          <code><a href="exercice_definir.html">exercice_definir()</a></code>
-
-        </dt>
-        <dd>Fixation de la possibilite d'un exercice</dd>
-
-        <dt>
-
           <code><a href="SOMMIER_REGIMES.html">SOMMIER_REGIMES</a></code>
 
         </dt>
         <dd>Regimes de propriete forestiere</dd>
+      </dl></div><div class="section level2">
+      <h2 id="am-nagement-et-balance-de-possibilit-">Aménagement et balance de possibilité<a class="anchor" aria-label="anchor" href="#am-nagement-et-balance-de-possibilit-"></a></h2>
+
+      <div class="section-desc"><p>L’aménagement comme acte chaîné du registre 1 : sa période, sa possibilité ou sa récolte prévue, ses avenants. La balance A50E se calcule contre lui, et repart de zéro avec chaque aménagement.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="sommier_amenagement.html">sommier_amenagement()</a></code>
+
+        </dt>
+        <dd>Amenagement : la periode et la possibilite, dans la chaine</dd>
+
+        <dt>
+
+          <code><a href="sommier_avenant_possibilite.html">sommier_avenant_possibilite()</a></code>
+
+        </dt>
+        <dd>Avenant a un amenagement : la possibilite, la surface ou la fin changent</dd>
+
+        <dt>
+
+          <code><a href="sommier_balance_possibilite.html">sommier_balance_possibilite()</a></code>
+
+        </dt>
+        <dd>Balance de possibilite (imprime A50E)</dd>
+
+        <dt>
+
+          <code><a href="sommier_martelages_hors_amenagement.html">sommier_martelages_hors_amenagement()</a></code>
+
+        </dt>
+        <dd>Martelages qu'aucun amenagement ne couvre</dd>
+
+        <dt>
+
+          <code><a href="sommier_reprendre_exercices.html">sommier_reprendre_exercices()</a></code>
+
+        </dt>
+        <dd>Reprise de la table <code>exercice</code> en amenagement(s)</dd>
+
+        <dt>
+
+          <code><a href="exercice_definir.html">exercice_definir()</a></code>
+
+        </dt>
+        <dd>Fixation de la possibilite d'un exercice (obsolete)</dd>
+
+        <dt>
+
+          <code><a href="SOMMIER_NATURES_VOLUME.html">SOMMIER_NATURES_VOLUME</a></code>
+
+        </dt>
+        <dd>Natures du volume d'un amenagement</dd>
       </dl></div><div class="section level2">
       <h2 id="base-de-donn-es">Base de données<a class="anchor" aria-label="anchor" href="#base-de-donn-es"></a></h2>
 
@@ -1266,13 +1317,6 @@
 
 
       <dl><dt>
-
-          <code><a href="sommier_balance_possibilite.html">sommier_balance_possibilite()</a></code>
-
-        </dt>
-        <dd>Balance de possibilite (imprime A50E)</dd>
-
-        <dt>
 
           <code><a href="sommier_exporter_manifeste.html">sommier_exporter_manifeste()</a></code>
 

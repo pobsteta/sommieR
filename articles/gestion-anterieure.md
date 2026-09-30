@@ -93,6 +93,8 @@ tableau(presence, "Ce que chaque référentiel retient de l'assemblage")
 | provenance       | oui | oui         | oui  |
 | coupes           | oui | oui         | oui  |
 | balance          | oui | oui         | oui  |
+| amenagements     | oui | oui         | oui  |
+| hors_amenagement | oui | oui         | oui  |
 | travaux          | oui | oui         | oui  |
 | evenements       | oui | oui         | oui  |
 | detections       | oui | oui         | oui  |
@@ -126,6 +128,8 @@ ga
 #>   provenance : 9 ligne(s)
 #>   coupes : 11 ligne(s)
 #>   balance : 10 ligne(s)
+#>   amenagements : 1 ligne(s)
+#>   hors_amenagement : 0 ligne(s)
 #>   travaux : 3 ligne(s)
 #>   evenements : 2 ligne(s)
 #>   detections : 0 ligne(s)
@@ -170,10 +174,10 @@ registre a bougé.
 verif <- sommier_verifier(con, foret)
 verif
 #> Verification de chaine - sommier
-#>   foret     : af5c793e-7217-42ce-98ec-4d3276358b47
-#>   entrees   : 66
-#>   seq tete  : 66
-#>   hash tete : 260eaeab5244eb70d37c297eab0868bc90a390fceee055399ee8469dad447d4e
+#>   foret     : 709d421c-4aae-4e3f-bf63-358789d5f372
+#>   entrees   : 67
+#>   seq tete  : 67
+#>   hash tete : bbf9588c065b5ccee603f91974c7462fde2f3b1451e25ea40d7ca6cbb6cbabc4
 #>   etat      : chaine intacte
 ```
 
@@ -212,7 +216,7 @@ tableau(
 
 | registre | nom | n_constate | n_transcrit | n_pieces | transcrit_du | transcrit_au |
 |---:|:---|---:|---:|---:|:---|:---|
-| 1 | Validations | 4 | 0 | 0 | NA | NA |
+| 1 | Validations | 4 | 1 | 1 | 2016-01-15 | 2016-01-15 |
 | 2 | Foncier & limites | 0 | 1 | 1 | 2017-09-14 | 2017-09-14 |
 | 3 | Droits & concessions | 5 | 1 | 1 | 2018-04-01 | 2018-04-01 |
 | 4 | Infrastructures | 0 | 3 | 1 | 2016-06-01 | 2016-06-01 |
@@ -282,12 +286,12 @@ tableau(
 
 | seq | registre | date_evenement | transcrit |
 |----:|---------:|:---------------|:----------|
-|  66 |        9 | 2018-10-04     | TRUE      |
-|  65 |        9 | 2019-06-03     | TRUE      |
-|  64 |        9 | 2016-07-12     | TRUE      |
-|  63 |        8 | 2020-08-10     | TRUE      |
-|  62 |        5 | 2020-03-05     | TRUE      |
-|  61 |        5 | 2019-03-05     | TRUE      |
+|  67 |        9 | 2018-10-04     | TRUE      |
+|  66 |        9 | 2019-06-03     | TRUE      |
+|  65 |        9 | 2016-07-12     | TRUE      |
+|  64 |        8 | 2020-08-10     | TRUE      |
+|  63 |        5 | 2020-03-05     | TRUE      |
+|  62 |        5 | 2019-03-05     | TRUE      |
 
 Les six dernières écritures de la chaîne : le bloc transcrit {.table}
 
@@ -327,20 +331,20 @@ négative un déficit ; c’est le cumul qui compte sur la durée du plan.
 tableau(ga$sections$balance, "Balance de possibilité (imprimé A50E)")
 ```
 
-| exercice | possibilite_m3_an | volume_martele_m3 | balance_exercice_m3 | balance_cumulee_m3 |
-|:---|---:|---:|---:|---:|
-| 2016 | 82 | 86 | 4 | 4 |
-| 2017 | 82 | 98 | 16 | 20 |
-| 2018 | 82 | 80 | -2 | 18 |
-| 2019 | 82 | 92 | 10 | 28 |
-| 2020 | 82 | 74 | -8 | 20 |
-| 2021 | 82 | 86 | 4 | 24 |
-| 2022 | 82 | 146 | 64 | 88 |
-| 2023 | 82 | 80 | -2 | 86 |
-| 2024 | 82 | 92 | 10 | 96 |
-| 2025 | 82 | 74 | -8 | 88 |
+| amenagement_id | amenagement | exercice | possibilite_m3_ha_an | possibilite_m3_an | volume_martele_m3 | prelevement_m3_ha | balance_exercice_m3 | balance_cumulee_m3 | reference_acte |
+|:---|:---|:---|---:|---:|---:|---:|---:|---:|:---|
+| COUCHEY-2016 | Amenagement 2016-2035 | 2016 | 5 | 81.8725 | 86 | 5.252069 | 4.1275 | 4.1275 | Arrete d’amenagement de la foret communale de Couchey |
+| COUCHEY-2016 | Amenagement 2016-2035 | 2017 | 5 | 81.8725 | 98 | 5.984916 | 16.1275 | 20.2550 | Arrete d’amenagement de la foret communale de Couchey |
+| COUCHEY-2016 | Amenagement 2016-2035 | 2018 | 5 | 81.8725 | 80 | 4.885645 | -1.8725 | 18.3825 | Arrete d’amenagement de la foret communale de Couchey |
+| COUCHEY-2016 | Amenagement 2016-2035 | 2019 | 5 | 81.8725 | 92 | 5.618492 | 10.1275 | 28.5100 | Arrete d’amenagement de la foret communale de Couchey |
+| COUCHEY-2016 | Amenagement 2016-2035 | 2020 | 5 | 81.8725 | 74 | 4.519222 | -7.8725 | 20.6375 | Arrete d’amenagement de la foret communale de Couchey |
+| COUCHEY-2016 | Amenagement 2016-2035 | 2021 | 5 | 81.8725 | 86 | 5.252069 | 4.1275 | 24.7650 | Arrete d’amenagement de la foret communale de Couchey |
+| COUCHEY-2016 | Amenagement 2016-2035 | 2022 | 5 | 81.8725 | 146 | 8.916303 | 64.1275 | 88.8925 | Arrete d’amenagement de la foret communale de Couchey |
+| COUCHEY-2016 | Amenagement 2016-2035 | 2023 | 5 | 81.8725 | 80 | 4.885645 | -1.8725 | 87.0200 | Arrete d’amenagement de la foret communale de Couchey |
+| COUCHEY-2016 | Amenagement 2016-2035 | 2024 | 5 | 81.8725 | 92 | 5.618492 | 10.1275 | 97.1475 | Arrete d’amenagement de la foret communale de Couchey |
+| COUCHEY-2016 | Amenagement 2016-2035 | 2025 | 5 | 81.8725 | 74 | 4.519222 | -7.8725 | 89.2750 | Arrete d’amenagement de la foret communale de Couchey |
 
-Balance de possibilité (imprimé A50E) {.table style="width:100%;"}
+Balance de possibilité (imprimé A50E) {.table}
 
 ``` r
 
@@ -825,7 +829,7 @@ couche <- tempfile(fileext = ".geojson")
 export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
 str(export)
 #> List of 3
-#>  $ chemin               : chr "/tmp/Rtmp8GdlDl/file33d77d495809.geojson"
+#>  $ chemin               : chr "/tmp/RtmpoIQb1G/file34f3776f5db1.geojson"
 #>  $ n_unites             : int 3
 #>  $ unites_sans_geometrie: chr(0)
 ```
@@ -898,10 +902,10 @@ chemin <- tempfile(fileext = ".json")
 sommier_exporter_manifeste(con, foret, chemin)
 sommier_verifier_manifeste(chemin)
 #> Verification de chaine - sommier
-#>   foret     : af5c793e-7217-42ce-98ec-4d3276358b47
-#>   entrees   : 66
-#>   seq tete  : 66
-#>   hash tete : 260eaeab5244eb70d37c297eab0868bc90a390fceee055399ee8469dad447d4e
+#>   foret     : 709d421c-4aae-4e3f-bf63-358789d5f372
+#>   entrees   : 67
+#>   seq tete  : 67
+#>   hash tete : bbf9588c065b5ccee603f91974c7462fde2f3b1451e25ea40d7ca6cbb6cbabc4
 #>   etat      : chaine intacte
 #>   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau
 ```

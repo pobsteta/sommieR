@@ -43,7 +43,10 @@ registre5_coupe(
 
 - surface_ha:
 
-  Surface parcourue en hectares (facultatif).
+  Surface parcourue en hectares (facultatif). Sans elle, un martelage
+  rattache a une unite de gestion parcourt, a la lecture, toute la
+  surface de l'unite (voir la colonne `surface_source` de `v_coupe`) :
+  la surface deduite n'entre pas dans le payload.
 
 - essence:
 

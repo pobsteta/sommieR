@@ -424,10 +424,38 @@ Forêts, unités de gestion à identifiant stable, filiation et exercices.
   : Scission d'une unite de gestion
 - [`ug_fusionner()`](https://pobsteta.github.io/sommieR/reference/ug_fusionner.md)
   : Fusion d'unites de gestion
-- [`exercice_definir()`](https://pobsteta.github.io/sommieR/reference/exercice_definir.md)
-  : Fixation de la possibilite d'un exercice
 - [`SOMMIER_REGIMES`](https://pobsteta.github.io/sommieR/reference/SOMMIER_REGIMES.md)
   : Regimes de propriete forestiere
+
+## Aménagement et balance de possibilité
+
+L’aménagement comme acte chaîné du registre 1 : sa période, sa
+possibilité ou sa récolte prévue, ses avenants. La balance A50E se
+calcule contre lui, et repart de zéro avec chaque aménagement.
+
+- [`sommier_amenagement()`](https://pobsteta.github.io/sommieR/reference/sommier_amenagement.md)
+  : Amenagement : la periode et la possibilite, dans la chaine
+
+- [`sommier_avenant_possibilite()`](https://pobsteta.github.io/sommieR/reference/sommier_avenant_possibilite.md)
+  : Avenant a un amenagement : la possibilite, la surface ou la fin
+  changent
+
+- [`sommier_balance_possibilite()`](https://pobsteta.github.io/sommieR/reference/sommier_balance_possibilite.md)
+  : Balance de possibilite (imprime A50E)
+
+- [`sommier_martelages_hors_amenagement()`](https://pobsteta.github.io/sommieR/reference/sommier_martelages_hors_amenagement.md)
+  : Martelages qu'aucun amenagement ne couvre
+
+- [`sommier_reprendre_exercices()`](https://pobsteta.github.io/sommieR/reference/sommier_reprendre_exercices.md)
+  :
+
+  Reprise de la table `exercice` en amenagement(s)
+
+- [`exercice_definir()`](https://pobsteta.github.io/sommieR/reference/exercice_definir.md)
+  : Fixation de la possibilite d'un exercice (obsolete)
+
+- [`SOMMIER_NATURES_VOLUME`](https://pobsteta.github.io/sommieR/reference/SOMMIER_NATURES_VOLUME.md)
+  : Natures du volume d'un amenagement
 
 ## Base de données
 
@@ -440,8 +468,6 @@ Forêts, unités de gestion à identifiant stable, filiation et exercices.
 
 ## Consultation et export
 
-- [`sommier_balance_possibilite()`](https://pobsteta.github.io/sommieR/reference/sommier_balance_possibilite.md)
-  : Balance de possibilite (imprime A50E)
 - [`sommier_exporter_manifeste()`](https://pobsteta.github.io/sommieR/reference/sommier_exporter_manifeste.md)
   : Export d'un manifeste verifiable
 - [`sommier_verifier_manifeste()`](https://pobsteta.github.io/sommieR/reference/sommier_verifier_manifeste.md)

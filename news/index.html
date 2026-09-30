@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.18.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.19.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,41 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.19.0" id="sommier-0190">sommieR 0.19.0<a class="anchor" aria-label="anchor" href="#sommier-0190"></a></h2>
+<p>La balance de possibilité se calcule contre un aménagement inscrit dans la chaîne. Jusqu’ici, elle se comparait à un chiffre qu’on pouvait réécrire sans laisser de trace.</p>
+<div class="section level3">
+<h3 id="laménagement-est-une-écriture-0-19-0">L’aménagement est une écriture<a class="anchor" aria-label="anchor" href="#lam%C3%A9nagement-est-une-%C3%A9criture-0-19-0"></a></h3>
+<p>La possibilité vivait dans une table <code>exercice</code>, hors de la chaîne, que <code><a href="../reference/exercice_definir.html">exercice_definir()</a></code> remplaçait en silence. Un paquet dont l’objet est la valeur probante comparait ainsi des prélèvements attestés à un chiffre modifiable après coup.</p>
+<p><code><a href="../reference/sommier_amenagement.html">sommier_amenagement()</a></code> écrit désormais l’acte du registre 1 (arrêté ou agrément du PSG, schéma <code>r1-1.2.0</code>). L’acte porte la période, la <strong>possibilité à l’hectare (m³/ha/an)</strong> et la surface à laquelle elle s’applique, la ventilation par nature de coupe (elle aussi à l’hectare), la série, la tolérance et la source. Le volume annuel se déduit du taux et de la surface. <code><a href="../reference/sommier_avenant_possibilite.html">sommier_avenant_possibilite()</a></code> change le taux, la surface ou la fin à partir d’un exercice, sans réécrire le passé : une distraction de 20 ha change le volume, pas le taux. Deux aménagements ne peuvent pas se chevaucher : une révision anticipée clôt d’abord l’ancien par avenant.</p>
+</div>
+<div class="section level3">
+<h3 id="une-balance-par-aménagement-0-19-0">Une balance par aménagement<a class="anchor" aria-label="anchor" href="#une-balance-par-am%C3%A9nagement-0-19-0"></a></h3>
+<p><code>v_balance_possibilite</code> se calcule à partir des exercices de chaque aménagement. Elle donne la possibilité à l’hectare et en volume, et ramène le martelé à l’hectare (<code>prelevement_m3_ha</code>). On lit ainsi le prélèvement contre la possibilité, et contre les références de l’IFN, dans la même unité. Son cumul <strong>repart de zéro</strong> avec chaque nouvel aménagement, et court jusqu’à l’exercice courant. Chaque ligne cite l’acte dont vient sa possibilité, et dit s’il s’agit d’un avenant. Un martelage imputé à un exercice qu’aucun aménagement ne couvre n’est pas compté, mais il n’est pas perdu : <code><a href="../reference/sommier_martelages_hors_amenagement.html">sommier_martelages_hors_amenagement()</a></code> et le rapport le montrent à part.</p>
+</div>
+<div class="section level3">
+<h3 id="possibilité-ou-récolte-prévue-0-19-0">Possibilité ou récolte prévue<a class="anchor" aria-label="anchor" href="#possibilit%C3%A9-ou-r%C3%A9colte-pr%C3%A9vue-0-19-0"></a></h3>
+<p>La recherche des aménagements de la forêt domaniale d’Orléans a montré qu’un arrêté récent de l’ONF ne fixe plus de possibilité en m³. Celui du 9 août 2019 (massif de Lorris-Les Bordes, 2019-2038) fixe des surfaces par groupe. Le volume, 37 215 m³/an, n’apparaît qu’au document, comme récolte prévisible pilotée en surface terrière.</p>
+<p>L’aménagement porte donc <code>nature_volume</code> : <code>possibilite</code> (fixée par l’acte) ou <code>recolte_prevue</code> (récolte prévisible du document). Il garde aussi les surfaces par groupe et la surface à ouvrir en régénération. Le rapport ne présente jamais une prévision comme une possibilité.</p>
+</div>
+<div class="section level3">
+<h3 id="la-table-exercice-se-reprend-0-19-0">La table <code>exercice</code> se reprend<a class="anchor" aria-label="anchor" href="#la-table-exercice-se-reprend-0-19-0"></a></h3>
+<p><code><a href="../reference/sommier_reprendre_exercices.html">sommier_reprendre_exercices()</a></code> transcrit la table en un ou plusieurs aménagements repris, en regroupant les années consécutives de même possibilité (source <code>base_gestionnaire</code>, NDP 2). Le volume de la table est ramené à l’hectare sur la surface de la forêt. La balance ne lit plus la table. <code><a href="../reference/exercice_definir.html">exercice_definir()</a></code> avertit qu’il est obsolète, puis refuse d’écrire une fois la table reprise. Le jeu de démonstration de Couchey porte désormais un aménagement transcrit, 2016-2035 à 5 m³/ha/an sur 16,37 ha.</p>
+</div>
+<div class="section level3">
+<h3 id="un-martelage-parcourt-son-unité-0-19-0">Un martelage parcourt son unité<a class="anchor" aria-label="anchor" href="#un-martelage-parcourt-son-unit%C3%A9-0-19-0"></a></h3>
+<p>Par défaut, la surface d’un martelage est celle de son unité de gestion. <code>v_coupe</code> la déduit à la lecture, à partir du contour en vigueur à la date du martelage, et une nouvelle colonne <code>surface_source</code> dit si la surface a été <code>saisie</code> ou vient de l’<code>unite</code>. La surface déduite n’entre pas dans la chaîne : elle n’a pas à passer pour une surface saisie, et elle suit le contour si celui-ci est révisé. Une coupe réalisée ou un produit accidentel ne parcourt pas forcément toute l’unité : ils gardent la surface saisie, ou aucune.</p>
+</div>
+<div class="section level3">
+<h3 id="un-contrôle-de-vraisemblance-0-19-0">Un contrôle de vraisemblance<a class="anchor" aria-label="anchor" href="#un-contr%C3%B4le-de-vraisemblance-0-19-0"></a></h3>
+<p><code>sommier_amenagement(reference_m3_ha_an = )</code> confronte la possibilité à un prélèvement de référence à l’hectare, par exemple celui que l’IFN observe dans la sylvoécorégion. Au-delà d’un facteur 3, un avertissement signale une faute de frappe possible. L’acte s’écrit quand même : la possibilité est un acte d’autorité, pas une estimation.</p>
+</div>
+<div class="section level3">
+<h3 id="dans-le-rapport-0-19-0">Dans le rapport<a class="anchor" aria-label="anchor" href="#dans-le-rapport-0-19-0"></a></h3>
+<p>La section « Balance de possibilité » nomme chaque aménagement : sa période, sa possibilité (« 4,40 m³/ha/an sur 535,20 ha, soit 2 355 m³/an ») et sa nature, l’acte, les surfaces par groupe. Le tableau donne le prélèvement à l’hectare de chaque exercice. Elle trace le cumul par aménagement, et prévient que l’exercice en cours pèse déjà pour toute sa possibilité. Sans aménagement, elle dit pourquoi elle est vide.</p>
+<p>Les apports de nemeton, prévus au brief (volume sur pied, coupes SUFOSAT sans martelage, plan d’actions), viendront dans un lot suivant.</p>
+</div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.18.0" id="sommier-0180">sommieR 0.18.0<a class="anchor" aria-label="anchor" href="#sommier-0180"></a></h2>
 <p>Trois retouches au suivi des limites, tirées de la recette sur le terrain.</p>
