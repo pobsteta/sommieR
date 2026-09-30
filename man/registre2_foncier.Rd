@@ -19,7 +19,15 @@ registre2_foncier(
   references_cadastrales = NULL,
   beneficiaire = NULL,
   observations = NULL,
-  geometrie = NULL
+  geometrie = NULL,
+  etat = NULL,
+  element_pci = NULL,
+  visite_le = NULL,
+  operateur = NULL,
+  precision_m = NULL,
+  source_gnss = NULL,
+  releve_uuid = NULL,
+  photos = NULL
 )
 }
 \arguments{
@@ -54,6 +62,33 @@ elements (facultatif).}
 \code{\link[=geom_point]{geom_point()}}), une limite une ligne (voir \code{\link[=geom_ligne]{geom_ligne()}}).
 Facultative — un gestionnaire sans releve continue de saisir sans, et son
 sommier reste conforme.}
+
+\item{etat}{Pour une \code{reconnaissance_limite}, l'un de
+\link{SOMMIER_ETATS_LIMITE}. Obligatoire pour ce type, refuse pour les autres.}
+
+\item{element_pci}{Pour une \code{reconnaissance_limite}, l'element du plan
+cadastral tel que l'agent l'a vu : liste nommee portant au moins \code{id}
+(\code{feuille:OBJECT_RID}, voir \code{\link[=sommier_elements_pci]{sommier_elements_pci()}}), et facultativement
+\code{numero}, \code{categorie}, \code{nature}, \code{texte}, \code{millesime}, \code{x}, \code{y}.
+Obligatoire sauf a l'etat \code{hors_plan}, ou il est refuse.}
+
+\item{visite_le}{Instant de la visite, tel que l'appareil l'a note
+(facultatif).}
+
+\item{operateur}{Agent qui a constate (facultatif).}
+
+\item{precision_m}{Precision horizontale declaree par le recepteur GNSS,
+en metres (facultatif).}
+
+\item{source_gnss}{Recepteur ou mode de positionnement declare
+(facultatif).}
+
+\item{releve_uuid}{Identifiant du releve dans l'outil de terrain
+(facultatif).}
+
+\item{photos}{Liste de photos, chacune liste nommee : \code{sha256}
+(64 caracteres hexadecimaux), \code{octets}, \code{type}, et facultativement
+\code{fichier}, \code{exif_date}, \code{exif_position}. Voir \code{\link[=sommier_deposer_photo]{sommier_deposer_photo()}}.}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.

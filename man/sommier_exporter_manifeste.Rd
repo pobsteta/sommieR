@@ -4,7 +4,7 @@
 \alias{sommier_exporter_manifeste}
 \title{Export d'un manifeste verifiable}
 \usage{
-sommier_exporter_manifeste(con, foret_id, chemin)
+sommier_exporter_manifeste(con, foret_id, chemin, depot = NULL)
 }
 \arguments{
 \item{con}{Connexion DBI.}
@@ -12,6 +12,8 @@ sommier_exporter_manifeste(con, foret_id, chemin)
 \item{foret_id}{UUID de la foret.}
 
 \item{chemin}{Fichier de destination.}
+
+\item{depot}{Depot de photos a joindre (facultatif).}
 }
 \value{
 Invisiblement, \code{chemin}.
@@ -33,4 +35,11 @@ Le manifeste porte les payloads en JSON tel que stocke, pas en forme
 canonique : c'est la verification qui recanonise. Un manifeste dont les
 payloads seraient deja canoniques masquerait un bogue de canonisation chez
 l'expediteur.
+
+\strong{Les photos voyagent a cote.} Une reconnaissance de limite ne porte ses
+photos que par leur empreinte (voir \code{\link[=sommier_deposer_photo]{sommier_deposer_photo()}}). Avec
+\code{depot}, les photos que la chaine reference sont copiees dans un dossier
+\verb{photos/} voisin du manifeste, sous leur nom d'empreinte ; le destinataire
+les confronte aux empreintes chainees avec \code{\link[=sommier_verifier_manifeste]{sommier_verifier_manifeste()}}.
+Le format du manifeste n'en change pas : les empreintes y sont deja.
 }

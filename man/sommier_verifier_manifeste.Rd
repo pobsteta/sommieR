@@ -4,7 +4,7 @@
 \alias{sommier_verifier_manifeste}
 \title{Verification d'un manifeste exporte}
 \usage{
-sommier_verifier_manifeste(chemin, ancres = list())
+sommier_verifier_manifeste(chemin, ancres = list(), photos = NULL)
 }
 \arguments{
 \item{chemin}{Fichier JSON produit par \code{\link[=sommier_exporter_manifeste]{sommier_exporter_manifeste()}}.}
@@ -12,11 +12,13 @@ sommier_verifier_manifeste(chemin, ancres = list())
 \item{ancres}{Ancres de confiance, lues par \code{\link[=certificat_lire]{certificat_lire()}}. Aucune
 n'est embarquee : ce serait faire dependre du rythme de publication de
 sommieR la question de savoir qui est digne de confiance.}
+
+\item{photos}{Dossier des photos jointes au manifeste (facultatif).}
 }
 \value{
 Un objet \code{sommier_rapport}, dont les anomalies incluent les types
 \code{visa_orphelin}, \code{ancrage_orphelin}, \code{visa_horodatage},
-\code{ancrage_horodatage} et \code{visa_signature}.
+\code{ancrage_horodatage}, \code{visa_signature} et \code{photo_alteree}.
 }
 \description{
 Verifie hors ligne la chaine d'un manifeste produit par
@@ -38,6 +40,10 @@ accompagnerait le manifeste sans que rien ne le distingue du bon.
 certificat de son signataire (format \code{sommier-manifeste-2}). C'est ce
 qui rend l'export verifiable par un tiers sans qu'il ait a se procurer
 la cle par un canal que le manifeste n'organise pas.
+\item \strong{Les photos jointes sont celles que la chaine atteste}, quand
+\code{photos} designe leur dossier. Une photo dont l'empreinte differe est
+une anomalie (\code{photo_alteree}) ; une photo absente, une reserve : elle
+est perdue pour la lecture, mais la chaine n'en est pas moins intacte.
 }
 
 \strong{Anomalies et reserves ne se confondent pas.} Une anomalie dit que

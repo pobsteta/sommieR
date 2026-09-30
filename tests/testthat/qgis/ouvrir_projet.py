@@ -1,0 +1,42 @@
+"""Ouvre un projet engendre par sommier_projet_qfield() comme le ferait QGIS,
+et rend en JSON ce que les tests verifient : couches valides, identifiants,
+relation, et l'element que le formulaire proposerait pour chaque constat.
+
+    QT_QPA_PLATFORM=offscreen python3 ouvrir_projet.py limites.qgs
+"""
+import json
+import sys
+
+from qgis.core import (QgsApplication, QgsExpression, QgsExpressionContext,
+                       QgsExpressionContextUtils, QgsFeature, QgsProject)
+
+QgsApplication.setPrefixPath("/usr", True)
+application = QgsApplication([], False)
+application.initQgis()
+projet = QgsProject.instance()
+resultat = {"lu": projet.read(sys.argv[1]), "titre": projet.title(),
+            "couches": {}, "relations": [], "propositions": [],
+            "variables": projet.customVariables()}
+for identifiant, couche in projet.mapLayers().items():
+    resultat["couches"][identifiant] = {
+        "valide": couche.isValid(),
+        "lecture_seule": couche.readOnly(),
+        "objets": couche.featureCount() if hasattr(couche, "featureCount") else None,
+    }
+for relation in projet.relationManager().relations().values():
+    resultat["relations"].append({"id": relation.id(), "valide": relation.isValid()})
+constats = projet.mapLayer("limites_constats")
+if constats is not None:
+    expression = QgsExpression(constats.defaultValueDefinition(
+        constats.fields().indexOf("element_id")).expression())
+    for saisi in constats.getFeatures():
+        nouveau = QgsFeature(constats.fields())
+        nouveau.setGeometry(saisi.geometry())
+        contexte = QgsExpressionContext(
+            QgsExpressionContextUtils.globalProjectLayerScopes(constats))
+        contexte.setFeature(nouveau)
+        propose = expression.evaluate(contexte)
+        resultat["propositions"].append(
+            {"uuid": saisi["uuid"], "propose": propose if propose else None})
+application.exitQgis()
+print("JSON:" + json.dumps(resultat))

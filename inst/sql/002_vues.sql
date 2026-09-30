@@ -421,6 +421,47 @@ WHERE e.registre = 2;
 
 COMMENT ON VIEW v_foncier IS 'Imprime A40 et actes fonciers.';
 
+-- Reconnaissances de limite (v0.16.0) : un constat de terrain par element du
+-- plan cadastral, photo a l'appui. L'element est recopie dans le payload tel
+-- que l'agent l'a vu ; les photos n'y sont que par leur empreinte.
+CREATE OR REPLACE VIEW v_reconnaissance_limite AS
+SELECT
+  e.id, e.foret_id, e.ug_uuid, e.seq, e.date_evenement, e.date_saisie,
+  e.auteur,
+  (e.payload ->> 'etat')::TEXT                       AS etat,
+  (e.payload -> 'element_pci' ->> 'id')::TEXT        AS element_id,
+  (e.payload -> 'element_pci' ->> 'numero')::TEXT    AS element_numero,
+  (e.payload -> 'element_pci' ->> 'categorie')::TEXT AS element_categorie,
+  (e.payload -> 'element_pci' ->> 'x')::NUMERIC      AS element_x,
+  (e.payload -> 'element_pci' ->> 'y')::NUMERIC      AS element_y,
+  (e.payload ->> 'visite_le')::TIMESTAMPTZ           AS visite_le,
+  (e.payload ->> 'operateur')::TEXT                  AS operateur,
+  (e.payload ->> 'precision_m')::NUMERIC             AS precision_m,
+  (e.payload ->> 'source_gnss')::TEXT                AS source_gnss,
+  (e.payload ->> 'releve_uuid')::TEXT                AS releve_uuid,
+  coalesce(jsonb_array_length(e.payload -> 'photos'), 0) AS nb_photos,
+  (e.payload ->> 'observations')::TEXT               AS observations,
+  e.geom
+FROM v_entree_courante e
+WHERE e.registre = 2
+  AND e.payload ->> 'type_entree' = 'reconnaissance_limite';
+
+COMMENT ON VIEW v_reconnaissance_limite IS
+  'Constats de terrain sur les elements de limite du plan cadastral.';
+
+-- La derniere visite de chaque element : c'est la question que pose le
+-- suivi des limites - quand cette borne a-t-elle ete vue pour la derniere
+-- fois, et dans quel etat. Les elements hors plan n'ont pas d'identifiant
+-- et ne s'y agregent pas.
+CREATE OR REPLACE VIEW v_reconnaissance_derniere AS
+SELECT DISTINCT ON (r.foret_id, r.element_id) r.*
+FROM v_reconnaissance_limite r
+WHERE r.element_id IS NOT NULL
+ORDER BY r.foret_id, r.element_id, r.date_evenement DESC, r.seq DESC;
+
+COMMENT ON VIEW v_reconnaissance_derniere IS
+  'Derniere reconnaissance de chaque element du plan cadastral.';
+
 -- `titulaire` et `garants` ne sont pas exposes : donnees a caractere
 -- personnel, comme `tiers` au registre 7.
 CREATE OR REPLACE VIEW v_droit AS

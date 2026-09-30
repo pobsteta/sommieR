@@ -34,6 +34,31 @@ que ci-dessus : fixture, jamais donnée du sommier.
 
 ---
 
+# Photos de test
+
+`photo-exif-ii.jpg`, `photo-exif-mm.jpg`, `photo-sans-exif.jpg` — trois
+images de 16 × 16 pixels **engendrées localement** le 30 septembre 2026 par
+Pillow 10.2. Les deux premières portent un en-tête EXIF, l'une en ordre
+d'octets Intel (`II`), l'autre Motorola (`MM`) : date de modification
+2026:10:12 10:00:00, date de prise de vue 2026:10:12 10:31:05, position
+47° 58' 37,2" N, 2° 1' 50,4" E. La troisième n'en porte aucun.
+
+**Pourquoi Pillow.** Le lecteur EXIF de `sommier_deposer_photo()` est écrit
+dans le paquet ; l'éprouver sur des en-têtes qu'il aurait lui-même fabriqués
+ne prouverait rien. Pillow est un autre producteur, et le plus répandu.
+
+    from PIL import Image
+    from PIL.TiffImagePlugin import IFDRational as R
+    ex = Image.Exif(); ex.endian = "<"   # ">" pour MM
+    ex[0x0132] = "2026:10:12 10:00:00"
+    ex[0x8769] = {0x9003: "2026:10:12 10:31:05"}
+    ex[0x8825] = {1: "N", 2: (R(47,1), R(58,1), R(372,10)),
+                  3: "E", 4: (R(2,1), R(1,1), R(504,10))}
+    Image.new("RGB", (16, 16), (90, 120, 60)).save(
+        "photo-exif-ii.jpg", "JPEG", exif=ex.tobytes(), quality=80)
+
+---
+
 # Autorité d'horodatage de test
 
 `tsa-test-racine.crt`, `tsa-test-requete.tsq`, `tsa-test-reponse.tsr` — une
