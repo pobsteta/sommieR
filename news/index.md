@@ -1,5 +1,58 @@
 # Changelog
 
+## sommieR 0.17.0
+
+Le rapport montre ce que le terrain a vu. Les reconnaissances de limite
+rapportées de QField ont désormais leur section, avec une carte, un
+tableau et une planche de photos. Une version publique la rend sans les
+photos.
+
+### Ce que le terrain a vu
+
+[`sommier_rapport_quarto()`](https://pobsteta.github.io/sommieR/reference/sommier_rapport_quarto.md)
+ajoute, après les éléments du plan, une section « Vérification des
+limites sur le terrain » :
+
+- **un bilan par catégorie** : « Borne : 2 vu(s) sur 68, dont 1
+  endommagé(s) ; 0 non retrouvé(s) ou détruit(s) ; 66 à voir », puis les
+  éléments trouvés hors plan ;
+- **un encadré sur ce que la photo atteste**, et sur ce qu’elle
+  n’atteste pas ;
+- **une carte du dernier état de chaque élément**. Ce qui reste à voir y
+  est allégé, pour qu’une voie de trois kilomètres n’écrase pas les
+  bornes, et les éléments visités sont dessinés en dernier ;
+- **un tableau des constats** : élément, état, date, opérateur, écart au
+  plan, délai entre la visite et l’import, nombre de photos ;
+- **une planche photographique**, quatre vignettes par ligne, sous
+  chacune le numéro, la date, l’état et le début de l’empreinte.
+
+Les vignettes sont réduites au rendu par GDAL, déjà là par `sf` : aucune
+dépendance nouvelle. Une photo de QField passe de 1,6 Mo à environ 130
+Ko. Seul l’original est attesté. Une photo dont l’empreinte ne tient
+plus n’est pas montrée, et le rapport dit pourquoi. La planche est
+écrite directement en HTML et en LaTeX, parce que la grille de figures
+de Quarto numérotait chaque vignette « (a) ».
+
+### Un pointé n’est pas une mesure
+
+Le premier retour de terrain l’a montré. Avec le positionnement coupé,
+QField laisse la précision vide, et la position du constat est l’endroit
+où l’agent a touché la carte. L’écart au plan n’est donc calculé que
+pour une position mesurée. Il est dit dans la tolérance sous la
+précision déclarée du relevé augmentée d’un mètre, la précision
+graphique d’un plan au 1/5000 (le brief prévoyait l’échelle de chaque
+feuille, que les éléments ne portent pas encore). Au-delà, le tableau
+écrit « hors tolérance », jamais « déplacé ». Sans mesure, il écrit «
+pointé ».
+
+### Une version publique
+
+`sommier_rapport_quarto(public = TRUE)` retire la planche. Le tableau
+garde le nombre de photos, et un encadré dit qu’elles existent et où les
+demander. Une photo peut montrer un riverain ou une plaque
+d’immatriculation. `photos =` désigne le dépôt, qui est fourni et jamais
+téléchargé, comme le fond.
+
 ## sommieR 0.16.0
 
 Le suivi des limites va sur le terrain. Le sommier prépare un projet

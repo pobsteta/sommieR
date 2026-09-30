@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.16.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.17.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,33 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.17.0" id="sommier-0170">sommieR 0.17.0<a class="anchor" aria-label="anchor" href="#sommier-0170"></a></h2>
+<p>Le rapport montre ce que le terrain a vu. Les reconnaissances de limite rapportées de QField ont désormais leur section, avec une carte, un tableau et une planche de photos. Une version publique la rend sans les photos.</p>
+<div class="section level3">
+<h3 id="ce-que-le-terrain-a-vu-0-17-0">Ce que le terrain a vu<a class="anchor" aria-label="anchor" href="#ce-que-le-terrain-a-vu-0-17-0"></a></h3>
+<p><code><a href="../reference/sommier_rapport_quarto.html">sommier_rapport_quarto()</a></code> ajoute, après les éléments du plan, une section « Vérification des limites sur le terrain » :</p>
+<ul><li>
+<strong>un bilan par catégorie</strong> : « Borne : 2 vu(s) sur 68, dont 1 endommagé(s) ; 0 non retrouvé(s) ou détruit(s) ; 66 à voir », puis les éléments trouvés hors plan ;</li>
+<li>
+<strong>un encadré sur ce que la photo atteste</strong>, et sur ce qu’elle n’atteste pas ;</li>
+<li>
+<strong>une carte du dernier état de chaque élément</strong>. Ce qui reste à voir y est allégé, pour qu’une voie de trois kilomètres n’écrase pas les bornes, et les éléments visités sont dessinés en dernier ;</li>
+<li>
+<strong>un tableau des constats</strong> : élément, état, date, opérateur, écart au plan, délai entre la visite et l’import, nombre de photos ;</li>
+<li>
+<strong>une planche photographique</strong>, quatre vignettes par ligne, sous chacune le numéro, la date, l’état et le début de l’empreinte.</li>
+</ul><p>Les vignettes sont réduites au rendu par GDAL, déjà là par <code>sf</code> : aucune dépendance nouvelle. Une photo de QField passe de 1,6 Mo à environ 130 Ko. Seul l’original est attesté. Une photo dont l’empreinte ne tient plus n’est pas montrée, et le rapport dit pourquoi. La planche est écrite directement en HTML et en LaTeX, parce que la grille de figures de Quarto numérotait chaque vignette « (a) ».</p>
+</div>
+<div class="section level3">
+<h3 id="un-pointé-nest-pas-une-mesure-0-17-0">Un pointé n’est pas une mesure<a class="anchor" aria-label="anchor" href="#un-point%C3%A9-nest-pas-une-mesure-0-17-0"></a></h3>
+<p>Le premier retour de terrain l’a montré. Avec le positionnement coupé, QField laisse la précision vide, et la position du constat est l’endroit où l’agent a touché la carte. L’écart au plan n’est donc calculé que pour une position mesurée. Il est dit dans la tolérance sous la précision déclarée du relevé augmentée d’un mètre, la précision graphique d’un plan au 1/5000 (le brief prévoyait l’échelle de chaque feuille, que les éléments ne portent pas encore). Au-delà, le tableau écrit « hors tolérance », jamais « déplacé ». Sans mesure, il écrit « pointé ».</p>
+</div>
+<div class="section level3">
+<h3 id="une-version-publique-0-17-0">Une version publique<a class="anchor" aria-label="anchor" href="#une-version-publique-0-17-0"></a></h3>
+<p><code>sommier_rapport_quarto(public = TRUE)</code> retire la planche. Le tableau garde le nombre de photos, et un encadré dit qu’elles existent et où les demander. Une photo peut montrer un riverain ou une plaque d’immatriculation. <code>photos =</code> désigne le dépôt, qui est fourni et jamais téléchargé, comme le fond.</p>
+</div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.16.0" id="sommier-0160">sommieR 0.16.0<a class="anchor" aria-label="anchor" href="#sommier-0160"></a></h2>
 <p>Le suivi des limites va sur le terrain. Le sommier prépare un projet QGIS que l’agent ouvre avec QField, et il relit ce que l’agent en rapporte : un constat par élément visité, avec sa position et ses photos, au registre 2.</p>

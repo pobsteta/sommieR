@@ -17,6 +17,8 @@ sommier_rapport_quarto(
   referentiel = "psg",
   fond = NULL,
   fond_pci = NULL,
+  photos = NULL,
+  public = FALSE,
   quarto = Sys.which("quarto")
 )
 ```
@@ -72,6 +74,21 @@ sommier_rapport_quarto(
   [`sommier_fond_pci_lire()`](https://pobsteta.github.io/sommieR/reference/sommier_fond_pci_lire.md),
   se posent en croix sur la carte de la desserte. `NULL` pour s'en
   passer. Meme regle que `fond` : fourni, jamais telecharge au rendu.
+
+- photos:
+
+  Depot des photos des reconnaissances de limite (voir
+  [`sommier_deposer_photo()`](https://pobsteta.github.io/sommieR/reference/sommier_deposer_photo.md))
+  ; `NULL` pour s'en passer. Fourni, jamais telecharge. Les vignettes de
+  la planche photographique sont reduites au rendu ; une photo dont
+  l'empreinte ne tient plus n'est pas montree.
+
+- public:
+
+  `TRUE` pour un document a diffuser : la planche photographique est
+  retiree, le tableau garde le nombre de photos, et le document dit
+  qu'elles existent. Une photo peut montrer un riverain ou une plaque
+  d'immatriculation.
 
 - quarto:
 
