@@ -30,7 +30,8 @@ sommier_fond_pci(code_insee, feuilles, cache = NULL, force = FALSE)
 ## Value
 
 Invisiblement, un objet `sommier_fond_pci` : `feuilles` (table des
-feuilles et de leurs fichiers `.THF`), `code_insee`, `source`.
+feuilles, de leurs fichiers `.THF` et de leur millesime), `code_insee`,
+`source`.
 
 ## Details
 
@@ -43,6 +44,10 @@ geometrie (voir
 
 Le telechargement est explicite, comme pour le fond parcellaire : ni le
 rapport ni un export ne declenchent d'appel reseau.
+
+Le millesime de chaque feuille est la date d'echange que le lot declare
+dans son `.THF` (`TDASD`). Le telechargement vise la derniere livraison
+: sans cette date, un plan de 2026 relu en 2031 ne dirait pas son age.
 
 ## Examples
 

@@ -63,11 +63,15 @@ sommier_rapport_quarto(
 
 - fond_pci:
 
-  Bornes du PCI vecteur a poser sur la carte de la desserte, telles que
-  les rend
-  [`sommier_fond_pci_lire()`](https://pobsteta.github.io/sommieR/reference/sommier_fond_pci_lire.md)
-  ; `NULL` pour s'en passer. Meme regle que `fond` : fourni, jamais
-  telecharge au rendu.
+  Le PCI vecteur, sous l'une de deux formes. Les elements du plan que
+  rend
+  [`sommier_elements_pci()`](https://pobsteta.github.io/sommieR/reference/sommier_elements_pci.md) -
+  bornes, details, cours d'eau, voies, dans la foret et a ses abords -
+  recoivent leur propre section, avec une carte et un tableau par
+  categorie. Les bornes seules, telles que les rend
+  [`sommier_fond_pci_lire()`](https://pobsteta.github.io/sommieR/reference/sommier_fond_pci_lire.md),
+  se posent en croix sur la carte de la desserte. `NULL` pour s'en
+  passer. Meme regle que `fond` : fourni, jamais telecharge au rendu.
 
 - quarto:
 

@@ -720,8 +720,9 @@ qui n’entre ni dans un registre ni dans une empreinte.
 ## PCI vecteur — bornes et détails
 
 Ce que le plan cadastral porte et que les livraisons simplifiées
-écartent : bornes, murs, fossés, haies. Décor lui aussi — le bornage qui
-fait foi est celui du gestionnaire, au registre 2.
+écartent : bornes, signes de limite, détails, cours d’eau, voies,
+bâtiments. Décor lui aussi — le bornage qui fait foi est celui du
+gestionnaire, au registre 2.
 
 - [`sommier_feuilles_pci()`](https://pobsteta.github.io/sommieR/reference/sommier_feuilles_pci.md)
   : Feuilles cadastrales d'une commune
@@ -729,8 +730,14 @@ fait foi est celui du gestionnaire, au registre 2.
   : Fond PCI vecteur d'une ou plusieurs feuilles
 - [`sommier_fond_pci_lire()`](https://pobsteta.github.io/sommieR/reference/sommier_fond_pci_lire.md)
   : Lecture d'une couche du PCI vecteur
+- [`sommier_elements_pci()`](https://pobsteta.github.io/sommieR/reference/sommier_elements_pci.md)
+  : Elements du plan cadastral dans la foret et a ses abords
+- [`sommier_exporter_elements_pci()`](https://pobsteta.github.io/sommieR/reference/sommier_exporter_elements_pci.md)
+  : Export des elements du plan cadastral en GeoPackage
 - [`SOMMIER_COUCHES_PCI`](https://pobsteta.github.io/sommieR/reference/SOMMIER_COUCHES_PCI.md)
   : Couches du PCI vecteur (EDIGEO)
+- [`SOMMIER_CATEGORIES_PCI`](https://pobsteta.github.io/sommieR/reference/SOMMIER_CATEGORIES_PCI.md)
+  : Elements du plan cadastral retenus pour le suivi des limites
 - [`SOMMIER_PROJECTIONS_EDIGEO`](https://pobsteta.github.io/sommieR/reference/SOMMIER_PROJECTIONS_EDIGEO.md)
   : Projections declarees par les lots EDIGEO
 

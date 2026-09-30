@@ -11,6 +11,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/NOM_FORET_DEMO.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_ALGOS_JWS.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_AUTORITES.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_CATEGORIES_PCI.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_CHAMPS_EMPREINTE.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_COUCHES_CADASTRE.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_COUCHES_PCI.html</loc></url>
@@ -101,11 +102,13 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_demo_couchey.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_densite_voirie.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_elements_ibp.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_elements_pci.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_empreinte.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_empreinte_genese.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_enregistrement_canonique.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_entree.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_execution_budgetaire.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_exporter_elements_pci.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_exporter_manifeste.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_exporter_sig.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_feuilles_pci.html</loc></url>

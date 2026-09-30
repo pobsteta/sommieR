@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.15.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,7 +71,8 @@
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Invisiblement, un objet <code>sommier_fond_pci</code> : <code>feuilles</code> (table des
-feuilles et de leurs fichiers <code>.THF</code>), <code>code_insee</code>, <code>source</code>.</p>
+feuilles, de leurs fichiers <code>.THF</code> et de leur millesime), <code>code_insee</code>,
+<code>source</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -82,6 +83,9 @@ est celui du gestionnaire, porte au registre 2 avec sa geometrie (voir
 <a href="geometries.html">geometries</a>).</p>
 <p>Le telechargement est explicite, comme pour le fond parcellaire : ni le
 rapport ni un export ne declenchent d'appel reseau.</p>
+<p>Le millesime de chaque feuille est la date d'echange que le lot declare
+dans son <code>.THF</code> (<code>TDASD</code>). Le telechargement vise la derniere livraison :
+sans cette date, un plan de 2026 relu en 2031 ne dirait pas son age.</p>
     </div>
 
     <div class="section level2">

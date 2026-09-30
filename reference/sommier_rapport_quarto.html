@@ -11,7 +11,7 @@ elements d'IBP et la desserte."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.15.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -105,9 +105,13 @@ ne liste que les unites.</p></dd>
 
 
 <dt id="arg-fond-pci">fond_pci<a class="anchor" aria-label="anchor" href="#arg-fond-pci"></a></dt>
-<dd><p>Bornes du PCI vecteur a poser sur la carte de la desserte,
-telles que les rend <code><a href="sommier_fond_pci_lire.html">sommier_fond_pci_lire()</a></code> ; <code>NULL</code> pour s'en passer.
-Meme regle que <code>fond</code> : fourni, jamais telecharge au rendu.</p></dd>
+<dd><p>Le PCI vecteur, sous l'une de deux formes. Les elements
+du plan que rend <code><a href="sommier_elements_pci.html">sommier_elements_pci()</a></code> - bornes, details, cours d'eau,
+voies, dans la foret et a ses abords - recoivent leur propre section,
+avec une carte et un tableau par categorie. Les bornes seules, telles que
+les rend <code><a href="sommier_fond_pci_lire.html">sommier_fond_pci_lire()</a></code>, se posent en croix sur la carte de la
+desserte. <code>NULL</code> pour s'en passer. Meme regle que <code>fond</code> : fourni, jamais
+telecharge au rendu.</p></dd>
 
 
 <dt id="arg-quarto">quarto<a class="anchor" aria-label="anchor" href="#arg-quarto"></a></dt>
