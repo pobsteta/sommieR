@@ -2,16 +2,21 @@
 #'
 #' @description
 #' Ce que le Plan Cadastral Informatise porte et que les livraisons GeoJSON
-#' d'Etalab ecartent : les bornes, et les details topographiques lineaires -
-#' murs, fosses, haies, clotures.
+#' d'Etalab ecartent : les bornes, les signes de limite, et les details
+#' topographiques - ponctuels, lineaires et surfaciques -, avec les cours
+#' d'eau, les voies et les batiments.
 #'
 #' @details
 #' Les noms sont ceux des couches EDIGEO, tels que le pilote de GDAL les
-#' expose. `bornes` correspond a `BORNE_id`, `details` a `TLINE_id`.
+#' expose : `bornes` correspond a `BORNE_id`, `details` a `TLINE_id`,
+#' `points` a `TPOINT_id`, `surfaces` a `TSURF_id`, `signes` a `SYMBLIM_id`.
 #'
 #' @export
 SOMMIER_COUCHES_PCI <- c(bornes = "BORNE_id", details = "TLINE_id",
-                         parcelles = "PARCELLE_id", voies = "ZONCOMMUNI_id")
+                         parcelles = "PARCELLE_id", voies = "ZONCOMMUNI_id",
+                         points = "TPOINT_id", surfaces = "TSURF_id",
+                         signes = "SYMBLIM_id", cours_eau = "TRONFLUV_id",
+                         routes = "TRONROUTE_id", batiments = "BATIMENT_id")
 
 SOMMIER_SOURCE_PCI <- "https://cadastre.data.gouv.fr/data/dgfip-pci-vecteur"
 
@@ -109,6 +114,10 @@ sommier_feuilles_pci <- function(code_insee, emprise = NULL, marge_m = 100,
 #' Le telechargement est explicite, comme pour le fond parcellaire : ni le
 #' rapport ni un export ne declenchent d'appel reseau.
 #'
+#' Le millesime de chaque feuille est la date d'echange que le lot declare
+#' dans son `.THF` (`TDASD`). Le telechargement vise la derniere livraison :
+#' sans cette date, un plan de 2026 relu en 2031 ne dirait pas son age.
+#'
 #' @param code_insee Code INSEE de la commune.
 #' @param feuilles Identifiants de feuilles, tels que les rend
 #'   [sommier_feuilles_pci()].
@@ -116,7 +125,8 @@ sommier_feuilles_pci <- function(code_insee, emprise = NULL, marge_m = 100,
 #' @param force Retelecharger meme si l'archive est deja decompressee.
 #'
 #' @return Invisiblement, un objet `sommier_fond_pci` : `feuilles` (table des
-#'   feuilles et de leurs fichiers `.THF`), `code_insee`, `source`.
+#'   feuilles, de leurs fichiers `.THF` et de leur millesime), `code_insee`,
+#'   `source`.
 #'
 #' @examples
 #' # Necessite un acces reseau :
@@ -162,8 +172,11 @@ sommier_fond_pci <- function(code_insee, feuilles, cache = NULL,
 
   structure(
     list(
-      feuilles = data.frame(feuille = feuilles, thf = unname(chemins),
-                            stringsAsFactors = FALSE),
+      feuilles = data.frame(
+        feuille = feuilles, thf = unname(chemins),
+        millesime = do.call(c, lapply(unname(chemins), millesime_lot)),
+        stringsAsFactors = FALSE
+      ),
       code_insee = code_insee, source = SOMMIER_SOURCE_PCI
     ),
     class = "sommier_fond_pci"
@@ -332,6 +345,22 @@ appliquer_symboles <- function(objets, symboles) {
     return(rep(NA_character_, nrow(objets)))
   }
   unname(symboles[objets$sym])
+}
+
+# La date d'echange du lot, que le `.THF` declare sous `TDASD08:AAAAMMJJ`.
+# C'est le millesime de la feuille : la livraison telechargee est la
+# derniere, et son age ne se lit nulle part ailleurs. Une declaration absente
+# ou illisible rend `NA` - un millesime inconnu se dit, il ne s'invente pas.
+millesime_lot <- function(thf) {
+  if (is.na(thf) || !file.exists(thf)) {
+    return(as.Date(NA))
+  }
+  lignes <- readLines(thf, warn = FALSE, encoding = "latin1")
+  date <- grep("^TDASD08:[0-9]{8}", sub("\r$", "", lignes), value = TRUE)
+  if (length(date) == 0L) {
+    return(as.Date(NA))
+  }
+  as.Date(substr(date[[1L]], 9L, 16L), format = "%Y%m%d")
 }
 
 fichier_thf <- function(dossier) {

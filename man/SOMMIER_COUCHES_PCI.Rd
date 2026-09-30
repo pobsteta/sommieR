@@ -8,10 +8,12 @@ SOMMIER_COUCHES_PCI
 }
 \description{
 Ce que le Plan Cadastral Informatise porte et que les livraisons GeoJSON
-d'Etalab ecartent : les bornes, et les details topographiques lineaires -
-murs, fosses, haies, clotures.
+d'Etalab ecartent : les bornes, les signes de limite, et les details
+topographiques - ponctuels, lineaires et surfaciques -, avec les cours
+d'eau, les voies et les batiments.
 }
 \details{
 Les noms sont ceux des couches EDIGEO, tels que le pilote de GDAL les
-expose. \code{bornes} correspond a \code{BORNE_id}, \code{details} a \code{TLINE_id}.
+expose : \code{bornes} correspond a \code{BORNE_id}, \code{details} a \code{TLINE_id},
+\code{points} a \code{TPOINT_id}, \code{surfaces} a \code{TSURF_id}, \code{signes} a \code{SYMBLIM_id}.
 }

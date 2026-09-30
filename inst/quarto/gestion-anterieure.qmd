@@ -158,8 +158,15 @@ dessiner_fond <- function() {
 # Bornes du PCI vecteur : décor lui aussi, et de la même source qu'un fond
 # parcellaire — une borne relevée par la DGFiP n'est pas un constat du
 # gestionnaire, celui-là est au registre 2.
+#
+# Il arrive sous deux formes. Les bornes seules (`sommier_fond_pci_lire()`) se
+# posent en croix sur la carte de la desserte, comme avant. Les éléments du
+# plan (`sommier_elements_pci()`) — bornes, détails, cours d'eau, voies — ont
+# leur propre section : une borne n'est pas un élément de desserte.
 fond_pci <- rapport$fond_pci
-pci_pose <- !is.null(fond_pci) && nrow(fond_pci) > 0L && cartographiable
+elements_pci <- !is.null(fond_pci) && !is.null(fond_pci$categorie)
+pci_pose <- !is.null(fond_pci) && !elements_pci && nrow(fond_pci) > 0L &&
+  cartographiable
 
 dessiner_pci <- function() {
   if (!pci_pose) return(invisible(NULL))
@@ -169,7 +176,7 @@ dessiner_pci <- function() {
 }
 
 mention_pci <- function() {
-  if (is.null(fond_pci)) return(invisible(NULL))
+  if (is.null(fond_pci) || elements_pci) return(invisible(NULL))
   if (nrow(fond_pci) == 0L) {
     cat("*Aucune borne du plan cadastral dans l'emprise de la forêt.*\n\n")
     return(invisible(NULL))
@@ -456,6 +463,239 @@ if (!fond_pose) {
         paste(sans_tenement, collapse = ", "),
         ". Le fond ne couvre peut-être pas toute la forêt.\n:::\n\n", sep = "")
   }
+}
+```
+
+```{r elements-pci-preparation, eval=elements_pci}
+# Les éléments du plan cadastral dans la forêt et à ses abords. Ce que le plan
+# annonce, pas ce que le terrain montre : une donnée tierce, lue au rendu,
+# hors registre et hors chaîne.
+tampon_pci <- attr(fond_pci, "tampon_m") %||% NA_real_
+a_elements_pci <- nrow(fond_pci) > 0L
+
+# La désignation dit d'où elle vient. Une nature fournie par une table est
+# marquée comme telle ; un détail que rien ne nomme garde son code, plutôt
+# que de recevoir un nom deviné. Le texte que le plan attache à l'objet est
+# cité entre guillemets, sans être pris pour sa nature : il nomme parfois
+# l'objet (« pylone télécom »), parfois seulement ses abords (le nom de la
+# commune voisine le long d'une limite). Un nom que le plan pose mot par mot
+# le long d'une voie n'est pas recomposé : l'ordre des mots ne s'y lit pas.
+designation_pci <- function(e) {
+  details <- e$categorie %in% c("détail ponctuel", "détail linéaire",
+                                "détail surfacique")
+  cite <- ifelse(is.na(e$texte), NA_character_,
+                 paste0("« ", e$texte, " »"))
+  base <- ifelse(e$nature_source %in% "appelant",
+                 paste0(e$nature, " (table fournie)"),
+                 paste0(e$categorie, ", code ", e$sym))
+  ifelse(
+    details,
+    ifelse(is.na(cite), base, paste0(base, " — ", cite)),
+    ifelse(!is.na(cite), cite,
+           ifelse(e$texte_morcele %in% TRUE, "nom morcelé sur le plan", "—"))
+  )
+}
+
+# Un style par catégorie. Les éléments du tampon sont atténués : on les voit,
+# mais l'œil va d'abord à la forêt.
+styles_pci <- list(
+  "borne"              = list(col = "#6D4C41", pch = 21),
+  "signe de limite"    = list(col = "#6D4C41", pch = 17),
+  "détail ponctuel"    = list(col = "#C62828", pch = 18),
+  "détail linéaire"    = list(col = "#5D4037", lwd = 1.6),
+  "détail surfacique"  = list(col = "#8D6E63"),
+  "cours d'eau"        = list(col = "#1E88E5"),
+  "voie"               = list(col = "#757575", lwd = 1.2),
+  "tronçon de route"   = list(col = "#9E9E9E"),
+  "bâtiment"           = list(col = "#424242")
+)
+attenuer <- function(couleur, tampon) ifelse(tampon, paste0(couleur, "66"),
+                                             couleur)
+
+# En PDF, un tableau de pandoc répartit la largeur entre ses colonnes et fait
+# revenir les nombres à la ligne : « 634 » au-dessus de « 554 » ne se lit plus
+# comme une coordonnée. Ces tableaux passent donc en LaTeX direct, sur
+# plusieurs pages s'il le faut, avec des colonnes qui ne se coupent jamais —
+# sauf la désignation, qui peut porter un nom de voie et revient à la ligne
+# dans sa colonne.
+imprimer_tableau_pci <- function(tableau, legende) {
+  aligne <- ifelse(names(tableau) %in% c("Contour (m)", "X (L93)",
+                                         "Y (L93)"), "r", "l")
+  if (!knitr::is_latex_output()) {
+    print(knitr::kable(tableau, caption = legende, align = aligne))
+    cat("\n\n")
+    return(invisible(NULL))
+  }
+  latex <- knitr::kable(tableau, format = "latex", booktabs = TRUE,
+                        longtable = TRUE, caption = legende, align = aligne)
+  taille <- "\\small"
+  if ("Désignation" %in% names(tableau)) {
+    large <- aligne
+    large[names(tableau) == "Désignation"] <- "p{3.4cm}"
+    latex <- sub(paste0("{", paste(aligne, collapse = ""), "}"),
+                 paste0("{", paste(large, collapse = ""), "}"), latex,
+                 fixed = TRUE)
+    taille <- "\\footnotesize"
+  }
+  cat(taille, "\n\n", latex, "\n\n\\normalsize\n\n", sep = "")
+  invisible(NULL)
+}
+```
+
+```{r elements-pci, results='asis', eval=elements_pci}
+cat("### Éléments du plan cadastral\n\n")
+if (!a_elements_pci) {
+  cat("*Aucun élément du plan cadastral dans la forêt ni à moins de ",
+      nombre(tampon_pci, 0L), " m de son contour.*\n\n", sep = "")
+} else {
+  n_bornes <- sum(fond_pci$categorie == "borne")
+  cat(nrow(fond_pci), " élément(s) du plan cadastral dans la forêt ou à moins ",
+      "de ", nombre(tampon_pci, 0L), " m de son contour, dont ", n_bornes,
+      " borne(s) : ", sum(fond_pci$situation == "foret"), " dans la forêt, ",
+      sum(fond_pci$situation == "tampon"), " dans le tampon.\n\n", sep = "")
+}
+```
+
+```{r carte-elements-pci, fig.height=5.2, fig.width=7, fig.cap="Éléments du plan cadastral dans la forêt et à ses abords. Tireté : tampon autour des unités de gestion. Teinte atténuée : élément hors des unités.", eval=elements_pci && cartographiable && a_elements_pci}
+formes_pci <- sf::st_as_sfc(fond_pci$wkt, crs = 2154)
+union_ug <- sf::st_union(contours)
+tampon_ug <- sf::st_buffer(union_ug, if (is.na(tampon_pci)) 0 else tampon_pci)
+boite <- sf::st_bbox(c(sf::st_geometry(tampon_ug), formes_pci))
+presentes <- unique(fond_pci$categorie)
+
+op <- par(mar = c(0, 0, 0, 8))
+plot(tampon_ug, border = "grey55", lty = 2, col = NA,
+     xlim = boite[c("xmin", "xmax")], ylim = boite[c("ymin", "ymax")])
+plot(contours, col = "#EEF6EE", border = "grey35", lwd = 1.2, add = TRUE)
+dessiner_fond()
+
+dimension <- sf::st_dimension(formes_pci)
+dans_tampon <- fond_pci$situation == "tampon"
+couleur <- vapply(fond_pci$categorie, function(k) styles_pci[[k]]$col, "")
+# Les surfaces d'abord, puis les lignes, puis les points : un point sous un
+# aplat ne se verrait pas.
+for (d in 2:0) {
+  garde <- which(dimension == d)
+  if (length(garde) == 0L) next
+  teinte <- attenuer(couleur[garde], dans_tampon[garde])
+  if (d == 2L) {
+    plot(formes_pci[garde], add = TRUE, col = paste0(substr(teinte, 1L, 7L), "55"),
+         border = teinte, lwd = 0.8)
+  } else if (d == 1L) {
+    largeur <- vapply(fond_pci$categorie[garde],
+                      function(k) styles_pci[[k]]$lwd %||% 1.2, 0)
+    plot(formes_pci[garde], add = TRUE, col = teinte, lwd = largeur)
+  } else {
+    symbole <- vapply(fond_pci$categorie[garde],
+                      function(k) styles_pci[[k]]$pch %||% 19, 0)
+    plot(formes_pci[garde], add = TRUE, pch = symbole, cex = 0.7,
+         col = teinte, bg = ifelse(dans_tampon[garde], NA, teinte))
+  }
+}
+
+# Les bornes portent leur numéro, sans préfixe : c'est lui que l'agent
+# cherchera sur le terrain. Les autres éléments se lisent dans les tableaux.
+bornes <- which(fond_pci$categorie == "borne")
+if (length(bornes) > 0L) {
+  ancres <- cbind(fond_pci$x[bornes], fond_pci$y[bornes])
+  text(ancres, labels = sub("^B-0*", "", fond_pci$numero[bornes]),
+       cex = 0.42, pos = 3, offset = 0.25, col = "#4E342E")
+}
+
+legende <- presentes[presentes %in% names(styles_pci)]
+legend(par("usr")[[2L]], par("usr")[[4L]], xpd = NA, bty = "n", cex = 0.62,
+       legend = legende,
+       col = vapply(legende, function(k) styles_pci[[k]]$col, ""),
+       pch = vapply(legende, function(k) styles_pci[[k]]$pch %||% NA_real_, 0),
+       lwd = vapply(legende, function(k)
+         if (is.null(styles_pci[[k]]$pch)) styles_pci[[k]]$lwd %||% 4 else NA, 0),
+       pt.bg = vapply(legende, function(k) styles_pci[[k]]$col, ""))
+par(op)
+```
+
+```{r carte-bornes-pci, fig.height=7.5, fig.width=7, fig.cap="Bornes du plan cadastral, au plus près. Point plein : borne dans une unité de gestion ; point creux : hors des unités.", eval=elements_pci && cartographiable && a_elements_pci && sum(fond_pci$categorie == "borne") >= 10L}
+# Sur une forêt de plusieurs kilomètres, les bornes se groupent sur quelques
+# tronçons de limite et leurs numéros se chevauchent. Une seconde carte les
+# reprend au plus près : l'étendue est celle des bornes, et non de la forêt.
+bornes <- which(fond_pci$categorie == "borne")
+formes_bornes <- sf::st_as_sfc(fond_pci$wkt[bornes], crs = 2154)
+cadre <- sf::st_bbox(sf::st_buffer(sf::st_as_sfc(sf::st_bbox(formes_bornes)),
+                                   30))
+op <- par(mar = c(0, 0, 0, 0))
+plot(sf::st_geometry(tampon_ug), border = "grey55", lty = 2, col = NA,
+     xlim = cadre[c("xmin", "xmax")], ylim = cadre[c("ymin", "ymax")])
+plot(contours, col = "#EEF6EE", border = "grey35", lwd = 1.2, add = TRUE)
+dessiner_fond()
+lignes <- which(sf::st_dimension(formes_pci) == 1L)
+if (length(lignes) > 0L) {
+  plot(formes_pci[lignes], add = TRUE, lwd = 1.2,
+       col = attenuer(couleur[lignes], dans_tampon[lignes]))
+}
+plein <- fond_pci$situation[bornes] == "foret"
+plot(formes_bornes, add = TRUE, pch = 21, cex = 0.8, col = "#6D4C41",
+     bg = ifelse(plein, "#6D4C41", "white"))
+# Les numéros alternent de côté : deux bornes voisines ne les superposent pas.
+text(fond_pci$x[bornes], fond_pci$y[bornes],
+     labels = sub("^B-0*", "", fond_pci$numero[bornes]), cex = 0.5,
+     pos = ifelse(seq_along(bornes) %% 2L == 0L, 4, 2), offset = 0.35,
+     col = "#4E342E")
+par(op)
+```
+
+```{r elements-pci-tableaux, results='asis', eval=elements_pci && a_elements_pci}
+for (categorie in unique(fond_pci$categorie)) {
+  e <- fond_pci[fond_pci$categorie == categorie, , drop = FALSE]
+  # L'identifiant complet est la feuille suivie de l'OBJECT_RID. Le PDF n'a
+  # pas la largeur de l'écrire en toutes lettres : on garde la section et le
+  # numéro de feuille, et le numéro d'objet, qui suffisent à le reconstituer.
+  identifiant <- paste0(sub("^[0-9]{5}0*", "", e$feuille), " / ",
+                        sub("^Objet_", "", e$objet))
+  tableau_pci <- data.frame(
+    `Numéro`                  = e$numero,
+    `Désignation`             = designation_pci(e),
+    `Situation`               = ifelse(e$situation == "foret", "forêt", "tampon"),
+    `Contour (m)`             = nombre(e$distance_limite_m, 1L),
+    `Feuille / objet`         = identifiant,
+    `X (L93)`                 = nombre(e$x, 0L),
+    `Y (L93)`                 = nombre(e$y, 0L),
+    `Modifié`                 = ifelse(is.na(e$modifie_le), "—",
+                                       format(as.Date(e$modifie_le), "%d/%m/%Y")),
+    check.names = FALSE, stringsAsFactors = FALSE
+  )
+  # Une colonne qui ne dit rien — « — » sur toutes les lignes, comme la
+  # désignation des bornes — est retirée plutôt que répétée.
+  if (all(tableau_pci$`Désignation` == "—")) {
+    tableau_pci$`Désignation` <- NULL
+  }
+  titre <- paste0(toupper(substr(categorie, 1L, 1L)),
+                  substr(categorie, 2L, nchar(categorie)))
+  imprimer_tableau_pci(tableau_pci, paste0(titre, " (", nrow(e), ")"))
+}
+
+millesimes <- unique(fond_pci[c("feuille", "millesime")])
+cat("*Plan cadastral informatisé (PCI vecteur, DGFiP) : feuille(s) ",
+    paste0(millesimes$feuille, " (",
+           ifelse(is.na(millesimes$millesime), "millésime inconnu",
+                  paste("millésime",
+                        format(as.Date(millesimes$millesime), "%d/%m/%Y"))),
+           ")", collapse = ", "),
+    ". Feuille / objet : section et numéro de la feuille, puis numéro de ",
+    "l'objet dans le lot EDIGÉO ; modifié : dernière mise à jour de l'objet ",
+    "au cadastre. Tampon de ", nombre(tampon_pci, 0L),
+    " m autour du contour des ",
+    "unités de gestion. Donnée tierce, hors registre et hors chaîne : ce que ",
+    "le plan annonce, non ce que le terrain montre. La distance est mesurée ",
+    "au contour des unités ; quelques mètres disent l'écart entre deux ",
+    "dessins, non un déplacement.*\n\n", sep = "")
+if (any(is.na(fond_pci$nature_source))) {
+  cat("*Un détail est désigné par son code de symbole (SYM) : l'archive du ",
+      "plan ne dit pas ce que ce code représente, et le rapport ne le devine ",
+      "pas.*\n\n", sep = "")
+}
+if (any(!is.na(fond_pci$texte))) {
+  cat("*Entre guillemets, le texte que le plan écrit sur l'objet ou près de ",
+      "lui, cité sans être interprété : il le nomme parfois, il en nomme ",
+      "d'autres fois les abords.*\n\n", sep = "")
 }
 ```
 

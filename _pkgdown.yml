@@ -183,13 +183,17 @@ reference:
   - title: "PCI vecteur — bornes et détails"
     desc: >
       Ce que le plan cadastral porte et que les livraisons simplifiées
-      écartent : bornes, murs, fossés, haies. Décor lui aussi — le bornage
-      qui fait foi est celui du gestionnaire, au registre 2.
+      écartent : bornes, signes de limite, détails, cours d'eau, voies,
+      bâtiments. Décor lui aussi — le bornage qui fait foi est celui du
+      gestionnaire, au registre 2.
     contents:
     - sommier_feuilles_pci
     - sommier_fond_pci
     - sommier_fond_pci_lire
+    - sommier_elements_pci
+    - sommier_exporter_elements_pci
     - SOMMIER_COUCHES_PCI
+    - SOMMIER_ELEMENTS_PCI
     - SOMMIER_PROJECTIONS_EDIGEO
 
   - title: "Géométrie des payloads"

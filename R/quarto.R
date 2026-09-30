@@ -44,9 +44,13 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 #'   donne les tenements du recapitulatif du parcellaire - la part de chaque
 #'   parcelle cadastrale comprise dans une unite : sans fond, le recapitulatif
 #'   ne liste que les unites.
-#' @param fond_pci Bornes du PCI vecteur a poser sur la carte de la desserte,
-#'   telles que les rend [sommier_fond_pci_lire()] ; `NULL` pour s'en passer.
-#'   Meme regle que `fond` : fourni, jamais telecharge au rendu.
+#' @param fond_pci Le PCI vecteur, sous l'une de deux formes. Les elements
+#'   du plan que rend [sommier_elements_pci()] - bornes, details, cours d'eau,
+#'   voies, dans la foret et a ses abords - recoivent leur propre section,
+#'   avec une carte et un tableau par categorie. Les bornes seules, telles que
+#'   les rend [sommier_fond_pci_lire()], se posent en croix sur la carte de la
+#'   desserte. `NULL` pour s'en passer. Meme regle que `fond` : fourni, jamais
+#'   telecharge au rendu.
 #' @param quarto Chemin de l'executable Quarto.
 #'
 #' @return Invisiblement, le chemin du document produit.
