@@ -8,7 +8,7 @@ SOMMIER_NATURES_VOLUME
 }
 \description{
 \itemize{
-\item \code{possibilite} : volume annuel fixe par l'acte - un PSG, un amenagement
+\item \code{possibilite} : possibilite fixee par l'acte - un PSG, un amenagement
 ancien ;
 \item \code{recolte_prevue} : recolte previsible du document d'amenagement, quand
 l'arrete ne fixe que des surfaces et que la recolte se pilote en surface

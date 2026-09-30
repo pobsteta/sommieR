@@ -19,25 +19,31 @@ marteler <- function(con, foret, annee, volume, type = "martelage") {
 test_that("le bloc amenagement se valide avant d'entrer dans la chaine", {
   bloc <- valider_amenagement(list(
     id = "FD-TEST", annee_debut = 2026, annee_fin = 2045,
-    possibilite_m3_an = 2400, ventilation = c(regeneration = 1700,
-                                              amelioration = 700)
+    possibilite_m3_ha_an = 4.4, surface_ha = 535.2,
+    ventilation = c(regeneration = 3.1, amelioration = 1.3)
   ), "arrete")
   expect_equal(bloc$nature_volume, "possibilite")
-  expect_equal(bloc$ventilation$regeneration, 1700)
+  expect_equal(bloc$ventilation$regeneration, 3.1)
   expect_error(valider_amenagement(list(id = "x", annee_debut = 2030,
                                         annee_fin = 2020,
-                                        possibilite_m3_an = 1), "arrete"),
+                                        possibilite_m3_ha_an = 1,
+                                        surface_ha = 1), "arrete"),
                "avant de commencer")
   expect_error(valider_amenagement(list(id = "x", annee_debut = 2026,
-                                        annee_fin = 2045), "arrete"),
-               "possibilite_m3_an")
+                                        annee_fin = 2045, surface_ha = 10),
+                                   "arrete"), "possibilite_m3_ha_an")
+  # La possibilite est a l'hectare : sans surface, pas de volume annuel.
+  expect_error(valider_amenagement(list(id = "x", annee_debut = 2026,
+                                        annee_fin = 2045,
+                                        possibilite_m3_ha_an = 4),
+                                   "arrete"), "surface_ha")
   expect_error(valider_amenagement(list(
-    id = "x", annee_debut = 2026, annee_fin = 2045, possibilite_m3_an = 2400,
-    ventilation = c(regeneration = 1700, amelioration = 600)
+    id = "x", annee_debut = 2026, annee_fin = 2045, possibilite_m3_ha_an = 4.4,
+    surface_ha = 10, ventilation = c(regeneration = 3, amelioration = 1)
   ), "arrete"), "ne totalise pas")
-  # Un avenant change la possibilite, la fin, ou les deux - pas rien.
+  # Un avenant change la possibilite, la surface ou la fin - pas rien.
   expect_error(valider_amenagement(list(id = "x", a_partir_de = 2030),
-                                   "avenant"), "ne peuvent manquer ensemble")
+                                   "avenant"), "ne peuvent")
   # Seuls l'arrete, l'agrement et l'avenant portent un amenagement.
   expect_error(registre1_validation("deliberation", "commune", "Maire",
                                     amenagement = list(id = "x")),
@@ -54,6 +60,10 @@ test_that("la balance se calcule contre l'amenagement, et l'acte est cite", {
 
   bal <- sommier_balance_possibilite(con, foret)
   expect_equal(bal$exercice, c(2024, 2025))
+  # 1 m3/ha/an sur 100 ha : 100 m3/an, et le martele ramene a l'hectare.
+  expect_equal(bal$possibilite_m3_ha_an, c(1, 1))
+  expect_equal(bal$possibilite_m3_an, c(100, 100))
+  expect_equal(bal$prelevement_m3_ha, c(1.2, 0.6))
   expect_equal(bal$balance_cumulee_m3, c(20, -20))
   expect_equal(unique(bal$reference_acte), "Arrete du 2 janvier 2024")
   expect_true(sommier_verifier(con, foret)$valide)
@@ -89,7 +99,7 @@ test_that("un avenant change la possibilite a partir d'un exercice", {
                               autorite = "onf", nom_qualite = "Agent",
                               date_acte = "2022-01-10", auteur = "agent-01",
                               reference = "Avenant n 1",
-                              possibilite_m3_an = 80)
+                              possibilite_m3_ha_an = 0.8)
   bal <- sommier_balance_possibilite(con, foret)
   # Le passe garde sa possibilite ; l'avenant vaut desormais, et il est cite.
   expect_equal(bal$possibilite_m3_an, c(100, 100, 80, 80))
@@ -100,11 +110,26 @@ test_that("un avenant change la possibilite a partir d'un exercice", {
   expect_error(sommier_avenant_possibilite(
     con, foret, "TEST-2020-2023", a_partir_de = 2030, autorite = "onf",
     nom_qualite = "Agent", date_acte = "2030-01-10", auteur = "agent-01",
-    possibilite_m3_an = 70), "hors de")
+    possibilite_m3_ha_an = 0.7), "hors de")
   expect_error(sommier_avenant_possibilite(
     con, foret, "INCONNU", a_partir_de = 2021, autorite = "onf",
     nom_qualite = "Agent", date_acte = "2021-01-10", auteur = "agent-01",
-    possibilite_m3_an = 70), "inconnu")
+    possibilite_m3_ha_an = 0.7), "inconnu")
+})
+
+test_that("un avenant de surface change le volume sans changer le taux", {
+  # Une distraction de 20 ha : le taux reste, le volume annuel suit.
+  con <- base_amenagement()
+  foret <- foret_creer(con, "Foret amenagee", "domanial")
+  amenager(con, foret, 2020, 2021, 400)
+  sommier_avenant_possibilite(con, foret, "TEST-2020-2021", a_partir_de = 2021,
+                              autorite = "prefet", nom_qualite = "Prefet",
+                              date_acte = "2021-01-10", auteur = "agent-01",
+                              surface_ha = 80)
+  bal <- sommier_balance_possibilite(con, foret)
+  expect_equal(bal$possibilite_m3_ha_an, c(4, 4))
+  expect_equal(bal$surface_ha, c(100, 80))
+  expect_equal(bal$possibilite_m3_an, c(400, 320))
 })
 
 test_that("un avenant qui avance la fin permet l'amenagement suivant", {
@@ -139,7 +164,7 @@ test_that("une recolte prevue se distingue d'une possibilite", {
   # groupe ; le volume n'est qu'au document, comme recolte previsible.
   con <- base_amenagement()
   foret <- foret_creer(con, "Foret amenagee", "domanial")
-  amenager(con, foret, 2019, 2020, 37215, nature_volume = "recolte_prevue",
+  amenager(con, foret, 2019, 2020, 440, nature_volume = "recolte_prevue",
            groupes = c(regeneration = 2648.31, amelioration = 3016.81),
            surface_regeneration_ha = 2026.57)
   bal <- sommier_balance_possibilite(con, foret)
@@ -156,22 +181,21 @@ test_that("une recolte prevue se distingue d'une possibilite", {
 test_that("la vraisemblance avertit sans refuser", {
   con <- base_amenagement()
   foret <- foret_creer(con, "Foret amenagee", "communal")
-  # 820 m3/an sur 16,4 ha : 50 m3/ha/an, dix fois un prelevement de 5.
+  # 50 m3/ha/an saisis au lieu de 5 : dix fois le prelevement de reference.
   expect_warning(
-    amenager(con, foret, 2016, 2035, 820, surface_ha = 16.4,
-             reference_m3_ha_an = 5),
+    amenager(con, foret, 2016, 2035, 5000, reference_m3_ha_an = 5),
     "un zero de trop"
   )
   # L'acte est ecrit quand meme.
   expect_equal(nrow(sommier_balance_possibilite(con, foret)) > 0L, TRUE)
   foret2 <- foret_creer(con, "Foret amenagee 2", "communal")
-  expect_silent(amenager(con, foret2, 2016, 2035, 82, surface_ha = 16.4,
+  expect_silent(amenager(con, foret2, 2016, 2035, 500,
                          reference_m3_ha_an = 5))
 })
 
 test_that("la table exercice se reprend, et ne s'ecrit plus ensuite", {
   con <- base_amenagement()
-  foret <- foret_creer(con, "Foret ancienne", "communal")
+  foret <- foret_creer(con, "Foret ancienne", "communal", surface_ha = 50)
   expect_warning(exercice_definir(con, foret, 2020, 100), "obsolete")
   suppressWarnings({
     exercice_definir(con, foret, 2021, 100)
@@ -183,12 +207,15 @@ test_that("la table exercice se reprend, et ne s'ecrit plus ensuite", {
   sommier_reprendre_exercices(con, foret, auteur = "agent-01")
   amenagements <- DBI::dbGetQuery(
     con, "SELECT amenagement_id, annee_debut, annee_fin,
-                 possibilite_initiale_m3_an AS p, repris
+                 possibilite_initiale_m3_an AS p,
+                 possibilite_initiale_m3_ha_an AS taux, repris
             FROM v_amenagement WHERE foret_id = $1 ORDER BY annee_debut",
     params = list(foret))
   expect_equal(amenagements$amenagement_id,
                c("REPRISE-EXERCICES-2020-2021", "REPRISE-EXERCICES-2022-2022"))
   expect_equal(as.numeric(amenagements$p), c(100, 80))
+  # Ramenee a l'hectare sur la surface de la foret : 100 m3/an sur 50 ha.
+  expect_equal(as.numeric(amenagements$taux), c(2, 1.6))
   expect_true(all(amenagements$repris))
   expect_equal(sommier_balance_possibilite(con, foret)$possibilite_m3_an,
                c(100, 100, 80))

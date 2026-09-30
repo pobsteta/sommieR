@@ -10,7 +10,8 @@ sommier_amenagement(
   id,
   annee_debut,
   annee_fin,
-  possibilite_m3_an,
+  possibilite_m3_ha_an,
+  surface_ha,
   autorite,
   nom_qualite,
   date_acte,
@@ -19,7 +20,6 @@ sommier_amenagement(
   reference = NULL,
   libelle = NULL,
   ventilation = NULL,
-  surface_ha = NULL,
   serie = NULL,
   tolerance_ans = NULL,
   source = NULL,
@@ -40,8 +40,10 @@ sommier_amenagement(
 
 \item{annee_debut, annee_fin}{Premier et dernier exercice couverts.}
 
-\item{possibilite_m3_an}{Volume annuel, en m3 : la possibilite fixee par
-l'acte, ou la recolte prevue au document (voir \code{nature_volume}).}
+\item{possibilite_m3_ha_an}{Possibilite a l'hectare, en m3/ha/an : fixee
+par l'acte, ou recolte prevue au document (voir \code{nature_volume}).}
+
+\item{surface_ha}{Surface a laquelle la possibilite s'applique, en ha.}
 
 \item{autorite}{L'un de \link{SOMMIER_AUTORITES}.}
 
@@ -57,11 +59,9 @@ l'acte, ou la recolte prevue au document (voir \code{nature_volume}).}
 
 \item{libelle}{Libelle lisible (facultatif).}
 
-\item{ventilation}{Possibilite ventilee par nature de coupe, en m3/an,
-vecteur nomme - par exemple \code{c(regeneration = 1200, amelioration = 3400)}.
-Sa somme doit egaler \code{possibilite_m3_an} (facultatif).}
-
-\item{surface_ha}{Surface a laquelle la possibilite s'applique (facultatif).}
+\item{ventilation}{Possibilite ventilee par nature de coupe, en m3/ha/an,
+vecteur nomme - par exemple \code{c(regeneration = 3, amelioration = 1.4)}.
+Sa somme doit egaler \code{possibilite_m3_ha_an} (facultatif).}
 
 \item{serie}{Serie concernee, si la foret en compte plusieurs (facultatif).}
 
@@ -71,7 +71,7 @@ possibilite (facultatif) : quatre ans pour un PSG.}
 \item{source}{Page ou tableau du document ou la possibilite est fixee
 (facultatif).}
 
-\item{nature_volume}{\code{"possibilite"} (volume fixe par l'acte) ou
+\item{nature_volume}{\code{"possibilite"} (fixee par l'acte) ou
 \code{"recolte_prevue"} (recolte previsible du document d'amenagement).}
 
 \item{groupes}{Surfaces par groupe d'amenagement, en ha, vecteur nomme -
@@ -97,6 +97,12 @@ qu'il fixe. La balance de possibilite (imprime A50E) se calcule ensuite
 contre lui : voir \code{\link[=sommier_balance_possibilite]{sommier_balance_possibilite()}}.
 }
 \details{
+\strong{La possibilite s'exprime a l'hectare.} Elle se saisit en m3/ha/an, sur
+une surface ; le volume annuel en m3, que la balance confronte aux
+martelages, s'en deduit. C'est l'unite dans laquelle se comparent les
+forets entre elles et avec l'IFN, dont nemeton tire le prelevement observe
+par sylvoecoregion.
+
 \strong{La possibilite est une ecriture.} Elle entre au registre 1 avec l'acte
 qui la fixe, et elle est couverte par l'empreinte au meme titre qu'un
 volume martele. La changer suppose un avenant
@@ -108,27 +114,26 @@ seul amenagement, sans quoi il aurait deux possibilites. Une revision
 anticipee clot d'abord l'ancien par avenant, en avancant sa fin.
 
 \strong{Possibilite ou recolte prevue.} Un PSG, ou un amenagement ancien, fixe
-une possibilite en volume. Les amenagements recents de l'ONF ne le font
-plus : l'arrete fixe des surfaces par groupe (a regenerer, a ameliorer), et
-le volume n'apparait qu'au document, comme recolte previsible pilotee en
+une possibilite. Les amenagements recents de l'ONF ne le font plus :
+l'arrete fixe des surfaces par groupe (a regenerer, a ameliorer), et le
+volume n'apparait qu'au document, comme recolte previsible pilotee en
 surface terriere - l'arrete du 9 aout 2019 du massif de Lorris-Les Bordes
 (foret domaniale d'Orleans) n'en porte aucun, son document en prevoit
-37 215 m3/an. \code{nature_volume} le dit, et le rapport ne presente pas une
+4,4 m3/ha/an. \code{nature_volume} le dit, et le rapport ne presente pas une
 prevision comme une possibilite. Les surfaces que l'arrete fixe se
 gardent dans \code{groupes} et \code{surface_regeneration_ha}.
 
-\strong{Le controle de vraisemblance avertit, il ne refuse pas.} Une
-possibilite ramenee a l'hectare peut etre confrontee a un prelevement de
-reference - celui que l'IFN observe dans la sylvoecoregion, que nemeton
-calcule. Au-dela d'un facteur \code{facteur_vraisemblance}, un avertissement
-signale une possible faute de frappe (un zero de trop). L'acte s'ecrit
-quand meme : la possibilite est un acte d'autorite, pas une estimation, et
-un amenagement de conversion ou de rattrapage s'ecarte legitimement de la
-moyenne regionale.
+\strong{Le controle de vraisemblance avertit, il ne refuse pas.} La possibilite
+peut etre confrontee a un prelevement de reference a l'hectare - celui que
+l'IFN observe dans la sylvoecoregion. Au-dela d'un facteur
+\code{facteur_vraisemblance}, un avertissement signale une possible faute de
+frappe (un zero de trop). L'acte s'ecrit quand meme : la possibilite est
+un acte d'autorite, pas une estimation, et un amenagement de conversion ou
+de rattrapage s'ecarte legitimement de la moyenne regionale.
 }
 \examples{
 # sommier_amenagement(con, foret, "FD-ORLEANS-2026", 2026, 2045,
-#   possibilite_m3_an = 2400, autorite = "ministre",
+#   possibilite_m3_ha_an = 4.4, surface_ha = 535.2, autorite = "ministre",
 #   nom_qualite = "Ministre de l'agriculture", date_acte = "2026-02-01",
 #   auteur = "gestionnaire", reference = "Arrete du 1er fevrier 2026")
 

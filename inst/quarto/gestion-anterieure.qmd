@@ -38,6 +38,9 @@ libelles_colonnes <- c(
   taux_reprise_moyen_pct = "Reprise moyenne (%)",
   possibilite_m3_an = "Possibilité (m³/an)",
   recolte_prevue_m3_an = "Récolte prévue (m³/an)",
+  possibilite_m3_ha_an = "Possibilité (m³/ha/an)",
+  recolte_prevue_m3_ha_an = "Récolte prévue (m³/ha/an)",
+  prelevement_m3_ha = "Prélevé (m³/ha)",
   amenagement = "Aménagement", reference_acte = "Acte",
   volume_martele_m3 = "Martelé (m³)", balance_exercice_m3 = "Balance (m³)",
   balance_cumulee_m3 = "Balance cumulée (m³)", date_evenement = "Date",
@@ -1038,9 +1041,12 @@ dessiner(carte$volume_martele_m3,
 ### Balance de possibilité
 
 La balance confronte les volumes **martelés** à la possibilité de
-l'aménagement. Une balance positive signale un excès de prélèvement, une
-balance négative un déficit ; c'est le cumul qui compte, et il repart de zéro
-avec chaque aménagement.
+l'aménagement. La possibilité se fixe à l'hectare (m³/ha/an) sur une surface ;
+le volume annuel s'en déduit, et le prélèvement se ramène lui aussi à
+l'hectare, pour se lire contre la possibilité et contre les références de
+l'IFN. Une balance positive signale un excès de prélèvement, une balance
+négative un déficit ; c'est le cumul qui compte, et il repart de zéro avec
+chaque aménagement.
 
 ```{r balance-amenagements, results='asis'}
 # L'aménagement est un acte du registre 1 : la balance cite ce à quoi elle
@@ -1074,8 +1080,10 @@ if (is.null(amenagements) || nrow(amenagements) == 0L) {
     } else ""
     cat("**", ifelse(is.na(a$libelle), a$amenagement_id, a$libelle), "**",
         " (`", a$amenagement_id, "`), exercices ", a$annee_debut, "–",
-        a$annee_fin, " : ", nombre(a$possibilite_initiale_m3_an, 0L),
-        " m³/an, ", nature, ". Acte : ",
+        a$annee_fin, " : ", nombre(a$possibilite_initiale_m3_ha_an, 2L),
+        " m³/ha/an sur ", nombre(a$surface_initiale_ha, 2L), " ha, soit ",
+        nombre(a$possibilite_initiale_m3_an, 0L), " m³/an — ", nature,
+        ". Acte : ",
         ifelse(is.na(a$reference), "référence non renseignée", a$reference),
         " (", format(as.Date(a$date_acte), "%d/%m/%Y"), ")",
         if (isTRUE(a$repris)) ", transcrit depuis une pièce antérieure",
@@ -1097,6 +1105,8 @@ if (!is.null(b) && nrow(b) > 0L) {
   if (recolte_prevue) {
     names(affichee)[names(affichee) == "possibilite_m3_an"] <-
       "recolte_prevue_m3_an"
+    names(affichee)[names(affichee) == "possibilite_m3_ha_an"] <-
+      "recolte_prevue_m3_ha_an"
   }
   sections$balance_affichee <- affichee
   tableau("balance_affichee", "Balance de possibilité")

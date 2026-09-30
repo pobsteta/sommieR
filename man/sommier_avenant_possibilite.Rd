@@ -2,7 +2,7 @@
 % Please edit documentation in R/amenagement.R
 \name{sommier_avenant_possibilite}
 \alias{sommier_avenant_possibilite}
-\title{Avenant a un amenagement : la possibilite ou la fin changent}
+\title{Avenant a un amenagement : la possibilite, la surface ou la fin changent}
 \usage{
 sommier_avenant_possibilite(
   con,
@@ -14,7 +14,8 @@ sommier_avenant_possibilite(
   date_acte,
   auteur,
   reference = NULL,
-  possibilite_m3_an = NULL,
+  possibilite_m3_ha_an = NULL,
+  surface_ha = NULL,
   annee_fin = NULL,
   ventilation = NULL,
   source = NULL
@@ -32,11 +33,13 @@ sommier_avenant_possibilite(
 \item{autorite, nom_qualite, date_acte, auteur, reference}{Comme pour
 \code{\link[=sommier_amenagement]{sommier_amenagement()}}.}
 
-\item{possibilite_m3_an}{Nouvelle possibilite annuelle (facultatif).}
+\item{possibilite_m3_ha_an}{Nouvelle possibilite a l'hectare (facultatif).}
+
+\item{surface_ha}{Nouvelle surface (facultatif).}
 
 \item{annee_fin}{Nouvelle fin de l'amenagement (facultatif).}
 
-\item{ventilation}{Nouvelle ventilation (facultatif).}
+\item{ventilation}{Nouvelle ventilation, en m3/ha/an (facultatif).}
 
 \item{source}{Page ou tableau de l'avenant (facultatif).}
 }
@@ -44,13 +47,16 @@ sommier_avenant_possibilite(
 Invisiblement, l'entree chainee.
 }
 \description{
-Ecrit l'avenant qui change, a partir d'un exercice, la possibilite d'un
-amenagement, sa fin, ou les deux.
+Ecrit l'avenant qui change, a partir d'un exercice, la possibilite a
+l'hectare d'un amenagement, la surface a laquelle elle s'applique, sa fin,
+ou plusieurs de ces elements.
 }
 \details{
 Les exercices anterieurs a \code{a_partir_de} gardent la possibilite qu'ils
 avaient : un avenant ne recrit pas le passe, il dit ce qui vaut desormais.
 La balance cite, pour chaque exercice, l'acte dont vient sa possibilite.
+Changer la surface - une distraction, une acquisition - change le volume
+annuel sans changer le taux.
 
 Avancer la fin clot l'amenagement - c'est ce qui permet une revision
 anticipee. La reculer n'est admis que si aucun autre amenagement ne couvre

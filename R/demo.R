@@ -249,15 +249,15 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
   }
 
   # Registre 1 - l'amenagement, anterieur a la tenue : transcrit, avec sa
-  # possibilite. Environ 5 m3/ha/an sur 16,4 ha de chenaie, arrondis a 82 ;
-  # c'est lui que la balance confronte aux martelages.
+  # possibilite : 5 m3/ha/an sur les 16,37 ha de chenaie, soit 82 m3/an ;
+  # c'est elle que la balance confronte aux martelages.
   transcrire(1L, registre1_validation(
     "arrete", "prefet", "Prefet de la Cote-d'Or",
     reference = "Arrete d'amenagement de la foret communale de Couchey",
     portee = "amenagement",
     amenagement = list(
       id = "COUCHEY-2016", libelle = "Amenagement 2016-2035",
-      annee_debut = 2016, annee_fin = 2035, possibilite_m3_an = 82,
+      annee_debut = 2016, annee_fin = 2035, possibilite_m3_ha_an = 5,
       surface_ha = surface_totale,
       source = "Document d'amenagement, tableau de la possibilite"
     )

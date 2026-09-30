@@ -8,6 +8,7 @@ sommier_reprendre_exercices(
   con,
   foret_id,
   auteur,
+  surface_ha = NULL,
   autorite = "onf",
   nom_qualite = "Non renseigne",
   reference = NULL
@@ -19,6 +20,9 @@ sommier_reprendre_exercices(
 \item{foret_id}{UUID de la foret.}
 
 \item{auteur}{Compte qui transcrit.}
+
+\item{surface_ha}{Surface sur laquelle ramener le volume a l'hectare. Par
+defaut, celle de la foret.}
 
 \item{autorite, nom_qualite}{Autorite et signataire de l'acte d'origine,
 s'ils sont connus.}
@@ -35,6 +39,10 @@ repris. Les annees consecutives de meme possibilite forment un
 amenagement.
 }
 \details{
+La table porte un volume annuel, en m3 ; l'amenagement, une possibilite a
+l'hectare. La conversion se fait sur \code{surface_ha}, par defaut la surface
+de la foret : sans surface, il n'y a pas de taux, et la reprise le dit.
+
 La transcription dit qu'elle en est une : chaque amenagement porte un bloc
 \code{reprise} (source \code{base_gestionnaire}, NDP 2), et rien n'est efface de la
 table. Apres reprise, \code{\link[=exercice_definir]{exercice_definir()}} refuse d'ecrire : une

@@ -12,16 +12,22 @@ valeur probante comparait ainsi des prélèvements attestés à un chiffre
 modifiable après coup.
 
 `sommier_amenagement()` écrit désormais l'acte du registre 1 (arrêté ou
-agrément du PSG, schéma `r1-1.2.0`) avec la période, le volume annuel, sa
-ventilation par nature de coupe, la surface, la série, la tolérance et la
-source. `sommier_avenant_possibilite()` change la possibilité ou la fin à
-partir d'un exercice, sans réécrire le passé. Deux aménagements ne peuvent
+agrément du PSG, schéma `r1-1.2.0`). L'acte porte la période, la
+**possibilité à l'hectare (m³/ha/an)** et la surface à laquelle elle
+s'applique, la ventilation par nature de coupe (elle aussi à l'hectare), la
+série, la tolérance et la source. Le volume annuel se déduit du taux et de la
+surface. `sommier_avenant_possibilite()` change le taux, la surface ou la fin
+à partir d'un exercice, sans réécrire le passé : une distraction de 20 ha
+change le volume, pas le taux. Deux aménagements ne peuvent
 pas se chevaucher : une révision anticipée clôt d'abord l'ancien par avenant.
 
 ## Une balance par aménagement
 
 `v_balance_possibilite` se calcule à partir des exercices de chaque
-aménagement. Son cumul **repart de zéro** avec chaque nouvel aménagement, et
+aménagement. Elle donne la possibilité à l'hectare et en volume, et ramène le
+martelé à l'hectare (`prelevement_m3_ha`). On lit ainsi le prélèvement
+contre la possibilité, et contre les références de l'IFN, dans la même
+unité. Son cumul **repart de zéro** avec chaque nouvel aménagement, et
 court jusqu'à l'exercice courant. Chaque ligne cite l'acte dont vient sa
 possibilité, et dit s'il s'agit d'un avenant. Un martelage imputé à un
 exercice qu'aucun aménagement ne couvre n'est pas compté, mais il n'est pas
@@ -45,15 +51,16 @@ présente jamais une prévision comme une possibilité.
 
 `sommier_reprendre_exercices()` transcrit la table en un ou plusieurs
 aménagements repris, en regroupant les années consécutives de même
-possibilité (source `base_gestionnaire`, NDP 2). La balance ne lit plus la
+possibilité (source `base_gestionnaire`, NDP 2). Le volume de la table est
+ramené à l'hectare sur la surface de la forêt. La balance ne lit plus la
 table. `exercice_definir()` avertit qu'il est obsolète, puis refuse d'écrire
 une fois la table reprise. Le jeu de démonstration de Couchey porte
-désormais un aménagement transcrit, 2016-2035 à 82 m³/an.
+désormais un aménagement transcrit, 2016-2035 à 5 m³/ha/an sur 16,37 ha.
 
 ## Un contrôle de vraisemblance
 
-`sommier_amenagement(reference_m3_ha_an = )` confronte le volume à
-l'hectare à un prélèvement de référence, par exemple celui que l'IFN observe
+`sommier_amenagement(reference_m3_ha_an = )` confronte la possibilité à un
+prélèvement de référence à l'hectare, par exemple celui que l'IFN observe
 dans la sylvoécorégion. Au-delà d'un facteur 3, un avertissement signale une
 faute de frappe possible. L'acte s'écrit quand même : la possibilité est un
 acte d'autorité, pas une estimation.
@@ -61,7 +68,9 @@ acte d'autorité, pas une estimation.
 ## Dans le rapport
 
 La section « Balance de possibilité » nomme chaque aménagement : sa période,
-son volume et sa nature, l'acte, les surfaces par groupe. Elle trace le
+sa possibilité (« 4,40 m³/ha/an sur 535,20 ha, soit 2 355 m³/an ») et sa
+nature, l'acte, les surfaces par groupe. Le tableau donne le prélèvement à
+l'hectare de chaque exercice. Elle trace le
 cumul par aménagement, et prévient que l'exercice en cours pèse déjà pour
 toute sa possibilité. Sans aménagement, elle dit pourquoi elle est vide.
 

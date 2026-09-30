@@ -188,7 +188,10 @@ sommier_verifier <- function(con, foret_id, depuis_seq = NULL,
 #'   possibilite. Par defaut, celle que l'amenagement declare ; sans elle,
 #'   aucune colonne d'appreciation n'est ajoutee.
 #' @return Un `data.frame` : `amenagement_id`, `amenagement`, `exercice`,
-#'   `possibilite_m3_an`, `volume_martele_m3`, `volume_realise_m3`,
+#'   `possibilite_m3_ha_an` et `surface_ha` (ce que l'acte fixe),
+#'   `possibilite_m3_an` (le volume qui s'en deduit), `volume_martele_m3`,
+#'   `prelevement_m3_ha` (le martele ramene a l'hectare, comparable a la
+#'   possibilite et a l'IFN), `volume_realise_m3`,
 #'   `balance_exercice_m3`, `balance_cumulee_m3`, `reference_acte`,
 #'   `par_avenant`, `nature_volume` (possibilite fixee, ou recolte prevue au
 #'   document), et `conforme` quand une tolerance s'applique.
@@ -198,8 +201,9 @@ sommier_balance_possibilite <- function(con, foret_id, tolerance_ans = NULL) {
   foret_id <- valider_uuid(foret_id, "foret_id")
   res <- DBI::dbGetQuery(
     con,
-    "SELECT amenagement_id, amenagement, exercice, possibilite_m3_an,
-            volume_martele_m3, volume_realise_m3, balance_exercice_m3,
+    "SELECT amenagement_id, amenagement, exercice, possibilite_m3_ha_an,
+            surface_ha, possibilite_m3_an, volume_martele_m3,
+            prelevement_m3_ha, volume_realise_m3, balance_exercice_m3,
             balance_cumulee_m3, reference_acte, par_avenant, nature_volume,
             tolerance_ans
        FROM v_balance_possibilite

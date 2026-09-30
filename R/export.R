@@ -106,9 +106,9 @@ sommier_gestion_anterieure <- function(con, foret_id, debut = NULL, fin = NULL,
         GROUP BY exercice, type_entree, nature_coupe, repris
         ORDER BY exercice, type_entree, nature_coupe, repris"),
     balance = lire(
-      "SELECT amenagement_id, amenagement, exercice, possibilite_m3_an,
-              volume_martele_m3, balance_exercice_m3, balance_cumulee_m3,
-              reference_acte
+      "SELECT amenagement_id, amenagement, exercice, possibilite_m3_ha_an,
+              possibilite_m3_an, volume_martele_m3, prelevement_m3_ha,
+              balance_exercice_m3, balance_cumulee_m3, reference_acte
          FROM v_balance_possibilite
         WHERE foret_id = $1
           AND exercice BETWEEN EXTRACT(YEAR FROM $2::date)
@@ -118,8 +118,9 @@ sommier_gestion_anterieure <- function(con, foret_id, debut = NULL, fin = NULL,
     # sont des etats, pas des faits de la periode.
     amenagements = lire_etat(
       "SELECT amenagement_id, libelle, annee_debut, annee_fin,
+              possibilite_initiale_m3_ha_an, surface_initiale_ha,
               possibilite_initiale_m3_an, ventilation::text AS ventilation,
-              surface_ha, serie, tolerance_ans, source, reference,
+              serie, tolerance_ans, source, reference,
               type_validation, date_acte, repris, nature_volume,
               groupes::text AS groupes, surface_regeneration_ha
          FROM v_amenagement

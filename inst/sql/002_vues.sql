@@ -81,8 +81,8 @@ SELECT
   (e.payload -> 'amenagement' ->> 'annee_debut')::INTEGER AS annee_debut,
   (e.payload -> 'amenagement' ->> 'annee_fin')::INTEGER   AS annee_fin,
   (e.payload -> 'amenagement' ->> 'a_partir_de')::INTEGER AS a_partir_de,
-  (e.payload -> 'amenagement' ->> 'possibilite_m3_an')::NUMERIC
-                                                         AS possibilite_m3_an,
+  (e.payload -> 'amenagement' ->> 'possibilite_m3_ha_an')::NUMERIC
+                                                         AS possibilite_m3_ha_an,
   (e.payload -> 'amenagement' -> 'ventilation')          AS ventilation,
   (e.payload -> 'amenagement' ->> 'surface_ha')::NUMERIC AS surface_ha,
   (e.payload -> 'amenagement' ->> 'serie')::TEXT         AS serie,
@@ -111,8 +111,10 @@ SELECT
      ORDER BY v.seq DESC LIMIT 1
   ), a.annee_fin)                                        AS annee_fin,
   a.annee_fin                                            AS annee_fin_initiale,
-  a.possibilite_m3_an                                    AS possibilite_initiale_m3_an,
-  a.ventilation, a.surface_ha, a.serie, a.tolerance_ans, a.source,
+  a.possibilite_m3_ha_an                                 AS possibilite_initiale_m3_ha_an,
+  a.surface_ha                                           AS surface_initiale_ha,
+  a.possibilite_m3_ha_an * a.surface_ha                  AS possibilite_initiale_m3_an,
+  a.ventilation, a.serie, a.tolerance_ans, a.source,
   a.nature_volume, a.groupes, a.surface_regeneration_ha,
   a.reference, a.type_validation, a.acte_id, a.seq,
   a.date_evenement                                       AS date_acte,
@@ -124,28 +126,42 @@ COMMENT ON VIEW v_amenagement IS
   'Amenagements et PSG, avec la fin fixee par le dernier avenant.';
 
 -- La possibilite de chaque exercice, et l'acte dont elle vient : le dernier
--- avenant applicable a cet exercice, sinon l'acte d'amenagement.
+-- avenant applicable a cet exercice, sinon l'acte d'amenagement. Le taux a
+-- l'hectare et la surface se suivent separement - un avenant peut changer
+-- l'un sans l'autre -, et le volume annuel s'en deduit.
 CREATE VIEW v_possibilite_exercice AS
 SELECT
   m.foret_id, m.amenagement_id, m.libelle, g.exercice,
-  COALESCE(av.possibilite_m3_an, m.possibilite_initiale_m3_an)
-                                                         AS possibilite_m3_an,
-  COALESCE(av.acte_id, m.acte_id)                        AS acte_id,
-  COALESCE(av.reference, m.reference)                    AS reference_acte,
-  (av.acte_id IS NOT NULL)                               AS par_avenant,
+  COALESCE(taux.possibilite_m3_ha_an, m.possibilite_initiale_m3_ha_an)
+                                                         AS possibilite_m3_ha_an,
+  COALESCE(surf.surface_ha, m.surface_initiale_ha)       AS surface_ha,
+  COALESCE(taux.possibilite_m3_ha_an, m.possibilite_initiale_m3_ha_an)
+    * COALESCE(surf.surface_ha, m.surface_initiale_ha)   AS possibilite_m3_an,
+  COALESCE(taux.acte_id, surf.acte_id, m.acte_id)        AS acte_id,
+  COALESCE(taux.reference, surf.reference, m.reference)  AS reference_acte,
+  (taux.acte_id IS NOT NULL OR surf.acte_id IS NOT NULL) AS par_avenant,
   m.tolerance_ans,
   m.nature_volume
 FROM v_amenagement m
 CROSS JOIN LATERAL generate_series(m.annee_debut, m.annee_fin) AS g(exercice)
 LEFT JOIN LATERAL (
-  SELECT v.possibilite_m3_an, v.acte_id, v.reference
+  SELECT v.possibilite_m3_ha_an, v.acte_id, v.reference
     FROM v_amenagement_acte v
    WHERE v.foret_id = m.foret_id AND v.amenagement_id = m.amenagement_id
-     AND v.type_validation = 'avenant' AND v.possibilite_m3_an IS NOT NULL
+     AND v.type_validation = 'avenant' AND v.possibilite_m3_ha_an IS NOT NULL
      AND v.a_partir_de <= g.exercice
    ORDER BY v.a_partir_de DESC, v.seq DESC
    LIMIT 1
-) av ON TRUE;
+) taux ON TRUE
+LEFT JOIN LATERAL (
+  SELECT v.surface_ha, v.acte_id, v.reference
+    FROM v_amenagement_acte v
+   WHERE v.foret_id = m.foret_id AND v.amenagement_id = m.amenagement_id
+     AND v.type_validation = 'avenant' AND v.surface_ha IS NOT NULL
+     AND v.a_partir_de <= g.exercice
+   ORDER BY v.a_partir_de DESC, v.seq DESC
+   LIMIT 1
+) surf ON TRUE;
 
 COMMENT ON VIEW v_possibilite_exercice IS
   'Possibilite en vigueur pour chaque exercice d''un amenagement, et l''acte qui la fixe.';
@@ -179,7 +195,8 @@ WITH martele AS (
 socle AS (
   SELECT
     p.foret_id, p.amenagement_id, p.libelle, p.exercice,
-    p.possibilite_m3_an, p.reference_acte, p.acte_id, p.par_avenant,
+    p.possibilite_m3_ha_an, p.surface_ha, p.possibilite_m3_an,
+    p.reference_acte, p.acte_id, p.par_avenant,
     p.tolerance_ans, p.nature_volume,
     COALESCE(m.volume_martele_m3, 0)          AS volume_martele_m3,
     COALESCE(m.volume_realise_m3, 0)          AS volume_realise_m3
@@ -194,8 +211,11 @@ SELECT
   s.amenagement_id,
   s.libelle                                            AS amenagement,
   s.exercice,
+  s.possibilite_m3_ha_an,
+  s.surface_ha,
   s.possibilite_m3_an,
   s.volume_martele_m3,
+  s.volume_martele_m3 / NULLIF(s.surface_ha, 0)        AS prelevement_m3_ha,
   s.volume_realise_m3,
   s.volume_martele_m3 - COALESCE(s.possibilite_m3_an, 0) AS balance_exercice_m3,
   SUM(s.volume_martele_m3 - COALESCE(s.possibilite_m3_an, 0))
@@ -210,7 +230,8 @@ FROM socle s
 ORDER BY s.foret_id, s.exercice;
 
 COMMENT ON VIEW v_balance_possibilite IS
-  'Imprime A50E, par amenagement. Balance positive = exces de prelevement '
+  'Imprime A50E, par amenagement. Possibilite en m3/ha/an sur une surface, '
+  'volume annuel deduit. Balance positive = exces de prelevement '
   'sur la possibilite, negative = deficit. Le cumul repart de zero avec '
   'chaque amenagement. En foret privee, la possibilite tient lieu de '
   'programme PSG et la tolerance de conformite est de +/- 4 ans.';

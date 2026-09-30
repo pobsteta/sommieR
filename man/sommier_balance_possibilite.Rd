@@ -17,7 +17,10 @@ aucune colonne d'appreciation n'est ajoutee.}
 }
 \value{
 Un \code{data.frame} : \code{amenagement_id}, \code{amenagement}, \code{exercice},
-\code{possibilite_m3_an}, \code{volume_martele_m3}, \code{volume_realise_m3},
+\code{possibilite_m3_ha_an} et \code{surface_ha} (ce que l'acte fixe),
+\code{possibilite_m3_an} (le volume qui s'en deduit), \code{volume_martele_m3},
+\code{prelevement_m3_ha} (le martele ramene a l'hectare, comparable a la
+possibilite et a l'IFN), \code{volume_realise_m3},
 \code{balance_exercice_m3}, \code{balance_cumulee_m3}, \code{reference_acte},
 \code{par_avenant}, \code{nature_volume} (possibilite fixee, ou recolte prevue au
 document), et \code{conforme} quand une tolerance s'applique.
