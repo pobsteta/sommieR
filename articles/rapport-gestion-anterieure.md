@@ -51,7 +51,7 @@ document.
 | **État de la chaîne** | intacte |
 | **Entrées** | 66 |
 | **Séquence de tête** | 66 |
-| **Empreinte de tête** | `3bedd49e6bc93a60230dad8418095082d9f78038f2d5e1e1296636db0d8f1b91` |
+| **Empreinte de tête** | `260eaeab5244eb70d37c297eab0868bc90a390fceee055399ee8469dad447d4e` |
 
 ## 2 Provenance des écritures
 
