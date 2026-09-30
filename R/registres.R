@@ -126,7 +126,10 @@ SOMMIER_SCHEMA_VERSIONS <- c(
 #' @param nature_coupe Nature de la coupe (texte libre normalise par le
 #'   gestionnaire : amelioration, reguliere, sanitaire, emprise...).
 #' @param volume_m3 Volume en metres cubes (positif ou nul).
-#' @param surface_ha Surface parcourue en hectares (facultatif).
+#' @param surface_ha Surface parcourue en hectares (facultatif). Sans elle,
+#'   un martelage rattache a une unite de gestion parcourt, a la lecture,
+#'   toute la surface de l'unite (voir la colonne `surface_source` de
+#'   `v_coupe`) : la surface deduite n'entre pas dans le payload.
 #' @param essence Essence ou groupe d'essences (facultatif).
 #' @param coupon Identifiant du coupon ou de la subdivision (facultatif).
 #' @param observations Observations libres (facultatif).

@@ -26,7 +26,10 @@ gestionnaire : amelioration, reguliere, sanitaire, emprise...).}
 
 \item{volume_m3}{Volume en metres cubes (positif ou nul).}
 
-\item{surface_ha}{Surface parcourue en hectares (facultatif).}
+\item{surface_ha}{Surface parcourue en hectares (facultatif). Sans elle,
+un martelage rattache a une unite de gestion parcourt, a la lecture,
+toute la surface de l'unite (voir la colonne \code{surface_source} de
+\code{v_coupe}) : la surface deduite n'entre pas dans le payload.}
 
 \item{essence}{Essence ou groupe d'essences (facultatif).}
 

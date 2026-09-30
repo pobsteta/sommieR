@@ -57,6 +57,17 @@ table. `exercice_definir()` avertit qu'il est obsolète, puis refuse d'écrire
 une fois la table reprise. Le jeu de démonstration de Couchey porte
 désormais un aménagement transcrit, 2016-2035 à 5 m³/ha/an sur 16,37 ha.
 
+## Un martelage parcourt son unité
+
+Par défaut, la surface d'un martelage est celle de son unité de gestion.
+`v_coupe` la déduit à la lecture, à partir du contour en vigueur à la date du
+martelage, et une nouvelle colonne `surface_source` dit si la surface a été
+`saisie` ou vient de l'`unite`. La surface déduite n'entre pas dans la
+chaîne : elle n'a pas à passer pour une surface saisie, et elle suit le
+contour si celui-ci est révisé. Une coupe réalisée ou un produit accidentel
+ne parcourt pas forcément toute l'unité : ils gardent la surface saisie, ou
+aucune.
+
 ## Un contrôle de vraisemblance
 
 `sommier_amenagement(reference_m3_ha_an = )` confronte la possibilité à un

@@ -32,6 +32,13 @@ COMMENT ON VIEW v_entree_courante IS
 -- Registre 5 — coupes et recoltes
 -- ---------------------------------------------------------------------
 
+-- La surface d'un martelage est, par defaut, celle de son unite de gestion :
+-- un martelage parcourt l'unite. Elle se deduit a la lecture - du contour en
+-- vigueur a la date du martelage, a defaut du dernier connu - et n'entre pas
+-- dans la chaine : une surface deduite n'a pas a passer pour une surface
+-- saisie. `surface_source` dit laquelle s'applique. Une coupe realisee ou un
+-- produit accidentel ne parcourt pas forcement toute l'unite : ils gardent la
+-- surface saisie, ou aucune.
 CREATE OR REPLACE VIEW v_coupe AS
 SELECT
   e.id,
@@ -45,14 +52,32 @@ SELECT
   (e.payload ->> 'exercice')::INTEGER             AS exercice,
   (e.payload ->> 'nature_coupe')::TEXT            AS nature_coupe,
   (e.payload ->> 'volume_m3')::NUMERIC            AS volume_m3,
-  (e.payload ->> 'surface_ha')::NUMERIC           AS surface_ha,
+  COALESCE(
+    (e.payload ->> 'surface_ha')::NUMERIC,
+    CASE WHEN e.payload ->> 'type_entree' = 'martelage'
+         THEN unite.surface_ha END
+  )::NUMERIC                                      AS surface_ha,
   (e.payload ->> 'essence')::TEXT                 AS essence,
   (e.payload ->> 'coupon')::TEXT                  AS coupon,
   (e.payload ->> 'observations')::TEXT            AS observations,
   jsonb_exists(e.payload, 'reprise')          AS repris,
   (e.payload -> 'reprise' ->> 'source')       AS reprise_source,
-  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference
+  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference,
+  CASE
+    WHEN e.payload ? 'surface_ha' THEN 'saisie'
+    WHEN e.payload ->> 'type_entree' = 'martelage'
+         AND unite.surface_ha IS NOT NULL THEN 'unite'
+  END                                          AS surface_source
 FROM v_entree_courante e
+LEFT JOIN LATERAL (
+  SELECT (ST_Area(g.geom) / 10000)::NUMERIC AS surface_ha
+    FROM ug_geometrie g
+   WHERE g.ug_uuid = e.ug_uuid
+   ORDER BY (g.date_debut <= e.date_evenement
+             AND (g.date_fin IS NULL OR g.date_fin >= e.date_evenement)) DESC,
+            g.version DESC
+   LIMIT 1
+) unite ON TRUE
 WHERE e.registre = 5;
 
 -- Amenagements (v0.19.0) : la periode et la possibilite entrent dans la

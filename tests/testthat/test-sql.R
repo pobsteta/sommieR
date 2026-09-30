@@ -59,5 +59,9 @@ test_that("les vues metier excluent les entrees corrigees", {
   sql <- lire_sql("002_vues.sql")
   expect_match(sql, "CREATE OR REPLACE VIEW v_entree_courante")
   expect_match(sql, "WHERE NOT EXISTS")
-  expect_match(sql, "FROM v_entree_courante e\\s*\\n\\s*WHERE e\\.registre = 5")
+  # La vue des coupes part des entrees courantes ; la jointure sur le contour
+  # de l'unite (surface par defaut d'un martelage) s'intercale sans rien
+  # reintroduire de corrige.
+  expect_match(sql, paste0("FROM v_entree_courante e\\s*\\n\\s*LEFT JOIN LATERAL ",
+                           "[^;]*ug_geometrie[^;]*WHERE e\\.registre = 5"))
 })

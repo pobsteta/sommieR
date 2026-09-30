@@ -226,3 +226,36 @@ test_that("la table exercice se reprend, et ne s'ecrit plus ensuite", {
                "deja un amenagement")
   expect_true(sommier_verifier(con, foret)$valide)
 })
+
+test_that("un martelage parcourt par defaut toute son unite", {
+  con <- base_amenagement()
+  foret <- foret_creer(con, "Foret amenagee", "domanial")
+  ug <- ug_creer(con, foret, "12", "2010-01-01")
+  # Un carre de 200 m de cote : 4 ha.
+  DBI::dbExecute(con, paste0(
+    "INSERT INTO ug_geometrie (ug_uuid, version, geom, source, date_debut) ",
+    "VALUES ($1, 1, ST_Multi(ST_GeomFromText('POLYGON((600000 6700000, ",
+    "600200 6700000, 600200 6700200, 600000 6700200, 600000 6700000))', ",
+    "2154)), 'test', '2010-01-01')"), params = list(ug))
+  ecrire <- function(type, surface = NULL) {
+    sommier_ajouter(con, sommier_entree(
+      foret_id = foret, registre = 5L, date_evenement = "2024-03-01",
+      auteur = "agent-01", ug_uuid = ug,
+      payload = registre5_coupe(type, 2024, "amelioration", 100,
+                                surface_ha = surface)
+    ))
+  }
+  ecrire("martelage")
+  ecrire("martelage", surface = 1.5)
+  ecrire("coupe_realisee")
+  coupes <- DBI::dbGetQuery(
+    con, "SELECT type_entree, surface_ha, surface_source FROM v_coupe
+           WHERE foret_id = $1 ORDER BY seq", params = list(foret))
+  expect_equal(as.numeric(coupes$surface_ha), c(4, 1.5, NA))
+  expect_equal(coupes$surface_source, c("unite", "saisie", NA))
+  # La surface deduite n'entre pas dans la chaine.
+  payload <- DBI::dbGetQuery(
+    con, "SELECT payload ? 'surface_ha' AS a FROM entree_sommier
+           WHERE foret_id = $1 ORDER BY seq LIMIT 1", params = list(foret))
+  expect_false(payload$a)
+})
