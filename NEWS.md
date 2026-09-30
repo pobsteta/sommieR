@@ -29,7 +29,13 @@ La relation et la proposition de l'élément le plus proche se perdaient alors.
 Les couches s'appellent donc `limites_constats`, `limites_unites`… Un test
 ouvre le projet engendré avec PyQGIS, quand QGIS est installé.
 
-Le projet vise QField 4.x et le déclare dans ses métadonnées.
+Le projet a été recetté sous QField 4.3.4 (Android), et il demande désormais
+cette version au minimum, ce qu'il déclare dans ses métadonnées. Le premier
+retour de terrain, deux constats sur Loury avec leur photo, s'est importé tel
+quel. Il a aussi montré deux choses. QField écrit un en-tête EXIF, mais sans
+date de prise de vue ni position quand le positionnement est coupé. Et un
+constat pointé sur la carte, sans GNSS, a une précision vide : sa géométrie est
+un pointé, pas une mesure.
 
 ## Le constat au registre 2
 

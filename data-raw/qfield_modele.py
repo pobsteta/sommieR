@@ -346,7 +346,7 @@ def principal():
     projet.setCustomVariables({
         "operateur": "@@OPERATEUR@@",
         "sommier_foret": "@@FORET@@",
-        "qfield_version_minimale": "4.0",
+        "qfield_version_minimale": "4.3",
     })
     projet.viewSettings().setDefaultViewExtent(QgsReferencedRectangle(
         QgsRectangle(111111, 2222222, 333333, 4444444), L93))
@@ -354,7 +354,8 @@ def principal():
     metadonnees.setTitle("@@TITRE@@")
     metadonnees.setAbstract(
         "Vérification des limites sur le terrain. Projet engendré par sommieR "
-        "; à ouvrir avec QField 4.x ou plus récent. Les éléments du plan sont "
+        "; à ouvrir avec QField 4.3 ou plus récent (recetté sous QField "
+        "4.3.4, Android). Les éléments du plan sont "
         "en lecture seule ; un constat par élément visité, avec ses photos.")
     projet.setMetadata(metadonnees)
 
