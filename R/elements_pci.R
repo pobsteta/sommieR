@@ -16,13 +16,13 @@
 #' qui la jalonnent.
 #'
 #' @export
-SOMMIER_ELEMENTS_PCI <- data.frame(
+SOMMIER_CATEGORIES_PCI <- data.frame(
   couche = c("bornes", "signes", "points", "details", "surfaces",
              "cours_eau", "voies", "routes", "batiments"),
-  categorie = c("borne", "signe de limite", "détail ponctuel",
-                "détail linéaire", "détail surfacique",
-                "cours d'eau", "voie", "tronçon de route",
-                "bâtiment"),
+  categorie = c("borne", "signe de limite", "d\u00e9tail ponctuel",
+                "d\u00e9tail lin\u00e9aire", "d\u00e9tail surfacique",
+                "cours d'eau", "voie", "tron\u00e7on de route",
+                "b\u00e2timent"),
   prefixe = c("B", "S", "P", "L", "T", "E", "V", "R", "H"),
   stringsAsFactors = FALSE
 )
@@ -210,7 +210,7 @@ COLONNES_ELEMENTS <- c("id", "numero", "categorie", "couche", "feuille",
 
 lire_elements_feuille <- function(thf, feuille, millesime) {
   presentes <- sf::st_layers(thf)$name
-  morceaux <- lapply(SOMMIER_ELEMENTS_PCI$couche, function(couche) {
+  morceaux <- lapply(SOMMIER_CATEGORIES_PCI$couche, function(couche) {
     edigeo <- SOMMIER_COUCHES_PCI[[couche]]
     if (!edigeo %in% presentes) {
       return(NULL)
@@ -350,8 +350,8 @@ situer_elements <- function(elements, emprise) {
 
 nommer_elements <- function(elements, symboles) {
   n <- nrow(elements)
-  elements$categorie <- SOMMIER_ELEMENTS_PCI$categorie[
-    match(elements$couche, SOMMIER_ELEMENTS_PCI$couche)
+  elements$categorie <- SOMMIER_CATEGORIES_PCI$categorie[
+    match(elements$couche, SOMMIER_CATEGORIES_PCI$couche)
   ]
   if (n == 0L) {
     elements$nature <- character(0)
@@ -395,12 +395,12 @@ numeroter_elements <- function(elements) {
   )
   elements$x <- round(ancres[, 1L], 2L)
   elements$y <- round(ancres[, 2L], 2L)
-  rang_categorie <- match(elements$couche, SOMMIER_ELEMENTS_PCI$couche)
+  rang_categorie <- match(elements$couche, SOMMIER_CATEGORIES_PCI$couche)
   elements <- elements[order(rang_categorie, elements$feuille, elements$x,
                              elements$y, elements$objet), , drop = FALSE]
 
-  prefixe <- SOMMIER_ELEMENTS_PCI$prefixe[
-    match(elements$couche, SOMMIER_ELEMENTS_PCI$couche)
+  prefixe <- SOMMIER_CATEGORIES_PCI$prefixe[
+    match(elements$couche, SOMMIER_CATEGORIES_PCI$couche)
   ]
   rang <- stats::ave(seq_along(prefixe), prefixe, FUN = seq_along)
   elements$numero <- sprintf("%s-%03d", prefixe, rang)

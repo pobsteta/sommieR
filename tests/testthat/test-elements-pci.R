@@ -30,10 +30,10 @@ carre <- function(x0, y0, cote) {
 }
 
 test_that("les categories retenues materialisent quelque chose au sol", {
-  expect_true(all(SOMMIER_ELEMENTS_PCI$couche %in% names(SOMMIER_COUCHES_PCI)))
-  expect_false(any(c("parcelles") %in% SOMMIER_ELEMENTS_PCI$couche))
+  expect_true(all(SOMMIER_CATEGORIES_PCI$couche %in% names(SOMMIER_COUCHES_PCI)))
+  expect_false(any(c("parcelles") %in% SOMMIER_CATEGORIES_PCI$couche))
   # Un prefixe par categorie : deux categories ne partagent pas une serie.
-  expect_equal(anyDuplicated(SOMMIER_ELEMENTS_PCI$prefixe), 0L)
+  expect_equal(anyDuplicated(SOMMIER_CATEGORIES_PCI$prefixe), 0L)
 })
 
 test_that("le millesime se lit dans la declaration du lot", {
