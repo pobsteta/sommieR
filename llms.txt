@@ -523,6 +523,8 @@ Imprimé A40 : délimitation, bornage, acquisitions, servitudes.
   : Payload du registre 2 - foncier et limites (imprime A40)
 - [`SOMMIER_TYPES_FONCIER`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_FONCIER.md)
   : Types d'entree du registre 2 (foncier et limites)
+- [`SOMMIER_ETATS_LIMITE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_LIMITE.md)
+  : Etats constates d'un element de limite
 
 ## Registre 3 — droits et concessions
 
@@ -740,6 +742,23 @@ gestionnaire, au registre 2.
   : Elements du plan cadastral retenus pour le suivi des limites
 - [`SOMMIER_PROJECTIONS_EDIGEO`](https://pobsteta.github.io/sommieR/reference/SOMMIER_PROJECTIONS_EDIGEO.md)
   : Projections declarees par les lots EDIGEO
+
+## Suivi des limites sur le terrain
+
+Un projet QGIS/QField pour aller voir les éléments du plan, et le retour
+du terrain : un constat par élément au registre 2, les photos attestées
+par leur empreinte.
+
+- [`sommier_projet_qfield()`](https://pobsteta.github.io/sommieR/reference/sommier_projet_qfield.md)
+  : Projet QGIS/QField pour verifier les limites sur le terrain
+- [`sommier_importer_qfield()`](https://pobsteta.github.io/sommieR/reference/sommier_importer_qfield.md)
+  : Import des constats d'un projet QField
+- [`sommier_deposer_photo()`](https://pobsteta.github.io/sommieR/reference/sommier_deposer_photo.md)
+  : Depot d'une photo, sous son empreinte
+- [`sommier_verifier_photos()`](https://pobsteta.github.io/sommieR/reference/sommier_verifier_photos.md)
+  : Verification des photos d'un sommier
+- [`SOMMIER_TYPES_PHOTO`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_PHOTO.md)
+  : Types de photo admis au depot
 
 ## Géométrie des payloads
 

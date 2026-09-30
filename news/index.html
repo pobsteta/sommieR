@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.15.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,33 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.16.0" id="sommier-0160">sommieR 0.16.0<a class="anchor" aria-label="anchor" href="#sommier-0160"></a></h2>
+<p>Le suivi des limites va sur le terrain. Le sommier prépare un projet QGIS que l’agent ouvre avec QField, et il relit ce que l’agent en rapporte : un constat par élément visité, avec sa position et ses photos, au registre 2.</p>
+<div class="section level3">
+<h3 id="un-projet-qfield-engendré-par-le-sommier-0-16-0">Un projet QField engendré par le sommier<a class="anchor" aria-label="anchor" href="#un-projet-qfield-engendr%C3%A9-par-le-sommier-0-16-0"></a></h3>
+<p><code><a href="../reference/sommier_projet_qfield.html">sommier_projet_qfield()</a></code> écrit un dossier autonome, sans avoir besoin de QGIS ni d’un service en ligne : un projet <code>limites.qgs</code>, un <code>terrain.gpkg</code> et un dossier <code>DCIM/</code> vide. On le copie sur le téléphone ou la tablette, et on le rapporte de la même façon. On y trouve les éléments du plan (lot 5 de la cartographie), colorés selon leur dernière visite : à voir, vu il y a plus de dix ans, vu en place, vu endommagé, non retrouvé ou détruit.</p>
+<p>Le formulaire du constat fait le plus possible à la place de l’agent. Il propose l’élément du plan le plus proche à moins de 30 m (les bornes d’abord) et remplit la date, l’opérateur, la précision et la source GNSS. Il exige un état, et un élément sauf pour un constat « hors plan ». On joint à un constat autant de photos qu’on veut, sous une consigne de prise de vue : cadrer l’élément, éviter les personnes et les véhicules.</p>
+<p>Le modèle du projet (styles, formulaires, relation entre constats et photos) a été produit par QGIS lui-même, avec <code>data-raw/qfield_modele.py</code>. Un <code>.qgs</code> écrit à la main n’aurait eu aucune garantie d’être relu. Le script a d’ailleurs révélé ce qu’aucune documentation ne dit : à la relecture, QGIS remplace par un UUID un identifiant de couche sans tiret bas, ou trop court (<code>limites_ug</code>). La relation et la proposition de l’élément le plus proche se perdaient alors. Les couches s’appellent donc <code>limites_constats</code>, <code>limites_unites</code>… Un test ouvre le projet engendré avec PyQGIS, quand QGIS est installé.</p>
+<p>Le projet a été recetté sous QField 4.3.4 (Android), et il demande désormais cette version au minimum, ce qu’il déclare dans ses métadonnées. Le premier retour de terrain, deux constats sur Loury avec leur photo, s’est importé tel quel. Il a aussi montré deux choses. QField écrit un en-tête EXIF, mais sans date de prise de vue ni position quand le positionnement est coupé. Et un constat pointé sur la carte, sans GNSS, a une précision vide : sa géométrie est un pointé, pas une mesure.</p>
+</div>
+<div class="section level3">
+<h3 id="le-constat-au-registre-0-16-0">Le constat au registre 2<a class="anchor" aria-label="anchor" href="#le-constat-au-registre-0-16-0"></a></h3>
+<p><code><a href="../reference/registre2_foncier.html">registre2_foncier()</a></code> gagne le type <code>reconnaissance_limite</code> (schéma <code>r2-1.3.0</code>). Un constat porte un état parmi <code>SOMMIER_ETATS_LIMITE</code> : en place, endommagé, non retrouvé, détruit, inaccessible, hors plan. Il n’y a pas d’état « déplacé » : un écart de quelques mètres entre un GNSS et un plan au 1/5000 ne prouve rien, et c’est au géomètre de juger. Le constat recopie l’élément du plan tel que l’agent l’a vu (identifiant, numéro, catégorie, millésime, coordonnées), pour rester lisible quand le plan changera.</p>
+<p><code><a href="../reference/sommier_importer_qfield.html">sommier_importer_qfield()</a></code> relit le projet rapporté. <strong>Tout ou rien</strong> : une seule faute fait échouer l’import, qui les liste toutes à la fois. <strong>Rejouable</strong> : l’UUID que QField donne au constat devient l’identifiant de l’entrée, si bien que réimporter n’écrit rien de plus. L’entrée porte NDP 0, puisque c’est un constat de terrain. Les vues <code>v_reconnaissance_limite</code> et <code>v_reconnaissance_derniere</code> donnent, pour chaque élément, sa dernière visite.</p>
+</div>
+<div class="section level3">
+<h3 id="les-photos-attestées-par-leur-empreinte-0-16-0">Les photos, attestées par leur empreinte<a class="anchor" aria-label="anchor" href="#les-photos-attest%C3%A9es-par-leur-empreinte-0-16-0"></a></h3>
+<p><code><a href="../reference/sommier_deposer_photo.html">sommier_deposer_photo()</a></code> range chaque photo dans un dépôt local, sous son SHA-256. Le payload ne porte que l’empreinte, si bien que la chaîne atteste les octets. Le fichier n’est jamais modifié, pas même pour en retirer des métadonnées. La date et la position lues dans l’EXIF sont recopiées comme déclarations de l’appareil, jamais comme des faits. Le lecteur EXIF est écrit dans le paquet, sans nouvelle dépendance, et éprouvé sur des photos produites par Pillow dans les deux ordres d’octets.</p>
+<p><code><a href="../reference/sommier_verifier_photos.html">sommier_verifier_photos()</a></code> classe chaque photo : conforme, altérée ou manquante. Une photo effacée est perdue pour la lecture, mais pas pour la chaîne, et <code><a href="../reference/sommier_verifier.html">sommier_verifier()</a></code> reste valide. <code><a href="../reference/sommier_exporter_manifeste.html">sommier_exporter_manifeste()</a></code> joint les photos au manifeste (<code>depot =</code>), et <code><a href="../reference/sommier_verifier_manifeste.html">sommier_verifier_manifeste()</a></code> les confronte aux empreintes (<code>photos =</code>). Une altération y est une anomalie, une absence une réserve.</p>
+</div>
+<div class="section level3">
+<h3 id="ce-qui-reste-à-faire-0-16-0">Ce qui reste à faire<a class="anchor" aria-label="anchor" href="#ce-qui-reste-%C3%A0-faire-0-16-0"></a></h3>
+<ul><li>La section du rapport sur la vérification des limites, avec sa carte par état, sa planche de photos et la variante publique sans photos. Ce sera le lot 2.</li>
+<li>Un fond d’orthophotographie hors ligne. Le projet porte celle de l’IGN, qui ne s’affiche qu’avec du réseau.</li>
+<li>Pour un constat hors plan, QField propose quand même l’élément le plus proche. L’agent doit vider le champ, et la contrainte du formulaire l’y oblige.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.15.0" id="sommier-0150">sommieR 0.15.0<a class="anchor" aria-label="anchor" href="#sommier-0150"></a></h2>
 <p>Le rapport montre désormais tout ce que le plan cadastral pose dans la forêt et à ses abords : bornes, signes de limite, détails, cours d’eau, voies, bâtiments. C’est la liste que le suivi des limites emportera sur le terrain.</p>

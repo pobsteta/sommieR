@@ -11,7 +11,7 @@ a l'empreinte qu'il pretend attester."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.15.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,7 @@ a l'empreinte qu'il pretend attester.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sommier_verifier_manifeste</span><span class="op">(</span><span class="va">chemin</span>, ancres <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sommier_verifier_manifeste</span><span class="op">(</span><span class="va">chemin</span>, ancres <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, photos <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -66,12 +66,16 @@ a l'empreinte qu'il pretend attester.</p>
 n'est embarquee : ce serait faire dependre du rythme de publication de
 sommieR la question de savoir qui est digne de confiance.</p></dd>
 
+
+<dt id="arg-photos">photos<a class="anchor" aria-label="anchor" href="#arg-photos"></a></dt>
+<dd><p>Dossier des photos jointes au manifeste (facultatif).</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Un objet <code>sommier_rapport</code>, dont les anomalies incluent les types
 <code>visa_orphelin</code>, <code>ancrage_orphelin</code>, <code>visa_horodatage</code>,
-<code>ancrage_horodatage</code> et <code>visa_signature</code>.</p>
+<code>ancrage_horodatage</code>, <code>visa_signature</code> et <code>photo_alteree</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -87,6 +91,10 @@ accompagnerait le manifeste sans que rien ne le distingue du bon.</p></li>
 certificat de son signataire (format <code>sommier-manifeste-2</code>). C'est ce
 qui rend l'export verifiable par un tiers sans qu'il ait a se procurer
 la cle par un canal que le manifeste n'organise pas.</p></li>
+<li><p><strong>Les photos jointes sont celles que la chaine atteste</strong>, quand
+<code>photos</code> designe leur dossier. Une photo dont l'empreinte differe est
+une anomalie (<code>photo_alteree</code>) ; une photo absente, une reserve : elle
+est perdue pour la lecture, mais la chaine n'en est pas moins intacte.</p></li>
 </ol><p><strong>Anomalies et reserves ne se confondent pas.</strong> Une anomalie dit que
 quelque chose est faux ; une reserve, que quelque chose n'a pas pu etre
 verifie sans que rien n'indique pour autant que ce soit faux - un jeton

@@ -15,7 +15,7 @@ sans confiance&quot; du brief (section 6.3)."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.15.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.16.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,7 +56,7 @@ sans confiance" du brief (section 6.3).</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sommier_exporter_manifeste</span><span class="op">(</span><span class="va">con</span>, <span class="va">foret_id</span>, <span class="va">chemin</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sommier_exporter_manifeste</span><span class="op">(</span><span class="va">con</span>, <span class="va">foret_id</span>, <span class="va">chemin</span>, depot <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -74,6 +74,10 @@ sans confiance" du brief (section 6.3).</p>
 <dt id="arg-chemin">chemin<a class="anchor" aria-label="anchor" href="#arg-chemin"></a></dt>
 <dd><p>Fichier de destination.</p></dd>
 
+
+<dt id="arg-depot">depot<a class="anchor" aria-label="anchor" href="#arg-depot"></a></dt>
+<dd><p>Depot de photos a joindre (facultatif).</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -89,6 +93,12 @@ cartographique.</p>
 canonique : c'est la verification qui recanonise. Un manifeste dont les
 payloads seraient deja canoniques masquerait un bogue de canonisation chez
 l'expediteur.</p>
+<p><strong>Les photos voyagent a cote.</strong> Une reconnaissance de limite ne porte ses
+photos que par leur empreinte (voir <code><a href="sommier_deposer_photo.html">sommier_deposer_photo()</a></code>). Avec
+<code>depot</code>, les photos que la chaine reference sont copiees dans un dossier
+<code>photos/</code> voisin du manifeste, sous leur nom d'empreinte ; le destinataire
+les confronte aux empreintes chainees avec <code><a href="sommier_verifier_manifeste.html">sommier_verifier_manifeste()</a></code>.
+Le format du manifeste n'en change pas : les empreintes y sont deja.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

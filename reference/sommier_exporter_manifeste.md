@@ -10,7 +10,7 @@ c'est le "partage sans confiance" du brief (section 6.3).
 ## Usage
 
 ``` r
-sommier_exporter_manifeste(con, foret_id, chemin)
+sommier_exporter_manifeste(con, foret_id, chemin, depot = NULL)
 ```
 
 ## Arguments
@@ -27,6 +27,10 @@ sommier_exporter_manifeste(con, foret_id, chemin)
 
   Fichier de destination.
 
+- depot:
+
+  Depot de photos a joindre (facultatif).
+
 ## Value
 
 Invisiblement, `chemin`.
@@ -42,3 +46,12 @@ Le manifeste porte les payloads en JSON tel que stocke, pas en forme
 canonique : c'est la verification qui recanonise. Un manifeste dont les
 payloads seraient deja canoniques masquerait un bogue de canonisation
 chez l'expediteur.
+
+**Les photos voyagent a cote.** Une reconnaissance de limite ne porte
+ses photos que par leur empreinte (voir
+[`sommier_deposer_photo()`](https://pobsteta.github.io/sommieR/reference/sommier_deposer_photo.md)).
+Avec `depot`, les photos que la chaine reference sont copiees dans un
+dossier `photos/` voisin du manifeste, sous leur nom d'empreinte ; le
+destinataire les confronte aux empreintes chainees avec
+[`sommier_verifier_manifeste()`](https://pobsteta.github.io/sommieR/reference/sommier_verifier_manifeste.md).
+Le format du manifeste n'en change pas : les empreintes y sont deja.

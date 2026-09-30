@@ -21,7 +21,15 @@ registre2_foncier(
   references_cadastrales = NULL,
   beneficiaire = NULL,
   observations = NULL,
-  geometrie = NULL
+  geometrie = NULL,
+  etat = NULL,
+  element_pci = NULL,
+  visite_le = NULL,
+  operateur = NULL,
+  precision_m = NULL,
+  source_gnss = NULL,
+  releve_uuid = NULL,
+  photos = NULL
 )
 ```
 
@@ -84,6 +92,50 @@ registre2_foncier(
   [`geom_ligne()`](https://pobsteta.github.io/sommieR/reference/geometries.md)).
   Facultative — un gestionnaire sans releve continue de saisir sans, et
   son sommier reste conforme.
+
+- etat:
+
+  Pour une `reconnaissance_limite`, l'un de
+  [SOMMIER_ETATS_LIMITE](https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_LIMITE.md).
+  Obligatoire pour ce type, refuse pour les autres.
+
+- element_pci:
+
+  Pour une `reconnaissance_limite`, l'element du plan cadastral tel que
+  l'agent l'a vu : liste nommee portant au moins `id`
+  (`feuille:OBJECT_RID`, voir
+  [`sommier_elements_pci()`](https://pobsteta.github.io/sommieR/reference/sommier_elements_pci.md)),
+  et facultativement `numero`, `categorie`, `nature`, `texte`,
+  `millesime`, `x`, `y`. Obligatoire sauf a l'etat `hors_plan`, ou il
+  est refuse.
+
+- visite_le:
+
+  Instant de la visite, tel que l'appareil l'a note (facultatif).
+
+- operateur:
+
+  Agent qui a constate (facultatif).
+
+- precision_m:
+
+  Precision horizontale declaree par le recepteur GNSS, en metres
+  (facultatif).
+
+- source_gnss:
+
+  Recepteur ou mode de positionnement declare (facultatif).
+
+- releve_uuid:
+
+  Identifiant du releve dans l'outil de terrain (facultatif).
+
+- photos:
+
+  Liste de photos, chacune liste nommee : `sha256` (64 caracteres
+  hexadecimaux), `octets`, `type`, et facultativement `fichier`,
+  `exif_date`, `exif_position`. Voir
+  [`sommier_deposer_photo()`](https://pobsteta.github.io/sommieR/reference/sommier_deposer_photo.md).
 
 ## Value
 

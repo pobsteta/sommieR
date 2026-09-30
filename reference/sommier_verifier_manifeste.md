@@ -8,7 +8,7 @@ attester.
 ## Usage
 
 ``` r
-sommier_verifier_manifeste(chemin, ancres = list())
+sommier_verifier_manifeste(chemin, ancres = list(), photos = NULL)
 ```
 
 ## Arguments
@@ -26,11 +26,15 @@ sommier_verifier_manifeste(chemin, ancres = list())
   publication de sommieR la question de savoir qui est digne de
   confiance.
 
+- photos:
+
+  Dossier des photos jointes au manifeste (facultatif).
+
 ## Value
 
 Un objet `sommier_rapport`, dont les anomalies incluent les types
 `visa_orphelin`, `ancrage_orphelin`, `visa_horodatage`,
-`ancrage_horodatage` et `visa_signature`.
+`ancrage_horodatage`, `visa_signature` et `photo_alteree`.
 
 ## Details
 
@@ -51,6 +55,12 @@ Deux confrontations sont faites, sans reseau ni magasin de confiance.
     certificat de son signataire (format `sommier-manifeste-2`). C'est
     ce qui rend l'export verifiable par un tiers sans qu'il ait a se
     procurer la cle par un canal que le manifeste n'organise pas.
+
+4.  **Les photos jointes sont celles que la chaine atteste**, quand
+    `photos` designe leur dossier. Une photo dont l'empreinte differe
+    est une anomalie (`photo_alteree`) ; une photo absente, une reserve
+    : elle est perdue pour la lecture, mais la chaine n'en est pas moins
+    intacte.
 
 **Anomalies et reserves ne se confondent pas.** Une anomalie dit que
 quelque chose est faux ; une reserve, que quelque chose n'a pas pu etre
