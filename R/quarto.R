@@ -59,6 +59,20 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 #'   photographique est retiree, le tableau garde le nombre de photos, et le
 #'   document dit qu'elles existent. Une photo peut montrer un riverain ou une
 #'   plaque d'immatriculation.
+#' @param indices Indices de nemeton par unite, tels que les rend
+#'   [sommier_lire_indices_nemeton()] (facultatif) : un encadre « Ce que la
+#'   foret porte » donne le volume sur pied et la possibilite rapportee au
+#'   capital. Des estimations, hors chaine, presentees comme telles.
+#' @param reference_ifn Prelevement de reference de l'IFN, pour situer la
+#'   possibilite et le preleve (facultatif) : liste nommee portant
+#'   `taux_m3_ha_an`, et facultativement `ser`, `nom`, `millesime`, `source`.
+#'   Voir [sommier_ser()] pour la sylvoecoregion ; le taux se tire par
+#'   exemple de `nemeton::ifn_prelevement_essence_ser()`, somme des taux
+#'   `maille` de la SER.
+#' @param coupes_detectees Coupes rases detectees, telles que les rend
+#'   [sommier_coupes_sufosat()] (facultatif) : celles qu'aucun martelage de la
+#'   meme unite n'explique, l'exercice de la detection ou le precedent, sont
+#'   signalees sous la balance.
 #' @param quarto Chemin de l'executable Quarto.
 #'
 #' @return Invisiblement, le chemin du document produit.
@@ -74,7 +88,9 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
                                    debut = NULL, fin = NULL,
                                    referentiel = "psg", fond = NULL,
                                    fond_pci = NULL, photos = NULL,
-                                   public = FALSE,
+                                   public = FALSE, indices = NULL,
+                                   reference_ifn = NULL,
+                                   coupes_detectees = NULL,
                                    quarto = Sys.which("quarto")) {
   format <- valider_choix(format, "format", SOMMIER_FORMATS_QUARTO)
   chemin <- valider_texte(chemin, "chemin")
@@ -126,6 +142,16 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
       con, foret_id, elements = if (!is.null(fond_pci$categorie)) fond_pci
     )),
     public          = isTRUE(public),
+    indices         = indices,
+    reference_ifn   = valider_reference_ifn(reference_ifn),
+    coupes_sans_martelage = essayer_section(coupes_sans_martelage(
+      con, foret_id, coupes_detectees
+    )),
+    coupes_detectees_parametres = if (!is.null(coupes_detectees)) list(
+      seuil_proba = attr(coupes_detectees, "seuil_proba"),
+      surface_min_ha = attr(coupes_detectees, "surface_min_ha"),
+      n = nrow(coupes_detectees)
+    ),
     version_sommier = as.character(utils::packageVersion("sommieR")),
     edite_le        = format(Sys.Date(), "%d/%m/%Y")
   )
@@ -246,4 +272,45 @@ environnement_utf8 <- function() {
     return(character(0))
   }
   c(paste0("LC_ALL=", retenue[[1L]]), paste0("LANG=", retenue[[1L]]))
+}
+
+valider_reference_ifn <- function(reference) {
+  if (is.null(reference)) {
+    return(NULL)
+  }
+  if (!is.list(reference) || is.null(reference$taux_m3_ha_an)) {
+    stop("`reference_ifn` doit etre une liste portant `taux_m3_ha_an`.",
+         call. = FALSE)
+  }
+  compacter(list(
+    taux_m3_ha_an = valider_nombre(reference$taux_m3_ha_an,
+                                   "reference_ifn$taux_m3_ha_an", min = 0),
+    ser = si_present(reference$ser, valider_texte, "reference_ifn$ser"),
+    nom = si_present(reference$nom, valider_texte, "reference_ifn$nom"),
+    millesime = si_present(reference$millesime, valider_texte,
+                           "reference_ifn$millesime"),
+    source = si_present(reference$source, valider_texte,
+                        "reference_ifn$source")
+  ))
+}
+
+# Une coupe detectee est expliquee par un martelage de la meme unite,
+# l'exercice de la detection ou le precedent : on martele avant d'abattre.
+coupes_sans_martelage <- function(con, foret_id, coupes) {
+  if (is.null(coupes) || nrow(coupes) == 0L) {
+    return(NULL)
+  }
+  martelages <- DBI::dbGetQuery(
+    con,
+    "SELECT u.numero_affichage AS ug, c.exercice
+       FROM v_coupe c JOIN ug u ON u.uuid = c.ug_uuid
+      WHERE c.foret_id = $1
+        AND c.type_entree IN ('martelage', 'produit_accidentel')",
+    params = list(foret_id)
+  )
+  explique <- vapply(seq_len(nrow(coupes)), function(i) {
+    any(martelages$ug == coupes$ug[[i]] &
+          martelages$exercice %in% (coupes$annee[[i]] - c(1L, 0L)))
+  }, logical(1))
+  coupes[!explique, , drop = FALSE]
 }

@@ -16,6 +16,9 @@ sommier_rapport_quarto(
   fond_pci = NULL,
   photos = NULL,
   public = FALSE,
+  indices = NULL,
+  reference_ifn = NULL,
+  coupes_detectees = NULL,
   quarto = Sys.which("quarto")
 )
 }
@@ -59,6 +62,23 @@ rendu ; une photo dont l'empreinte ne tient plus n'est pas montree.}
 photographique est retiree, le tableau garde le nombre de photos, et le
 document dit qu'elles existent. Une photo peut montrer un riverain ou une
 plaque d'immatriculation.}
+
+\item{indices}{Indices de nemeton par unite, tels que les rend
+\code{\link[=sommier_lire_indices_nemeton]{sommier_lire_indices_nemeton()}} (facultatif) : un encadre « Ce que la
+foret porte » donne le volume sur pied et la possibilite rapportee au
+capital. Des estimations, hors chaine, presentees comme telles.}
+
+\item{reference_ifn}{Prelevement de reference de l'IFN, pour situer la
+possibilite et le preleve (facultatif) : liste nommee portant
+\code{taux_m3_ha_an}, et facultativement \code{ser}, \code{nom}, \code{millesime}, \code{source}.
+Voir \code{\link[=sommier_ser]{sommier_ser()}} pour la sylvoecoregion ; le taux se tire par
+exemple de \code{nemeton::ifn_prelevement_essence_ser()}, somme des taux
+\code{maille} de la SER.}
+
+\item{coupes_detectees}{Coupes rases detectees, telles que les rend
+\code{\link[=sommier_coupes_sufosat]{sommier_coupes_sufosat()}} (facultatif) : celles qu'aucun martelage de la
+meme unite n'explique, l'exercice de la detection ou le precedent, sont
+signalees sous la balance.}
 
 \item{quarto}{Chemin de l'executable Quarto.}
 }

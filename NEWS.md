@@ -1,3 +1,44 @@
+# sommieR 0.20.0
+
+La balance se lit désormais en regard de ce que la forêt porte et de ce que
+l'IFN observe autour d'elle. Tout est en m³/ha/an, et rien de ces repères
+n'entre dans la chaîne.
+
+## Situer la possibilité
+
+`sommier_ser()` rend la sylvoécorégion de l'IGN qui contient la forêt. La
+couche est téléchargée une fois, explicitement, puis gardée en cache. La
+forêt domaniale d'Orléans est dans la SER B70 « Sologne-Orléanais ».
+
+Le rapport accepte une `reference_ifn` : le prélèvement que l'IFN observe
+dans cette SER. Un tableau de repères à l'hectare réunit alors la
+possibilité, le prélevé moyen des exercices échus et ce prélèvement de
+référence. Pour Orléans, la référence est de 2,28 m³/ha/an sur 2005-2024 :
+c'est la somme des taux `maille` de toutes les essences, tirée de
+`nemeton::ifn_prelevement_essence_ser()`. sommieR n'appelle pas nemeton, qui
+n'est pas sur le CRAN ; la documentation montre comment obtenir le taux. Le
+rapport rappelle que ce chiffre est ce qui a été coupé, toutes propriétés
+confondues, et non ce qui devait l'être.
+
+## Ce que la forêt porte
+
+`sommier_lire_indices_nemeton()` lit les indicateurs d'un projet nemeton
+(`data/indicators.parquet`, avec `arrow` en Suggests). Les unités sont
+rapprochées par le numéro de parcelle lu à la fin du libellé. Le rapport en
+tire un encadré : volume sur pied estimé, possibilité rapportée au capital
+(1,6 % par an sur la copie d'essai d'Orléans), unités à volume nul, et unités
+sans indice. Il donne la source et la date, et dit que nemeton ne déclare pas
+sa précision.
+
+## Les coupes que la balance ne voit pas
+
+`sommier_coupes_sufosat()` agrège les rasters SUFOSAT par unité et par année
+(surface, date médiane, probabilité moyenne), et écarte les détections sous
+0,5 ha. Passées au rapport par `coupes_detectees`, les coupes qu'aucun
+martelage de la même unité n'explique, ni l'exercice de la détection ni le
+précédent, sont signalées sous la balance. Une détection n'est pas un
+constat : la balance n'est pas corrigée d'office.
+
 # sommieR 0.19.0
 
 La balance de possibilité se calcule contre un aménagement inscrit dans la
