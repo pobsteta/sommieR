@@ -360,6 +360,10 @@ def principal():
 
     if not projet.write():
         sys.exit("Ecriture du projet impossible.")
+    # QGIS laisse une sauvegarde de l'ecriture precedente : elle n'a rien a
+    # faire dans le paquet.
+    if os.path.exists(QGS + "~"):
+        os.remove(QGS + "~")
     print("Ecrit :", QGS, "et", GPKG)
 
 

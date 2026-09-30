@@ -11,3 +11,4 @@ docs/
 # Produit de construction de l'article « Le document engendré » : le rapport
 # que pkgdown emporte vers le site à chaque build.
 vignettes/articles/rapport-gestion-anterieure.html
+*.qgs~
