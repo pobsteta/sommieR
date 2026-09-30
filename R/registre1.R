@@ -57,6 +57,10 @@ SOMMIER_TYPES_VALIDATION <- c(
 #' @param portee Portee de l'acte : `"sommier"`, `"amenagement"`, `"psg"`
 #'   (facultatif).
 #' @param observations Observations libres (facultatif).
+#' @param amenagement Pour un `arrete`, un `agrement` ou un `avenant`, le
+#'   contenu du document de gestion qui fixe la possibilite : voir
+#'   [sommier_amenagement()] et [sommier_avenant_possibilite()], qui le
+#'   construisent (facultatif).
 #'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
@@ -74,7 +78,8 @@ registre1_validation <- function(type_validation,
                                  reference = NULL,
                                  date_effet = NULL,
                                  portee = NULL,
-                                 observations = NULL) {
+                                 observations = NULL,
+                                 amenagement = NULL) {
   type_validation <- valider_choix(type_validation, "type_validation",
                                    SOMMIER_TYPES_VALIDATION)
   # Le visa annuel de l'imprime A10 est justement annuel : sans exercice, il
@@ -94,6 +99,7 @@ registre1_validation <- function(type_validation,
     date_effet      = if (est_vide(date_effet)) NULL else format_date(date_effet, "date_effet"),
     portee          = si_present(portee, valider_choix, "portee",
                                  choix = c("sommier", "amenagement", "psg")),
-    observations    = si_present(observations, valider_texte, "observations")
+    observations    = si_present(observations, valider_texte, "observations"),
+    amenagement     = valider_amenagement(amenagement, type_validation)
   ))
 }

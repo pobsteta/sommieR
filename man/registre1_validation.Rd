@@ -12,7 +12,8 @@ registre1_validation(
   reference = NULL,
   date_effet = NULL,
   portee = NULL,
-  observations = NULL
+  observations = NULL,
+  amenagement = NULL
 )
 }
 \arguments{
@@ -35,6 +36,11 @@ d'agrement (facultatif).}
 (facultatif).}
 
 \item{observations}{Observations libres (facultatif).}
+
+\item{amenagement}{Pour un \code{arrete}, un \code{agrement} ou un \code{avenant}, le
+contenu du document de gestion qui fixe la possibilite : voir
+\code{\link[=sommier_amenagement]{sommier_amenagement()}} et \code{\link[=sommier_avenant_possibilite]{sommier_avenant_possibilite()}}, qui le
+construisent (facultatif).}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.

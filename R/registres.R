@@ -103,10 +103,12 @@ SOMMIER_TYPES_MARTELES <- c("martelage", "produit_accidentel", "bois_delivre")
 #'
 #' Le registre 2 est passe en `1.3.0` avec la reconnaissance de limite : un
 #' etat constate, l'element du plan recopie, et les photos par leur empreinte.
+#' Le registre 1 est passe en `1.2.0` avec l'amenagement : la periode et la
+#' possibilite que l'arrete ou l'agrement fixe entrent dans la chaine.
 #'
 #' @export
 SOMMIER_SCHEMA_VERSIONS <- c(
-  "1" = "r1-1.1.0", "2" = "r2-1.3.0", "3" = "r3-1.1.0",
+  "1" = "r1-1.2.0", "2" = "r2-1.3.0", "3" = "r3-1.1.0",
   "4" = "r4-1.2.0", "5" = "r5-1.2.0", "6" = "r6-1.1.0",
   "7" = "r7-1.1.0", "8" = "r8-1.2.0", "9" = "r9-1.2.0"
 )
@@ -124,7 +126,10 @@ SOMMIER_SCHEMA_VERSIONS <- c(
 #' @param nature_coupe Nature de la coupe (texte libre normalise par le
 #'   gestionnaire : amelioration, reguliere, sanitaire, emprise...).
 #' @param volume_m3 Volume en metres cubes (positif ou nul).
-#' @param surface_ha Surface parcourue en hectares (facultatif).
+#' @param surface_ha Surface parcourue en hectares (facultatif). Sans elle,
+#'   un martelage rattache a une unite de gestion parcourt, a la lecture,
+#'   toute la surface de l'unite (voir la colonne `surface_source` de
+#'   `v_coupe`) : la surface deduite n'entre pas dans le payload.
 #' @param essence Essence ou groupe d'essences (facultatif).
 #' @param coupon Identifiant du coupon ou de la subdivision (facultatif).
 #' @param observations Observations libres (facultatif).

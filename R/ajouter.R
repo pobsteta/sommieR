@@ -166,9 +166,16 @@ sommier_verifier <- function(con, foret_id, depuis_seq = NULL,
 #'
 #' @description
 #' Vue calculee, jamais saisie : `SUM(volumes marteles de l'exercice)` moins
-#' la possibilite, cumulee par foret.
+#' la possibilite, cumulee **par amenagement**. La possibilite vient de l'acte
+#' qui la fixe - l'amenagement ou l'avenant, au registre 1 : voir
+#' [sommier_amenagement()].
 #'
 #' @details
+#' Le cumul repart de zero avec chaque amenagement, et court jusqu'a
+#' l'exercice courant. Un martelage impute a un exercice qu'aucun amenagement
+#' ne couvre ne s'y trouve pas : [sommier_martelages_hors_amenagement()] le
+#' montre a part.
+#'
 #' En foret publique, la balance se lit contre la possibilite de
 #' l'amenagement regle. En foret privee, la meme mecanique sert de balance de
 #' conformite au programme du PSG, avec une tolerance de plus ou moins quatre
@@ -177,37 +184,89 @@ sommier_verifier <- function(con, foret_id, depuis_seq = NULL,
 #'
 #' @param con Connexion DBI.
 #' @param foret_id UUID de la foret.
-#' @param tolerance_ans Fenetre de resorption admise (defaut `NULL` : aucune
-#'   colonne d'appreciation n'est ajoutee).
-#' @return Un `data.frame` : `exercice`, `possibilite_m3_an`,
-#'   `volume_martele_m3`, `volume_realise_m3`, `balance_exercice_m3`,
-#'   `balance_cumulee_m3`.
+#' @param tolerance_ans Fenetre de resorption admise, en annees de
+#'   possibilite. Par defaut, celle que l'amenagement declare ; sans elle,
+#'   aucune colonne d'appreciation n'est ajoutee.
+#' @return Un `data.frame` : `amenagement_id`, `amenagement`, `exercice`,
+#'   `possibilite_m3_ha_an` et `surface_ha` (ce que l'acte fixe),
+#'   `possibilite_m3_an` (le volume qui s'en deduit), `volume_martele_m3`,
+#'   `prelevement_m3_ha` (le martele ramene a l'hectare, comparable a la
+#'   possibilite et a l'IFN), `volume_realise_m3`,
+#'   `balance_exercice_m3`, `balance_cumulee_m3`, `reference_acte`,
+#'   `par_avenant`, `nature_volume` (possibilite fixee, ou recolte prevue au
+#'   document), et `conforme` quand une tolerance s'applique.
 #'
 #' @export
 sommier_balance_possibilite <- function(con, foret_id, tolerance_ans = NULL) {
   foret_id <- valider_uuid(foret_id, "foret_id")
   res <- DBI::dbGetQuery(
     con,
-    "SELECT exercice, possibilite_m3_an, volume_martele_m3, volume_realise_m3,
-            balance_exercice_m3, balance_cumulee_m3
+    "SELECT amenagement_id, amenagement, exercice, possibilite_m3_ha_an,
+            surface_ha, possibilite_m3_an, volume_martele_m3,
+            prelevement_m3_ha, volume_realise_m3, balance_exercice_m3,
+            balance_cumulee_m3, reference_acte, par_avenant, nature_volume,
+            tolerance_ans
        FROM v_balance_possibilite
       WHERE foret_id = $1
       ORDER BY exercice",
     params = list(foret_id)
   )
-  if (!est_vide(tolerance_ans) && nrow(res) > 0L) {
+  if (!est_vide(tolerance_ans)) {
     tolerance_ans <- valider_entier(tolerance_ans, "tolerance_ans", min = 1)
-    # Marge admissible : la possibilite moyenne multipliee par la fenetre de
-    # resorption. Au-dela, l'ecart n'est plus rattrapable dans les delais.
-    moyenne <- mean(res$possibilite_m3_an, na.rm = TRUE)
-    marge <- moyenne * tolerance_ans
-    res$conforme <- is.na(res$balance_cumulee_m3) |
-      abs(res$balance_cumulee_m3) <= marge
+    res$tolerance_ans <- rep(tolerance_ans, nrow(res))
   }
+  if (nrow(res) > 0L && any(!is.na(res$tolerance_ans))) {
+    # Marge admissible : la possibilite moyenne de l'amenagement multipliee
+    # par la fenetre de resorption. Au-dela, l'ecart n'est plus rattrapable
+    # dans les delais. Un amenagement sans tolerance declaree n'est pas juge.
+    moyenne <- stats::ave(as.numeric(res$possibilite_m3_an),
+                          res$amenagement_id,
+                          FUN = function(x) mean(x, na.rm = TRUE))
+    marge <- moyenne * as.numeric(res$tolerance_ans)
+    res$conforme <- ifelse(is.na(marge), NA,
+                           abs(res$balance_cumulee_m3) <= marge)
+  }
+  res$tolerance_ans <- NULL
   res
 }
 
-#' Fixation de la possibilite d'un exercice
+#' Martelages qu'aucun amenagement ne couvre
+#'
+#' @description
+#' Les prelevements imputes a un exercice hors de toute periode
+#' d'amenagement. Ils ne se comparent a rien, et la balance ne peut pas les
+#' compter ; ils ne sont pas perdus pour autant.
+#'
+#' @param con Connexion DBI.
+#' @param foret_id UUID de la foret.
+#' @return Un `data.frame` : `id`, `exercice`, `type_entree`,
+#'   `nature_coupe`, `volume_m3`, `date_evenement`.
+#' @export
+sommier_martelages_hors_amenagement <- function(con, foret_id) {
+  foret_id <- valider_uuid(foret_id, "foret_id")
+  DBI::dbGetQuery(
+    con,
+    "SELECT id::text AS id, exercice, type_entree, nature_coupe, volume_m3,
+            date_evenement
+       FROM v_martelage_hors_amenagement
+      WHERE foret_id = $1
+      ORDER BY exercice, date_evenement",
+    params = list(foret_id)
+  )
+}
+
+#' Fixation de la possibilite d'un exercice (obsolete)
+#'
+#' @description
+#' Ecrit la possibilite d'un exercice dans la table `exercice`, hors de la
+#' chaine. **La balance ne la lit plus** depuis sommieR 0.19.0 : la
+#' possibilite est portee par l'acte d'amenagement, au registre 1 (voir
+#' [sommier_amenagement()]), et une table reecrivable sans trace n'a pas a
+#' fixer ce a quoi des prelevements attestes se comparent.
+#'
+#' La fonction avertit a chaque appel, et refuse d'ecrire une fois la table
+#' reprise par [sommier_reprendre_exercices()] : une possibilite ne se
+#' modifie plus alors que par avenant.
 #'
 #' @param con Connexion DBI.
 #' @param foret_id UUID de la foret.
@@ -223,6 +282,20 @@ exercice_definir <- function(con, foret_id, annee, possibilite_m3_an) {
     valider_entier(annee, "annee", min = 1500, max = 2999),
     valider_nombre(possibilite_m3_an, "possibilite_m3_an", min = 0)
   )
+  reprise <- DBI::dbGetQuery(
+    con,
+    "SELECT count(*) AS n FROM v_amenagement
+      WHERE foret_id = $1 AND amenagement_id LIKE 'REPRISE-EXERCICES-%'",
+    params = list(valeurs[[1L]])
+  )$n
+  if (as.numeric(reprise) > 0) {
+    stop("La table `exercice` de cette foret a ete reprise dans la chaine : ",
+         "la possibilite ne se modifie plus que par avenant ",
+         "(sommier_avenant_possibilite()).", call. = FALSE)
+  }
+  warning("exercice_definir() est obsolete : la balance ne lit plus la table ",
+          "`exercice`. Ecrire l'amenagement avec sommier_amenagement().",
+          call. = FALSE)
   invisible(DBI::dbExecute(
     con,
     "INSERT INTO exercice (foret_id, annee, possibilite_m3_an)

@@ -32,6 +32,13 @@ COMMENT ON VIEW v_entree_courante IS
 -- Registre 5 — coupes et recoltes
 -- ---------------------------------------------------------------------
 
+-- La surface d'un martelage est, par defaut, celle de son unite de gestion :
+-- un martelage parcourt l'unite. Elle se deduit a la lecture - du contour en
+-- vigueur a la date du martelage, a defaut du dernier connu - et n'entre pas
+-- dans la chaine : une surface deduite n'a pas a passer pour une surface
+-- saisie. `surface_source` dit laquelle s'applique. Une coupe realisee ou un
+-- produit accidentel ne parcourt pas forcement toute l'unite : ils gardent la
+-- surface saisie, ou aucune.
 CREATE OR REPLACE VIEW v_coupe AS
 SELECT
   e.id,
@@ -45,26 +52,158 @@ SELECT
   (e.payload ->> 'exercice')::INTEGER             AS exercice,
   (e.payload ->> 'nature_coupe')::TEXT            AS nature_coupe,
   (e.payload ->> 'volume_m3')::NUMERIC            AS volume_m3,
-  (e.payload ->> 'surface_ha')::NUMERIC           AS surface_ha,
+  COALESCE(
+    (e.payload ->> 'surface_ha')::NUMERIC,
+    CASE WHEN e.payload ->> 'type_entree' = 'martelage'
+         THEN unite.surface_ha END
+  )::NUMERIC                                      AS surface_ha,
   (e.payload ->> 'essence')::TEXT                 AS essence,
   (e.payload ->> 'coupon')::TEXT                  AS coupon,
   (e.payload ->> 'observations')::TEXT            AS observations,
   jsonb_exists(e.payload, 'reprise')          AS repris,
   (e.payload -> 'reprise' ->> 'source')       AS reprise_source,
-  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference
+  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference,
+  CASE
+    WHEN e.payload ? 'surface_ha' THEN 'saisie'
+    WHEN e.payload ->> 'type_entree' = 'martelage'
+         AND unite.surface_ha IS NOT NULL THEN 'unite'
+  END                                          AS surface_source
 FROM v_entree_courante e
+LEFT JOIN LATERAL (
+  SELECT (ST_Area(g.geom) / 10000)::NUMERIC AS surface_ha
+    FROM ug_geometrie g
+   WHERE g.ug_uuid = e.ug_uuid
+   ORDER BY (g.date_debut <= e.date_evenement
+             AND (g.date_fin IS NULL OR g.date_fin >= e.date_evenement)) DESC,
+            g.version DESC
+   LIMIT 1
+) unite ON TRUE
 WHERE e.registre = 5;
 
--- Balance A50E : SUM(volumes marteles de l'exercice) - possibilite, cumulee.
+-- Amenagements (v0.19.0) : la periode et la possibilite entrent dans la
+-- chaine avec l'acte qui les fixe (registre 1). Un avenant change la
+-- possibilite a partir d'un exercice, ou la fin de l'amenagement ; il ne
+-- recrit pas le passe.
+--
+-- Les vues de ce bloc sont supprimees puis recreees, des dependantes aux
+-- sources : `v_balance_possibilite` change de colonnes avec la v0.19.0, et
+-- `CREATE OR REPLACE` ne permet pas de changer les colonnes d'une vue
+-- existante. Aucune autre vue n'en depend.
+DROP VIEW IF EXISTS v_martelage_hors_amenagement;
+DROP VIEW IF EXISTS v_balance_possibilite;
+DROP VIEW IF EXISTS v_possibilite_exercice;
+DROP VIEW IF EXISTS v_amenagement;
+DROP VIEW IF EXISTS v_amenagement_acte;
+
+CREATE VIEW v_amenagement_acte AS
+SELECT
+  e.id                                                   AS acte_id,
+  e.foret_id, e.seq, e.date_evenement,
+  (e.payload ->> 'type_validation')::TEXT                AS type_validation,
+  (e.payload ->> 'reference')::TEXT                      AS reference,
+  (e.payload -> 'amenagement' ->> 'id')::TEXT            AS amenagement_id,
+  (e.payload -> 'amenagement' ->> 'libelle')::TEXT       AS libelle,
+  (e.payload -> 'amenagement' ->> 'annee_debut')::INTEGER AS annee_debut,
+  (e.payload -> 'amenagement' ->> 'annee_fin')::INTEGER   AS annee_fin,
+  (e.payload -> 'amenagement' ->> 'a_partir_de')::INTEGER AS a_partir_de,
+  (e.payload -> 'amenagement' ->> 'possibilite_m3_ha_an')::NUMERIC
+                                                         AS possibilite_m3_ha_an,
+  (e.payload -> 'amenagement' -> 'ventilation')          AS ventilation,
+  (e.payload -> 'amenagement' ->> 'surface_ha')::NUMERIC AS surface_ha,
+  (e.payload -> 'amenagement' ->> 'serie')::TEXT         AS serie,
+  (e.payload -> 'amenagement' ->> 'tolerance_ans')::INTEGER AS tolerance_ans,
+  (e.payload -> 'amenagement' ->> 'source')::TEXT        AS source,
+  COALESCE(e.payload -> 'amenagement' ->> 'nature_volume', 'possibilite')
+                                                         AS nature_volume,
+  (e.payload -> 'amenagement' -> 'groupes')              AS groupes,
+  (e.payload -> 'amenagement' ->> 'surface_regeneration_ha')::NUMERIC
+                                                         AS surface_regeneration_ha,
+  jsonb_exists(e.payload, 'reprise')                     AS repris
+FROM v_entree_courante e
+WHERE e.registre = 1 AND e.payload ? 'amenagement';
+
+COMMENT ON VIEW v_amenagement_acte IS
+  'Actes du registre 1 qui portent un amenagement : arretes, agrements, avenants.';
+
+-- Un amenagement, et sa fin telle que le dernier avenant l'a fixee.
+CREATE VIEW v_amenagement AS
+SELECT
+  a.foret_id, a.amenagement_id, a.libelle, a.annee_debut,
+  COALESCE((
+    SELECT v.annee_fin FROM v_amenagement_acte v
+     WHERE v.foret_id = a.foret_id AND v.amenagement_id = a.amenagement_id
+       AND v.type_validation = 'avenant' AND v.annee_fin IS NOT NULL
+     ORDER BY v.seq DESC LIMIT 1
+  ), a.annee_fin)                                        AS annee_fin,
+  a.annee_fin                                            AS annee_fin_initiale,
+  a.possibilite_m3_ha_an                                 AS possibilite_initiale_m3_ha_an,
+  a.surface_ha                                           AS surface_initiale_ha,
+  a.possibilite_m3_ha_an * a.surface_ha                  AS possibilite_initiale_m3_an,
+  a.ventilation, a.serie, a.tolerance_ans, a.source,
+  a.nature_volume, a.groupes, a.surface_regeneration_ha,
+  a.reference, a.type_validation, a.acte_id, a.seq,
+  a.date_evenement                                       AS date_acte,
+  a.repris
+FROM v_amenagement_acte a
+WHERE a.type_validation IN ('arrete', 'agrement');
+
+COMMENT ON VIEW v_amenagement IS
+  'Amenagements et PSG, avec la fin fixee par le dernier avenant.';
+
+-- La possibilite de chaque exercice, et l'acte dont elle vient : le dernier
+-- avenant applicable a cet exercice, sinon l'acte d'amenagement. Le taux a
+-- l'hectare et la surface se suivent separement - un avenant peut changer
+-- l'un sans l'autre -, et le volume annuel s'en deduit.
+CREATE VIEW v_possibilite_exercice AS
+SELECT
+  m.foret_id, m.amenagement_id, m.libelle, g.exercice,
+  COALESCE(taux.possibilite_m3_ha_an, m.possibilite_initiale_m3_ha_an)
+                                                         AS possibilite_m3_ha_an,
+  COALESCE(surf.surface_ha, m.surface_initiale_ha)       AS surface_ha,
+  COALESCE(taux.possibilite_m3_ha_an, m.possibilite_initiale_m3_ha_an)
+    * COALESCE(surf.surface_ha, m.surface_initiale_ha)   AS possibilite_m3_an,
+  COALESCE(taux.acte_id, surf.acte_id, m.acte_id)        AS acte_id,
+  COALESCE(taux.reference, surf.reference, m.reference)  AS reference_acte,
+  (taux.acte_id IS NOT NULL OR surf.acte_id IS NOT NULL) AS par_avenant,
+  m.tolerance_ans,
+  m.nature_volume
+FROM v_amenagement m
+CROSS JOIN LATERAL generate_series(m.annee_debut, m.annee_fin) AS g(exercice)
+LEFT JOIN LATERAL (
+  SELECT v.possibilite_m3_ha_an, v.acte_id, v.reference
+    FROM v_amenagement_acte v
+   WHERE v.foret_id = m.foret_id AND v.amenagement_id = m.amenagement_id
+     AND v.type_validation = 'avenant' AND v.possibilite_m3_ha_an IS NOT NULL
+     AND v.a_partir_de <= g.exercice
+   ORDER BY v.a_partir_de DESC, v.seq DESC
+   LIMIT 1
+) taux ON TRUE
+LEFT JOIN LATERAL (
+  SELECT v.surface_ha, v.acte_id, v.reference
+    FROM v_amenagement_acte v
+   WHERE v.foret_id = m.foret_id AND v.amenagement_id = m.amenagement_id
+     AND v.type_validation = 'avenant' AND v.surface_ha IS NOT NULL
+     AND v.a_partir_de <= g.exercice
+   ORDER BY v.a_partir_de DESC, v.seq DESC
+   LIMIT 1
+) surf ON TRUE;
+
+COMMENT ON VIEW v_possibilite_exercice IS
+  'Possibilite en vigueur pour chaque exercice d''un amenagement, et l''acte qui la fixe.';
+
+-- La balance se calcule par amenagement : le cumul repart de zero avec
+-- chaque nouvel amenagement. Elle court jusqu'a l'exercice courant - un
+-- exercice futur de l'amenagement ne pese pas encore - sauf si un martelage
+-- y est deja impute.
+--
+-- Le socle part des exercices de l'amenagement et non des coupes : un
+-- exercice sans aucune coupe pese pour un deficit egal a toute sa
+-- possibilite, il ne doit pas disparaitre de la balance cumulee.
 --
 -- `coupe_realisee` est exclu du martele : la meme coupe est d'abord martelee
 -- (A50E) puis exploitee (A50F), l'imputer deux fois doublerait le
 -- prelevement constate.
---
--- La jointure part de `exercice` et non des coupes : un exercice sans aucune
--- coupe pese pour un deficit egal a toute sa possibilite, il ne doit pas
--- disparaitre de la balance cumulee.
-CREATE OR REPLACE VIEW v_balance_possibilite AS
+CREATE VIEW v_balance_possibilite AS
 WITH martele AS (
   SELECT
     c.foret_id,
@@ -80,32 +219,61 @@ WITH martele AS (
 ),
 socle AS (
   SELECT
-    x.foret_id,
-    x.annee                                   AS exercice,
-    x.possibilite_m3_an,
+    p.foret_id, p.amenagement_id, p.libelle, p.exercice,
+    p.possibilite_m3_ha_an, p.surface_ha, p.possibilite_m3_an,
+    p.reference_acte, p.acte_id, p.par_avenant,
+    p.tolerance_ans, p.nature_volume,
     COALESCE(m.volume_martele_m3, 0)          AS volume_martele_m3,
     COALESCE(m.volume_realise_m3, 0)          AS volume_realise_m3
-  FROM exercice x
+  FROM v_possibilite_exercice p
   LEFT JOIN martele m
-    ON m.foret_id = x.foret_id AND m.exercice = x.annee
+    ON m.foret_id = p.foret_id AND m.exercice = p.exercice
+  WHERE p.exercice <= EXTRACT(YEAR FROM CURRENT_DATE)
+     OR m.volume_martele_m3 IS NOT NULL
 )
 SELECT
   s.foret_id,
+  s.amenagement_id,
+  s.libelle                                            AS amenagement,
   s.exercice,
+  s.possibilite_m3_ha_an,
+  s.surface_ha,
   s.possibilite_m3_an,
   s.volume_martele_m3,
+  s.volume_martele_m3 / NULLIF(s.surface_ha, 0)        AS prelevement_m3_ha,
   s.volume_realise_m3,
   s.volume_martele_m3 - COALESCE(s.possibilite_m3_an, 0) AS balance_exercice_m3,
   SUM(s.volume_martele_m3 - COALESCE(s.possibilite_m3_an, 0))
-    OVER (PARTITION BY s.foret_id ORDER BY s.exercice
-          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS balance_cumulee_m3
+    OVER (PARTITION BY s.foret_id, s.amenagement_id ORDER BY s.exercice
+          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS balance_cumulee_m3,
+  s.reference_acte,
+  s.acte_id,
+  s.par_avenant,
+  s.tolerance_ans,
+  s.nature_volume
 FROM socle s
 ORDER BY s.foret_id, s.exercice;
 
 COMMENT ON VIEW v_balance_possibilite IS
-  'Imprime A50E. Balance positive = exces de prelevement sur la possibilite, '
-  'negative = deficit. En foret privee, la possibilite tient lieu de '
+  'Imprime A50E, par amenagement. Possibilite en m3/ha/an sur une surface, '
+  'volume annuel deduit. Balance positive = exces de prelevement '
+  'sur la possibilite, negative = deficit. Le cumul repart de zero avec '
+  'chaque amenagement. En foret privee, la possibilite tient lieu de '
   'programme PSG et la tolerance de conformite est de +/- 4 ans.';
+
+-- Ce qui ne se compare a rien : un prelevement impute a un exercice
+-- qu'aucun amenagement ne couvre. Il n'est pas perdu, il est montre a part.
+CREATE VIEW v_martelage_hors_amenagement AS
+SELECT c.*
+FROM v_coupe c
+WHERE c.type_entree IN ('martelage', 'produit_accidentel', 'bois_delivre')
+  AND NOT EXISTS (
+    SELECT 1 FROM v_possibilite_exercice p
+     WHERE p.foret_id = c.foret_id AND p.exercice = c.exercice
+  );
+
+COMMENT ON VIEW v_martelage_hors_amenagement IS
+  'Martelages imputes a un exercice qu''aucun amenagement ne couvre.';
 
 -- ---------------------------------------------------------------------
 -- Registre 6 — travaux

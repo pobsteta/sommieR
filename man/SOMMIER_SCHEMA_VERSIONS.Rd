@@ -24,4 +24,6 @@ cette entree a ete ecrite sous ce schema-la.
 
 Le registre 2 est passe en \verb{1.3.0} avec la reconnaissance de limite : un
 etat constate, l'element du plan recopie, et les photos par leur empreinte.
+Le registre 1 est passe en \verb{1.2.0} avec l'amenagement : la periode et la
+possibilite que l'arrete ou l'agrement fixe entrent dans la chaine.
 }

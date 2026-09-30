@@ -106,13 +106,31 @@ sommier_gestion_anterieure <- function(con, foret_id, debut = NULL, fin = NULL,
         GROUP BY exercice, type_entree, nature_coupe, repris
         ORDER BY exercice, type_entree, nature_coupe, repris"),
     balance = lire(
-      "SELECT exercice, possibilite_m3_an, volume_martele_m3,
-              balance_exercice_m3, balance_cumulee_m3
+      "SELECT amenagement_id, amenagement, exercice, possibilite_m3_ha_an,
+              possibilite_m3_an, volume_martele_m3, prelevement_m3_ha,
+              balance_exercice_m3, balance_cumulee_m3, reference_acte
          FROM v_balance_possibilite
         WHERE foret_id = $1
           AND exercice BETWEEN EXTRACT(YEAR FROM $2::date)
                            AND EXTRACT(YEAR FROM $3::date)
         ORDER BY exercice"),
+    # Sans bornes : l'amenagement en vigueur et ce qui ne s'y rattache pas
+    # sont des etats, pas des faits de la periode.
+    amenagements = lire_etat(
+      "SELECT amenagement_id, libelle, annee_debut, annee_fin,
+              possibilite_initiale_m3_ha_an, surface_initiale_ha,
+              possibilite_initiale_m3_an, ventilation::text AS ventilation,
+              serie, tolerance_ans, source, reference,
+              type_validation, date_acte, repris, nature_volume,
+              groupes::text AS groupes, surface_regeneration_ha
+         FROM v_amenagement
+        WHERE foret_id = $1
+        ORDER BY annee_debut"),
+    hors_amenagement = lire_etat(
+      "SELECT exercice, type_entree, nature_coupe, volume_m3, date_evenement
+         FROM v_martelage_hors_amenagement
+        WHERE foret_id = $1
+        ORDER BY exercice, date_evenement"),
     travaux = lire(
       "SELECT annee, nature_travaux,
               CASE WHEN repris THEN 'transcrit' ELSE 'constate' END AS provenance,
@@ -226,6 +244,8 @@ sommier_rapport_markdown <- function(x, chemin = NULL) {
   titres <- c(
     provenance = "Provenance des ecritures",
     coupes = "Coupes realisees", balance = "Balance de possibilite",
+    amenagements = "Amenagements et PSG",
+    hors_amenagement = "Martelages hors amenagement",
     travaux = "Travaux realises", evenements = "Evenements marquants",
     detections = "Detections a verifier sur le terrain",
     suites_detection = "Suites donnees aux detections",

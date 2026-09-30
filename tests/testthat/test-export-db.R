@@ -7,8 +7,7 @@ base_export <- function() {
 
 foret_garnie <- function(con) {
   foret <- foret_creer(con, "Foret de Chaux", "communal", surface_ha = 500)
-  exercice_definir(con, foret, 2024, 100)
-  exercice_definir(con, foret, 2025, 100)
+  amenager(con, foret, 2024, 2025, 100)
   ecrire <- function(registre, payload, date) {
     sommier_ajouter(con, sommier_entree(
       foret_id = foret, registre = registre, date_evenement = date,

@@ -1,3 +1,93 @@
+# sommieR 0.19.0
+
+La balance de possibilité se calcule contre un aménagement inscrit dans la
+chaîne. Jusqu'ici, elle se comparait à un chiffre qu'on pouvait réécrire sans
+laisser de trace.
+
+## L'aménagement est une écriture
+
+La possibilité vivait dans une table `exercice`, hors de la chaîne, que
+`exercice_definir()` remplaçait en silence. Un paquet dont l'objet est la
+valeur probante comparait ainsi des prélèvements attestés à un chiffre
+modifiable après coup.
+
+`sommier_amenagement()` écrit désormais l'acte du registre 1 (arrêté ou
+agrément du PSG, schéma `r1-1.2.0`). L'acte porte la période, la
+**possibilité à l'hectare (m³/ha/an)** et la surface à laquelle elle
+s'applique, la ventilation par nature de coupe (elle aussi à l'hectare), la
+série, la tolérance et la source. Le volume annuel se déduit du taux et de la
+surface. `sommier_avenant_possibilite()` change le taux, la surface ou la fin
+à partir d'un exercice, sans réécrire le passé : une distraction de 20 ha
+change le volume, pas le taux. Deux aménagements ne peuvent
+pas se chevaucher : une révision anticipée clôt d'abord l'ancien par avenant.
+
+## Une balance par aménagement
+
+`v_balance_possibilite` se calcule à partir des exercices de chaque
+aménagement. Elle donne la possibilité à l'hectare et en volume, et ramène le
+martelé à l'hectare (`prelevement_m3_ha`). On lit ainsi le prélèvement
+contre la possibilité, et contre les références de l'IFN, dans la même
+unité. Son cumul **repart de zéro** avec chaque nouvel aménagement, et
+court jusqu'à l'exercice courant. Chaque ligne cite l'acte dont vient sa
+possibilité, et dit s'il s'agit d'un avenant. Un martelage imputé à un
+exercice qu'aucun aménagement ne couvre n'est pas compté, mais il n'est pas
+perdu : `sommier_martelages_hors_amenagement()` et le rapport le montrent à
+part.
+
+## Possibilité ou récolte prévue
+
+La recherche des aménagements de la forêt domaniale d'Orléans a montré
+qu'un arrêté récent de l'ONF ne fixe plus de possibilité en m³. Celui du
+9 août 2019 (massif de Lorris-Les Bordes, 2019-2038) fixe des surfaces par
+groupe. Le volume, 37 215 m³/an, n'apparaît qu'au document, comme récolte
+prévisible pilotée en surface terrière.
+
+L'aménagement porte donc `nature_volume` : `possibilite` (fixée par l'acte)
+ou `recolte_prevue` (récolte prévisible du document). Il garde aussi les
+surfaces par groupe et la surface à ouvrir en régénération. Le rapport ne
+présente jamais une prévision comme une possibilité.
+
+## La table `exercice` se reprend
+
+`sommier_reprendre_exercices()` transcrit la table en un ou plusieurs
+aménagements repris, en regroupant les années consécutives de même
+possibilité (source `base_gestionnaire`, NDP 2). Le volume de la table est
+ramené à l'hectare sur la surface de la forêt. La balance ne lit plus la
+table. `exercice_definir()` avertit qu'il est obsolète, puis refuse d'écrire
+une fois la table reprise. Le jeu de démonstration de Couchey porte
+désormais un aménagement transcrit, 2016-2035 à 5 m³/ha/an sur 16,37 ha.
+
+## Un martelage parcourt son unité
+
+Par défaut, la surface d'un martelage est celle de son unité de gestion.
+`v_coupe` la déduit à la lecture, à partir du contour en vigueur à la date du
+martelage, et une nouvelle colonne `surface_source` dit si la surface a été
+`saisie` ou vient de l'`unite`. La surface déduite n'entre pas dans la
+chaîne : elle n'a pas à passer pour une surface saisie, et elle suit le
+contour si celui-ci est révisé. Une coupe réalisée ou un produit accidentel
+ne parcourt pas forcément toute l'unité : ils gardent la surface saisie, ou
+aucune.
+
+## Un contrôle de vraisemblance
+
+`sommier_amenagement(reference_m3_ha_an = )` confronte la possibilité à un
+prélèvement de référence à l'hectare, par exemple celui que l'IFN observe
+dans la sylvoécorégion. Au-delà d'un facteur 3, un avertissement signale une
+faute de frappe possible. L'acte s'écrit quand même : la possibilité est un
+acte d'autorité, pas une estimation.
+
+## Dans le rapport
+
+La section « Balance de possibilité » nomme chaque aménagement : sa période,
+sa possibilité (« 4,40 m³/ha/an sur 535,20 ha, soit 2 355 m³/an ») et sa
+nature, l'acte, les surfaces par groupe. Le tableau donne le prélèvement à
+l'hectare de chaque exercice. Elle trace le
+cumul par aménagement, et prévient que l'exercice en cours pèse déjà pour
+toute sa possibilité. Sans aménagement, elle dit pourquoi elle est vide.
+
+Les apports de nemeton, prévus au brief (volume sur pied, coupes SUFOSAT
+sans martelage, plan d'actions), viendront dans un lot suivant.
+
 # sommieR 0.18.0
 
 Trois retouches au suivi des limites, tirées de la recette sur le terrain.

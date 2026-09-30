@@ -40,11 +40,16 @@ test_that("la filiation des unites de gestion sait representer une fusion", {
 
 test_that("la balance est une vue, jamais une colonne stockee", {
   sql <- lire_sql("002_vues.sql")
-  expect_match(sql, "CREATE OR REPLACE VIEW v_balance_possibilite")
+  expect_match(sql, "CREATE VIEW v_balance_possibilite")
   expect_match(sql, "balance_cumulee_m3")
-  # La jointure part de `exercice` : un exercice sans coupe pese pour un
-  # deficit egal a toute sa possibilite, il ne doit pas disparaitre.
-  expect_match(sql, "FROM exercice x")
+  # La jointure part des exercices de l'amenagement : un exercice sans coupe
+  # pese pour un deficit egal a toute sa possibilite, il ne doit pas
+  # disparaitre. Et la possibilite vient de l'acte, plus de la table
+  # `exercice`, reecrivable sans trace.
+  expect_match(sql, "FROM v_possibilite_exercice p")
+  expect_no_match(sql, "FROM exercice x", fixed = TRUE)
+  # Le cumul repart de zero avec chaque amenagement.
+  expect_match(sql, "PARTITION BY s.foret_id, s.amenagement_id")
   expect_match(sql, "LEFT JOIN martele")
   # coupe_realisee hors du martele, sinon double imputation.
   expect_match(sql, "'martelage', 'produit_accidentel', 'bois_delivre'")
@@ -54,5 +59,9 @@ test_that("les vues metier excluent les entrees corrigees", {
   sql <- lire_sql("002_vues.sql")
   expect_match(sql, "CREATE OR REPLACE VIEW v_entree_courante")
   expect_match(sql, "WHERE NOT EXISTS")
-  expect_match(sql, "FROM v_entree_courante e\\s*\\n\\s*WHERE e\\.registre = 5")
+  # La vue des coupes part des entrees courantes ; la jointure sur le contour
+  # de l'unite (surface par defaut d'un martelage) s'intercale sans rien
+  # reintroduire de corrige.
+  expect_match(sql, paste0("FROM v_entree_courante e\\s*\\n\\s*LEFT JOIN LATERAL ",
+                           "[^;]*ug_geometrie[^;]*WHERE e\\.registre = 5"))
 })
