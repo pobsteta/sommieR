@@ -260,7 +260,7 @@ designation_element <- function(e) {
                  ifelse(details, paste0(e$categorie, ", code ", e$sym),
                         e$categorie))
   ifelse(is.na(e$texte), base,
-         paste0(base, " - « ", e$texte, " »"))
+         paste0(base, " - \u00ab ", e$texte, " \u00bb"))
 }
 
 # La derniere visite de chaque element, lue au sommier, et la couleur qui en
