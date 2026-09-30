@@ -1,3 +1,67 @@
+# sommieR 0.15.0
+
+Le rapport montre désormais tout ce que le plan cadastral pose dans la forêt
+et à ses abords : bornes, signes de limite, détails, cours d'eau, voies,
+bâtiments. C'est la liste que le suivi des limites emportera sur le terrain.
+
+## Tout ce qui touche la forêt élargie de 20 mètres
+
+`sommier_elements_pci()` lit toutes les couches physiques du PCI vecteur —
+`BORNE`, `SYMBLIM`, `TPOINT`, `TLINE`, `TSURF`, `TRONFLUV`, `ZONCOMMUNI`,
+`TRONROUTE`, `BATIMENT` — et retient ce qui touche l'union des unités élargie
+de `tampon_m` mètres (20 par défaut). Sur la forêt de Loury, cinq feuilles en
+donnent **118** : 68 bornes, 30 voies, 7 bâtiments, 6 détails surfaciques,
+5 cours d'eau, un détail linéaire et un détail ponctuel.
+
+Les couches qui ne posent rien au sol sont écartées : parcelles, sections,
+lieux-dits, numéros de voirie, et `ID_S_OBJ_Z_1_2_2`, qui ne porte que la
+position des étiquettes des numéros de parcelle.
+
+Chaque élément reçoit un identifiant stable, `feuille:OBJECT_RID`, et un
+numéro court par catégorie (`B-001`, `P-001`…) dans l'ordre du cadastre. Le
+millésime de chaque feuille, date d'échange que le lot déclare dans son
+`.THF`, est désormais lu par `sommier_fond_pci()` et imprimé sous la carte.
+
+## Une distance, parce que la situation seule tromperait
+
+Chaque élément est dit « forêt » s'il touche les unités, « tampon » sinon.
+Sur Loury, 64 des 68 bornes tombent dans le tampon, à 8 m du contour en
+médiane et 18 m au plus : elles sont sur la limite cadastrale, ce sont les
+unités, dessinées à une autre main, qui ne la suivent pas au mètre. La
+distance au contour (`distance_limite_m`) est donc rendue à côté. Elle mesure,
+là où la situation classe, et elle justifie le tampon de 20 m.
+
+## Le texte du plan est cité, pas interprété
+
+Le brief prévoyait de lire la nature d'un détail dans le texte que le plan
+lui attache. La feuille de Couchey l'a démenti : ses lignes de code 19
+portent « COMMUNE DE FLAVIGNEROT », le nom de la commune voisine posé le long
+de la limite. Le texte nomme parfois l'objet (« pylone télécom » sur Loury),
+parfois seulement ses abords. Il est donc cité entre guillemets, à côté de la
+nature, qui ne vient que de la couche ou d'une table `symboles` fournie.
+
+Les noms de voies et de cours d'eau posés mot par mot — un mot par attribut
+`TEX`, `TEX2`… dans un ordre qui n'est pas celui de la lecture — ne sont pas
+recomposés : « Route de la Vallée Jaune » arrive en `Jaune`, `de`, `la`,
+`Vallée`, `Route`. Le rapport écrit « nom morcelé sur le plan ».
+
+## Dans le rapport
+
+Passé à `sommier_rapport_quarto(fond_pci = )`, le tableau des éléments ouvre
+une section « Éléments du plan cadastral » après le récapitulatif du
+parcellaire : une carte d'ensemble avec le tampon, une carte des bornes au
+plus près — sur une forêt de plusieurs kilomètres, les bornes se groupent et
+leurs numéros se chevauchaient —, et un tableau par catégorie. En PDF, ces
+tableaux passent en LaTeX direct : pandoc faisait revenir les coordonnées à
+la ligne. Les bornes seules (`sommier_fond_pci_lire()`) restent acceptées et
+gardent leurs croix sur la carte de la desserte.
+
+`sommier_exporter_elements_pci()` écrit les mêmes éléments en GeoPackage, une
+couche par type de géométrie, pour QGIS et QField.
+
+Le PCI reste un décor : rien n'entre dans la chaîne, et le rendu ne fait
+aucun appel réseau.
+
 # sommieR 0.14.1
 
 Les contours lus depuis le cadastre gardent leur précision.

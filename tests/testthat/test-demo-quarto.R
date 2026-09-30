@@ -255,3 +255,41 @@ test_that("le recapitulatif croise les unites et les parcelles du fond", {
   expect_no_match(html, "212000000A0999", fixed = TRUE)
   expect_no_match(html, "Fond cadastral non fourni", fixed = TRUE)
 })
+
+test_that("le rapport donne aux elements du plan leur propre section", {
+  skip_if(!nzchar(Sys.which("quarto")), "Quarto n'est pas installe.")
+  skip_if_not_installed("sf")
+  archive <- testthat::test_path("fixtures", "edigeo-212000000A01.tar.bz2")
+  skip_if_not(file.exists(archive), "Fixture EDIGEO absente.")
+  con <- base_demo()
+  demo <- sommier_demo_couchey(con, suffixe = suffixe_test("elements-pci"))
+
+  # La feuille A01 porte les parcelles A 15 et A 35 de la demonstration.
+  dossier <- withr::local_tempdir()
+  utils::untar(archive, exdir = dossier, tar = "internal")
+  fond_pci <- structure(
+    list(feuilles = data.frame(feuille = "212000000A01",
+                               thf = fichier_thf(dossier),
+                               stringsAsFactors = FALSE),
+         code_insee = "21200", source = "fixture locale"),
+    class = "sommier_fond_pci"
+  )
+  elements <- sommier_elements_pci(fond_pci,
+                                   sommier_couche_ug(con, demo$foret_id))
+  expect_gt(nrow(elements), 0L)
+
+  chemin <- withr::local_tempfile(fileext = ".html")
+  sommier_rapport_quarto(con, demo$foret_id, chemin, format = "html",
+                         fond_pci = elements)
+  html <- paste(readLines(chemin, warn = FALSE, encoding = "UTF-8"),
+                collapse = "\n")
+
+  expect_match(html, "Éléments du plan cadastral", fixed = TRUE)
+  expect_match(html, paste0(nrow(elements), " élément(s) du plan cadastral"),
+               fixed = TRUE)
+  expect_match(html, "millésime 02/05/2024", fixed = TRUE)
+  # Un detail que rien ne nomme garde son code ; le texte du plan est cite.
+  expect_match(html, "détail linéaire, code", fixed = TRUE)
+  # Les croix de la desserte sont reservees a l'ancien format.
+  expect_no_match(html, "Croix brunes", fixed = TRUE)
+})

@@ -17,6 +17,21 @@ couverture qui tient à une connexion n'en est pas une.
 Elle sert de **fixture**, jamais de donnée du sommier : rien de son contenu
 n'entre dans un registre, une empreinte ou un manifeste.
 
+`edigeo-45188000ZK01.tar.bz2` — feuille cadastrale ZK01 de Loury (45188),
+téléchargée le 30 septembre 2026 depuis :
+
+    https://cadastre.data.gouv.fr/data/dgfip-pci-vecteur/latest/edigeo/feuilles/45/45188/edigeo-45188000ZK01.tar.bz2
+
+Plan Cadastral Informatisé, DGFiP, sous Licence Ouverte. 48 Ko. Lot daté du
+17 février 2026 (`TDASD08` de son `.THF`).
+
+**Pourquoi une seconde feuille.** La feuille de Couchey ne porte que des
+bornes, des détails linéaires et des voies. Celle de Loury porte tout ce que
+les éléments du plan doivent savoir lire : un détail ponctuel nommé
+(« pylone télécom »), un signe de limite orienté, une surface, des cours
+d'eau, des bâtiments, et des noms de voies posés mot par mot. Mêmes règles
+que ci-dessus : fixture, jamais donnée du sommier.
+
 ---
 
 # Autorité d'horodatage de test

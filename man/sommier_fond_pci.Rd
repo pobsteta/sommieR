@@ -18,7 +18,8 @@ sommier_fond_pci(code_insee, feuilles, cache = NULL, force = FALSE)
 }
 \value{
 Invisiblement, un objet \code{sommier_fond_pci} : \code{feuilles} (table des
-feuilles et de leurs fichiers \code{.THF}), \code{code_insee}, \code{source}.
+feuilles, de leurs fichiers \code{.THF} et de leur millesime), \code{code_insee},
+\code{source}.
 }
 \description{
 Telecharge et decompresse les archives EDIGEO des feuilles demandees.
@@ -32,6 +33,10 @@ est celui du gestionnaire, porte au registre 2 avec sa geometrie (voir
 
 Le telechargement est explicite, comme pour le fond parcellaire : ni le
 rapport ni un export ne declenchent d'appel reseau.
+
+Le millesime de chaque feuille est la date d'echange que le lot declare
+dans son \code{.THF} (\code{TDASD}). Le telechargement vise la derniere livraison :
+sans cette date, un plan de 2026 relu en 2031 ne dirait pas son age.
 }
 \examples{
 # Necessite un acces reseau :

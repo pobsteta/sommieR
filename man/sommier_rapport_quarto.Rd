@@ -40,9 +40,13 @@ donne les tenements du recapitulatif du parcellaire - la part de chaque
 parcelle cadastrale comprise dans une unite : sans fond, le recapitulatif
 ne liste que les unites.}
 
-\item{fond_pci}{Bornes du PCI vecteur a poser sur la carte de la desserte,
-telles que les rend \code{\link[=sommier_fond_pci_lire]{sommier_fond_pci_lire()}} ; \code{NULL} pour s'en passer.
-Meme regle que \code{fond} : fourni, jamais telecharge au rendu.}
+\item{fond_pci}{Le PCI vecteur, sous l'une de deux formes. Les elements
+du plan que rend \code{\link[=sommier_elements_pci]{sommier_elements_pci()}} - bornes, details, cours d'eau,
+voies, dans la foret et a ses abords - recoivent leur propre section,
+avec une carte et un tableau par categorie. Les bornes seules, telles que
+les rend \code{\link[=sommier_fond_pci_lire]{sommier_fond_pci_lire()}}, se posent en croix sur la carte de la
+desserte. \code{NULL} pour s'en passer. Meme regle que \code{fond} : fourni, jamais
+telecharge au rendu.}
 
 \item{quarto}{Chemin de l'executable Quarto.}
 }

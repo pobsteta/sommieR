@@ -3,8 +3,11 @@
 test_that("les couches annoncees sont celles du modele EDIGEO", {
   expect_equal(SOMMIER_COUCHES_PCI[["bornes"]], "BORNE_id")
   expect_equal(SOMMIER_COUCHES_PCI[["details"]], "TLINE_id")
+  expect_equal(SOMMIER_COUCHES_PCI[["points"]], "TPOINT_id")
+  expect_equal(SOMMIER_COUCHES_PCI[["signes"]], "SYMBLIM_id")
   expect_setequal(names(SOMMIER_COUCHES_PCI),
-                  c("bornes", "details", "parcelles", "voies"))
+                  c("bornes", "details", "parcelles", "voies", "points",
+                    "surfaces", "signes", "cours_eau", "routes", "batiments"))
 })
 
 test_that("sommier_fond_pci_lire refuse ce qui ne vient pas du telechargement", {
