@@ -88,11 +88,17 @@ suivant.
    communal) ou l'agrément (PSG) gagne un bloc `amenagement` :
    - un **identifiant** et un **libellé** (« Aménagement 2026-2045 ») ;
    - une **période** : `annee_debut` et `annee_fin`, exercices compris ;
-   - une **possibilité annuelle en volume** (m³/an), éventuellement **ventilée
-     par nature de coupe** (régénération, amélioration) quand l'aménagement la
-     ventile ;
-   - la **surface** à laquelle elle s'applique (ha), et la **série** si la
-     forêt en compte plusieurs ;
+   - une **possibilité à l'hectare** (m³/ha/an), éventuellement **ventilée
+     par nature de coupe** (régénération, amélioration), elle aussi à
+     l'hectare ;
+   - la **surface** à laquelle elle s'applique (ha), obligatoire, dont se
+     déduit le volume annuel (m³/an), et la **série** si la forêt en compte
+     plusieurs ;
+
+   *Décision du 30 septembre 2026 :* la possibilité se saisit en m³/ha/an.
+   C'est l'unité dans laquelle se comparent les forêts entre elles, et avec
+   le prélèvement observé par l'IFN que nemeton calcule par sylvoécorégion.
+   Le volume annuel n'est qu'une conséquence de la surface.
    - la **source** : référence de l'arrêté ou de l'agrément, page ou tableau
      du document où la possibilité est fixée.
 
@@ -149,8 +155,10 @@ suivant.
   fin de période, à partir d'un exercice donné.
 - Vues `v_amenagement` (les aménagements et leurs avenants, avec la
   possibilité en vigueur par exercice) et `v_balance_possibilite` réécrite
-  (colonnes `amenagement_id`, `exercice`, `possibilite_m3_an`, `source_acte`,
-  `volume_martele_m3`, `volume_realise_m3`, `balance_exercice_m3`,
+  (colonnes `amenagement_id`, `exercice`, `possibilite_m3_ha_an`,
+  `surface_ha`, `possibilite_m3_an` (déduite), `source_acte`,
+  `volume_martele_m3`, `prelevement_m3_ha`, `volume_realise_m3`,
+  `balance_exercice_m3`,
   `balance_cumulee_m3` remise à zéro par aménagement). Une vue
   `v_martelage_hors_amenagement` recense ce qui ne se compare à rien.
 - `sommier_balance_possibilite()` : même signature, résultat par aménagement ;
@@ -234,7 +242,7 @@ reprendre tel quel. Ce qui existe sert d'ordre de grandeur ou de contrôle.
   l'ancienne.
 - Aucun indice de nemeton n'entre dans la chaîne, et le rapport les présente
   comme des estimations, avec leur source et leur date.
-- Saisir 820 m³/an au lieu de 82 déclenche l'avertissement de vraisemblance
+- Saisir 50 m³/ha/an au lieu de 5 déclenche l'avertissement de vraisemblance
   quand le prélèvement IFN de la SER est fourni. L'aménagement s'écrit quand
   même : c'est un avertissement, pas un refus.
 - Une unité où SUFOSAT détecte une coupe rase sans martelage inscrit sur la
