@@ -44,6 +44,44 @@ sa période, sa possibilité et sa source. La balance s'en déduit.
   produit accidentel et bois délivré d'un côté, coupe réalisée de l'autre,
   pour ne pas compter deux fois la même coupe. Ce choix reste.
 
+### Ce que dit un aménagement réel de la forêt domaniale d'Orléans
+
+*Ajout du 30 septembre 2026, après recherche des arrêtés en ligne.*
+
+- La forêt domaniale d'Orléans (34 698,73 ha, identifiant ONF F09381U) compte
+  **quatre massifs, chacun avec son aménagement** : Orléans, Ingrannes,
+  Lorris-Châteauneuf et Lorris-Les Bordes.
+- **Seul l'aménagement de Lorris-Les Bordes est publié en ligne.** Il a été
+  approuvé par un arrêté ministériel du 9 août 2019 (BO agri, semaine 33), pour
+  la période 2019-2038, sur 8 673,16 ha. **L'arrêté ne fixe aucune possibilité
+  en m³.** Son article 4 fixe des **surfaces par groupe** : 2 648,31 ha en
+  régénération, dont 2 026,57 ha à ouvrir ; 1 576,05 ha de jeunesse ;
+  3 016,81 ha en amélioration ; 817,61 ha en futaie irrégulière. Le volume
+  n'apparaît que dans le document d'aménagement, comme **récolte prévisible**
+  pilotée en surface terrière : 37 215 m³/an, soit 4,4 m³/ha/an. Le document
+  précise que « la notion de tarif aménagement est abandonnée ».
+- **Le massif d'Orléans, dont dépend la zone RECONFORT, n'a aucun
+  aménagement publié.** L'ancien couvrait 2005-2024, sur environ 6 260 ha, en
+  série unique (DOCOB Natura 2000 de 2005). Un nouvel aménagement 2025-2044
+  était en consultation en 2023 (contribution de Loiret Nature
+  Environnement), mais nous n'avons trouvé ni son arrêté ni ses chiffres. Il
+  faut les demander à l'agence ONF Val-de-Loire.
+
+**Ce qui change dans la conception.** La possibilité en m³ fixée par l'acte
+reste le cas du PSG et des aménagements anciens. Pour un aménagement récent,
+le volume est une **prévision** du document, et l'acte fixe des surfaces.
+L'aménagement porte donc aussi :
+- `nature_volume` : `possibilite` (fixée par l'acte) ou `recolte_prevue`
+  (récolte prévisible du document). Le rapport ne présente jamais une prévision
+  comme une possibilité.
+- `groupes` : les surfaces par groupe que l'arrêté fixe.
+- `surface_regeneration_ha` : la surface à ouvrir en régénération sur la
+  période. C'est le socle d'une future balance en surface (lot 2).
+
+La question ouverte « surface ou volume ? » est ainsi tranchée : les deux sont
+gardés, la balance en volume vient dans ce lot, celle en surface dans le
+suivant.
+
 ## Décisions de conception
 
 1. **L'aménagement est une écriture du registre 1.** L'arrêté (domanial,
@@ -204,13 +242,11 @@ reprendre tel quel. Ce qui existe sert d'ordre de grandeur ou de contrôle.
 
 ## Questions ouvertes
 
-- **Orléans : quel aménagement ?** Il faut la période, la possibilité et la
-  référence de l'arrêté de la forêt domaniale d'Orléans (ou du moins de la
-  série RECONFORT). L'aménagement est un document de l'ONF : on le transcrit,
+- **Orléans : quel aménagement ?** Il faut l'arrêté du massif d'Orléans
+  2025-2044, ou la prorogation de celui de 2005-2024 : ses groupes, sa surface
+  à régénérer, et la récolte prévue au document. Il n'est pas publié en ligne
+  (voir plus haut). L'aménagement est un document de l'ONF : on le transcrit,
   on ne l'invente pas.
-- **Surface ou volume ?** Certains aménagements fixent aussi une possibilité
-  en **surface à régénérer** (ha/an). Faut-il la suivre dès ce lot, ou
-  seulement le volume ?
 - **PSG par unité.** Un PSG fixe souvent un programme de coupes par unité et
   par année, plutôt qu'un volume annuel global. Le suivre à l'unité serait un
   lot 2.
