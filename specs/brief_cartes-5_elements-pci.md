@@ -42,13 +42,14 @@ Soit **118 éléments** pour Loury, dont 68 bornes.
 
 Quatre constats commandent la conception :
 
-1. **Le plan nomme une partie de ses éléments.** Le lot 4 croyait que la
-   nature d'un détail ne se trouvait nulle part dans l'archive. C'est vrai du
-   code `SYM`, mais pas de l'objet : `TPOINT_id` porte un attribut `TEX`
-   (« pylone télécom »), `ZONCOMMUNI_id` porte le nom de la voie, et les
-   couches `*_LABEL` rattachent un texte à leur objet par `OGR_OBJ_LNK` (les
-   lignes `TLINE` sont étiquetées « chemin »). Ce texte a été écrit par le
-   service du cadastre : c'est une source citable, et il suffit de le lire.
+1. **Le plan écrit du texte sur une partie de ses éléments.** `TPOINT_id`
+   porte un attribut `TEX` (« pylone télécom »), `ZONCOMMUNI_id` porte le nom
+   de la voie, et les couches `*_LABEL` rattachent un texte à leur objet par
+   `OGR_OBJ_LNK`. *Ajout à la mise en œuvre :* ce texte ne dit pas toujours
+   la nature. Sur Couchey, les lignes de code 19 portent « COMMUNE DE
+   FLAVIGNEROT », le nom de la commune voisine le long de la limite. Et les
+   noms de voies sont posés mot par mot, un mot par attribut (`TEX`,
+   `TEX2`…), dans un ordre qui n'est pas celui de la lecture.
 2. **Le code seul ne dit toujours rien.** Sans texte, `SYM` = 34 sur six
    surfaces reste muet, et rien dans l'archive ne dit ce qu'il désigne.
 3. **Les couches restantes ne sont pas des éléments de terrain.**
@@ -72,17 +73,25 @@ Quatre constats commandent la conception :
    imprime la valeur retenue.
 
 2. **La situation se calcule, elle ne s'enregistre pas.** Chaque élément reçoit
-   `situation = "foret"` s'il touche l'union des unités, `"tampon"` sinon. Même
-   logique que les ténements : c'est une lecture du plan au rendu, pas un fait
-   advenu.
+   `situation = "foret"` s'il touche l'union des unités, `"tampon"` sinon, et
+   sa distance au contour de cette union (`distance_limite_m`). Même logique
+   que les ténements : c'est une lecture du plan au rendu, pas un fait advenu.
+   *Ajout à la mise en œuvre :* la distance compte plus que la situation. Sur
+   Loury, 64 des 68 bornes tombent dans le tampon, à 8 m du contour en
+   médiane, parce que les unités ne sont pas dessinées sur la limite
+   cadastrale.
 
-3. **La nature se lit dans le plan, puis se cite, puis se tait.** Dans l'ordre :
-   * le texte que le plan attache à l'objet (`TEX`, ou `*_LABEL` joint par
-     `OGR_OBJ_LNK`), marqué `nature_source = "plan"` ;
-   * le nom de la couche, quand il suffit : borne, bâtiment, cours d'eau, voie ;
-   * une table `SYM` **fournie par l'appelant**, marquée
-     `nature_source = "appelant"` ;
+3. **La nature vient de la couche ou d'une table fournie. Le texte du plan
+   est cité, pas interprété.**
+   * Le nom de la couche, quand il suffit : borne, bâtiment, cours d'eau,
+     voie (`nature_source = "couche"`) ;
+   * pour un détail, une table `SYM` **fournie par l'appelant**
+     (`nature_source = "appelant"`) ;
    * sinon, rien : le document écrit « détail surfacique, code 34 ».
+
+   Le texte que le plan attache à l'objet est rendu à côté, dans `texte`, et
+   le rapport le cite entre guillemets. Un nom morcelé en plusieurs mots
+   n'est pas recomposé (`texte_morcele = TRUE`).
 
    La règle du lot 4 tient : aucune correspondance plausible n'est embarquée
    sans source. Si la documentation DGFiP du format EDIGÉO PCI donne la table,
@@ -109,8 +118,9 @@ Quatre constats commandent la conception :
   toutes les couches utiles, joint les étiquettes, sélectionne dans le tampon,
   calcule la situation, déduit la nature, numérote. Il renvoie un tableau WKT en
   Lambert-93 avec les colonnes `id`, `numero`, `feuille`, `objet`, `couche`,
-  `sym`, `texte`, `nature`, `nature_source`, `situation`, `orientation`
-  (`SYMBLIM`), `cree_le`, `modifie_le`, `millesime`.
+  `sym`, `texte`, `texte_morcele`, `nature`, `nature_source`, `situation`,
+  `distance_limite_m`, `orientation` (`SYMBLIM`), `cree_le`, `modifie_le`,
+  `millesime`, `x`, `y`.
 * `sommier_exporter_elements_pci(elements, chemin)` : le même tableau en
   GeoPackage, pour le projet QField du lot « Limites ».
 * Le paramètre `fond_pci` de `sommier_rapport_quarto()` accepte ce tableau.
@@ -134,10 +144,11 @@ Quatre constats commandent la conception :
 
 * Sur Loury, avec un tampon de 20 m, la section compte 118 éléments, dont
   68 bornes. Ce compte figure dans la NEWS.
-* Le point `SYM` 50 s'affiche « pylone télécom (d'après le plan) », et les
-  surfaces `SYM` 34 s'affichent « détail surfacique, code 34 ».
+* Le point `SYM` 50 s'affiche « détail ponctuel, code 50 — « pylone
+  télécom » », et les surfaces `SYM` 34 « détail surfacique, code 34 ».
 * Avec une table fournie par l'appelant, les libellés viennent de la table et
-  sont marqués comme tels. Le texte du plan, quand il existe, prime sur elle.
+  sont marqués comme tels. Le texte du plan reste cité à côté.
+* Un nom de voie posé mot par mot n'est jamais recomposé.
 * Aucun élément de `ID_S_OBJ_Z_1_2_2`, `PARCELLE` ou `LIEUDIT` n'apparaît.
 * Un élément garde son identifiant d'un rendu à l'autre, et son numéro court
   sur un même millésime.
@@ -149,7 +160,7 @@ Quatre constats commandent la conception :
 
 ## Question ouverte
 
-* **La table `SYM`.** Il n'y a plus urgence, puisque le plan nomme une partie
-  de ses éléments et que le reste s'affiche en code. On la cherche quand même
+* **La table `SYM`.** Il n'y a pas urgence : le texte du plan est cité, et
+  les codes s'affichent tels quels. On la cherche quand même
   dans la documentation DGFiP : les six surfaces `SYM` 34 de Loury méritent un
   nom.
