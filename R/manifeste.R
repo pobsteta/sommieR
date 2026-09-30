@@ -38,13 +38,21 @@ SOMMIER_FORMATS_MANIFESTE_LUS <- c("sommier-manifeste-1", "sommier-manifeste-2")
 #' payloads seraient deja canoniques masquerait un bogue de canonisation chez
 #' l'expediteur.
 #'
+#' **Les photos voyagent a cote.** Une reconnaissance de limite ne porte ses
+#' photos que par leur empreinte (voir [sommier_deposer_photo()]). Avec
+#' `depot`, les photos que la chaine reference sont copiees dans un dossier
+#' `photos/` voisin du manifeste, sous leur nom d'empreinte ; le destinataire
+#' les confronte aux empreintes chainees avec [sommier_verifier_manifeste()].
+#' Le format du manifeste n'en change pas : les empreintes y sont deja.
+#'
 #' @param con Connexion DBI.
 #' @param foret_id UUID de la foret.
 #' @param chemin Fichier de destination.
+#' @param depot Depot de photos a joindre (facultatif).
 #' @return Invisiblement, `chemin`.
 #'
 #' @export
-sommier_exporter_manifeste <- function(con, foret_id, chemin) {
+sommier_exporter_manifeste <- function(con, foret_id, chemin, depot = NULL) {
   foret_id <- valider_uuid(foret_id, "foret_id")
   entrees <- sommier_lire(con, foret_id)
 
@@ -94,6 +102,11 @@ sommier_exporter_manifeste <- function(con, foret_id, chemin) {
                      na = "null", pretty = TRUE, dataframe = "rows"),
     chemin, useBytes = TRUE
   )
+
+  if (!est_vide(depot)) {
+    joindre_photos(photos_referencees(entrees), valider_texte(depot, "depot"),
+                   file.path(dirname(chemin), "photos"))
+  }
   invisible(chemin)
 }
 
@@ -121,6 +134,11 @@ sommier_exporter_manifeste <- function(con, foret_id, chemin) {
 #'    qui rend l'export verifiable par un tiers sans qu'il ait a se procurer
 #'    la cle par un canal que le manifeste n'organise pas.
 #'
+#' 4. **Les photos jointes sont celles que la chaine atteste**, quand
+#'    `photos` designe leur dossier. Une photo dont l'empreinte differe est
+#'    une anomalie (`photo_alteree`) ; une photo absente, une reserve : elle
+#'    est perdue pour la lecture, mais la chaine n'en est pas moins intacte.
+#'
 #' **Anomalies et reserves ne se confondent pas.** Une anomalie dit que
 #' quelque chose est faux ; une reserve, que quelque chose n'a pas pu etre
 #' verifie sans que rien n'indique pour autant que ce soit faux - un jeton
@@ -136,12 +154,14 @@ sommier_exporter_manifeste <- function(con, foret_id, chemin) {
 #' @param ancres Ancres de confiance, lues par [certificat_lire()]. Aucune
 #'   n'est embarquee : ce serait faire dependre du rythme de publication de
 #'   sommieR la question de savoir qui est digne de confiance.
+#' @param photos Dossier des photos jointes au manifeste (facultatif).
 #' @return Un objet `sommier_rapport`, dont les anomalies incluent les types
 #'   `visa_orphelin`, `ancrage_orphelin`, `visa_horodatage`,
-#'   `ancrage_horodatage` et `visa_signature`.
+#'   `ancrage_horodatage`, `visa_signature` et `photo_alteree`.
 #'
 #' @export
-sommier_verifier_manifeste <- function(chemin, ancres = list()) {
+sommier_verifier_manifeste <- function(chemin, ancres = list(),
+                                       photos = NULL) {
   manifeste <- jsonlite::fromJSON(chemin, simplifyVector = TRUE,
                                   simplifyDataFrame = TRUE)
 
@@ -185,6 +205,15 @@ sommier_verifier_manifeste <- function(chemin, ancres = list()) {
   controle <- verifier_signatures_visas(rapport$anomalies, manifeste$visas)
   rapport$anomalies <- controle$anomalies
   reserves <- c(reserves, controle$reserves)
+
+  if (!est_vide(photos)) {
+    controle <- verifier_photos_jointes(
+      rapport$anomalies, photos_referencees(manifeste$entrees),
+      valider_texte(photos, "photos")
+    )
+    rapport$anomalies <- controle$anomalies
+    reserves <- c(reserves, controle$reserves)
+  }
 
   rapport$reserves <- c(reserves,
                         "revocation des certificats non verifiee : CRL et OCSP demandent le reseau")
@@ -305,4 +334,69 @@ verifier_jeton_atteste <- function(anomalies, table, i, seq_tete, type, libelle,
   }
   list(anomalies = anomalies,
        non_rattache = if (identical(verdict$etat, "non_rattache")) 1L else 0L)
+}
+
+# Les photos que la chaine reference : une ligne par photo, avec l'entree qui
+# la porte. Les payloads sont relus tels qu'ils ont ete chaines.
+photos_referencees <- function(entrees) {
+  vide <- data.frame(seq = numeric(0), id = character(0),
+                     sha256 = character(0), type = character(0),
+                     stringsAsFactors = FALSE)
+  if (is.null(entrees) || nrow(entrees) == 0L) {
+    return(vide)
+  }
+  garde <- which(as.integer(entrees$registre) == 2L &
+                   grepl('"photos"', entrees$payload, fixed = TRUE))
+  lignes <- lapply(garde, function(i) {
+    payload <- jsonlite::fromJSON(entrees$payload[[i]], simplifyVector = FALSE)
+    if (is.null(payload$photos)) return(NULL)
+    data.frame(seq = as.numeric(entrees$seq[[i]]), id = entrees$id[[i]],
+               sha256 = vapply(payload$photos, function(p) p$sha256, ""),
+               type = vapply(payload$photos, function(p) p$type, ""),
+               stringsAsFactors = FALSE)
+  })
+  lignes <- lignes[!vapply(lignes, is.null, logical(1))]
+  if (length(lignes) == 0L) vide else do.call(rbind, lignes)
+}
+
+joindre_photos <- function(photos, depot, destination) {
+  if (nrow(photos) == 0L) {
+    return(invisible(0L))
+  }
+  if (!dir.exists(destination)) {
+    dir.create(destination, recursive = TRUE)
+  }
+  sources <- unique(chemin_photo_vec(depot, photos))
+  presentes <- sources[file.exists(sources)]
+  file.copy(presentes, destination, overwrite = TRUE, copy.date = TRUE)
+  invisible(length(presentes))
+}
+
+verifier_photos_jointes <- function(anomalies, photos, dossier) {
+  manquantes <- 0L
+  for (i in seq_len(nrow(photos))) {
+    cible <- chemin_photo(dossier, photos$sha256[[i]], photos$type[[i]])
+    if (!file.exists(cible)) {
+      manquantes <- manquantes + 1L
+    } else if (!identical(empreinte_fichier(cible), photos$sha256[[i]])) {
+      anomalies <- ajouter_anomalie(
+        anomalies, photos$seq[[i]], photos$id[[i]], "photo_alteree",
+        paste0("Photo ", basename(cible), " : son contenu n'est plus celui ",
+               "que la chaine atteste.")
+      )
+    }
+  }
+  reserves <- if (manquantes > 0L) {
+    paste0(manquantes, " photo(s) referencee(s) absente(s) du dossier joint : ",
+           "non verifiee(s), la chaine reste intacte")
+  } else {
+    character(0)
+  }
+  list(anomalies = anomalies, reserves = reserves)
+}
+
+chemin_photo_vec <- function(depot, photos) {
+  vapply(seq_len(nrow(photos)), function(i) {
+    chemin_photo(depot, photos$sha256[[i]], photos$type[[i]])
+  }, character(1))
 }

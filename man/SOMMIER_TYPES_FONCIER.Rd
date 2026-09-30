@@ -5,7 +5,7 @@
 \alias{SOMMIER_TYPES_FONCIER}
 \title{Types d'entree du registre 2 (foncier et limites)}
 \format{
-An object of class \code{character} of length 7.
+An object of class \code{character} of length 8.
 }
 \usage{
 SOMMIER_TYPES_FONCIER
@@ -18,6 +18,9 @@ de calcul et leur repartition (imprime A40).
 forestier, sans objet en foret privee.
 \item \code{acquisition} et \code{cession} : mouvements de propriete.
 \item \code{servitude} : servitude constituee ou subie.
+\item \code{reconnaissance_limite} : constat, sur le terrain, de l'etat d'un element
+de limite - une borne, un mur, un fosse -, photo a l'appui (voir
+\code{\link[=sommier_importer_qfield]{sommier_importer_qfield()}}).
 }
 }
 \keyword{datasets}

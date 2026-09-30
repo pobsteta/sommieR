@@ -21,4 +21,7 @@ sous laquelle elles ont ete ecrites, et restent valides : le registre est
 append-only, un changement de schema ne se retrofitte pas sur ce qui est
 deja chaine. C'est precisement ce que la version hachee permet de dire -
 cette entree a ete ecrite sous ce schema-la.
+
+Le registre 2 est passe en \verb{1.3.0} avec la reconnaissance de limite : un
+etat constate, l'element du plan recopie, et les photos par leur empreinte.
 }

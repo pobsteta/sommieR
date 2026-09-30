@@ -101,9 +101,12 @@ SOMMIER_TYPES_MARTELES <- c("martelage", "produit_accidentel", "bois_delivre")
 #' deja chaine. C'est precisement ce que la version hachee permet de dire -
 #' cette entree a ete ecrite sous ce schema-la.
 #'
+#' Le registre 2 est passe en `1.3.0` avec la reconnaissance de limite : un
+#' etat constate, l'element du plan recopie, et les photos par leur empreinte.
+#'
 #' @export
 SOMMIER_SCHEMA_VERSIONS <- c(
-  "1" = "r1-1.1.0", "2" = "r2-1.2.0", "3" = "r3-1.1.0",
+  "1" = "r1-1.1.0", "2" = "r2-1.3.0", "3" = "r3-1.1.0",
   "4" = "r4-1.2.0", "5" = "r5-1.2.0", "6" = "r6-1.1.0",
   "7" = "r7-1.1.0", "8" = "r8-1.2.0", "9" = "r9-1.2.0"
 )

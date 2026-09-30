@@ -63,6 +63,7 @@ reference:
     contents:
     - registre2_foncier
     - SOMMIER_TYPES_FONCIER
+    - SOMMIER_ETATS_LIMITE
   - title: "Registre 3 — droits et concessions"
     desc: "Imprimé A50C, et l'affouage propre à la forêt communale."
     contents:
@@ -195,6 +196,18 @@ reference:
     - SOMMIER_COUCHES_PCI
     - SOMMIER_ELEMENTS_PCI
     - SOMMIER_PROJECTIONS_EDIGEO
+
+  - title: "Suivi des limites sur le terrain"
+    desc: >
+      Un projet QGIS/QField pour aller voir les éléments du plan, et le retour
+      du terrain : un constat par élément au registre 2, les photos attestées
+      par leur empreinte.
+    contents:
+    - sommier_projet_qfield
+    - sommier_importer_qfield
+    - sommier_deposer_photo
+    - sommier_verifier_photos
+    - SOMMIER_TYPES_PHOTO
 
   - title: "Géométrie des payloads"
     desc: >
