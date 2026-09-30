@@ -51,6 +51,14 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 #'   les rend [sommier_fond_pci_lire()], se posent en croix sur la carte de la
 #'   desserte. `NULL` pour s'en passer. Meme regle que `fond` : fourni, jamais
 #'   telecharge au rendu.
+#' @param photos Depot des photos des reconnaissances de limite (voir
+#'   [sommier_deposer_photo()]) ; `NULL` pour s'en passer. Fourni, jamais
+#'   telecharge. Les vignettes de la planche photographique sont reduites au
+#'   rendu ; une photo dont l'empreinte ne tient plus n'est pas montree.
+#' @param public `TRUE` pour un document a diffuser : la planche
+#'   photographique est retiree, le tableau garde le nombre de photos, et le
+#'   document dit qu'elles existent. Une photo peut montrer un riverain ou une
+#'   plaque d'immatriculation.
 #' @param quarto Chemin de l'executable Quarto.
 #'
 #' @return Invisiblement, le chemin du document produit.
@@ -65,7 +73,8 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
                                    debut = NULL, fin = NULL,
                                    referentiel = "psg", fond = NULL,
-                                   fond_pci = NULL,
+                                   fond_pci = NULL, photos = NULL,
+                                   public = FALSE,
                                    quarto = Sys.which("quarto")) {
   format <- valider_choix(format, "format", SOMMIER_FORMATS_QUARTO)
   chemin <- valider_texte(chemin, "chemin")
@@ -111,6 +120,10 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
     fond_pci        = fond_pci,
     ibp             = essayer_section(sommier_elements_ibp(con, foret_id)),
     densite_voirie  = essayer_section(sommier_densite_voirie(con, foret_id)),
+    # Sans bornes, comme le patrimoine : la derniere visite d'une borne est un
+    # etat courant, quelle que soit la periode du rapport.
+    limites         = essayer_section(lire_reconnaissances(con, foret_id)),
+    public          = isTRUE(public),
     version_sommier = as.character(utils::packageVersion("sommieR")),
     edite_le        = format(Sys.Date(), "%d/%m/%Y")
   )
@@ -128,6 +141,13 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
 
   source_qmd <- file.path(atelier, "rapport.qmd")
   file.copy(modele, source_qmd)
+  # Les vignettes se deposent dans l'atelier, a cote du document : un rendu
+  # public n'en fabrique aucune.
+  if (!is.null(rapport$limites) && !isTRUE(public) && !est_vide(photos)) {
+    rapport$limites$photos <- preparer_vignettes(
+      rapport$limites$photos, valider_texte(photos, "photos"), atelier
+    )
+  }
   saveRDS(rapport, file.path(atelier, "donnees.rds"))
 
   # Chemin absolu, et non un nom relatif : `system2()` n'offre pas de

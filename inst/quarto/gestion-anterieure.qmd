@@ -301,6 +301,34 @@ etendue <- function(formes, axe) {
   c(min(boites[, axe]), max(boites[, axe + 2L]))
 }
 
+# En PDF, un tableau de pandoc répartit la largeur entre ses colonnes et fait
+# revenir les nombres à la ligne : « 634 » au-dessus de « 554 » ne se lit plus
+# comme une coordonnée. Ces tableaux passent donc en LaTeX direct, sur
+# plusieurs pages s'il le faut, avec des colonnes qui ne se coupent jamais —
+# sauf la désignation, qui peut porter un nom de voie et revient à la ligne
+# dans sa colonne.
+imprimer_tableau_long <- function(tableau, legende, droite = character(0)) {
+  aligne <- ifelse(names(tableau) %in% droite, "r", "l")
+  if (!knitr::is_latex_output()) {
+    print(knitr::kable(tableau, caption = legende, align = aligne))
+    cat("\n\n")
+    return(invisible(NULL))
+  }
+  latex <- knitr::kable(tableau, format = "latex", booktabs = TRUE,
+                        longtable = TRUE, caption = legende, align = aligne)
+  taille <- "\\small"
+  if ("Désignation" %in% names(tableau)) {
+    large <- aligne
+    large[names(tableau) == "Désignation"] <- "p{3.4cm}"
+    latex <- sub(paste0("{", paste(aligne, collapse = ""), "}"),
+                 paste0("{", paste(large, collapse = ""), "}"), latex,
+                 fixed = TRUE)
+    taille <- "\\footnotesize"
+  }
+  cat(taille, "\n\n", latex, "\n\n\\normalsize\n\n", sep = "")
+  invisible(NULL)
+}
+
 # Ce que les cartes omettent se dit sous la première d'entre elles : une forêt
 # partiellement cartographiée doit se déclarer telle, sans quoi la carte laisse
 # croire qu'elle montre tout.
@@ -512,33 +540,9 @@ styles_pci <- list(
 attenuer <- function(couleur, tampon) ifelse(tampon, paste0(couleur, "66"),
                                              couleur)
 
-# En PDF, un tableau de pandoc répartit la largeur entre ses colonnes et fait
-# revenir les nombres à la ligne : « 634 » au-dessus de « 554 » ne se lit plus
-# comme une coordonnée. Ces tableaux passent donc en LaTeX direct, sur
-# plusieurs pages s'il le faut, avec des colonnes qui ne se coupent jamais —
-# sauf la désignation, qui peut porter un nom de voie et revient à la ligne
-# dans sa colonne.
 imprimer_tableau_pci <- function(tableau, legende) {
-  aligne <- ifelse(names(tableau) %in% c("Contour (m)", "X (L93)",
-                                         "Y (L93)"), "r", "l")
-  if (!knitr::is_latex_output()) {
-    print(knitr::kable(tableau, caption = legende, align = aligne))
-    cat("\n\n")
-    return(invisible(NULL))
-  }
-  latex <- knitr::kable(tableau, format = "latex", booktabs = TRUE,
-                        longtable = TRUE, caption = legende, align = aligne)
-  taille <- "\\small"
-  if ("Désignation" %in% names(tableau)) {
-    large <- aligne
-    large[names(tableau) == "Désignation"] <- "p{3.4cm}"
-    latex <- sub(paste0("{", paste(aligne, collapse = ""), "}"),
-                 paste0("{", paste(large, collapse = ""), "}"), latex,
-                 fixed = TRUE)
-    taille <- "\\footnotesize"
-  }
-  cat(taille, "\n\n", latex, "\n\n\\normalsize\n\n", sep = "")
-  invisible(NULL)
+  imprimer_tableau_long(tableau, legende,
+                        droite = c("Contour (m)", "X (L93)", "Y (L93)"))
 }
 ```
 
@@ -696,6 +700,262 @@ if (any(!is.na(fond_pci$texte))) {
   cat("*Entre guillemets, le texte que le plan écrit sur l'objet ou près de ",
       "lui, cité sans être interprété : il le nomme parfois, il en nomme ",
       "d'autres fois les abords.*\n\n", sep = "")
+}
+```
+
+```{r limites-preparation}
+# Les reconnaissances de limite : ce que le terrain a montré, élément par
+# élément. Lues au registre 2 sans bornes de période — la dernière visite
+# d'une borne est un état courant.
+limites <- rapport$limites
+a_limites <- !is.null(limites) && !is.null(limites$constats) &&
+  nrow(limites$constats) > 0L
+public <- isTRUE(rapport$public)
+libelles_etat <- c(en_place = "en place", endommage = "endommagé",
+                   non_retrouve = "non retrouvé", detruit = "détruit",
+                   inaccessible = "inaccessible", hors_plan = "hors plan")
+classe_visite <- function(etat) {
+  ifelse(is.na(etat) | etat == "inaccessible", "a_voir",
+         ifelse(etat %in% c("non_retrouve", "detruit"), "perdu",
+                ifelse(etat == "endommage", "defaut", "vu")))
+}
+couleurs_visite <- c(a_voir = "#D32F2F", vu = "#388E3C", defaut = "#F9A825",
+                     perdu = "#212121")
+libelles_visite <- c(a_voir = "à voir", vu = "vu en place",
+                     defaut = "vu endommagé", perdu = "non retrouvé ou détruit")
+premiere_majuscule <- function(x) paste0(toupper(substr(x, 1L, 1L)),
+                                         substr(x, 2L, nchar(x)))
+
+# La planche : quatre vignettes par ligne, la légende sous chacune. Écrite
+# directement en HTML et en LaTeX — la grille de figures de Quarto numérotait
+# chaque vignette « (a) », comme autant de sous-figures d'une figure absente.
+imprimer_planche <- function(montrees) {
+  legende <- paste0(
+    ifelse(is.na(montrees$numero), "hors plan", montrees$numero), " · ",
+    format(montrees$date_visite, "%d/%m/%Y"), " · ",
+    unname(libelles_etat[montrees$etat]), " · ",
+    substr(montrees$sha256, 1L, 12L)
+  )
+  if (knitr::is_latex_output()) {
+    # Trois lignes courtes plutôt qu'une légende justifiée, qui s'étirait
+    # dans la colonne.
+    legende_latex <- paste0(
+      ifelse(is.na(montrees$numero), "hors plan", montrees$numero),
+      "\\newline ", format(montrees$date_visite, "%d/%m/%Y"), " · ",
+      unname(libelles_etat[montrees$etat]), "\\newline ",
+      "\\texttt{", substr(montrees$sha256, 1L, 12L), "}"
+    )
+    cellules <- paste0(
+      "\\includegraphics[width=3.5cm,height=4.6cm,keepaspectratio]{",
+      montrees$vignette, "}\\newline\\footnotesize ", legende_latex
+    )
+    lignes <- split(cellules, ceiling(seq_along(cellules) / 4L))
+    cat("```{=latex}\n\\begin{longtable}{@{}p{3.6cm}p{3.6cm}p{3.6cm}",
+        "p{3.6cm}@{}}\n",
+        paste0(vapply(lignes, function(l) {
+          paste(c(l, rep("", 4L - length(l))), collapse = " & ")
+        }, ""), " \\\\[8pt]", collapse = "\n"),
+        "\n\\end{longtable}\n```\n\n", sep = "")
+  } else {
+    cat("```{=html}\n<div style=\"display:grid;",
+        "grid-template-columns:repeat(4,1fr);gap:10px;margin:1em 0\">\n",
+        paste0("<figure style=\"margin:0\"><img src=\"", montrees$vignette,
+               "\" style=\"width:100%;height:auto\" alt=\"", legende,
+               "\"><figcaption style=\"font-size:0.8em\">", legende,
+               "</figcaption></figure>", collapse = "\n"),
+        "\n</div>\n```\n\n", sep = "")
+  }
+}
+if (a_limites) {
+  constats <- limites$constats
+  derniers <- constats[!is.na(constats$element_id), , drop = FALSE]
+  derniers <- derniers[order(derniers$date_visite, derniers$seq), ,
+                       drop = FALSE]
+  derniers <- derniers[!duplicated(derniers$element_id, fromLast = TRUE), ,
+                       drop = FALSE]
+  hors_plan <- constats[constats$etat == "hors_plan", , drop = FALSE]
+}
+```
+
+```{r limites, results='asis', eval=a_limites || elements_pci}
+cat("### Vérification des limites sur le terrain\n\n")
+if (!a_limites) {
+  cat("*Aucune reconnaissance de limite au registre : les ", nrow(fond_pci),
+      " élément(s) du plan restent à voir.*\n\n", sep = "")
+} else {
+  if (elements_pci && nrow(fond_pci) > 0L) {
+    classe <- classe_visite(derniers$etat[match(fond_pci$id,
+                                                derniers$element_id)])
+    for (k in unique(fond_pci$categorie)) {
+      g <- classe[fond_pci$categorie == k]
+      cat("- **", premiere_majuscule(k), "** : ", sum(g %in% c("vu", "defaut")),
+          " vu(s) sur ", length(g), ", dont ", sum(g == "defaut"),
+          " endommagé(s) ; ", sum(g == "perdu"),
+          " non retrouvé(s) ou détruit(s) ; ", sum(g == "a_voir"),
+          " à voir.\n", sep = "")
+    }
+    ailleurs <- setdiff(derniers$element_id, fond_pci$id)
+    if (length(ailleurs) > 0L) {
+      cat("- ", length(ailleurs), " élément(s) reconnu(s) absent(s) du plan ",
+          "fourni : le constat en garde la copie.\n", sep = "")
+    }
+  } else {
+    for (k in unique(derniers$categorie)) {
+      g <- classe_visite(derniers$etat[derniers$categorie %in% k])
+      cat("- **", premiere_majuscule(k), "** : ", sum(g %in% c("vu", "defaut")),
+          " vu(s), ", sum(g == "perdu"), " non retrouvé(s) ou détruit(s).\n",
+          sep = "")
+    }
+  }
+  if (nrow(hors_plan) > 0L) {
+    cat("- **Hors plan** : ", nrow(hors_plan), " élément(s) trouvé(s) sur le ",
+        "terrain, absent(s) du plan.\n", sep = "")
+  }
+  cat("\n")
+  cat("::: {.callout-note}\n## Ce que la photo atteste\n\n",
+      "Chaque photo entre au sommier par son empreinte (SHA-256) : la chaîne ",
+      "atteste qu'elle existait, avec ces octets, au moment de l'import — pas ",
+      "quand ni où elle a été prise. Entre la prise de vue et l'import, elle a ",
+      "vécu sur le téléphone ; le délai est donné pour chaque constat. La date ",
+      "et la position que la photo porte (EXIF) sont des déclarations de ",
+      "l'appareil.\n\n",
+      "Un écart au plan n'est calculé que pour une position mesurée au GNSS ; ",
+      "une position pointée sur la carte n'en a pas. Il est dit dans la ",
+      "tolérance sous la précision déclarée du relevé augmentée d'un mètre, ",
+      "la précision graphique d'un plan au 1/5000. Aucun écart ne vaut ",
+      "déplacement : c'est au géomètre d'en juger.\n:::\n\n", sep = "")
+}
+```
+
+```{r carte-limites, fig.height=5.2, fig.width=7, fig.cap="Dernier état constaté de chaque élément du plan. Losange bleu : élément trouvé sur le terrain, absent du plan.", eval=a_limites && cartographiable}
+if (elements_pci && nrow(fond_pci) > 0L) {
+  formes <- sf::st_as_sfc(fond_pci$wkt, crs = 2154)
+  classe <- classe_visite(derniers$etat[match(fond_pci$id,
+                                              derniers$element_id)])
+} else {
+  formes <- sf::st_as_sfc(sprintf("POINT (%f %f)", derniers$x_plan,
+                                  derniers$y_plan), crs = 2154)
+  classe <- classe_visite(derniers$etat)
+}
+union_ug <- sf::st_union(contours)
+boite <- sf::st_bbox(c(sf::st_geometry(sf::st_buffer(union_ug, 20)), formes))
+op <- par(mar = c(0, 0, 0, 8))
+plot(contours, col = "#EEF6EE", border = "grey35", lwd = 1.2,
+     xlim = boite[c("xmin", "xmax")], ylim = boite[c("ymin", "ymax")])
+dessiner_fond()
+dimension <- sf::st_dimension(formes)
+teinte <- unname(couleurs_visite[classe])
+# Ce qui reste à voir s'allège : une voie de trois kilomètres en rouge
+# épais écraserait les bornes. Les éléments visités se dessinent en dernier,
+# et plus gros.
+vu <- classe != "a_voir"
+for (d in 2:0) {
+  for (visite in c(FALSE, TRUE)) {
+    garde <- which(dimension == d & vu == visite)
+    if (length(garde) == 0L) next
+    if (d == 2L) {
+      plot(formes[garde], add = TRUE, col = paste0(teinte[garde], "33"),
+           border = paste0(teinte[garde], if (visite) "" else "99"))
+    } else if (d == 1L) {
+      plot(formes[garde], add = TRUE, lwd = if (visite) 2 else 0.8,
+           col = paste0(teinte[garde], if (visite) "" else "99"))
+    } else {
+      plot(formes[garde], add = TRUE, pch = 21, cex = if (visite) 1.3 else 0.6,
+           col = if (visite) "black" else "white", bg = teinte[garde])
+    }
+  }
+}
+if (nrow(hors_plan) > 0L && any(!is.na(hors_plan$x_releve))) {
+  points(hors_plan$x_releve, hors_plan$y_releve, pch = 23, cex = 1.1,
+         col = "white", bg = "#1565C0")
+}
+presentes <- names(couleurs_visite)[names(couleurs_visite) %in% classe]
+legend(par("usr")[[2L]], par("usr")[[4L]], xpd = NA, bty = "n", cex = 0.62,
+       legend = c(libelles_visite[presentes],
+                  if (nrow(hors_plan) > 0L) "hors plan"),
+       pch = c(rep(21, length(presentes)), if (nrow(hors_plan) > 0L) 23),
+       pt.bg = c(couleurs_visite[presentes],
+                 if (nrow(hors_plan) > 0L) "#1565C0"),
+       col = "white")
+par(op)
+```
+
+```{r limites-tableau, results='asis', eval=a_limites}
+ecart <- ifelse(
+  constats$etat == "hors_plan", "—",
+  ifelse(!constats$mesure, "pointé",
+         ifelse(is.na(constats$ecart_m), "—",
+                paste0(nombre(constats$ecart_m, 1L), " (± ",
+                       nombre(constats$precision_m, 2L), ")",
+                       ifelse(constats$compatible, "", " hors tolérance")))))
+delai <- ifelse(is.na(constats$delai_h), "—",
+                ifelse(constats$delai_h < 1, "< 1 h",
+                ifelse(constats$delai_h < 48,
+                       paste(nombre(pmax(constats$delai_h, 0), 0L), "h"),
+                       paste(nombre(constats$delai_h / 24, 0L), "j"))))
+imprimer_tableau_long(data.frame(
+  `Élément`        = ifelse(constats$etat == "hors_plan", "hors plan",
+                            constats$numero),
+  `Catégorie`      = ifelse(is.na(constats$categorie), "—",
+                            constats$categorie),
+  `État`           = unname(libelles_etat[constats$etat]),
+  `Visite`         = format(constats$date_visite, "%d/%m/%Y"),
+  `Opérateur`      = ifelse(is.na(constats$operateur), "—",
+                            constats$operateur),
+  `Écart (m)`      = ecart,
+  `Import`         = delai,
+  `Photos`         = constats$nb_photos,
+  check.names = FALSE, stringsAsFactors = FALSE
+), paste0("Reconnaissances de limite (", nrow(constats), ")"),
+droite = c("Écart (m)", "Import", "Photos"))
+cat("*Écart : distance entre la position relevée et celle du plan, avec la ",
+    "précision déclarée du relevé ; « pointé » : position posée sur la carte, ",
+    "sans mesure. Import : délai entre la visite et l'écriture au ",
+    "sommier.*\n\n", sep = "")
+```
+
+```{r limites-photos, results='asis', eval=a_limites && sum(constats$nb_photos) > 0L}
+photos_limites <- limites$photos
+n_photos <- nrow(photos_limites)
+if (public) {
+  cat("::: {.callout-important}\n## Version publique\n\n",
+      "Ce document ne montre pas les ", n_photos, " photo(s) des constats : ",
+      "une photo peut montrer un riverain ou une plaque d'immatriculation. ",
+      "Elles sont au dépôt du gestionnaire, chacune identifiée par ",
+      "l'empreinte que la chaîne atteste.\n:::\n\n", sep = "")
+} else if (is.null(photos_limites$vignette)) {
+  cat("*", n_photos, " photo(s) au registre ; le dépôt n'a pas été fourni au ",
+      "rendu, la planche n'est donc pas montrée.*\n\n", sep = "")
+} else {
+  cat("#### Planche photographique\n\n")
+  montrees <- photos_limites[!is.na(photos_limites$vignette), , drop = FALSE]
+  if (nrow(montrees) > 0L) {
+    imprimer_planche(montrees)
+  }
+  cachees <- photos_limites[is.na(photos_limites$vignette), , drop = FALSE]
+  if (nrow(cachees) > 0L) {
+    raison <- c(alteree = "contenu altéré depuis l'import, non montrée",
+                manquante = "absente du dépôt",
+                conforme = "format que le rendu ne sait pas réduire")
+    cat("*Non montrée(s) : ",
+        paste0(ifelse(is.na(cachees$numero), "hors plan", cachees$numero),
+               " (", substr(cachees$sha256, 1L, 12L), ") — ",
+               raison[cachees$statut], collapse = " ; "), ".*\n\n", sep = "")
+  }
+  declarees <- photos_limites[!is.na(photos_limites$exif_date) |
+                                !is.na(photos_limites$exif_position), ,
+                              drop = FALSE]
+  if (nrow(declarees) > 0L) {
+    cat("*Déclaré par l'appareil (EXIF) : ",
+        paste0(ifelse(is.na(declarees$numero), "hors plan", declarees$numero),
+               " — ", ifelse(is.na(declarees$exif_date), "date non déclarée",
+                             sub("T", " ", declarees$exif_date)),
+               ifelse(is.na(declarees$exif_position), "",
+                      paste0(", ", declarees$exif_position)),
+               collapse = " ; "), ".*\n\n", sep = "")
+  }
+  cat("*Vignettes réduites au rendu : seul l'original, au dépôt, est ",
+      "attesté par son empreinte.*\n\n", sep = "")
 }
 ```
 

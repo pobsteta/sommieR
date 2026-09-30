@@ -262,3 +262,80 @@ test_that("une photo alteree se voit, une photo perdue ne rompt pas la chaine", 
   expect_equal(rapport$anomalies$type, "photo_alteree")
   expect_true(any(grepl("absente", rapport$reserves)))
 })
+
+test_that("le rapport montre ce que le terrain a vu, et la version publique le tait", {
+  skip_if(!nzchar(Sys.which("quarto")), "Quarto n'est pas installe.")
+  con <- base_limites()
+  fond <- fond_zk01()
+  foret <- foret_zk01(con, fond)
+  elements <- sommier_elements_pci(fond, sommier_couche_ug(con, foret))
+  b <- elements[elements$couche == "bornes", ][1:3, ]
+  dossier <- file.path(withr::local_tempdir(), "limites")
+  depot <- file.path(withr::local_tempdir(), "photos")
+  sommier_projet_qfield(con, foret, elements, dossier, operateur = "P. O.")
+  u <- c(uuid_v4(), uuid_v4(), uuid_v4(), uuid_v4())
+  pointe <- constat(u[[3L]], b$id[[3L]], "endommage", b$x[[3L]], b$y[[3L]],
+                    precision = NA_real_)
+  saisir(
+    dossier,
+    rbind(
+      # Mesure a 50 cm du plan, precision 2 cm : dans la tolerance.
+      constat(u[[1L]], b$id[[1L]], "en_place", b$x[[1L]] + 0.5, b$y[[1L]]),
+      # A 3 m, precision 2 cm : hors tolerance, sans verdict de deplacement.
+      constat(u[[2L]], b$id[[2L]], "en_place", b$x[[2L]] + 3, b$y[[2L]]),
+      # Sans precision : un pointe sur la carte.
+      pointe,
+      constat(u[[4L]], NA_character_, "hors_plan", b$x[[1L]] + 40, b$y[[1L]])
+    ),
+    data.frame(uuid = c(uuid_v4(), uuid_v4()), constat_uuid = u[c(1L, 2L)],
+               fichier = c("DCIM/a.jpg", "DCIM/b.jpg"),
+               source = c("photo-exif-ii.jpg", "photo-exif-mm.jpg"),
+               stringsAsFactors = FALSE)
+  )
+  sommier_importer_qfield(con, foret, dossier, depot, auteur = "test")
+
+  lus <- lire_reconnaissances(con, foret)$constats
+  # Au centimetre pres : le payload porte la position en WGS84 a sept
+  # decimales, et l'element a ses coordonnees au centimetre.
+  expect_equal(lus$ecart_m[lus$id == u[[1L]]], 0.5, tolerance = 0.02)
+  expect_true(lus$compatible[lus$id == u[[1L]]])
+  expect_false(lus$compatible[lus$id == u[[2L]]])
+  expect_false(lus$mesure[lus$id == u[[3L]]])
+  expect_true(is.na(lus$ecart_m[lus$id == u[[3L]]]))
+
+  # Les deux photos sont identiques a l'image pres de l'ordre des octets de
+  # leur EXIF : deux empreintes, deux vignettes. On altere la seconde.
+  photos <- list.files(depot, full.names = TRUE)
+  alteree <- photos[[2L]]
+  octets <- readBin(alteree, "raw", file.size(alteree))
+  octets[[length(octets)]] <- xor(octets[[length(octets)]], as.raw(1L))
+  writeBin(octets, alteree)
+
+  chemin <- withr::local_tempfile(fileext = ".html")
+  sommier_rapport_quarto(con, foret, chemin, format = "html",
+                         fond_pci = elements, photos = depot)
+  html <- paste(readLines(chemin, warn = FALSE, encoding = "UTF-8"),
+                collapse = "\n")
+  expect_match(html, "Vérification des limites sur le terrain", fixed = TRUE)
+  expect_match(html, "Ce que la photo atteste", fixed = TRUE)
+  expect_match(html, "hors tolérance", fixed = TRUE)
+  expect_match(html, "pointé", fixed = TRUE)
+  expect_match(html, "Hors plan", fixed = TRUE)
+  expect_match(html, "Planche photographique", fixed = TRUE)
+  # Pandoc rend l'apostrophe typographique : on s'arrete avant elle.
+  expect_match(html, "contenu altéré depuis l", fixed = TRUE)
+  expect_match(html, "Déclaré par l", fixed = TRUE)
+  expect_match(html, "(EXIF)", fixed = TRUE)
+  expect_no_match(html, "déplacé", fixed = TRUE)
+  # Une seule vignette : celle dont l'empreinte tient.
+  expect_equal(lengths(regmatches(html, gregexpr("<figure style=", html))), 1L)
+
+  public <- withr::local_tempfile(fileext = ".html")
+  sommier_rapport_quarto(con, foret, public, format = "html",
+                         fond_pci = elements, photos = depot, public = TRUE)
+  html <- paste(readLines(public, warn = FALSE, encoding = "UTF-8"),
+                collapse = "\n")
+  expect_match(html, "Version publique", fixed = TRUE)
+  expect_no_match(html, "Planche photographique", fixed = TRUE)
+  expect_no_match(html, "<figure style=", fixed = TRUE)
+})
