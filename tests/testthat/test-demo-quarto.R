@@ -151,6 +151,10 @@ test_that("le rapport Quarto se rend et porte l'empreinte de tete", {
   # qui ne se signale pas est exactement ce qu'on veut eviter.
   expect_match(html, "monstration", fixed = TRUE)
 
+  # La balance nomme l'amenagement contre lequel elle se calcule.
+  expect_match(html, "Amenagement 2016-2035", fixed = TRUE)
+  expect_match(html, "possibilité fixée par l", fixed = TRUE)
+
   # Sans fond cadastral, le recapitulatif dit pourquoi il n'a pas de tenements.
   expect_match(html, "Récapitulatif du parcellaire", fixed = TRUE)
   expect_match(html, "Fond cadastral non fourni", fixed = TRUE)
@@ -190,6 +194,8 @@ test_that("le rapport Quarto d'une foret reelle montre ses detections", {
   # Les bornes par defaut ne s'impriment pas comme des dates.
   expect_no_match(html, "0001-01-01", fixed = TRUE)
   expect_match(html, "554,93 ha", fixed = TRUE)
+  # Sans amenagement, la balance dit pourquoi elle est vide.
+  expect_match(html, "Aucun aménagement au registre", fixed = TRUE)
   # La sequence de tete est un bigint : relue sans bit64, elle sortait en
   # 5e-324 au lieu de 1.
   expect_no_match(html, "e-32[0-9]")

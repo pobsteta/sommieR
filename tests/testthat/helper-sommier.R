@@ -74,3 +74,15 @@ sauter_sans_base <- function() {
   }
   con
 }
+
+# Un amenagement d'essai, pour les tests qui ont besoin d'une possibilite.
+# Depuis la v0.19.0, la balance ne lit plus la table `exercice` : la
+# possibilite vient de l'acte d'amenagement, au registre 1.
+amenager <- function(con, foret, debut, fin, possibilite, ...) {
+  sommier_amenagement(
+    con, foret, id = paste0("TEST-", debut, "-", fin), annee_debut = debut,
+    annee_fin = fin, possibilite_m3_an = possibilite, autorite = "onf",
+    nom_qualite = "Agent patrimonial", date_acte = paste0(debut, "-01-01"),
+    auteur = "agent-01", ...
+  )
+}

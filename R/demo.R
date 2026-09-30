@@ -203,12 +203,6 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
     }
   }
 
-  # Possibilite : ~5 m3/ha/an sur 16,4 ha de chenaie, arrondie a 82.
-  exercices <- 2016:2025
-  for (annee in exercices) {
-    exercice_definir(con, foret, annee, possibilite_m3_an = 82)
-  }
-
   ecrire <- function(registre, payload, date, unite = NULL) {
     sommier_ajouter(con, sommier_entree(
       foret_id = foret, registre = registre, date_evenement = date,
@@ -253,6 +247,24 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
     )
     invisible(NULL)
   }
+
+  # Registre 1 - l'amenagement, anterieur a la tenue : transcrit, avec sa
+  # possibilite. Environ 5 m3/ha/an sur 16,4 ha de chenaie, arrondis a 82 ;
+  # c'est lui que la balance confronte aux martelages.
+  transcrire(1L, registre1_validation(
+    "arrete", "prefet", "Prefet de la Cote-d'Or",
+    reference = "Arrete d'amenagement de la foret communale de Couchey",
+    portee = "amenagement",
+    amenagement = list(
+      id = "COUCHEY-2016", libelle = "Amenagement 2016-2035",
+      annee_debut = 2016, annee_fin = 2035, possibilite_m3_an = 82,
+      surface_ha = surface_totale,
+      source = "Document d'amenagement, tableau de la possibilite"
+    )
+  ), "2016-01-15", reprise_source(
+    "registre_signe", "Arrete d'amenagement 2016-2035, archives communales",
+    date_piece = "2016-01-15", detenteur = "Commune de Couchey"
+  ))
 
   # Registre 2 - foncier. Le bornage de 2017 precede la tenue : transcrit.
   transcrire(2L, registre2_foncier(
@@ -312,6 +324,7 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
   # Registre 5 - un martelage par exercice, plus un chablis. Les exercices
   # anterieurs a la tenue viennent du registre papier ; les suivants ont ete
   # portes ici le jour du martelage.
+  exercices <- 2016:2025
   natures <- c("amelioration", "reguliere", "sanitaire")
   for (i in seq_along(exercices)) {
     annee <- exercices[[i]]

@@ -78,7 +78,7 @@ test_that("une unite fermee sort de la couche a la date demandee", {
 test_that("les indicateurs comptent par unite, et zero n'est pas rien", {
   con <- base_carte()
   foret <- foret_creer(con, "Foret indicee", "communal", surface_ha = 50)
-  exercice_definir(con, foret, 2024, 100)
+  amenager(con, foret, 2024, 2024, 100)
   travaillee <- ug_creer(con, foret, "1", "2010-01-01")
   vierge <- ug_creer(con, foret, "2", "2010-01-01")
 
@@ -120,7 +120,7 @@ test_that("les indicateurs comptent par unite, et zero n'est pas rien", {
 test_that("les indicateurs se bornent a la periode", {
   con <- base_carte()
   foret <- foret_creer(con, "Foret bornee", "domanial")
-  exercice_definir(con, foret, 2024, 100)
+  amenager(con, foret, 2024, 2024, 100)
   ug <- ug_creer(con, foret, "1", "2010-01-01")
   sommier_ajouter(con, sommier_entree(
     foret_id = foret, registre = 5L, date_evenement = "2024-03-01",
@@ -158,7 +158,7 @@ test_that("une ecriture hors unite de gestion n'est portee sur aucune carte", {
 test_that("la couche joint geometries et indicateurs, et signale les manques", {
   con <- base_carte()
   foret <- foret_creer(con, "Foret mixte", "communal")
-  exercice_definir(con, foret, 2024, 100)
+  amenager(con, foret, 2024, 2024, 100)
   cartographiee <- ug_creer(con, foret, "1", "2010-01-01")
   ug_creer(con, foret, "2", "2010-01-01")   # sans contour
   poser_geometrie(con, cartographiee, carre(100))

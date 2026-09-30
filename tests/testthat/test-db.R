@@ -96,8 +96,7 @@ test_that("la base refuse toute mutation d'une entree", {
 test_that("la balance A50E se calcule comme l'imprime", {
   con <- base_prete()
   foret <- foret_creer(con, "Foret test", "communal")
-  exercice_definir(con, foret, 2025, 100)
-  exercice_definir(con, foret, 2026, 100)
+  amenager(con, foret, 2025, 2026, 100)
 
   ajouter <- function(type, annee, volume) {
     sommier_ajouter(con, sommier_entree(
@@ -121,7 +120,7 @@ test_that("la balance A50E se calcule comme l'imprime", {
 test_that("une correction sort des vues sans sortir de la chaine", {
   con <- base_prete()
   foret <- foret_creer(con, "Foret test", "communal")
-  exercice_definir(con, foret, 2026, 100)
+  amenager(con, foret, 2026, 2026, 100)
 
   premiere <- sommier_ajouter(con, sommier_entree(
     foret_id = foret, registre = 5L, date_evenement = "2026-03-01",
@@ -136,7 +135,8 @@ test_that("une correction sort des vues sans sortir de la chaine", {
   ))
 
   expect_equal(sommier_balance_possibilite(con, foret)$volume_martele_m3, 95)
-  expect_equal(nrow(sommier_lire(con, foret)), 2L)   # la chaine garde tout
+  # La chaine garde tout : l'amenagement et les deux martelages.
+  expect_equal(nrow(sommier_lire(con, foret)), 3L)
   expect_true(sommier_verifier(con, foret)$valide)
 })
 

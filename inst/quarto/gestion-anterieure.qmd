@@ -37,6 +37,8 @@ libelles_colonnes <- c(
   quantite = "Quantité", unite = "Unité", montant_eur = "Montant (€)",
   taux_reprise_moyen_pct = "Reprise moyenne (%)",
   possibilite_m3_an = "Possibilité (m³/an)",
+  recolte_prevue_m3_an = "Récolte prévue (m³/an)",
+  amenagement = "Aménagement", reference_acte = "Acte",
   volume_martele_m3 = "Martelé (m³)", balance_exercice_m3 = "Balance (m³)",
   balance_cumulee_m3 = "Balance cumulée (m³)", date_evenement = "Date",
   nature = "Nature", description = "Description",
@@ -1037,25 +1039,110 @@ dessiner(carte$volume_martele_m3,
 
 La balance confronte les volumes **martelés** à la possibilité de
 l'aménagement. Une balance positive signale un excès de prélèvement, une
-balance négative un déficit ; c'est le cumul qui compte sur la durée du plan.
+balance négative un déficit ; c'est le cumul qui compte, et il repart de zéro
+avec chaque aménagement.
 
-```{r balance, results='asis'}
-tableau("balance", "Balance de possibilité")
+```{r balance-amenagements, results='asis'}
+# L'aménagement est un acte du registre 1 : la balance cite ce à quoi elle
+# compare, et ne présente pas une récolte prévue comme une possibilité.
+amenagements <- sections$amenagements
+b <- sections$balance
+recolte_prevue <- !is.null(amenagements) && nrow(amenagements) > 0L &&
+  all(amenagements$nature_volume == "recolte_prevue")
+if (is.null(amenagements) || nrow(amenagements) == 0L) {
+  cat("::: {.callout-warning}\n## Aucun aménagement au registre\n\n",
+      "Le registre 1 ne porte aucun aménagement ni PSG : la balance n'a rien ",
+      "à quoi comparer les martelages. La possibilité s'inscrit avec l'acte ",
+      "qui la fixe (`sommier_amenagement()`).\n:::\n\n", sep = "")
+} else {
+  for (i in seq_len(nrow(amenagements))) {
+    a <- amenagements[i, ]
+    nature <- if (identical(a$nature_volume, "recolte_prevue")) {
+      paste0("récolte prévue au document d'aménagement — l'arrêté fixe des ",
+             "surfaces, la récolte se pilote en surface terrière")
+    } else {
+      "possibilité fixée par l'acte"
+    }
+    groupes <- if (!is.na(a$groupes)) {
+      g <- jsonlite::fromJSON(a$groupes)
+      paste0(" Surfaces par groupe : ", paste0(gsub("_", " ", names(g)),
+             " ", nombre(unlist(g), 2L), " ha", collapse = ", "), ".")
+    } else ""
+    regeneration <- if (!is.na(a$surface_regeneration_ha)) {
+      paste0(" Surface à ouvrir en régénération sur la période : ",
+             nombre(a$surface_regeneration_ha, 2L), " ha.")
+    } else ""
+    cat("**", ifelse(is.na(a$libelle), a$amenagement_id, a$libelle), "**",
+        " (`", a$amenagement_id, "`), exercices ", a$annee_debut, "–",
+        a$annee_fin, " : ", nombre(a$possibilite_initiale_m3_an, 0L),
+        " m³/an, ", nature, ". Acte : ",
+        ifelse(is.na(a$reference), "référence non renseignée", a$reference),
+        " (", format(as.Date(a$date_acte), "%d/%m/%Y"), ")",
+        if (isTRUE(a$repris)) ", transcrit depuis une pièce antérieure",
+        ".", groupes, regeneration, "\n\n", sep = "")
+  }
+}
 ```
 
-```{r balance-cumul, fig.height=3.2, fig.width=7, fig.cap="Balance cumulée sur la période — la ligne pointillée marque l'équilibre."}
-b <- sections$balance
-if (!is.null(b) && nrow(b) > 1L) {
-  cumul <- as.numeric(b$balance_cumulee_m3)
-  op <- par(mar = c(4, 4.5, 1, 1), cex = 0.85)
-  # L'axe embrasse zéro, sans quoi la ligne d'équilibre sortirait du cadre.
-  plot(b$exercice, cumul, type = "n", ylim = range(c(0, cumul), na.rm = TRUE),
-       xlab = "Exercice", ylab = expression("Balance cumulée ("*m^3*")"),
-       panel.first = grid(col = "grey90", lty = 1))
-  abline(h = 0, lty = 2, col = "grey40")
-  lines(b$exercice, cumul, lwd = 2, col = "#2E7D32")
-  points(b$exercice, cumul, pch = 19, col = "#2E7D32")
-  par(op)
+```{r balance, results='asis'}
+if (!is.null(b) && nrow(b) > 0L) {
+  # Une seule référence d'acte se dit au-dessus, pas à chaque ligne ; et
+  # l'identifiant de l'aménagement ne sert qu'au graphique.
+  affichee <- b
+  affichee$amenagement_id <- NULL
+  if (length(unique(affichee$reference_acte)) <= 1L) {
+    affichee$reference_acte <- NULL
+  }
+  if (length(unique(affichee$amenagement)) <= 1L) affichee$amenagement <- NULL
+  if (recolte_prevue) {
+    names(affichee)[names(affichee) == "possibilite_m3_an"] <-
+      "recolte_prevue_m3_an"
+  }
+  sections$balance_affichee <- affichee
+  tableau("balance_affichee", "Balance de possibilité")
+  courant <- as.integer(format(as.Date(rapport$edite_le, "%d/%m/%Y"), "%Y"))
+  if (courant %in% as.integer(b$exercice)) {
+    cat("*L'exercice ", courant, " est en cours : il pèse déjà pour toute ",
+        "sa possibilité, comme s'il était clos.*\n\n", sep = "")
+  }
+} else if (!is.null(amenagements) && nrow(amenagements) > 0L) {
+  cat("*Aucun exercice d'aménagement échu sur la période.*\n\n")
+}
+```
+
+```{r balance-cumul, fig.height=3.2, fig.width=7, fig.cap="Balance cumulée par aménagement — la ligne pointillée marque l'équilibre, et le cumul repart de zéro à chaque aménagement.", eval=!is.null(b) && nrow(b) > 1L}
+cumul <- as.numeric(b$balance_cumulee_m3)
+exercices <- as.integer(b$exercice)
+op <- par(mar = c(4, 4.5, 1, 1), cex = 0.85)
+# L'axe embrasse zéro, sans quoi la ligne d'équilibre sortirait du cadre.
+# Un exercice est une année entière : pas de graduation à 2025,2.
+plot(exercices, cumul, type = "n", ylim = range(c(0, cumul), na.rm = TRUE),
+     xlab = "Exercice", ylab = expression("Balance cumulée ("*m^3*")"),
+     xaxt = "n", panel.first = grid(col = "grey90", lty = 1))
+axis(1, at = pretty(exercices)[pretty(exercices) == round(pretty(exercices))])
+abline(h = 0, lty = 2, col = "grey40")
+for (id in unique(b$amenagement_id)) {
+  garde <- b$amenagement_id == id
+  lines(exercices[garde], cumul[garde], lwd = 2, col = "#2E7D32")
+  points(exercices[garde], cumul[garde], pch = 19, col = "#2E7D32")
+}
+debuts <- tapply(exercices, b$amenagement_id, min)
+if (length(debuts) > 1L) abline(v = sort(debuts)[-1L] - 0.5, lty = 3,
+                                col = "grey55")
+par(op)
+```
+
+```{r balance-hors-amenagement, results='asis'}
+hors <- sections$hors_amenagement
+if (!is.null(hors) && nrow(hors) > 0L) {
+  cat("::: {.callout-note}\n## Martelages hors aménagement\n\n",
+      nrow(hors), " prélèvement(s), ",
+      nombre(sum(as.numeric(hors$volume_m3), na.rm = TRUE), 1L),
+      " m³, imputé(s) à des exercices qu'aucun aménagement ne couvre : ",
+      paste0(hors$exercice, " (", gsub("_", " ", hors$type_entree), ", ",
+             nombre(as.numeric(hors$volume_m3), 1L), " m³)", collapse = " ; "),
+      ". Ils ne se comparent à rien : la balance ne les compte pas, et ils ",
+      "ne sont pas perdus pour autant.\n:::\n\n", sep = "")
 }
 ```
 

@@ -293,8 +293,21 @@ reference:
     - ug_lire
     - ug_scinder
     - ug_fusionner
-    - exercice_definir
     - SOMMIER_REGIMES
+
+  - title: "Aménagement et balance de possibilité"
+    desc: >
+      L'aménagement comme acte chaîné du registre 1 : sa période, sa
+      possibilité ou sa récolte prévue, ses avenants. La balance A50E se
+      calcule contre lui, et repart de zéro avec chaque aménagement.
+    contents:
+    - sommier_amenagement
+    - sommier_avenant_possibilite
+    - sommier_balance_possibilite
+    - sommier_martelages_hors_amenagement
+    - sommier_reprendre_exercices
+    - exercice_definir
+    - SOMMIER_NATURES_VOLUME
 
   - title: "Base de données"
     contents:
@@ -304,7 +317,6 @@ reference:
 
   - title: "Consultation et export"
     contents:
-    - sommier_balance_possibilite
     - sommier_exporter_manifeste
     - sommier_verifier_manifeste
     - SOMMIER_VERSION_MANIFESTE

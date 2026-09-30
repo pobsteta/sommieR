@@ -2,7 +2,7 @@
 % Please edit documentation in R/ajouter.R
 \name{exercice_definir}
 \alias{exercice_definir}
-\title{Fixation de la possibilite d'un exercice}
+\title{Fixation de la possibilite d'un exercice (obsolete)}
 \usage{
 exercice_definir(con, foret_id, annee, possibilite_m3_an)
 }
@@ -19,5 +19,13 @@ exercice_definir(con, foret_id, annee, possibilite_m3_an)
 Invisiblement, le nombre de lignes ecrites.
 }
 \description{
-Fixation de la possibilite d'un exercice
+Ecrit la possibilite d'un exercice dans la table \code{exercice}, hors de la
+chaine. \strong{La balance ne la lit plus} depuis sommieR 0.19.0 : la
+possibilite est portee par l'acte d'amenagement, au registre 1 (voir
+\code{\link[=sommier_amenagement]{sommier_amenagement()}}), et une table reecrivable sans trace n'a pas a
+fixer ce a quoi des prelevements attestes se comparent.
+
+La fonction avertit a chaque appel, et refuse d'ecrire une fois la table
+reprise par \code{\link[=sommier_reprendre_exercices]{sommier_reprendre_exercices()}} : une possibilite ne se
+modifie plus alors que par avenant.
 }

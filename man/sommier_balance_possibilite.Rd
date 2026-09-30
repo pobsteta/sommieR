@@ -11,19 +11,29 @@ sommier_balance_possibilite(con, foret_id, tolerance_ans = NULL)
 
 \item{foret_id}{UUID de la foret.}
 
-\item{tolerance_ans}{Fenetre de resorption admise (defaut \code{NULL} : aucune
-colonne d'appreciation n'est ajoutee).}
+\item{tolerance_ans}{Fenetre de resorption admise, en annees de
+possibilite. Par defaut, celle que l'amenagement declare ; sans elle,
+aucune colonne d'appreciation n'est ajoutee.}
 }
 \value{
-Un \code{data.frame} : \code{exercice}, \code{possibilite_m3_an},
-\code{volume_martele_m3}, \code{volume_realise_m3}, \code{balance_exercice_m3},
-\code{balance_cumulee_m3}.
+Un \code{data.frame} : \code{amenagement_id}, \code{amenagement}, \code{exercice},
+\code{possibilite_m3_an}, \code{volume_martele_m3}, \code{volume_realise_m3},
+\code{balance_exercice_m3}, \code{balance_cumulee_m3}, \code{reference_acte},
+\code{par_avenant}, \code{nature_volume} (possibilite fixee, ou recolte prevue au
+document), et \code{conforme} quand une tolerance s'applique.
 }
 \description{
 Vue calculee, jamais saisie : \verb{SUM(volumes marteles de l'exercice)} moins
-la possibilite, cumulee par foret.
+la possibilite, cumulee \strong{par amenagement}. La possibilite vient de l'acte
+qui la fixe - l'amenagement ou l'avenant, au registre 1 : voir
+\code{\link[=sommier_amenagement]{sommier_amenagement()}}.
 }
 \details{
+Le cumul repart de zero avec chaque amenagement, et court jusqu'a
+l'exercice courant. Un martelage impute a un exercice qu'aucun amenagement
+ne couvre ne s'y trouve pas : \code{\link[=sommier_martelages_hors_amenagement]{sommier_martelages_hors_amenagement()}} le
+montre a part.
+
 En foret publique, la balance se lit contre la possibilite de
 l'amenagement regle. En foret privee, la meme mecanique sert de balance de
 conformite au programme du PSG, avec une tolerance de plus ou moins quatre
