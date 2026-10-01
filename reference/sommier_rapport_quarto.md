@@ -105,11 +105,10 @@ sommier_rapport_quarto(
 
   Prelevement de reference de l'IFN, pour situer la possibilite et le
   preleve (facultatif) : liste nommee portant `taux_m3_ha_an`, et
-  facultativement `ser`, `nom`, `millesime`, `source`. Voir
-  [`sommier_ser()`](https://pobsteta.github.io/sommieR/reference/sommier_ser.md)
-  pour la sylvoecoregion ; le taux se tire par exemple de
-  `nemeton::ifn_prelevement_essence_ser()`, somme des taux `maille` de
-  la SER.
+  facultativement `ser`, `nom`, `millesime`, `source`.
+  [`sommier_reference_ifn()`](https://pobsteta.github.io/sommieR/reference/sommier_reference_ifn.md)
+  la rend toute faite, depuis la sylvoecoregion de la foret et les
+  tables IFN de nemeton.
 
 - coupes_detectees:
 

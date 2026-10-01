@@ -465,6 +465,8 @@ coupes rases détectées par SUFOSAT. Des estimations, hors chaîne.
 
 - [`sommier_ser()`](https://pobsteta.github.io/sommieR/reference/sommier_ser.md)
   : Sylvoecoregion d'une foret
+- [`sommier_reference_ifn()`](https://pobsteta.github.io/sommieR/reference/sommier_reference_ifn.md)
+  : Prelevement de reference de l'IFN pour une foret
 - [`sommier_lire_indices_nemeton()`](https://pobsteta.github.io/sommieR/reference/sommier_lire_indices_nemeton.md)
   : Indices d'un projet nemeton, par unite
 - [`sommier_coupes_sufosat()`](https://pobsteta.github.io/sommieR/reference/sommier_coupes_sufosat.md)

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.20.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.21.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,12 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.21.0" id="sommier-0210">sommieR 0.21.0<a class="anchor" aria-label="anchor" href="#sommier-0210"></a></h2>
+<p>La référence de l’IFN s’obtient en un appel.</p>
+<p><code>sommier_reference_ifn(emprise)</code> situe la forêt dans sa sylvoécorégion (<code><a href="../reference/sommier_ser.html">sommier_ser()</a></code>) et rend le prélèvement que l’IFN y observe, en m³/ha/an, prêt pour <code>sommier_rapport_quarto(reference_ifn = )</code> et pour le contrôle de vraisemblance de <code><a href="../reference/sommier_amenagement.html">sommier_amenagement()</a></code>. Pour la forêt domaniale d’Orléans : SER B70 « Sologne-Orléanais », 2,28 m³/ha/an sur 2005-2024.</p>
+<p>Le taux vient de nemeton. Le paquet entre en Suggests, et s’installe depuis GitHub (<code>Remotes: pobsteta/nemeton</code>), ce que la CI sait faire. Ses tables IFN sont livrées avec lui, si bien que l’appel ne demande pas le réseau. Sans nemeton, la fonction le dit ; le rapport accepte toujours une référence fournie à la main.</p>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.20.0" id="sommier-0200">sommieR 0.20.0<a class="anchor" aria-label="anchor" href="#sommier-0200"></a></h2>
 <p>La balance se lit désormais en regard de ce que la forêt porte et de ce que l’IFN observe autour d’elle. Tout est en m³/ha/an, et rien de ces repères n’entre dans la chaîne.</p>

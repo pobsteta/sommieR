@@ -1,5 +1,24 @@
 # Changelog
 
+## sommieR 0.21.0
+
+La référence de l’IFN s’obtient en un appel.
+
+`sommier_reference_ifn(emprise)` situe la forêt dans sa sylvoécorégion
+([`sommier_ser()`](https://pobsteta.github.io/sommieR/reference/sommier_ser.md))
+et rend le prélèvement que l’IFN y observe, en m³/ha/an, prêt pour
+`sommier_rapport_quarto(reference_ifn = )` et pour le contrôle de
+vraisemblance de
+[`sommier_amenagement()`](https://pobsteta.github.io/sommieR/reference/sommier_amenagement.md).
+Pour la forêt domaniale d’Orléans : SER B70 « Sologne-Orléanais », 2,28
+m³/ha/an sur 2005-2024.
+
+Le taux vient de nemeton. Le paquet entre en Suggests, et s’installe
+depuis GitHub (`Remotes: pobsteta/nemeton`), ce que la CI sait faire.
+Ses tables IFN sont livrées avec lui, si bien que l’appel ne demande pas
+le réseau. Sans nemeton, la fonction le dit ; le rapport accepte
+toujours une référence fournie à la main.
+
 ## sommieR 0.20.0
 
 La balance se lit désormais en regard de ce que la forêt porte et de ce
