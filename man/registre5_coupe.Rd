@@ -13,7 +13,8 @@ registre5_coupe(
   essence = NULL,
   coupon = NULL,
   observations = NULL,
-  geometrie = NULL
+  geometrie = NULL,
+  constat_id = NULL
 )
 }
 \arguments{
@@ -40,6 +41,10 @@ toute la surface de l'unite (voir la colonne \code{surface_source} de
 \item{geometrie}{Emprise de la coupe, en WGS84 : voir \code{\link[=geom_polygone]{geom_polygone()}}.
 Facultative — un gestionnaire sans releve continue de saisir sans, et son
 sommier reste conforme.}
+
+\item{constat_id}{UUID du constat de terrain dont la coupe procede - la
+suite d'une detection, au registre 8 (facultatif). Voir
+\code{\link[=sommier_produit_accidentel]{sommier_produit_accidentel()}}.}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.

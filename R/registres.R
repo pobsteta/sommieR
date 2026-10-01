@@ -103,6 +103,8 @@ SOMMIER_TYPES_MARTELES <- c("martelage", "produit_accidentel", "bois_delivre")
 #'
 #' Le registre 2 est passe en `1.3.0` avec la reconnaissance de limite : un
 #' etat constate, l'element du plan recopie, et les photos par leur empreinte.
+#' Le registre 5 est passe en `1.3.0` quand un produit accidentel a pu
+#' renvoyer au constat de terrain dont il procede (`constat_id`).
 #' Le registre 8 est passe en `1.3.0` quand la suite d'une detection est
 #' devenue un constat complet : position, precision, operateur, photos.
 #' Le registre 1 est passe en `1.2.0` avec l'amenagement : la periode et la
@@ -111,7 +113,7 @@ SOMMIER_TYPES_MARTELES <- c("martelage", "produit_accidentel", "bois_delivre")
 #' @export
 SOMMIER_SCHEMA_VERSIONS <- c(
   "1" = "r1-1.2.0", "2" = "r2-1.3.0", "3" = "r3-1.1.0",
-  "4" = "r4-1.2.0", "5" = "r5-1.2.0", "6" = "r6-1.1.0",
+  "4" = "r4-1.2.0", "5" = "r5-1.3.0", "6" = "r6-1.1.0",
   "7" = "r7-1.1.0", "8" = "r8-1.3.0", "9" = "r9-1.2.0"
 )
 
@@ -135,6 +137,9 @@ SOMMIER_SCHEMA_VERSIONS <- c(
 #' @param essence Essence ou groupe d'essences (facultatif).
 #' @param coupon Identifiant du coupon ou de la subdivision (facultatif).
 #' @param observations Observations libres (facultatif).
+#' @param constat_id UUID du constat de terrain dont la coupe procede - la
+#'   suite d'une detection, au registre 8 (facultatif). Voir
+#'   [sommier_produit_accidentel()].
 #'
 #' @param geometrie Emprise de la coupe, en WGS84 : voir [geom_polygone()].
 #'   Facultative — un gestionnaire sans releve continue de saisir sans, et son
@@ -158,7 +163,8 @@ registre5_coupe <- function(type_entree,
                             essence = NULL,
                             coupon = NULL,
                             observations = NULL,
-                            geometrie = NULL) {
+                            geometrie = NULL,
+                            constat_id = NULL) {
   compacter(list(
     type_entree  = valider_choix(type_entree, "type_entree", SOMMIER_TYPES_COUPE),
     exercice     = valider_entier(exercice, "exercice", min = 1500, max = 2999),
@@ -168,7 +174,8 @@ registre5_coupe <- function(type_entree,
     essence      = si_present(essence, valider_texte, "essence"),
     coupon       = si_present(coupon, valider_texte, "coupon"),
     geometrie    = geometrie_si_presente(geometrie, "Polygon"),
-    observations = si_present(observations, valider_texte, "observations")
+    observations = si_present(observations, valider_texte, "observations"),
+    constat_id   = si_present(constat_id, valider_uuid, "constat_id")
   ))
 }
 

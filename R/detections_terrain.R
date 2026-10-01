@@ -519,10 +519,13 @@ lire_suites_detection <- function(con, foret_id) {
             d.date_evenement AS date_detection, d.payload ->> 'source' AS source,
             (d.payload ->> 'surface_ha')::numeric AS surface_detectee,
             d.payload ->> 'nature' AS nature_detectee,
-            u.numero_affichage AS ug
+            u.numero_affichage AS ug, p.volume_m3 AS produit_m3
        FROM v_entree_courante s
        JOIN entree_sommier d ON d.id = (s.payload ->> 'detection_id')::uuid
        LEFT JOIN ug u ON u.uuid = d.ug_uuid
+       LEFT JOIN (SELECT constat_id, sum(volume_m3) AS volume_m3
+                    FROM v_coupe WHERE constat_id IS NOT NULL
+                   GROUP BY constat_id) p ON p.constat_id = s.id
       WHERE s.foret_id = $1 AND s.registre = 8
         AND s.payload ? 'statut_detection'
       ORDER BY s.date_evenement, s.seq",
@@ -554,6 +557,8 @@ lire_suites_detection <- function(con, foret_id) {
     precision_m = suppressWarnings(as.numeric(champ("precision_m"))),
     observations = champ("observations"),
     nb_photos = vapply(payloads, function(p) length(p$photos), integer(1)),
+    # Le volume des produits accidentels inscrits depuis ce constat.
+    produit_m3 = as.numeric(lignes$produit_m3),
     stringsAsFactors = FALSE
   )
   # La planche reconnait une photo par son « numero » : ici l'unite et la
@@ -590,11 +595,14 @@ suite_des_coupes <- function(con, foret_id, sans) {
     "SELECT u.numero_affichage AS ug,
             EXTRACT(YEAR FROM d.date_evenement)::int AS annee,
             s.payload ->> 'statut_detection' AS statut,
-            s.payload ->> 'nature' AS nature
+            s.payload ->> 'nature' AS nature, p.volume_m3 AS produit_m3
        FROM entree_sommier d
        JOIN ug u ON u.uuid = d.ug_uuid
        LEFT JOIN v_entree_courante s
          ON s.registre = 8 AND (s.payload ->> 'detection_id')::uuid = d.id
+       LEFT JOIN (SELECT constat_id, sum(volume_m3) AS volume_m3
+                    FROM v_coupe WHERE constat_id IS NOT NULL
+                   GROUP BY constat_id) p ON p.constat_id = s.id
       WHERE d.foret_id = $1 AND d.registre = 8
         AND d.payload ->> 'type_entree' = 'detection'
         AND d.payload ->> 'source' = 'sufosat'",
@@ -607,5 +615,133 @@ suite_des_coupes <- function(con, foret_id, sans) {
                               inscrites$statut[rang]))
   sans$nature_constatee <- ifelse(is.na(rang), NA_character_,
                                   inscrites$nature[rang])
+  sans$produit_m3 <- as.numeric(ifelse(is.na(rang), NA, inscrites$produit_m3[rang]))
   sans
+}
+
+#' Natures de phenomene qui laissent des produits accidentels
+#'
+#' @description
+#' Une detection confirmee sur le terrain avec l'une de ces natures laisse
+#' peut-etre des bois a exploiter hors martelage : des produits accidentels,
+#' au registre 5 (voir [sommier_produit_accidentel()]). Une coupe confirmee
+#' comme exploitation ordinaire (`autre`) appelle, elle, le martelage qui
+#' manque.
+#'
+#' @export
+SOMMIER_NATURES_ACCIDENTELLES <- c("crise_sanitaire", "tempete", "secheresse",
+                                   "incendie", "neige", "gel")
+
+#' Produit accidentel issu d'un constat de terrain
+#'
+#' @description
+#' Inscrit au registre 5 le produit accidentel - bois sanitaires, chablis -
+#' qu'une detection confirmee sur le terrain a laisse. L'entree reprend du
+#' constat l'unite, la nature et la surface, et renvoie a lui par
+#' `constat_id` ; seul le volume est a saisir.
+#'
+#' @details
+#' **Le volume ne se devine pas.** Ni la teledetection ni une photo ne le
+#' donnent : il vient du cubage, une fois les bois designes ou exploites.
+#' C'est pourquoi le rapport signale les produits a inscrire sans les ecrire.
+#'
+#' **Ce qui est refuse.** Un constat qui n'est pas la suite d'une detection,
+#' une detection ecartee, une nature qui ne laisse pas de produit accidentel
+#' (voir [SOMMIER_NATURES_ACCIDENTELLES] : une exploitation ordinaire appelle
+#' un martelage), et un second produit pour le meme constat - on corrige
+#' alors le premier.
+#'
+#' **Nature de coupe.** Par defaut, deduite de la nature retenue sur le
+#' terrain : « coupe sanitaire » pour une crise sanitaire ou une secheresse,
+#' « chablis » pour une tempete, etc.
+#'
+#' @param con Connexion DBI.
+#' @param constat_id UUID du constat : la suite de la detection, au
+#'   registre 8.
+#' @param volume_m3 Volume du produit, en metres cubes.
+#' @param auteur Compte qui inscrit.
+#' @param date_evenement Date de l'entree. Par defaut, aujourd'hui.
+#' @param exercice Exercice d'imputation. Par defaut, l'annee de
+#'   `date_evenement`.
+#' @param surface_ha Surface parcourue. Par defaut, la surface constatee sur
+#'   le terrain, si elle a ete saisie.
+#' @param nature_coupe Nature de la coupe. Par defaut, deduite du constat.
+#' @param essence Essence ou groupe d'essences (facultatif).
+#' @param observations Observations (facultatif). Par defaut, le renvoi au
+#'   constat en clair.
+#'
+#' @return Invisiblement, l'entree chainee.
+#'
+#' @seealso [sommier_importer_qfield_detections()], [registre5_coupe()]
+#'
+#' @export
+sommier_produit_accidentel <- function(con, constat_id, volume_m3, auteur,
+                                       date_evenement = Sys.Date(),
+                                       exercice = NULL, surface_ha = NULL,
+                                       nature_coupe = NULL, essence = NULL,
+                                       observations = NULL) {
+  constat_id <- valider_uuid(constat_id, "constat_id")
+  auteur <- valider_texte(auteur, "auteur")
+  constat <- DBI::dbGetQuery(
+    con,
+    "SELECT foret_id, ug_uuid::text AS ug_uuid, registre, date_evenement,
+            payload::text AS payload
+       FROM entree_sommier WHERE id = $1",
+    params = list(constat_id)
+  )
+  if (nrow(constat) == 0L) {
+    stop("Entree inconnue : ", constat_id, ".", call. = FALSE)
+  }
+  payload <- jsonlite::fromJSON(constat$payload[[1L]], simplifyVector = FALSE)
+  if (constat$registre[[1L]] != 8L || is.null(payload$statut_detection)) {
+    stop("L'entree ", constat_id, " n'est pas la suite d'une detection : un ",
+         "produit accidentel se rattache au constat de terrain qui l'a vu.",
+         call. = FALSE)
+  }
+  if (!identical(payload$statut_detection, "confirme")) {
+    stop("La detection a ete ecartee sur le terrain : elle ne laisse aucun ",
+         "produit.", call. = FALSE)
+  }
+  if (!payload$nature %in% SOMMIER_NATURES_ACCIDENTELLES) {
+    stop("Nature retenue sur le terrain : ", payload$nature, ". Elle ne ",
+         "laisse pas de produit accidentel (",
+         paste(SOMMIER_NATURES_ACCIDENTELLES, collapse = ", "), ") ; une ",
+         "exploitation ordinaire s'inscrit comme martelage.", call. = FALSE)
+  }
+  deja <- DBI::dbGetQuery(
+    con, "SELECT id::text AS id FROM v_coupe WHERE constat_id = $1",
+    params = list(constat_id)
+  )
+  if (nrow(deja) > 0L) {
+    stop("Un produit accidentel renvoie deja a ce constat (", deja$id[[1L]],
+         ") : pour en changer le volume, on corrige cette entree.",
+         call. = FALSE)
+  }
+  date_evenement <- format_date(date_evenement, "date_evenement")
+  exercice <- exercice %||% as.integer(substr(date_evenement, 1L, 4L))
+  natures <- c(crise_sanitaire = "coupe sanitaire", secheresse =
+                 "coupe sanitaire (secheresse)", tempete = "chablis",
+               incendie = "bois incendies", neige = "bris de neige",
+               gel = "coupe sanitaire (gel)")
+  sommier_ajouter(con, sommier_entree(
+    foret_id = constat$foret_id[[1L]],
+    registre = 5L,
+    date_evenement = date_evenement,
+    auteur = auteur,
+    ug_uuid = if (est_vide(constat$ug_uuid[[1L]])) NULL else
+      constat$ug_uuid[[1L]],
+    payload = registre5_coupe(
+      type_entree = "produit_accidentel",
+      exercice = exercice,
+      nature_coupe = nature_coupe %||% unname(natures[[payload$nature]]),
+      volume_m3 = volume_m3,
+      surface_ha = surface_ha %||% payload$surface_ha,
+      essence = essence,
+      observations = observations %||% paste0(
+        "Suite du constat de terrain du ",
+        format(as.Date(constat$date_evenement[[1L]]), "%d/%m/%Y"),
+        " (detection confirmee : ", payload$nature, ")."),
+      constat_id = constat_id
+    )
+  ))
 }
