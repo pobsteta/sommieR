@@ -564,6 +564,16 @@ imprimer_tableau_pci <- function(tableau, legende) {
 }
 ```
 
+```{r elements-pci-absents, results='asis', eval=is.null(fond_pci)}
+# Sans plan fourni, la section se dit absente plutôt que de disparaître : un
+# lecteur qui cherche les bornes doit savoir qu'elles n'ont pas été montrées,
+# non qu'il n'y en a pas.
+cat("### Éléments du plan cadastral\n\n",
+    "*Le plan cadastral (EDIGEO) n'a pas été fourni à ce rendu : les bornes, ",
+    "murs et autres éléments du plan ne sont pas montrés. Le document ne dit ",
+    "pas qu'il n'y en a pas.*\n\n", sep = "")
+```
+
 ```{r elements-pci, results='asis', eval=elements_pci}
 cat("### Éléments du plan cadastral\n\n")
 if (!a_elements_pci) {

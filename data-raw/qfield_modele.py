@@ -176,8 +176,11 @@ def symbole(geometrie, couleur):
              "outline_color": "#FFFFFF", "outline_width": "0.4"})
     if geometrie == "ligne":
         return QgsLineSymbol.createSimple({"color": couleur, "width": "0.8"})
+    # Le voile se donne en « r,g,b,a » : QGIS lit un « #RRGGBBAA » comme
+    # « #AARRGGBB », et un « à voir » rouge sortait bleu marine.
+    r, g, b = (int(couleur[i:i + 2], 16) for i in (1, 3, 5))
     return QgsFillSymbol.createSimple(
-        {"color": couleur + "55", "outline_color": couleur,
+        {"color": "%d,%d,%d,85" % (r, g, b), "outline_color": couleur,
          "outline_width": "0.5"})
 
 
