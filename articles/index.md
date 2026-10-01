@@ -13,3 +13,9 @@
 
   La sortie HTML de sommier_rapport_quarto(), telle que la fonction la
   produit, sur le sommier de démonstration de Couchey.
+
+- [Suivre la balance de
+  possibilité](https://pobsteta.github.io/sommieR/articles/balance-possibilite.md):
+
+  L’aménagement inscrit dans la chaîne, la balance en volume et en
+  surface, et les repères qui la situent : IFN, nemeton, SUFOSAT.

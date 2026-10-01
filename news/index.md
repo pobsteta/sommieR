@@ -1,5 +1,18 @@
 # Changelog
 
+## sommieR 0.22.1
+
+- Un article, « Suivre la balance de possibilité », déroule toute la
+  chaîne sur la démo de Couchey et une forêt d’exemple : l’aménagement
+  transcrit, la balance en volume, l’avenant qui change la possibilité à
+  partir d’un exercice, le martelage hors aménagement, la balance en
+  surface et la référence IFN (SER C20 pour Couchey, 2,55 m³/ha/an).
+- Le rapport montre la référence de l’IFN même sans aménagement : elle
+  dit ce que prélèvent les forêts voisines, et donc à quoi une future
+  possibilité se mesurera. Le rapport réel de la forêt domaniale
+  d’Orléans, qui n’a pas encore d’aménagement au registre, l’affichait
+  vide.
+
 ## sommieR 0.22.0
 
 La balance se tient aussi en surface. C’est ce que fixent les arrêtés
