@@ -133,9 +133,13 @@ jobs:
         timeout-minutes: 20
         continue-on-error: true
         with:
+          # nemeton (Suggests, depuis GitHub) n'est pas utile au site : aucun
+          # exemple ni article ne l'execute, et ses dependances - terra,
+          # exactextractr... - faisaient deborder le delai de 20 minutes.
           extra-packages: |
             any::pkgdown
             any::RPostgres
+            nemeton=?ignore
             local::.
           needs: website
 
@@ -144,9 +148,13 @@ jobs:
         uses: r-lib/actions/setup-r-dependencies@v2
         timeout-minutes: 20
         with:
+          # nemeton (Suggests, depuis GitHub) n'est pas utile au site : aucun
+          # exemple ni article ne l'execute, et ses dependances - terra,
+          # exactextractr... - faisaient deborder le delai de 20 minutes.
           extra-packages: |
             any::pkgdown
             any::RPostgres
+            nemeton=?ignore
             local::.
           needs: website
 
