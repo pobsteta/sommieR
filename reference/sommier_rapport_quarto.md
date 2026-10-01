@@ -80,7 +80,8 @@ sommier_rapport_quarto(
 
 - photos:
 
-  Depot des photos des reconnaissances de limite (voir
+  Depot des photos des constats de terrain - reconnaissances de limite
+  et suites des detections (voir
   [`sommier_deposer_photo()`](https://pobsteta.github.io/sommieR/reference/sommier_deposer_photo.md))
   ; `NULL` pour s'en passer. Fourni, jamais telecharge. Les vignettes de
   la planche photographique sont reduites au rendu ; une photo dont
