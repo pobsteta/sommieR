@@ -11,7 +11,7 @@ ou plusieurs de ces elements."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.21.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.22.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,6 +64,7 @@ ou plusieurs de ces elements.</p>
 <span>  surface_ha <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  annee_fin <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ventilation <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  surface_regeneration_ha <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  source <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -107,6 +108,12 @@ ou plusieurs de ces elements.</p>
 
 <dt id="arg-ventilation">ventilation<a class="anchor" aria-label="anchor" href="#arg-ventilation"></a></dt>
 <dd><p>Nouvelle ventilation, en m3/ha/an (facultatif).</p></dd>
+
+
+<dt id="arg-surface-regeneration-ha">surface_regeneration_ha<a class="anchor" aria-label="anchor" href="#arg-surface-regeneration-ha"></a></dt>
+<dd><p>Nouvelle surface a ouvrir en regeneration
+sur la periode, en ha (facultatif). Elle vaut pour tout l'amenagement :
+c'est un total de periode, pas un rythme annuel.</p></dd>
 
 
 <dt id="arg-source">source<a class="anchor" aria-label="anchor" href="#arg-source"></a></dt>

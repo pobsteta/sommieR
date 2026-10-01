@@ -443,6 +443,10 @@ calcule contre lui, et repart de zéro avec chaque aménagement.
 - [`sommier_balance_possibilite()`](https://pobsteta.github.io/sommieR/reference/sommier_balance_possibilite.md)
   : Balance de possibilite (imprime A50E)
 
+- [`sommier_balance_surface()`](https://pobsteta.github.io/sommieR/reference/sommier_balance_surface.md)
+  : Balance en surface : la regeneration ouverte contre la regeneration
+  prevue
+
 - [`sommier_martelages_hors_amenagement()`](https://pobsteta.github.io/sommieR/reference/sommier_martelages_hors_amenagement.md)
   : Martelages qu'aucun amenagement ne couvre
 
@@ -456,6 +460,9 @@ calcule contre lui, et repart de zéro avec chaque aménagement.
 
 - [`SOMMIER_NATURES_VOLUME`](https://pobsteta.github.io/sommieR/reference/SOMMIER_NATURES_VOLUME.md)
   : Natures du volume d'un amenagement
+
+- [`SOMMIER_NATURES_REGENERATION`](https://pobsteta.github.io/sommieR/reference/SOMMIER_NATURES_REGENERATION.md)
+  : Natures de coupe qui ouvrent une surface en regeneration
 
 ## Repères de la possibilité : IFN, nemeton, SUFOSAT
 

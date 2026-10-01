@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.21.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.22.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,20 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.22.0" id="sommier-0220">sommieR 0.22.0<a class="anchor" aria-label="anchor" href="#sommier-0220"></a></h2>
+<p>La balance se tient aussi en surface. C’est ce que fixent les arrêtés récents de l’ONF : celui de 2019 du massif de Lorris-Les Bordes ne fixe aucun volume, mais 2 026,57 ha à ouvrir en régénération sur vingt ans.</p>
+<div class="section level3">
+<h3 id="balance-en-surface-0-22-0">Balance en surface<a class="anchor" aria-label="anchor" href="#balance-en-surface-0-22-0"></a></h3>
+<p><code><a href="../reference/sommier_balance_surface.html">sommier_balance_surface()</a></code> confronte, exercice par exercice, la surface ouverte en régénération à la surface prévue, et en cumule l’écart par aménagement :</p>
+<ul><li>
+<strong>prévue</strong> : la surface à régénérer de la période (<code>surface_regeneration_ha</code> de l’aménagement), répartie également sur ses exercices. L’arrêté fixe un total, pas un calendrier : ce rythme régulier n’est qu’un repère ;</li>
+<li>
+<strong>ouverte</strong> : la surface des martelages dont la nature relève de <code>SOMMIER_NATURES_REGENERATION</code> (régénération, ensemencement, secondaire, définitive, coupe rase ; la nature, texte libre, est lue sans accents ni majuscules). <strong>Une unité ne s’ouvre qu’une fois</strong> : une coupe secondaire puis définitive sur la même parcelle n’ouvrent pas deux fois la même surface. Des surfaces partielles saisies s’additionnent, sans dépasser la surface de l’unité.</li>
+</ul><p>Un écart cumulé négatif est un retard de régénération. Un avenant peut désormais réviser la surface à régénérer (<code>sommier_avenant_possibilite(surface_regeneration_ha = )</code>).</p>
+<p>Le rapport ajoute une section « Balance en surface : la régénération » sous la balance en volume. Sur la copie d’essai d’Orléans, avec un avenant fictif de 60 ha sur 2009-2028, 47,89 ha sont ouverts, presque tous en 2017-2019 sur les coupes rases que SUFOSAT a vues, et l’écart cumulé est de −6,11 ha en 2026.</p>
+</div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.21.0" id="sommier-0210">sommieR 0.21.0<a class="anchor" aria-label="anchor" href="#sommier-0210"></a></h2>
 <p>La référence de l’IFN s’obtient en un appel.</p>
 <p><code>sommier_reference_ifn(emprise)</code> situe la forêt dans sa sylvoécorégion (<code><a href="../reference/sommier_ser.html">sommier_ser()</a></code>) et rend le prélèvement que l’IFN y observe, en m³/ha/an, prêt pour <code>sommier_rapport_quarto(reference_ifn = )</code> et pour le contrôle de vraisemblance de <code><a href="../reference/sommier_amenagement.html">sommier_amenagement()</a></code>. Pour la forêt domaniale d’Orléans : SER B70 « Sologne-Orléanais », 2,28 m³/ha/an sur 2005-2024.</p>
@@ -49,7 +63,7 @@
 <div class="section level3">
 <h3 id="situer-la-possibilité-0-20-0">Situer la possibilité<a class="anchor" aria-label="anchor" href="#situer-la-possibilit%C3%A9-0-20-0"></a></h3>
 <p><code><a href="../reference/sommier_ser.html">sommier_ser()</a></code> rend la sylvoécorégion de l’IGN qui contient la forêt. La couche est téléchargée une fois, explicitement, puis gardée en cache. La forêt domaniale d’Orléans est dans la SER B70 « Sologne-Orléanais ».</p>
-<p>Le rapport accepte une <code>reference_ifn</code> : le prélèvement que l’IFN observe dans cette SER. Un tableau de repères à l’hectare réunit alors la possibilité, le prélevé moyen des exercices échus et ce prélèvement de référence. Pour Orléans, la référence est de 2,28 m³/ha/an sur 2005-2024 : c’est la somme des taux <code>maille</code> de toutes les essences, tirée de <code>nemeton::ifn_prelevement_essence_ser()</code>. sommieR n’appelle pas nemeton, qui n’est pas sur le CRAN ; la documentation montre comment obtenir le taux. Le rapport rappelle que ce chiffre est ce qui a été coupé, toutes propriétés confondues, et non ce qui devait l’être.</p>
+<p>Le rapport accepte une <code>reference_ifn</code> : le prélèvement que l’IFN observe dans cette SER. Un tableau de repères à l’hectare réunit alors la possibilité, le prélevé moyen des exercices échus et ce prélèvement de référence. Pour Orléans, la référence est de 2,28 m³/ha/an sur 2005-2024 : c’est la somme des taux <code>maille</code> de toutes les essences, tirée de <code><a href="https://pobsteta.github.io/nemeton/reference/ifn_prelevement_essence_ser.html" class="external-link">nemeton::ifn_prelevement_essence_ser()</a></code>. sommieR n’appelle pas nemeton, qui n’est pas sur le CRAN ; la documentation montre comment obtenir le taux. Le rapport rappelle que ce chiffre est ce qui a été coupé, toutes propriétés confondues, et non ce qui devait l’être.</p>
 </div>
 <div class="section level3">
 <h3 id="ce-que-la-forêt-porte-0-20-0">Ce que la forêt porte<a class="anchor" aria-label="anchor" href="#ce-que-la-for%C3%AAt-porte-0-20-0"></a></h3>

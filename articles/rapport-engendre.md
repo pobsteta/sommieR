@@ -60,10 +60,10 @@ vaut attestation :
 
 sommier_verifier(con, foret)
 #> Verification de chaine - sommier
-#>   foret     : 0b76df4b-218a-460e-8b3e-a196a83cacd9
+#>   foret     : 42b2b74b-d6db-4f10-98da-1cfbc07edfb4
 #>   entrees   : 67
 #>   seq tete  : 67
-#>   hash tete : b6da6dd0e492a6db0d0a397d2ae5c406553f4f3f5537b9b729e839cd0c54aa84
+#>   hash tete : ce475d144dcc9b8cbbc186b909d80f6928642fdd0c4e794a51a99cad446c5389
 #>   etat      : chaine intacte
 ```
 
