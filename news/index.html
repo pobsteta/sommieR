@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.24.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.24.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,13 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.24.1" id="sommier-0241">sommieR 0.24.1<a class="anchor" aria-label="anchor" href="#sommier-0241"></a></h2>
+<ul><li>
+<strong>Couleurs du projet QField des limites.</strong> QGIS lit une couleur <code>#RRGGBBAA</code> comme <code>#AARRGGBB</code> : un élément surfacique « à voir » s’affichait bleu marine au lieu de rouge, et un « vu en place » brun presque invisible au lieu de vert. Le voile se donne désormais en <code>r,g,b,a</code>, et le modèle est régénéré. Les identifiants de couche ne changent pas.</li>
+<li>
+<strong>Un rapport rendu sans plan cadastral (EDIGEO) le dit</strong> sous « Éléments du plan cadastral », au lieu d’omettre la section : un lecteur qui cherche les bornes doit savoir qu’elles n’ont pas été montrées, non qu’il n’y en a pas.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.24.0" id="sommier-0240">sommieR 0.24.0<a class="anchor" aria-label="anchor" href="#sommier-0240"></a></h2>
 <p>Le rapport montre ce que le terrain a dit des détections.</p>

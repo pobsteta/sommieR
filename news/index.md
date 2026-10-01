@@ -1,5 +1,18 @@
 # Changelog
 
+## sommieR 0.24.1
+
+- **Couleurs du projet QField des limites.** QGIS lit une couleur
+  `#RRGGBBAA` comme `#AARRGGBB` : un élément surfacique « à voir »
+  s’affichait bleu marine au lieu de rouge, et un « vu en place » brun
+  presque invisible au lieu de vert. Le voile se donne désormais en
+  `r,g,b,a`, et le modèle est régénéré. Les identifiants de couche ne
+  changent pas.
+- **Un rapport rendu sans plan cadastral (EDIGEO) le dit** sous «
+  Éléments du plan cadastral », au lieu d’omettre la section : un
+  lecteur qui cherche les bornes doit savoir qu’elles n’ont pas été
+  montrées, non qu’il n’y en a pas.
+
 ## sommieR 0.24.0
 
 Le rapport montre ce que le terrain a dit des détections.

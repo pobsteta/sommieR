@@ -40,7 +40,13 @@ Seules les unités de gestion sont récapitulées.*
 
 Unités de gestion en vigueur {.caption-top .table}
 
-### 1.3 Intégrité du registre
+### 1.3 Éléments du plan cadastral
+
+*Le plan cadastral (EDIGEO) n’a pas été fourni à ce rendu : les bornes,
+murs et autres éléments du plan ne sont pas montrés. Le document ne dit
+pas qu’il n’y en a pas.*
+
+### 1.4 Intégrité du registre
 
 Le sommier est un journal à chaînage de hachages : chaque entrée scelle
 la précédente. L’état ci-dessous est celui constaté à l’édition de ce
@@ -51,7 +57,7 @@ document.
 | **État de la chaîne** | intacte |
 | **Entrées** | 67 |
 | **Séquence de tête** | 67 |
-| **Empreinte de tête** | `87b38cd4c1295da3958edb46dc94224b6f2ca202f5953e047ec1b6ce6aba083c` |
+| **Empreinte de tête** | `4c9fd025251fde7e9342e0201264928e17fa41379b5283b9a04468f8c04cf2a4` |
 
 ## 2 Provenance des écritures
 
@@ -292,5 +298,5 @@ l’empreinte de tête, et la vérification le dit.
 
 ------------------------------------------------------------------------
 
-*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.24.0 le
+*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.24.1 le
 01/10/2026.*
