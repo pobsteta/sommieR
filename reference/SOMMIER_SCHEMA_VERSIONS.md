@@ -26,6 +26,8 @@ ecrite sous ce schema-la.
 
 Le registre 2 est passe en `1.3.0` avec la reconnaissance de limite : un
 etat constate, l'element du plan recopie, et les photos par leur
-empreinte. Le registre 1 est passe en `1.2.0` avec l'amenagement : la
-periode et la possibilite que l'arrete ou l'agrement fixe entrent dans
-la chaine.
+empreinte. Le registre 8 est passe en `1.3.0` quand la suite d'une
+detection est devenue un constat complet : position, precision,
+operateur, photos. Le registre 1 est passe en `1.2.0` avec l'amenagement
+: la periode et la possibilite que l'arrete ou l'agrement fixe entrent
+dans la chaine.

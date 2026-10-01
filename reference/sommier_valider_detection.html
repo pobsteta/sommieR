@@ -11,7 +11,7 @@ vues de consultation sans sortir de la chaine."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.22.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.23.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,9 @@ vues de consultation sans sortir de la chaine.</p>
 <span>  nature <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  surface_ha <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  volume_impacte_m3 <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  observations <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  observations <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  id <span class="op">=</span> <span class="fu"><a href="uuid_v4.html">uuid_v4</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -108,6 +110,17 @@ vues de consultation sans sortir de la chaine.</p>
 <dt id="arg-observations">observations<a class="anchor" aria-label="anchor" href="#arg-observations"></a></dt>
 <dd><p>Observations libres (facultatif).</p></dd>
 
+
+<dt id="arg-id">id<a class="anchor" aria-label="anchor" href="#arg-id"></a></dt>
+<dd><p>UUID de l'entree a ecrire (facultatif) : celui du releve de
+terrain, pour qu'un import se rejoue sans ecrire deux fois.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Champs du constat de terrain : <code>geometrie</code>, <code>precision_m</code>,
+<code>source_gnss</code>, <code>operateur</code>, <code>visite_le</code>, <code>releve_uuid</code>, <code>photos</code> (voir
+<code><a href="registre8_suite_detection.html">registre8_suite_detection()</a></code>).</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -119,6 +132,9 @@ vues de consultation sans sortir de la chaine.</p>
 qui la confirme : dans les deux cas la proposition ne doit plus etre lue
 comme un fait etabli. La difference tient au champ <code>statut_detection</code> du
 payload, que les vues exposent.</p>
+<p>Une detection ne se suit qu'une fois : une seconde suite est refusee. Pour
+revenir sur un constat, on corrige la suite elle-meme. Les constats d'une
+tournee QField s'importent par <code><a href="sommier_importer_qfield_detections.html">sommier_importer_qfield_detections()</a></code>.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

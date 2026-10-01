@@ -288,6 +288,22 @@ par leur empreinte.
 - [`SOMMIER_TYPES_PHOTO`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_PHOTO.md)
   : Types de photo admis au depot
 
+## Vérification des détections sur le terrain
+
+Les détections de télédétection (RECONFORT, SUFOSAT) se confirment ou
+s’écartent sur le terrain, avec un projet QField propre : contours
+recalculés depuis les rasters, constat avec position et photos, import
+tout ou rien et rejouable.
+
+- [`sommier_inscrire_coupes_sufosat()`](https://pobsteta.github.io/sommieR/reference/sommier_inscrire_coupes_sufosat.md)
+  : Inscription des coupes SUFOSAT comme detections
+- [`sommier_contours_detections()`](https://pobsteta.github.io/sommieR/reference/sommier_contours_detections.md)
+  : Contours des detections en attente
+- [`sommier_projet_qfield_detections()`](https://pobsteta.github.io/sommieR/reference/sommier_projet_qfield_detections.md)
+  : Projet QGIS/QField pour verifier les detections sur le terrain
+- [`sommier_importer_qfield_detections()`](https://pobsteta.github.io/sommieR/reference/sommier_importer_qfield_detections.md)
+  : Import des constats d'une tournee de verification des detections
+
 ## Géométrie des payloads
 
 La géométrie est dans le payload, donc dans l’empreinte : le contour

@@ -9,7 +9,7 @@ sommier_valider_detection() ; rarement construit a la main."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.22.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.23.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,7 +55,14 @@ sommier_valider_detection() ; rarement construit a la main."></head><body>
 <span>  <span class="va">description</span>,</span>
 <span>  surface_ha <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  volume_impacte_m3 <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  observations <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  observations <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  geometrie <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  precision_m <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  source_gnss <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  operateur <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  visite_le <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  releve_uuid <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  photos <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -89,6 +96,36 @@ sommier_valider_detection() ; rarement construit a la main."></head><body>
 
 <dt id="arg-observations">observations<a class="anchor" aria-label="anchor" href="#arg-observations"></a></dt>
 <dd><p>Observations libres (facultatif).</p></dd>
+
+
+<dt id="arg-geometrie">geometrie<a class="anchor" aria-label="anchor" href="#arg-geometrie"></a></dt>
+<dd><p>Position relevee sur le terrain, en WGS84 : un point
+(voir <code><a href="geometries.html">geom_point()</a></code>) (facultatif).</p></dd>
+
+
+<dt id="arg-precision-m-source-gnss">precision_m, source_gnss<a class="anchor" aria-label="anchor" href="#arg-precision-m-source-gnss"></a></dt>
+<dd><p>Precision et source declarees par le
+recepteur GNSS (facultatif).</p></dd>
+
+
+<dt id="arg-operateur">operateur<a class="anchor" aria-label="anchor" href="#arg-operateur"></a></dt>
+<dd><p>Agent qui a constate (facultatif).</p></dd>
+
+
+<dt id="arg-visite-le">visite_le<a class="anchor" aria-label="anchor" href="#arg-visite-le"></a></dt>
+<dd><p>Instant de la visite, tel que l'appareil l'a note
+(facultatif).</p></dd>
+
+
+<dt id="arg-releve-uuid">releve_uuid<a class="anchor" aria-label="anchor" href="#arg-releve-uuid"></a></dt>
+<dd><p>Identifiant du releve dans l'outil de terrain
+(facultatif).</p></dd>
+
+
+<dt id="arg-photos">photos<a class="anchor" aria-label="anchor" href="#arg-photos"></a></dt>
+<dd><p>Photos par leur empreinte, comme pour une reconnaissance de
+limite : voir <code><a href="registre2_foncier.html">registre2_foncier()</a></code> et <code><a href="sommier_deposer_photo.html">sommier_deposer_photo()</a></code>
+(facultatif).</p></dd>
 
 </dl></div>
     <div class="section level2">

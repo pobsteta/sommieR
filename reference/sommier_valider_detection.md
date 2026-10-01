@@ -17,7 +17,9 @@ sommier_valider_detection(
   nature = NULL,
   surface_ha = NULL,
   volume_impacte_m3 = NULL,
-  observations = NULL
+  observations = NULL,
+  id = uuid_v4(),
+  ...
 )
 ```
 
@@ -63,6 +65,17 @@ sommier_valider_detection(
 
   Observations libres (facultatif).
 
+- id:
+
+  UUID de l'entree a ecrire (facultatif) : celui du releve de terrain,
+  pour qu'un import se rejoue sans ecrire deux fois.
+
+- ...:
+
+  Champs du constat de terrain : `geometrie`, `precision_m`,
+  `source_gnss`, `operateur`, `visite_le`, `releve_uuid`, `photos` (voir
+  [`registre8_suite_detection()`](https://pobsteta.github.io/sommieR/reference/registre8_suite_detection.md)).
+
 ## Value
 
 Invisiblement, l'entree chainee.
@@ -73,3 +86,8 @@ Un constat qui ecarte la detection la rectifie tout autant qu'un constat
 qui la confirme : dans les deux cas la proposition ne doit plus etre lue
 comme un fait etabli. La difference tient au champ `statut_detection` du
 payload, que les vues exposent.
+
+Une detection ne se suit qu'une fois : une seconde suite est refusee.
+Pour revenir sur un constat, on corrige la suite elle-meme. Les constats
+d'une tournee QField s'importent par
+[`sommier_importer_qfield_detections()`](https://pobsteta.github.io/sommieR/reference/sommier_importer_qfield_detections.md).

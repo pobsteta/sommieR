@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.22.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.23.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,20 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.23.0" id="sommier-0230">sommieR 0.23.0<a class="anchor" aria-label="anchor" href="#sommier-0230"></a></h2>
+<p>Vérifier sur le terrain ce que la télédétection propose : un projet QField propre aux détections, à côté de celui des limites.</p>
+<ul><li>
+<code><a href="../reference/sommier_projet_qfield_detections.html">sommier_projet_qfield_detections()</a></code> écrit le projet de tournée : les détections en attente au registre 8, numérotées D01, D02… et dessinées par les pixels qui les ont produites. Le formulaire propose la détection sous les pieds de l’agent et exige un état : confirmé, écarté ou non vu. Une détection confirmée exige sa nature (crise sanitaire, chablis, sécheresse, coupe programmée…), ce que la télédétection ne sait pas dire.</li>
+<li>
+<code><a href="../reference/sommier_importer_qfield_detections.html">sommier_importer_qfield_detections()</a></code> inscrit la suite de chaque détection visitée, avec position, précision GNSS, opérateur et photos attestées par leur empreinte. L’import est tout ou rien et rejouable. « Non vu » n’écrit rien. Une détection déjà suivie ne l’est pas une seconde fois, et le bilan la signale.</li>
+<li>
+<code><a href="../reference/sommier_contours_detections.html">sommier_contours_detections()</a></code> recalcule, depuis les rasters RECONFORT (classes) et SUFOSAT (dates, probabilités), le contour de chaque détection en attente. Ce contour sert à trouver la zone, il ne prouve rien et n’entre pas dans la chaîne : à défaut de pixels, la détection se montre par son unité.</li>
+<li>
+<code><a href="../reference/sommier_inscrire_coupes_sufosat.html">sommier_inscrire_coupes_sufosat()</a></code> inscrit au registre 8, comme détections à vérifier, les coupes SUFOSAT qu’aucun martelage n’explique, sans doublon.</li>
+<li>Registre 8 en <code>r8-1.3.0</code> : la suite d’une détection porte la position relevée, la précision et la source GNSS, l’opérateur, l’instant de la visite et les photos. <code><a href="../reference/sommier_valider_detection.html">sommier_valider_detection()</a></code> gagne <code>id</code> et refuse une seconde suite pour une même détection.</li>
+<li>La lecture des rasters SUFOSAT se limite à l’emprise de la forêt : <code><a href="../reference/sommier_coupes_sufosat.html">sommier_coupes_sufosat()</a></code> et les contours lisent environ cinq fois plus vite sur un raster de zone.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.22.1" id="sommier-0221">sommieR 0.22.1<a class="anchor" aria-label="anchor" href="#sommier-0221"></a></h2>
 <ul><li>Un article, « Suivre la balance de possibilité », déroule toute la chaîne sur la démo de Couchey et une forêt d’exemple : l’aménagement transcrit, la balance en volume, l’avenant qui change la possibilité à partir d’un exercice, le martelage hors aménagement, la balance en surface et la référence IFN (SER C20 pour Couchey, 2,55 m³/ha/an).</li>
