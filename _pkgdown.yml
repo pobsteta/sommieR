@@ -316,6 +316,7 @@ reference:
       coupes rases détectées par SUFOSAT. Des estimations, hors chaîne.
     contents:
     - sommier_ser
+    - sommier_reference_ifn
     - sommier_lire_indices_nemeton
     - sommier_coupes_sufosat
 

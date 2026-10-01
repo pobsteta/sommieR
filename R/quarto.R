@@ -66,9 +66,8 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 #' @param reference_ifn Prelevement de reference de l'IFN, pour situer la
 #'   possibilite et le preleve (facultatif) : liste nommee portant
 #'   `taux_m3_ha_an`, et facultativement `ser`, `nom`, `millesime`, `source`.
-#'   Voir [sommier_ser()] pour la sylvoecoregion ; le taux se tire par
-#'   exemple de `nemeton::ifn_prelevement_essence_ser()`, somme des taux
-#'   `maille` de la SER.
+#'   [sommier_reference_ifn()] la rend toute faite, depuis la
+#'   sylvoecoregion de la foret et les tables IFN de nemeton.
 #' @param coupes_detectees Coupes rases detectees, telles que les rend
 #'   [sommier_coupes_sufosat()] (facultatif) : celles qu'aucun martelage de la
 #'   meme unite n'explique, l'exercice de la detection ou le precedent, sont

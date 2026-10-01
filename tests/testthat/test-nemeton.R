@@ -173,3 +173,31 @@ test_that("le rapport situe la possibilite et signale la coupe sans martelage", 
   expect_match(html, "B en 2018 (0,80 ha)", fixed = TRUE)
   expect_no_match(html, "A en 2018", fixed = TRUE)
 })
+
+test_that("la reference IFN se tire de nemeton pour la SER de la foret", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("nemeton")
+  cache <- withr::local_tempdir()
+  dir.create(file.path(cache, "ser"))
+  sf::st_write(sf::st_sf(
+    codeser = "B70", NomSER = "Sologne-Orleanais",
+    geometry = sf::st_sfc(sf::st_polygon(list(rbind(
+      c(600000, 6700000), c(601000, 6700000), c(601000, 6701000),
+      c(600000, 6701000), c(600000, 6700000)))), crs = 2154)
+  ), file.path(cache, "ser", "ser_l93.shp"), quiet = TRUE)
+  foret <- data.frame(wkt = paste0(
+    "POLYGON((600100 6700100, 600500 6700100, 600500 6700500, ",
+    "600100 6700500, 600100 6700100))"), stringsAsFactors = FALSE)
+
+  ref <- sommier_reference_ifn(foret, cache = cache)
+  expect_equal(ref$ser, "B70")
+  # Somme des taux `maille` des essences de la SER, IFN 2005-2024 : le
+  # chiffre que la forêt domaniale d'Orléans met en regard de sa possibilité.
+  expect_equal(ref$taux_m3_ha_an, 2.28)
+  expect_gt(ref$n_essences, 10L)
+  expect_match(ref$source, "nemeton")
+  # La reference se passe telle quelle au rapport.
+  expect_equal(valider_reference_ifn(ref[c("taux_m3_ha_an", "ser", "nom",
+                                           "millesime", "source")])$ser,
+               "B70")
+})

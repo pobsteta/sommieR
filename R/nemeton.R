@@ -53,6 +53,70 @@ sommier_ser <- function(emprise, cache = NULL, force = FALSE) {
   )
 }
 
+#' Prelevement de reference de l'IFN pour une foret
+#'
+#' @description
+#' Situe la foret dans sa sylvoecoregion ([sommier_ser()]) et rend le
+#' prelevement que l'IFN y observe, en m3/ha/an, toutes essences confondues :
+#' la reference qu'attend l'argument `reference_ifn` de
+#' [sommier_rapport_quarto()], et `reference_m3_ha_an` de
+#' [sommier_amenagement()].
+#'
+#' @details
+#' Le taux vient de nemeton (`ifn_prelevement_essence_ser()`), qui le tire des
+#' donnees brutes de l'IFN : arbres coupes et vidanges entre deux visites
+#' d'une placette, ramenes a l'annee. C'est la somme des taux `maille` des
+#' essences de la SER - le volume preleve par hectare de foret de la SER,
+#' toutes proprietes confondues. **Ce qui a ete coupe, non ce qui devait
+#' l'etre** : il situe une possibilite, il ne la juge pas.
+#'
+#' nemeton n'est pas sur le CRAN ; il s'installe depuis GitHub
+#' (`pak::pak("pobsteta/nemeton")`). Ses tables IFN sont livrees avec le
+#' paquet : aucun appel reseau, hors le premier telechargement de la couche
+#' des SER.
+#'
+#' @param emprise Couche des unites de gestion ([sommier_couche_ug()]), ou
+#'   `data.frame` a colonne `wkt` en Lambert-93.
+#' @param cache Repertoire de cache de la couche des SER.
+#'
+#' @return Une liste : `taux_m3_ha_an`, `ser`, `nom`, `millesime`, `source`,
+#'   `n_essences`, `plusieurs` (la foret touche plusieurs SER).
+#'
+#' @seealso [sommier_ser()], [sommier_rapport_quarto()]
+#'
+#' @examples
+#' # Necessite nemeton et, au premier appel, un acces reseau :
+#' # ref <- sommier_reference_ifn(sommier_couche_ug(con, foret))
+#' # sommier_rapport_quarto(con, foret, "rapport.pdf", format = "pdf",
+#' #                        reference_ifn = ref)
+#'
+#' @export
+sommier_reference_ifn <- function(emprise, cache = NULL) {
+  if (!requireNamespace("nemeton", quietly = TRUE)) {
+    stop("Le paquet `nemeton` est requis : pak::pak(\"pobsteta/nemeton\").",
+         call. = FALSE)
+  }
+  ser <- sommier_ser(emprise, cache = cache)
+  table <- nemeton::ifn_prelevement_essence_ser(ser = ser$code)
+  table <- table[table$niveau == "ser" & !is.na(table$prelev_ha_an_maille), ,
+                 drop = FALSE]
+  if (nrow(table) == 0L) {
+    stop("nemeton ne porte aucun prelevement IFN pour la SER ", ser$code,
+         " (", ser$nom, ").", call. = FALSE)
+  }
+  millesime <- unique(as.character(table$millesime))
+  list(
+    taux_m3_ha_an = round(sum(table$prelev_ha_an_maille), 2L),
+    ser = ser$code,
+    nom = ser$nom,
+    millesime = paste(millesime, collapse = ", "),
+    source = paste0("IGN, IFN ", paste(millesime, collapse = ", "),
+                    " (via nemeton) : somme des taux par essence de la SER"),
+    n_essences = nrow(table),
+    plusieurs = ser$plusieurs
+  )
+}
+
 #' Indices d'un projet nemeton, par unite
 #'
 #' @description
