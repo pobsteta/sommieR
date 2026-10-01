@@ -11,7 +11,14 @@ registre8_suite_detection(
   description,
   surface_ha = NULL,
   volume_impacte_m3 = NULL,
-  observations = NULL
+  observations = NULL,
+  geometrie = NULL,
+  precision_m = NULL,
+  source_gnss = NULL,
+  operateur = NULL,
+  visite_le = NULL,
+  releve_uuid = NULL,
+  photos = NULL
 )
 }
 \arguments{
@@ -28,6 +35,24 @@ registre8_suite_detection(
 \item{volume_impacte_m3}{Volume de bois affecte (facultatif).}
 
 \item{observations}{Observations libres (facultatif).}
+
+\item{geometrie}{Position relevee sur le terrain, en WGS84 : un point
+(voir \code{\link[=geom_point]{geom_point()}}) (facultatif).}
+
+\item{precision_m, source_gnss}{Precision et source declarees par le
+recepteur GNSS (facultatif).}
+
+\item{operateur}{Agent qui a constate (facultatif).}
+
+\item{visite_le}{Instant de la visite, tel que l'appareil l'a note
+(facultatif).}
+
+\item{releve_uuid}{Identifiant du releve dans l'outil de terrain
+(facultatif).}
+
+\item{photos}{Photos par leur empreinte, comme pour une reconnaissance de
+limite : voir \code{\link[=registre2_foncier]{registre2_foncier()}} et \code{\link[=sommier_deposer_photo]{sommier_deposer_photo()}}
+(facultatif).}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.

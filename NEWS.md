@@ -1,3 +1,35 @@
+# sommieR 0.23.0
+
+Vérifier sur le terrain ce que la télédétection propose : un projet QField
+propre aux détections, à côté de celui des limites.
+
+- `sommier_projet_qfield_detections()` écrit le projet de tournée : les
+  détections en attente au registre 8, numérotées D01, D02… et dessinées par
+  les pixels qui les ont produites. Le formulaire propose la détection sous
+  les pieds de l'agent et exige un état : confirmé, écarté ou non vu. Une
+  détection confirmée exige sa nature (crise sanitaire, chablis, sécheresse,
+  coupe programmée…), ce que la télédétection ne sait pas dire.
+- `sommier_importer_qfield_detections()` inscrit la suite de chaque détection
+  visitée, avec position, précision GNSS, opérateur et photos attestées par
+  leur empreinte. L'import est tout ou rien et rejouable. « Non vu » n'écrit
+  rien. Une détection déjà suivie ne l'est pas une seconde fois, et le bilan
+  la signale.
+- `sommier_contours_detections()` recalcule, depuis les rasters RECONFORT
+  (classes) et SUFOSAT (dates, probabilités), le contour de chaque détection
+  en attente. Ce contour sert à trouver la zone, il ne prouve rien et n'entre
+  pas dans la chaîne : à défaut de pixels, la détection se montre par son
+  unité.
+- `sommier_inscrire_coupes_sufosat()` inscrit au registre 8, comme
+  détections à vérifier, les coupes SUFOSAT qu'aucun martelage n'explique,
+  sans doublon.
+- Registre 8 en `r8-1.3.0` : la suite d'une détection porte la position
+  relevée, la précision et la source GNSS, l'opérateur, l'instant de la
+  visite et les photos. `sommier_valider_detection()` gagne `id` et refuse
+  une seconde suite pour une même détection.
+- La lecture des rasters SUFOSAT se limite à l'emprise de la forêt :
+  `sommier_coupes_sufosat()` et les contours lisent environ cinq fois plus
+  vite sur un raster de zone.
+
 # sommieR 0.22.1
 
 - Un article, « Suivre la balance de possibilité », déroule toute la chaîne

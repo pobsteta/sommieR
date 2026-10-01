@@ -237,6 +237,18 @@ registre8_detection <- function(nature,
 #' @param surface_ha Surface constatee en hectares (facultatif).
 #' @param volume_impacte_m3 Volume de bois affecte (facultatif).
 #' @param observations Observations libres (facultatif).
+#' @param geometrie Position relevee sur le terrain, en WGS84 : un point
+#'   (voir [geom_point()]) (facultatif).
+#' @param precision_m,source_gnss Precision et source declarees par le
+#'   recepteur GNSS (facultatif).
+#' @param operateur Agent qui a constate (facultatif).
+#' @param visite_le Instant de la visite, tel que l'appareil l'a note
+#'   (facultatif).
+#' @param releve_uuid Identifiant du releve dans l'outil de terrain
+#'   (facultatif).
+#' @param photos Photos par leur empreinte, comme pour une reconnaissance de
+#'   limite : voir [registre2_foncier()] et [sommier_deposer_photo()]
+#'   (facultatif).
 #'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
@@ -247,7 +259,14 @@ registre8_suite_detection <- function(statut,
                                       description,
                                       surface_ha = NULL,
                                       volume_impacte_m3 = NULL,
-                                      observations = NULL) {
+                                      observations = NULL,
+                                      geometrie = NULL,
+                                      precision_m = NULL,
+                                      source_gnss = NULL,
+                                      operateur = NULL,
+                                      visite_le = NULL,
+                                      releve_uuid = NULL,
+                                      photos = NULL) {
   compacter(list(
     type_entree       = "phenomene",
     nature            = valider_choix(nature, "nature", SOMMIER_NATURES_PHENOMENE),
@@ -257,7 +276,15 @@ registre8_suite_detection <- function(statut,
                                    "volume_impacte_m3", min = 0),
     statut_detection  = valider_choix(statut, "statut", c("confirme", "ecarte")),
     detection_id      = valider_uuid(detection_id, "detection_id"),
-    observations      = si_present(observations, valider_texte, "observations")
+    observations      = si_present(observations, valider_texte, "observations"),
+    geometrie         = geometrie_si_presente(geometrie, "Point"),
+    precision_m       = si_present(precision_m, valider_nombre, "precision_m",
+                                   min = 0),
+    source_gnss       = si_present(source_gnss, valider_texte, "source_gnss"),
+    operateur         = si_present(operateur, valider_texte, "operateur"),
+    visite_le         = si_present(visite_le, format_instant, "visite_le"),
+    releve_uuid       = si_present(releve_uuid, valider_uuid, "releve_uuid"),
+    photos            = valider_photos(photos)
   ))
 }
 

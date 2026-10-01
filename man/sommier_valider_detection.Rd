@@ -14,7 +14,9 @@ sommier_valider_detection(
   nature = NULL,
   surface_ha = NULL,
   volume_impacte_m3 = NULL,
-  observations = NULL
+  observations = NULL,
+  id = uuid_v4(),
+  ...
 )
 }
 \arguments{
@@ -37,6 +39,13 @@ sommier_valider_detection(
 \item{volume_impacte_m3}{Volume affecte (facultatif).}
 
 \item{observations}{Observations libres (facultatif).}
+
+\item{id}{UUID de l'entree a ecrire (facultatif) : celui du releve de
+terrain, pour qu'un import se rejoue sans ecrire deux fois.}
+
+\item{...}{Champs du constat de terrain : \code{geometrie}, \code{precision_m},
+\code{source_gnss}, \code{operateur}, \code{visite_le}, \code{releve_uuid}, \code{photos} (voir
+\code{\link[=registre8_suite_detection]{registre8_suite_detection()}}).}
 }
 \value{
 Invisiblement, l'entree chainee.
@@ -51,4 +60,8 @@ Un constat qui ecarte la detection la rectifie tout autant qu'un constat
 qui la confirme : dans les deux cas la proposition ne doit plus etre lue
 comme un fait etabli. La difference tient au champ \code{statut_detection} du
 payload, que les vues exposent.
+
+Une detection ne se suit qu'une fois : une seconde suite est refusee. Pour
+revenir sur un constat, on corrige la suite elle-meme. Les constats d'une
+tournee QField s'importent par \code{\link[=sommier_importer_qfield_detections]{sommier_importer_qfield_detections()}}.
 }

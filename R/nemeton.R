@@ -228,8 +228,9 @@ sommier_coupes_sufosat <- function(dates, proba, emprise, seuil_proba = 90,
          "(voir sommier_couche_ug()).", call. = FALSE)
   }
 
-  pixels <- merge(lire_xyz(dates), lire_xyz(proba), by = c("x", "y"),
-                  suffixes = c("_date", "_proba"))
+  fenetre <- fenetre_emprise(emprise)
+  pixels <- merge(lire_xyz(dates, fenetre), lire_xyz(proba, fenetre),
+                  by = c("x", "y"), suffixes = c("_date", "_proba"))
   pixels <- pixels[!is.na(pixels$v_date) & pixels$v_date > 0 &
                      pixels$v_date < 1e6 & !is.na(pixels$v_proba) &
                      pixels$v_proba >= seuil_proba & pixels$v_proba <= 100, ]
@@ -305,11 +306,34 @@ numero_du_libelle <- function(libelle) {
          character(1))
 }
 
-lire_xyz <- function(raster) {
+# La boite des unites, elargie de `marge_m` : ce qu'il faut lire d'un raster
+# de zone pour une foret.
+fenetre_emprise <- function(emprise, marge_m = 50) {
+  formes <- sf::st_as_sfc(emprise$wkt[!is.na(emprise$wkt)], crs = 2154)
+  boite <- sf::st_bbox(sf::st_buffer(sf::st_union(formes), marge_m))
+  as.numeric(boite[c("xmin", "ymin", "xmax", "ymax")])
+}
+
+# `fenetre` (xmin, ymin, xmax, ymax, en Lambert-93) restreint la lecture : un
+# raster de zone couvre souvent dix fois la foret.
+lire_xyz <- function(raster, fenetre = NULL) {
   xyz <- tempfile(fileext = ".xyz")
   on.exit(unlink(xyz), add = TRUE)
-  sf::gdal_utils("translate", raster, xyz, options = c("-of", "XYZ"),
-                 quiet = TRUE)
+  options <- c("-of", "XYZ")
+  if (!is.null(fenetre)) {
+    options <- c(options, "-projwin", fenetre[[1L]], fenetre[[4L]],
+                 fenetre[[3L]], fenetre[[2L]])
+  }
+  # Une fenetre qui deborde un raster deja decoupe a la foret se remplit de
+  # vide : GDAL le signale, sans que ce soit une faute.
+  withCallingHandlers(
+    sf::gdal_utils("translate", raster, xyz, options = options, quiet = TRUE),
+    warning = function(w) {
+      if (grepl("falls partially outside", conditionMessage(w), fixed = TRUE)) {
+        invokeRestart("muffleWarning")
+      }
+    }
+  )
   valeurs <- utils::read.table(xyz, col.names = c("x", "y", "v"))
   valeurs
 }

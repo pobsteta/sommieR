@@ -65,12 +65,7 @@ sommier_projet_qfield <- function(con, foret_id, elements, dossier, operateur,
            "QField.", call. = FALSE)
     }
   }
-  if (!est_vide(ortho)) {
-    ortho <- valider_texte(ortho, "ortho")
-    if (!file.exists(ortho)) {
-      stop("Ortho introuvable : ", ortho, ".", call. = FALSE)
-    }
-  }
+  ortho <- controler_ortho(ortho)
   foret_id <- valider_uuid(foret_id, "foret_id")
   dossier <- valider_texte(dossier, "dossier")
   operateur <- valider_texte(operateur, "operateur")
@@ -80,30 +75,11 @@ sommier_projet_qfield <- function(con, foret_id, elements, dossier, operateur,
     stop("`elements` doit venir de sommier_elements_pci() et n'etre pas vide.",
          call. = FALSE)
   }
-  if (file.exists(dossier)) {
-    stop("Le dossier existe deja : ", dossier, ". Un projet de terrain n'est ",
-         "jamais ecrase - il porte peut-etre une tournee non rapatriee.",
-         call. = FALSE)
-  }
-  foret <- DBI::dbGetQuery(con, "SELECT nom FROM foret WHERE id = $1",
-                           params = list(foret_id))
-  if (nrow(foret) == 0L) {
-    stop("Foret inconnue : ", foret_id, ".", call. = FALSE)
-  }
-  ug <- sommier_couche_ug(con, foret_id)
-  ug <- ug[!is.na(ug$wkt), , drop = FALSE]
-  if (nrow(ug) == 0L) {
-    stop("Aucune unite de gestion n'a de contour : le projet n'aurait pas de ",
-         "foret a montrer.", call. = FALSE)
-  }
-
-  modele <- system.file("qgis", package = "sommieR")
-  fichiers <- c("limites.qgs", "limites_attachments.zip", "terrain.gpkg")
-  if (!all(file.exists(file.path(modele, fichiers)))) {
-    stop("Modele QGIS introuvable dans le paquet.", call. = FALSE)
-  }
-  dir.create(file.path(dossier, "DCIM"), recursive = TRUE)
-  file.copy(file.path(modele, fichiers), dossier)
+  terrain <- preparer_terrain(con, foret_id, dossier)
+  foret <- terrain$foret
+  ug <- terrain$ug
+  copier_modele(dossier, c("limites.qgs", "limites_attachments.zip",
+                           "terrain.gpkg"))
   gpkg <- file.path(dossier, "terrain.gpkg")
 
   elements <- etat_des_elements(con, foret_id, elements, anciennete_ans)
@@ -122,32 +98,12 @@ sommier_projet_qfield <- function(con, foret_id, elements, dossier, operateur,
   ecrire_couche(sf::st_sf(numero = ug$numero_affichage,
                           geometry = sf::st_cast(contours, "MULTIPOLYGON")),
                 gpkg, "ug")
-  if (!is.null(fond) && nrow(fond) > 0L) {
-    ecrire_couche(sf::st_sf(
-      reference = fond$reference,
-      designation = paste(sub("^0+", "", fond$section),
-                          sub("^0+", "", fond$numero)),
-      geometry = sf::st_cast(sf::st_as_sfc(fond$wkt, crs = 2154),
-                             "MULTIPOLYGON")
-    ), gpkg, "parcelles")
-  }
+  ecrire_parcelles(fond, gpkg)
 
   qgs <- file.path(dossier, "limites.qgs")
-  if (est_vide(ortho)) {
-    retirer_couche_projet(qgs, "limites_ortho")
-  } else if (!file.copy(ortho, file.path(dossier, "ortho.tif"))) {
-    stop("Impossible de copier l'ortho dans le projet.", call. = FALSE)
-  }
-  cadre <- sf::st_bbox(sf::st_buffer(tampon, 50))
-  poser_valeurs_projet(qgs, c(
-    "@@TITRE@@" = paste0("Limites - ", foret$nom[[1L]]),
-    "@@OPERATEUR@@" = operateur,
-    "@@FORET@@" = foret_id,
-    'xmin="111111"' = sprintf('xmin="%.2f"', cadre[["xmin"]]),
-    'ymin="2222222"' = sprintf('ymin="%.2f"', cadre[["ymin"]]),
-    'xmax="333333"' = sprintf('xmax="%.2f"', cadre[["xmax"]]),
-    'ymax="4444444"' = sprintf('ymax="%.2f"', cadre[["ymax"]])
-  ))
+  joindre_ortho(qgs, dossier, ortho, "limites_ortho")
+  poser_cadre_projet(qgs, paste0("Limites - ", foret$nom[[1L]]), operateur,
+                     foret_id, sf::st_buffer(tampon, 50))
   invisible(qgs)
 }
 
@@ -232,10 +188,7 @@ sommier_importer_qfield <- function(con, foret_id, dossier, depot, auteur) {
   n_photos <- 0L
   entrees <- lapply(seq_len(nrow(nouveaux)), function(i) {
     c <- nouveaux[i, ]
-    siennes <- photos[tolower(photos$constat_uuid) == c$uuid, , drop = FALSE]
-    deposees <- lapply(siennes$fichier, function(f) {
-      sommier_deposer_photo(file.path(dossier, f), depot)
-    })
+    deposees <- deposer_photos_constat(c$uuid, photos, dossier, depot)
     n_photos <<- n_photos + length(deposees)
     element <- if (is.na(c$element_id)) NULL else
       element_vu(elements[elements$id == c$element_id, , drop = FALSE])
@@ -331,6 +284,86 @@ ecrire_couches_elements <- function(elements, gpkg) {
     coords = c("x", "y"), crs = 2154
   )
   ecrire_couche(ancres, gpkg, "elements")
+}
+
+# Ce que les deux projets de terrain - limites et detections - verifient et
+# preparent de la meme facon.
+
+controler_ortho <- function(ortho) {
+  if (est_vide(ortho)) {
+    return(NULL)
+  }
+  ortho <- valider_texte(ortho, "ortho")
+  if (!file.exists(ortho)) {
+    stop("Ortho introuvable : ", ortho, ".", call. = FALSE)
+  }
+  ortho
+}
+
+# Le dossier ne doit pas exister ; la foret doit avoir des contours.
+preparer_terrain <- function(con, foret_id, dossier) {
+  if (file.exists(dossier)) {
+    stop("Le dossier existe deja : ", dossier, ". Un projet de terrain n'est ",
+         "jamais ecrase - il porte peut-etre une tournee non rapatriee.",
+         call. = FALSE)
+  }
+  foret <- DBI::dbGetQuery(con, "SELECT nom FROM foret WHERE id = $1",
+                           params = list(foret_id))
+  if (nrow(foret) == 0L) {
+    stop("Foret inconnue : ", foret_id, ".", call. = FALSE)
+  }
+  ug <- sommier_couche_ug(con, foret_id)
+  ug <- ug[!is.na(ug$wkt), , drop = FALSE]
+  if (nrow(ug) == 0L) {
+    stop("Aucune unite de gestion n'a de contour : le projet n'aurait pas de ",
+         "foret a montrer.", call. = FALSE)
+  }
+  list(foret = foret, ug = ug)
+}
+
+copier_modele <- function(dossier, fichiers) {
+  modele <- system.file("qgis", package = "sommieR")
+  if (!all(file.exists(file.path(modele, fichiers)))) {
+    stop("Modele QGIS introuvable dans le paquet.", call. = FALSE)
+  }
+  dir.create(file.path(dossier, "DCIM"), recursive = TRUE)
+  file.copy(file.path(modele, fichiers), dossier)
+}
+
+ecrire_parcelles <- function(fond, gpkg) {
+  if (is.null(fond) || nrow(fond) == 0L) {
+    return(invisible())
+  }
+  ecrire_couche(sf::st_sf(
+    reference = fond$reference,
+    designation = paste(sub("^0+", "", fond$section),
+                        sub("^0+", "", fond$numero)),
+    geometry = sf::st_cast(sf::st_as_sfc(fond$wkt, crs = 2154),
+                           "MULTIPOLYGON")
+  ), gpkg, "parcelles")
+}
+
+# Sans ortho fournie, la couche hors ligne est retiree plutot que laissee
+# pointer vers un fichier absent.
+joindre_ortho <- function(qgs, dossier, ortho, identifiant) {
+  if (est_vide(ortho)) {
+    retirer_couche_projet(qgs, identifiant)
+  } else if (!file.copy(ortho, file.path(dossier, "ortho.tif"))) {
+    stop("Impossible de copier l'ortho dans le projet.", call. = FALSE)
+  }
+}
+
+poser_cadre_projet <- function(qgs, titre, operateur, foret_id, emprise) {
+  cadre <- sf::st_bbox(emprise)
+  poser_valeurs_projet(qgs, c(
+    "@@TITRE@@" = titre,
+    "@@OPERATEUR@@" = operateur,
+    "@@FORET@@" = foret_id,
+    'xmin="111111"' = sprintf('xmin="%.2f"', cadre[["xmin"]]),
+    'ymin="2222222"' = sprintf('ymin="%.2f"', cadre[["ymin"]]),
+    'xmax="333333"' = sprintf('xmax="%.2f"', cadre[["xmax"]]),
+    'ymax="4444444"' = sprintf('ymax="%.2f"', cadre[["ymax"]])
+  ))
 }
 
 # Une couche de donnees est remplacee ; les autres couches du GeoPackage -
@@ -518,20 +551,35 @@ controler_constats <- function(constats, photos, elements, dossier) {
     if (is.na(c$visite_le)) {
       fautes <- c(fautes, paste0(nom, " : date de visite absente"))
     }
-    if (!is.na(c$uuid)) {
-      siennes <- photos$fichier[tolower(photos$constat_uuid) == tolower(c$uuid)]
-      for (f in siennes) {
-        if (is.na(f) || !file.exists(file.path(dossier, f))) {
-          fautes <- c(fautes, paste0(nom, " : photo introuvable (",
-                                     if (is.na(f)) "vide" else f, ")"))
-        } else if (!tolower(tools::file_ext(f)) %in% names(SOMMIER_TYPES_PHOTO)) {
-          fautes <- c(fautes, paste0(nom, " : type de photo non reconnu (", f,
-                                     ")"))
-        }
-      }
+    fautes <- c(fautes, controler_photos_constat(c, nom, photos, dossier))
+  }
+  fautes
+}
+
+controler_photos_constat <- function(c, nom, photos, dossier) {
+  if (is.na(c$uuid)) {
+    return(character(0))
+  }
+  fautes <- character(0)
+  siennes <- photos$fichier[tolower(photos$constat_uuid) == tolower(c$uuid)]
+  for (f in siennes) {
+    if (is.na(f) || !file.exists(file.path(dossier, f))) {
+      fautes <- c(fautes, paste0(nom, " : photo introuvable (",
+                                 if (is.na(f)) "vide" else f, ")"))
+    } else if (!tolower(tools::file_ext(f)) %in% names(SOMMIER_TYPES_PHOTO)) {
+      fautes <- c(fautes, paste0(nom, " : type de photo non reconnu (", f,
+                                 ")"))
     }
   }
   fautes
+}
+
+# Les photos d'un constat, deposees sous leur empreinte.
+deposer_photos_constat <- function(uuid, photos, dossier, depot) {
+  siennes <- photos[tolower(photos$constat_uuid) == uuid, , drop = FALSE]
+  lapply(siennes$fichier, function(f) {
+    sommier_deposer_photo(file.path(dossier, f), depot)
+  })
 }
 
 # La position relevee, en WGS84 comme toute geometrie de payload. Un constat

@@ -211,6 +211,18 @@ reference:
     - sommier_verifier_photos
     - SOMMIER_TYPES_PHOTO
 
+  - title: "Vérification des détections sur le terrain"
+    desc: >
+      Les détections de télédétection (RECONFORT, SUFOSAT) se confirment ou
+      s'écartent sur le terrain, avec un projet QField propre : contours
+      recalculés depuis les rasters, constat avec position et photos, import
+      tout ou rien et rejouable.
+    contents:
+    - sommier_inscrire_coupes_sufosat
+    - sommier_contours_detections
+    - sommier_projet_qfield_detections
+    - sommier_importer_qfield_detections
+
   - title: "Géométrie des payloads"
     desc: >
       La géométrie est dans le payload, donc dans l'empreinte : le contour
