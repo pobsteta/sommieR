@@ -51,8 +51,9 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 #'   les rend [sommier_fond_pci_lire()], se posent en croix sur la carte de la
 #'   desserte. `NULL` pour s'en passer. Meme regle que `fond` : fourni, jamais
 #'   telecharge au rendu.
-#' @param photos Depot des photos des reconnaissances de limite (voir
-#'   [sommier_deposer_photo()]) ; `NULL` pour s'en passer. Fourni, jamais
+#' @param photos Depot des photos des constats de terrain - reconnaissances
+#'   de limite et suites des detections (voir [sommier_deposer_photo()]) ;
+#'   `NULL` pour s'en passer. Fourni, jamais
 #'   telecharge. Les vignettes de la planche photographique sont reduites au
 #'   rendu ; une photo dont l'empreinte ne tient plus n'est pas montree.
 #' @param public `TRUE` pour un document a diffuser : la planche
@@ -144,8 +145,11 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
     indices         = indices,
     balance_surface = essayer_section(sommier_balance_surface(con, foret_id)),
     reference_ifn   = valider_reference_ifn(reference_ifn),
-    coupes_sans_martelage = essayer_section(coupes_sans_martelage(
-      con, foret_id, coupes_detectees
+    # Sans bornes, comme les limites : le sort d'une detection est un etat
+    # courant.
+    suites_detection = essayer_section(lire_suites_detection(con, foret_id)),
+    coupes_sans_martelage = essayer_section(suite_des_coupes(
+      con, foret_id, coupes_sans_martelage(con, foret_id, coupes_detectees)
     )),
     coupes_detectees_parametres = if (!is.null(coupes_detectees)) list(
       seuil_proba = attr(coupes_detectees, "seuil_proba"),
@@ -171,10 +175,15 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
   file.copy(modele, source_qmd)
   # Les vignettes se deposent dans l'atelier, a cote du document : un rendu
   # public n'en fabrique aucune.
-  if (!is.null(rapport$limites) && !isTRUE(public) && !est_vide(photos)) {
-    rapport$limites$photos <- preparer_vignettes(
-      rapport$limites$photos, valider_texte(photos, "photos"), atelier
-    )
+  if (!isTRUE(public) && !est_vide(photos)) {
+    depot <- valider_texte(photos, "photos")
+    for (section in c("limites", "suites_detection")) {
+      if (!is.null(rapport[[section]])) {
+        rapport[[section]]$photos <- preparer_vignettes(
+          rapport[[section]]$photos, depot, atelier
+        )
+      }
+    }
   }
   saveRDS(rapport, file.path(atelier, "donnees.rds"))
 

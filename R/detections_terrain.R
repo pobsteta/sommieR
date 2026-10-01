@@ -504,3 +504,108 @@ controler_constats_detections <- function(constats, photos, projet,
   }
   fautes
 }
+
+# ---------------------------------------------------------------------------
+# Le rapport
+
+# Les suites donnees aux detections, avec la detection qu'elles tranchent et
+# leurs photos. Sans bornes : comme la derniere visite d'une borne, le sort
+# d'une detection est un etat courant. Une suite rectifiee a son tour ne se
+# lit plus que par sa correction.
+lire_suites_detection <- function(con, foret_id) {
+  lignes <- DBI::dbGetQuery(
+    con,
+    "SELECT s.id::text AS id, s.seq, s.date_evenement, s.payload::text AS payload,
+            d.date_evenement AS date_detection, d.payload ->> 'source' AS source,
+            (d.payload ->> 'surface_ha')::numeric AS surface_detectee,
+            d.payload ->> 'nature' AS nature_detectee,
+            u.numero_affichage AS ug
+       FROM v_entree_courante s
+       JOIN entree_sommier d ON d.id = (s.payload ->> 'detection_id')::uuid
+       LEFT JOIN ug u ON u.uuid = d.ug_uuid
+      WHERE s.foret_id = $1 AND s.registre = 8
+        AND s.payload ? 'statut_detection'
+      ORDER BY s.date_evenement, s.seq",
+    params = list(foret_id)
+  )
+  if (nrow(lignes) == 0L) {
+    return(NULL)
+  }
+  payloads <- lapply(lignes$payload, jsonlite::fromJSON,
+                     simplifyVector = FALSE)
+  champ <- function(nom) {
+    vapply(payloads, function(p) {
+      if (is.null(p[[nom]])) NA_character_ else as.character(p[[nom]])
+    }, character(1))
+  }
+  suites <- data.frame(
+    id = lignes$id,
+    ug = lignes$ug,
+    source = lignes$source,
+    date_detection = as.Date(lignes$date_detection),
+    nature_detectee = lignes$nature_detectee,
+    surface_detectee = as.numeric(lignes$surface_detectee),
+    statut = champ("statut_detection"),
+    nature = champ("nature"),
+    surface_constatee = suppressWarnings(as.numeric(champ("surface_ha"))),
+    volume_m3 = suppressWarnings(as.numeric(champ("volume_impacte_m3"))),
+    date_visite = as.Date(lignes$date_evenement),
+    operateur = champ("operateur"),
+    precision_m = suppressWarnings(as.numeric(champ("precision_m"))),
+    observations = champ("observations"),
+    nb_photos = vapply(payloads, function(p) length(p$photos), integer(1)),
+    stringsAsFactors = FALSE
+  )
+  # La planche reconnait une photo par son « numero » : ici l'unite et la
+  # source de la detection.
+  suites$numero <- paste0(ifelse(is.na(suites$ug), "hors UG", suites$ug), " \u00b7 ",
+                          toupper(suites$source))
+  photos <- do.call(rbind, lapply(seq_along(payloads), function(i) {
+    p <- payloads[[i]]$photos
+    if (length(p) == 0L) return(NULL)
+    data.frame(
+      entree_id = suites$id[[i]], numero = suites$numero[[i]],
+      etat = suites$statut[[i]], date_visite = suites$date_visite[[i]],
+      sha256 = vapply(p, function(x) x$sha256, ""),
+      type = vapply(p, function(x) x$type, ""),
+      exif_date = vapply(p, function(x) x$exif_date %||% NA_character_, ""),
+      exif_position = vapply(p, function(x) x$exif_position %||% NA_character_,
+                             ""),
+      stringsAsFactors = FALSE
+    )
+  }))
+  list(suites = suites, photos = photos)
+}
+
+# Ce que le registre 8 dit de chaque coupe SUFOSAT sans martelage : pas
+# inscrite, en attente, ou tranchee sur le terrain - et alors avec quelle
+# nature. Une coupe se reconnait a son unite et a son annee, comme a
+# l'inscription.
+suite_des_coupes <- function(con, foret_id, sans) {
+  if (is.null(sans) || nrow(sans) == 0L) {
+    return(sans)
+  }
+  inscrites <- DBI::dbGetQuery(
+    con,
+    "SELECT u.numero_affichage AS ug,
+            EXTRACT(YEAR FROM d.date_evenement)::int AS annee,
+            s.payload ->> 'statut_detection' AS statut,
+            s.payload ->> 'nature' AS nature
+       FROM entree_sommier d
+       JOIN ug u ON u.uuid = d.ug_uuid
+       LEFT JOIN v_entree_courante s
+         ON s.registre = 8 AND (s.payload ->> 'detection_id')::uuid = d.id
+      WHERE d.foret_id = $1 AND d.registre = 8
+        AND d.payload ->> 'type_entree' = 'detection'
+        AND d.payload ->> 'source' = 'sufosat'",
+    params = list(foret_id)
+  )
+  rang <- match(paste(sans$ug, sans$annee),
+                paste(inscrites$ug, inscrites$annee))
+  sans$suite <- ifelse(is.na(rang), "non_inscrite",
+                       ifelse(is.na(inscrites$statut[rang]), "en_attente",
+                              inscrites$statut[rang]))
+  sans$nature_constatee <- ifelse(is.na(rang), NA_character_,
+                                  inscrites$nature[rang])
+  sans
+}

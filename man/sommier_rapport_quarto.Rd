@@ -53,8 +53,9 @@ les rend \code{\link[=sommier_fond_pci_lire]{sommier_fond_pci_lire()}}, se posen
 desserte. \code{NULL} pour s'en passer. Meme regle que \code{fond} : fourni, jamais
 telecharge au rendu.}
 
-\item{photos}{Depot des photos des reconnaissances de limite (voir
-\code{\link[=sommier_deposer_photo]{sommier_deposer_photo()}}) ; \code{NULL} pour s'en passer. Fourni, jamais
+\item{photos}{Depot des photos des constats de terrain - reconnaissances
+de limite et suites des detections (voir \code{\link[=sommier_deposer_photo]{sommier_deposer_photo()}}) ;
+\code{NULL} pour s'en passer. Fourni, jamais
 telecharge. Les vignettes de la planche photographique sont reduites au
 rendu ; une photo dont l'empreinte ne tient plus n'est pas montree.}
 

@@ -290,3 +290,79 @@ test_that("un import fautif n'ecrit rien ; une detection deja suivie est signale
   expect_equal(bilan$ecrits, 0L)
   expect_equal(bilan$deja_suivies, "D01")
 })
+
+test_that("le rapport montre les suites, leurs photos, et le sort des coupes", {
+  con <- base_detections()
+  f <- foret_detections(con)
+  depot <- file.path(withr::local_tempdir(), "photos")
+  dossier <- file.path(withr::local_tempdir(), "detections")
+  sommier_projet_qfield_detections(con, f$foret, dossier, "P. O.")
+  u <- c(uuid_v4(), uuid_v4())
+  constats <- rbind(
+    constat_detection(u[[1L]], f$reconfort, "confirme", "crise_sanitaire",
+                      600100, 6700100),
+    constat_detection(u[[2L]], f$sufosat, "ecarte", NA, 600250, 6700150)
+  )
+  constats$surface_ha[[1L]] <- 0.8
+  constats$observations[[2L]] <- "Trouee ancienne, deja recrue"
+  saisir_constats(dossier, constats)
+  file.copy(testthat::test_path("fixtures", "photo-exif-ii.jpg"),
+            file.path(dossier, "DCIM", "detections_1.jpg"))
+  sf::st_write(data.frame(uuid = uuid_v4(), constat_uuid = u[[1L]],
+                          fichier = "DCIM/detections_1.jpg"),
+               file.path(dossier, "detections.gpkg"), layer = "photos",
+               append = TRUE, quiet = TRUE)
+  sommier_importer_qfield_detections(con, f$foret, dossier, depot, "test")
+
+  lu <- lire_suites_detection(con, f$foret)
+  k <- lu$suites[order(lu$suites$source), ]
+  expect_equal(k$statut, c("confirme", "ecarte"))
+  expect_equal(k$source, c("reconfort", "sufosat"))
+  expect_equal(k$surface_detectee, c(1, 0.5))
+  expect_equal(k$surface_constatee, c(0.8, NA))
+  expect_equal(k$nb_photos, c(1L, 0L))
+  expect_equal(nrow(lu$photos), 1L)
+  expect_equal(lu$photos$numero, "12 · RECONFORT")
+
+  # Le sort des coupes SUFOSAT sans martelage : 2019 a ete inscrite puis
+  # ecartee, 2021 n'est pas inscrite.
+  sans <- data.frame(ug = c("12", "12"), annee = c(2019L, 2021L),
+                     surface_ha = c(0.5, 1.2), stringsAsFactors = FALSE)
+  sort <- suite_des_coupes(con, f$foret, sans)
+  expect_equal(sort$suite, c("ecarte", "non_inscrite"))
+
+  skip_if(!nzchar(Sys.which("quarto")), "Quarto n'est pas installe.")
+  chemin <- withr::local_tempfile(fileext = ".html")
+  coupes <- data.frame(ug = c("12", "12"), annee = c(2019L, 2021L),
+                       surface_ha = c(0.5, 1.2),
+                       date_mediane = as.Date(c("2019-08-28", "2021-09-01")),
+                       debut = as.Date(c("2019-08-01", "2021-08-01")),
+                       fin = as.Date(c("2019-09-01", "2021-10-01")),
+                       proba_moyenne = c(95, 96), stringsAsFactors = FALSE)
+  attr(coupes, "seuil_proba") <- 90
+  attr(coupes, "surface_min_ha") <- 0.5
+  sommier_rapport_quarto(con, f$foret, chemin, format = "html", photos = depot,
+                         referentiel = "amenagement", coupes_detectees = coupes)
+  html <- paste(readLines(chemin, warn = FALSE, encoding = "UTF-8"),
+                collapse = "\n")
+  # La coupe de 2019, ecartee, sort du compte ; celle de 2021 n'est pas
+  # inscrite et le rapport le dit.
+  expect_match(html, "SUFOSAT détecte 1 coupe(s)", fixed = TRUE)
+  expect_match(html, "sur le terrain, hors du compte : 12 en 2019", fixed = TRUE)
+  expect_match(html, "pas encore proposées", fixed = TRUE)
+  expect_match(html, "Suites données sur le terrain", fixed = TRUE)
+  expect_match(html, "crise sanitaire", fixed = TRUE)
+  expect_match(html, "Des bois à exploiter hors martelage", fixed = TRUE)
+  expect_match(html, "Trouee ancienne", fixed = TRUE)
+  expect_match(html, "Planche photographique", fixed = TRUE)
+  expect_equal(lengths(regmatches(html, gregexpr("<figure style=", html))), 1L)
+
+  public <- withr::local_tempfile(fileext = ".html")
+  sommier_rapport_quarto(con, f$foret, public, format = "html", photos = depot,
+                         public = TRUE)
+  html <- paste(readLines(public, warn = FALSE, encoding = "UTF-8"),
+                collapse = "\n")
+  expect_match(html, "Suites données sur le terrain", fixed = TRUE)
+  expect_match(html, "Version publique", fixed = TRUE)
+  expect_no_match(html, "<figure style=", fixed = TRUE)
+})

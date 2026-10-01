@@ -1,3 +1,29 @@
+# sommieR 0.24.0
+
+Le rapport montre ce que le terrain a dit des détections.
+
+- **Une sous-section « Suites données sur le terrain »** sous les détections
+  en attente. Pour chaque détection tranchée, elle donne l'unité, la source,
+  la surface détectée, le constat (confirmée ou écartée), la nature retenue,
+  la surface constatée, la date de visite et le nombre de photos. Elle nomme
+  les opérateurs et reprend les observations de terrain. Elle n'est pas bornée
+  par la période : le sort d'une détection est un état courant.
+- **Un rappel du registre 5.** Une détection confirmée en crise sanitaire,
+  chablis, sécheresse, incendie, neige ou gel laisse peut-être des produits
+  accidentels à y inscrire. Le rapport le signale sans l'écrire.
+- **La planche photographique des limites sert aussi aux détections**, avec
+  les mêmes contrôles : empreinte vérifiée, EXIF déclaré, aucune photo dans
+  la version publique. Le paramètre `photos` de `sommier_rapport_quarto()`
+  désigne le dépôt de tous les constats de terrain.
+- **Le sort de chaque coupe SUFOSAT sans martelage.** Le rapport dit si elle
+  n'est pas inscrite, si elle attend un constat ou si elle a été confirmée,
+  et avec quelle nature. Une coupe écartée sur le terrain sort du compte des
+  coupes sans martelage.
+- `sommier_ortho_ign()` : un bloc que le service WMS de l'IGN refuse deux fois
+  est une panne du service, et l'erreur le dit par sa classe
+  (`sommier_reseau_indisponible`). Le test qui interroge le vrai service se
+  saute alors, au lieu d'échouer.
+
 # sommieR 0.23.0
 
 Vérifier sur le terrain ce que la télédétection propose : un projet QField
