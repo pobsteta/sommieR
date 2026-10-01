@@ -1,6 +1,6 @@
 Package: sommieR
 Title: Sommier Forestier Unifie a Valeur Probante
-Version: 0.19.0
+Version: 0.20.0
 Authors@R:
     person("Pascal", "Obstetar", email = "pascal.obstetar@gmail.com",
            role = c("aut", "cre"))
@@ -26,6 +26,7 @@ Imports:
     stats,
     utils
 Suggests:
+    arrow,
     curl,
     knitr,
     rmarkdown,

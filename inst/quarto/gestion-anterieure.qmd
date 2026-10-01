@@ -1156,6 +1156,133 @@ if (!is.null(hors) && nrow(hors) > 0L) {
 }
 ```
 
+```{r balance-reperes, results='asis'}
+# Trois grandeurs dans la même unité, le m³/ha/an : ce que l'acte fixe, ce
+# que la forêt a réellement donné, et ce que l'IFN observe dans la
+# sylvoécorégion. Le prélevé moyen ne porte que sur les exercices échus :
+# l'exercice en cours le tirerait vers le bas.
+ref <- rapport$reference_ifn
+if (!is.null(b) && nrow(b) > 0L) {
+  courant <- as.integer(format(as.Date(rapport$edite_le, "%d/%m/%Y"), "%Y"))
+  echus <- b[as.integer(b$exercice) < courant, , drop = FALSE]
+  lignes <- list()
+  for (id in unique(b$amenagement_id)) {
+    a <- b[b$amenagement_id == id, , drop = FALSE]
+    e <- echus[echus$amenagement_id == id, , drop = FALSE]
+    nom <- if (is.null(a$amenagement) || is.na(a$amenagement[[1L]])) id else
+      a$amenagement[[1L]]
+    lignes[[length(lignes) + 1L]] <- data.frame(
+      `Repère` = paste0(if (recolte_prevue) "Récolte prévue" else
+                          "Possibilité", " — ", nom),
+      `m³/ha/an` = nombre(mean(as.numeric(a$possibilite_m3_ha_an)), 2L),
+      check.names = FALSE, stringsAsFactors = FALSE)
+    if (nrow(e) > 0L) {
+      lignes[[length(lignes) + 1L]] <- data.frame(
+        `Repère` = paste0("Prélevé moyen, ", min(e$exercice), "–",
+                          max(e$exercice), " (", nrow(e), " exercice(s) échu(s))"),
+        `m³/ha/an` = nombre(mean(as.numeric(e$prelevement_m3_ha)), 2L),
+        check.names = FALSE, stringsAsFactors = FALSE)
+    }
+  }
+  if (!is.null(ref)) {
+    lignes[[length(lignes) + 1L]] <- data.frame(
+      `Repère` = paste0("Prélèvement observé par l'IFN",
+                        if (!is.null(ref$ser)) paste0(", SER ", ref$ser),
+                        if (!is.null(ref$nom)) paste0(" ", ref$nom),
+                        if (!is.null(ref$millesime))
+                          paste0(" (", ref$millesime, ")")),
+      `m³/ha/an` = nombre(ref$taux_m3_ha_an, 2L),
+      check.names = FALSE, stringsAsFactors = FALSE)
+  }
+  tableau_reperes <- do.call(rbind, lignes)
+  if (knitr::is_latex_output()) {
+    names(tableau_reperes) <- gsub("³", "3", names(tableau_reperes), fixed = TRUE)
+  }
+  print(knitr::kable(tableau_reperes, caption = "Repères, à l'hectare",
+                     align = c("l", "r")))
+  cat("\n\n")
+  if (!is.null(ref)) {
+    cat("*Le prélèvement de l'IFN est celui qu'il observe sur l'ensemble des ",
+        "forêts de la sylvoécorégion, toutes propriétés et toutes essences ",
+        "confondues : c'est ce qui a été coupé, non ce qui devait l'être. Il ",
+        "situe une possibilité, il ne la juge pas",
+        if (!is.null(ref$source)) paste0(" (", ref$source, ")"),
+        ".*\n\n", sep = "")
+  }
+}
+```
+
+```{r foret-porte, results='asis', eval=!is.null(rapport$indices)}
+# Le volume sur pied de nemeton : une estimation, hors chaîne, qui met la
+# possibilité en regard du capital qu'elle prélève.
+ind <- rapport$indices
+unites <- if (!is.null(carte)) as.character(carte$numero_affichage) else character(0)
+apparies <- ind[!is.na(ind$numero) & ind$numero %in% unites &
+                  !is.na(ind$volume_m3_ha), , drop = FALSE]
+volume <- sum(apparies$volume_m3_ha * apparies$surface_ha, na.rm = TRUE)
+surface <- sum(apparies$surface_ha, na.rm = TRUE)
+cat("::: {.callout-note}\n## Ce que la forêt porte\n\n")
+if (nrow(apparies) == 0L) {
+  cat("Aucune unité des indices de nemeton ne s'apparie à une unité du ",
+      "sommier : le volume sur pied n'est pas montré.\n", sep = "")
+} else {
+  cat("Volume sur pied estimé : **", nombre(volume, 0L), " m³** sur ",
+      nombre(surface, 2L), " ha, soit ", nombre(volume / surface, 0L),
+      " m³/ha en moyenne (médiane ",
+      nombre(stats::median(apparies$volume_m3_ha), 0L), " m³/ha, ",
+      nrow(apparies), " unité(s)).", sep = "")
+  if (!is.null(b) && nrow(b) > 0L) {
+    derniere <- b[nrow(b), ]
+    cat(" La possibilité en vigueur, ",
+        nombre(as.numeric(derniere$possibilite_m3_an), 0L),
+        " m³/an, en prélève ",
+        nombre(100 * as.numeric(derniere$possibilite_m3_an) / volume, 1L),
+        " % par an.", sep = "")
+  }
+  cat("\n\n")
+  vides <- apparies$numero[apparies$volume_m3_ha == 0]
+  if (length(vides) > 0L) {
+    cat("Unité(s) à volume nul, rasées ou non boisées : ",
+        paste(vides, collapse = ", "), ".\n\n", sep = "")
+  }
+}
+manquent <- setdiff(unites, ind$numero)
+if (length(manquent) > 0L) {
+  cat("Unité(s) du sommier sans indice : ", paste(manquent, collapse = ", "),
+      ".\n\n", sep = "")
+}
+cat("*", attr(ind, "source") %||% "nemeton", ", indices du ",
+    format(attr(ind, "date_calcul") %||% Sys.Date(), "%d/%m/%Y"),
+    ". Estimation sur la hauteur LiDAR HD et les tarifs de l'IFN ; nemeton ",
+    "ne déclare pas sa précision. Hors registre et hors chaîne.*\n:::\n\n",
+    sep = "")
+```
+
+```{r coupes-sans-martelage, results='asis', eval=!is.null(rapport$coupes_detectees_parametres)}
+# Une coupe qu'aucun martelage n'explique : la balance est peut-être
+# incomplète. Elle n'est pas corrigée pour autant - une détection n'est pas
+# un constat.
+sans <- rapport$coupes_sans_martelage
+p <- rapport$coupes_detectees_parametres
+if (is.null(sans) || nrow(sans) == 0L) {
+  cat("*Les ", p$n, " coupe(s) rase(s) détectée(s) par SUFOSAT ont chacune ",
+      "un martelage dans la même unité, l'exercice de la détection ou le ",
+      "précédent.*\n\n", sep = "")
+} else {
+  cat("::: {.callout-warning}\n## Coupes détectées sans martelage inscrit\n\n",
+      "SUFOSAT détecte ", nrow(sans), " coupe(s) rase(s) (",
+      nombre(sum(sans$surface_ha), 2L), " ha) qu'aucun martelage de la même ",
+      "unité n'explique, l'exercice de la détection ou le précédent : ",
+      paste0(sans$ug, " en ", sans$annee, " (", nombre(sans$surface_ha, 2L),
+             " ha)", collapse = " ; "),
+      ". La balance est peut-être incomplète — ou la coupe est un chablis, ",
+      "une coupe sanitaire. À vérifier ; rien n'est corrigé d'office.\n\n",
+      "*Probabilité d'au moins ", p$seuil_proba %||% 90, " %, détections ",
+      "d'au moins ", nombre(p$surface_min_ha %||% 0.5, 1L), " ha par unité ",
+      "et par année.*\n:::\n\n", sep = "")
+}
+```
+
 ```{r balance-provenance, results='asis'}
 # La balance additionne les volumes martelés sans regarder d'où ils viennent —
 # c'est correct, un exercice transcrit compte autant qu'un autre, mais cela ne
