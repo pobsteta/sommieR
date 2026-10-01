@@ -1283,6 +1283,43 @@ if (is.null(sans) || nrow(sans) == 0L) {
 }
 ```
 
+```{r balance-surface, results='asis', eval=!is.null(rapport$balance_surface)}
+# La balance en surface : ce que fixent les arrêtés récents de l'ONF, plus
+# qu'un volume. La surface prévue est le total de la période réparti
+# également ; l'arrêté ne fixe pas de calendrier, c'est un repère.
+bs <- rapport$balance_surface
+cat("#### Balance en surface : la régénération\n\n")
+for (id in unique(bs$amenagement_id)) {
+  a <- bs[bs$amenagement_id == id, , drop = FALSE]
+  duree <- round(a$surface_regeneration_ha[[1L]] / a$surface_prevue_ha[[1L]])
+  cat("**", a$amenagement[[1L]], "** : ",
+      nombre(a$surface_regeneration_ha[[1L]], 2L),
+      " ha à ouvrir en régénération sur ", duree, " exercices, soit ",
+      nombre(a$surface_prevue_ha[[1L]], 2L), " ha par an en rythme régulier. ",
+      "Ouverts à ce jour : ", nombre(sum(a$surface_ouverte_ha), 2L), " ha ; ",
+      "écart cumulé : ", nombre(a$ecart_cumule_ha[[nrow(a)]], 2L),
+      " ha.\n\n", sep = "")
+  tableau_surface <- data.frame(
+    Exercice = as.character(a$exercice),
+    `Prévue (ha)` = nombre(a$surface_prevue_ha, 2L),
+    `Ouverte (ha)` = nombre(a$surface_ouverte_ha, 2L),
+    `Écart (ha)` = nombre(a$ecart_ha, 2L),
+    `Écart cumulé (ha)` = nombre(a$ecart_cumule_ha, 2L),
+    check.names = FALSE, stringsAsFactors = FALSE)
+  print(knitr::kable(tableau_surface,
+                     caption = paste0("Surface ouverte en régénération — ",
+                                      a$amenagement[[1L]]),
+                     align = c("l", "r", "r", "r", "r")))
+  cat("\n\n")
+}
+cat("*Surface ouverte : celle des martelages de régénération (ensemencement, ",
+    "secondaire, définitive, coupe rase), surface saisie ou, à défaut, celle ",
+    "de l'unité. Une unité ne s'ouvre qu'une fois : des coupes successives ",
+    "sur la même parcelle n'ajoutent que la surface qu'elle n'avait pas encore ",
+    "ouverte. Un écart cumulé négatif est un retard de régénération.*\n\n",
+    sep = "")
+```
+
 ```{r balance-provenance, results='asis'}
 # La balance additionne les volumes martelés sans regarder d'où ils viennent —
 # c'est correct, un exercice transcrit compte autant qu'un autre, mais cela ne

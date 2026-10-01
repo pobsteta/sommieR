@@ -18,6 +18,7 @@ sommier_avenant_possibilite(
   surface_ha = NULL,
   annee_fin = NULL,
   ventilation = NULL,
+  surface_regeneration_ha = NULL,
   source = NULL
 )
 }
@@ -40,6 +41,10 @@ sommier_avenant_possibilite(
 \item{annee_fin}{Nouvelle fin de l'amenagement (facultatif).}
 
 \item{ventilation}{Nouvelle ventilation, en m3/ha/an (facultatif).}
+
+\item{surface_regeneration_ha}{Nouvelle surface a ouvrir en regeneration
+sur la periode, en ha (facultatif). Elle vaut pour tout l'amenagement :
+c'est un total de periode, pas un rythme annuel.}
 
 \item{source}{Page ou tableau de l'avenant (facultatif).}
 }

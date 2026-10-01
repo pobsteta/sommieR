@@ -259,3 +259,54 @@ test_that("un martelage parcourt par defaut toute son unite", {
            WHERE foret_id = $1 ORDER BY seq LIMIT 1", params = list(foret))
   expect_false(payload$a)
 })
+
+test_that("la balance en surface suit la regeneration ouverte", {
+  con <- base_amenagement()
+  foret <- foret_creer(con, "Foret regeneree", "domanial")
+  carre <- function(x0) sprintf(paste0(
+    "ST_Multi(ST_GeomFromText('POLYGON((%1$d 6700000, %2$d 6700000, ",
+    "%2$d 6700200, %1$d 6700200, %1$d 6700000))', 2154))"), x0, x0 + 200)
+  unites <- c(A = ug_creer(con, foret, "A", "2010-01-01"),
+              B = ug_creer(con, foret, "B", "2010-01-01"))
+  for (i in seq_along(unites)) {
+    DBI::dbExecute(con, paste0(
+      "INSERT INTO ug_geometrie (ug_uuid, version, geom, source, date_debut) ",
+      "VALUES ($1, 1, ", carre(600000 + (i - 1L) * 300), ", 'test', ",
+      "'2010-01-01')"), params = list(unites[[i]]))
+  }
+  # 20 ha a ouvrir sur 2020-2023 : 5 ha par an en rythme regulier.
+  amenager(con, foret, 2020, 2023, 400, surface_regeneration_ha = 20)
+  marteler_ug <- function(unite, annee, nature, surface = NULL) {
+    sommier_ajouter(con, sommier_entree(
+      foret_id = foret, registre = 5L, date_evenement = paste0(annee, "-10-01"),
+      auteur = "agent-01", ug_uuid = unites[[unite]],
+      payload = registre5_coupe("martelage", annee, nature, 100,
+                                surface_ha = surface)
+    ))
+  }
+  marteler_ug("A", 2020, "Coupe d'ensemencement")   # toute l'unite : 4 ha
+  marteler_ug("A", 2021, "secondaire")              # deja ouverte : 0
+  marteler_ug("B", 2022, "regeneration", 1.5)       # partielle : 1,5 ha
+  marteler_ug("B", 2023, "amelioration")            # n'ouvre rien
+
+  bs <- sommier_balance_surface(con, foret)
+  expect_equal(bs$exercice, 2020:2023)
+  expect_equal(bs$surface_prevue_ha, rep(5, 4))
+  expect_equal(bs$surface_ouverte_ha, c(4, 0, 1.5, 0), tolerance = 1e-6)
+  expect_equal(bs$ecart_cumule_ha, c(-1, -6, -9.5, -14.5), tolerance = 1e-6)
+
+  # Un avenant revise la surface a regenerer de la periode.
+  sommier_avenant_possibilite(con, foret, "TEST-2020-2023", a_partir_de = 2022,
+                              autorite = "onf", nom_qualite = "Agent",
+                              date_acte = "2022-01-10", auteur = "agent-01",
+                              surface_regeneration_ha = 8)
+  expect_equal(unique(sommier_balance_surface(con, foret)$surface_prevue_ha), 2)
+
+  # Sans surface a regenerer, pas de balance en surface.
+  foret2 <- foret_creer(con, "Foret sans surface", "domanial")
+  amenager(con, foret2, 2020, 2023, 400)
+  expect_equal(nrow(sommier_balance_surface(con, foret2)), 0L)
+
+  expect_equal(normaliser_nature("Coupe d'Ensemencement"),
+               "coupe_d_ensemencement")
+})
