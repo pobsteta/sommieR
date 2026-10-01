@@ -457,6 +457,19 @@ calcule contre lui, et repart de zéro avec chaque aménagement.
 - [`SOMMIER_NATURES_VOLUME`](https://pobsteta.github.io/sommieR/reference/SOMMIER_NATURES_VOLUME.md)
   : Natures du volume d'un amenagement
 
+## Repères de la possibilité : IFN, nemeton, SUFOSAT
+
+Ce qui situe une possibilité sans la fixer : le prélèvement observé par
+l’IFN dans la sylvoécorégion, le volume sur pied estimé par nemeton, les
+coupes rases détectées par SUFOSAT. Des estimations, hors chaîne.
+
+- [`sommier_ser()`](https://pobsteta.github.io/sommieR/reference/sommier_ser.md)
+  : Sylvoecoregion d'une foret
+- [`sommier_lire_indices_nemeton()`](https://pobsteta.github.io/sommieR/reference/sommier_lire_indices_nemeton.md)
+  : Indices d'un projet nemeton, par unite
+- [`sommier_coupes_sufosat()`](https://pobsteta.github.io/sommieR/reference/sommier_coupes_sufosat.md)
+  : Coupes rases detectees par SUFOSAT, par unite et par annee
+
 ## Base de données
 
 - [`sommier_init_schema()`](https://pobsteta.github.io/sommieR/reference/sommier_init_schema.md)

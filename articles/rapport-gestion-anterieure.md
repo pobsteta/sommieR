@@ -19,7 +19,7 @@ existante.
 | **Surface**          | 16,37 ha                                          |
 | **Période couverte** | Du 2016-01-01 au 2025-12-31                       |
 | **Référentiel**      | amenagement                                       |
-| **Édité le**         | 30/09/2026                                        |
+| **Édité le**         | 01/10/2026                                        |
 
 ### 1.1 Parcellaire
 
@@ -51,7 +51,7 @@ document.
 | **État de la chaîne** | intacte |
 | **Entrées** | 67 |
 | **Séquence de tête** | 67 |
-| **Empreinte de tête** | `bbf9588c065b5ccee603f91974c7462fde2f3b1451e25ea40d7ca6cbb6cbabc4` |
+| **Empreinte de tête** | `440ec493fe0930e46818f5c1ac583d1cfb0463d30f58cbd0d770e89acb06857a` |
 
 ## 2 Provenance des écritures
 
@@ -141,6 +141,13 @@ Balance de possibilité {.caption-top .table}
 
 Balance cumulée par aménagement — la ligne pointillée marque
 l’équilibre, et le cumul repart de zéro à chaque aménagement.
+
+| Repère                                            | m³/ha/an |
+|:--------------------------------------------------|---------:|
+| Possibilité — Amenagement 2016-2035               |     5,00 |
+| Prélevé moyen, 2016–2025 (10 exercice(s) échu(s)) |     5,55 |
+
+Repères, à l’hectare {.caption-top .table}
 
 Note
 
@@ -285,5 +292,5 @@ l’empreinte de tête, et la vérification le dit.
 
 ------------------------------------------------------------------------
 
-*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.19.0 le
-30/09/2026.*
+*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.20.0 le
+01/10/2026.*

@@ -11,7 +11,7 @@ elements d'IBP et la desserte."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.19.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.20.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,6 +62,9 @@ elements d'IBP et la desserte.</p>
 <span>  fond_pci <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  photos <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  public <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  indices <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  reference_ifn <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  coupes_detectees <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  quarto <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which</a></span><span class="op">(</span><span class="st">"quarto"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -128,6 +131,29 @@ rendu ; une photo dont l'empreinte ne tient plus n'est pas montree.</p></dd>
 photographique est retiree, le tableau garde le nombre de photos, et le
 document dit qu'elles existent. Une photo peut montrer un riverain ou une
 plaque d'immatriculation.</p></dd>
+
+
+<dt id="arg-indices">indices<a class="anchor" aria-label="anchor" href="#arg-indices"></a></dt>
+<dd><p>Indices de nemeton par unite, tels que les rend
+<code><a href="sommier_lire_indices_nemeton.html">sommier_lire_indices_nemeton()</a></code> (facultatif) : un encadre « Ce que la
+foret porte » donne le volume sur pied et la possibilite rapportee au
+capital. Des estimations, hors chaine, presentees comme telles.</p></dd>
+
+
+<dt id="arg-reference-ifn">reference_ifn<a class="anchor" aria-label="anchor" href="#arg-reference-ifn"></a></dt>
+<dd><p>Prelevement de reference de l'IFN, pour situer la
+possibilite et le preleve (facultatif) : liste nommee portant
+<code>taux_m3_ha_an</code>, et facultativement <code>ser</code>, <code>nom</code>, <code>millesime</code>, <code>source</code>.
+Voir <code><a href="sommier_ser.html">sommier_ser()</a></code> pour la sylvoecoregion ; le taux se tire par
+exemple de <code>nemeton::ifn_prelevement_essence_ser()</code>, somme des taux
+<code>maille</code> de la SER.</p></dd>
+
+
+<dt id="arg-coupes-detectees">coupes_detectees<a class="anchor" aria-label="anchor" href="#arg-coupes-detectees"></a></dt>
+<dd><p>Coupes rases detectees, telles que les rend
+<code><a href="sommier_coupes_sufosat.html">sommier_coupes_sufosat()</a></code> (facultatif) : celles qu'aucun martelage de la
+meme unite n'explique, l'exercice de la detection ou le precedent, sont
+signalees sous la balance.</p></dd>
 
 
 <dt id="arg-quarto">quarto<a class="anchor" aria-label="anchor" href="#arg-quarto"></a></dt>
