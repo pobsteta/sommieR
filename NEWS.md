@@ -1,3 +1,35 @@
+# sommieR 0.22.0
+
+La balance se tient aussi en surface. C'est ce que fixent les arrêtés récents
+de l'ONF : celui de 2019 du massif de Lorris-Les Bordes ne fixe aucun volume,
+mais 2 026,57 ha à ouvrir en régénération sur vingt ans.
+
+## Balance en surface
+
+`sommier_balance_surface()` confronte, exercice par exercice, la surface
+ouverte en régénération à la surface prévue, et en cumule l'écart par
+aménagement :
+
+- **prévue** : la surface à régénérer de la période (`surface_regeneration_ha`
+  de l'aménagement), répartie également sur ses exercices. L'arrêté fixe un
+  total, pas un calendrier : ce rythme régulier n'est qu'un repère ;
+- **ouverte** : la surface des martelages dont la nature relève de
+  `SOMMIER_NATURES_REGENERATION` (régénération, ensemencement, secondaire,
+  définitive, coupe rase ; la nature, texte libre, est lue sans accents ni
+  majuscules). **Une unité ne s'ouvre qu'une fois** : une coupe secondaire
+  puis définitive sur la même parcelle n'ouvrent pas deux fois la même
+  surface. Des surfaces partielles saisies s'additionnent, sans dépasser la
+  surface de l'unité.
+
+Un écart cumulé négatif est un retard de régénération. Un avenant peut
+désormais réviser la surface à régénérer
+(`sommier_avenant_possibilite(surface_regeneration_ha = )`).
+
+Le rapport ajoute une section « Balance en surface : la régénération » sous la
+balance en volume. Sur la copie d'essai d'Orléans, avec un avenant fictif de
+60 ha sur 2009-2028, 47,89 ha sont ouverts, presque tous en 2017-2019 sur les
+coupes rases que SUFOSAT a vues, et l'écart cumulé est de −6,11 ha en 2026.
+
 # sommieR 0.21.0
 
 La référence de l'IFN s'obtient en un appel.

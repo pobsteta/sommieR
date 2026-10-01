@@ -142,6 +142,7 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
     )),
     public          = isTRUE(public),
     indices         = indices,
+    balance_surface = essayer_section(sommier_balance_surface(con, foret_id)),
     reference_ifn   = valider_reference_ifn(reference_ifn),
     coupes_sans_martelage = essayer_section(coupes_sans_martelage(
       con, foret_id, coupes_detectees

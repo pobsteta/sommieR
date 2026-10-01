@@ -162,6 +162,9 @@ sommier_amenagement <- function(con, foret_id, id, annee_debut, annee_fin,
 #' @param surface_ha Nouvelle surface (facultatif).
 #' @param annee_fin Nouvelle fin de l'amenagement (facultatif).
 #' @param ventilation Nouvelle ventilation, en m3/ha/an (facultatif).
+#' @param surface_regeneration_ha Nouvelle surface a ouvrir en regeneration
+#'   sur la periode, en ha (facultatif). Elle vaut pour tout l'amenagement :
+#'   c'est un total de periode, pas un rythme annuel.
 #' @param source Page ou tableau de l'avenant (facultatif).
 #'
 #' @return Invisiblement, l'entree chainee.
@@ -174,12 +177,15 @@ sommier_avenant_possibilite <- function(con, foret_id, amenagement_id,
                                         date_acte, auteur, reference = NULL,
                                         possibilite_m3_ha_an = NULL,
                                         surface_ha = NULL, annee_fin = NULL,
-                                        ventilation = NULL, source = NULL) {
+                                        ventilation = NULL,
+                                        surface_regeneration_ha = NULL,
+                                        source = NULL) {
   foret_id <- valider_uuid(foret_id, "foret_id")
   bloc <- valider_amenagement(compacter(list(
     id = amenagement_id, a_partir_de = a_partir_de,
     possibilite_m3_ha_an = possibilite_m3_ha_an, surface_ha = surface_ha,
-    annee_fin = annee_fin, ventilation = ventilation, source = source
+    annee_fin = annee_fin, ventilation = ventilation,
+    surface_regeneration_ha = surface_regeneration_ha, source = source
   )), "avenant")
 
   existants <- lire_amenagements(con, foret_id)
@@ -349,7 +355,7 @@ valider_amenagement <- function(amenagement, type_validation) {
   avenant <- identical(type_validation, "avenant")
   admis <- if (avenant) {
     c("id", "a_partir_de", "possibilite_m3_ha_an", "surface_ha", "annee_fin",
-      "ventilation", "source")
+      "ventilation", "surface_regeneration_ha", "source")
   } else {
     c("id", "libelle", "annee_debut", "annee_fin", "possibilite_m3_ha_an",
       "surface_ha", "ventilation", "serie", "tolerance_ans", "source",
@@ -367,10 +373,11 @@ valider_amenagement <- function(amenagement, type_validation) {
   if (avenant) {
     bloc$a_partir_de <- annee(a$a_partir_de, "amenagement$a_partir_de")
     if (est_vide(a$possibilite_m3_ha_an) && est_vide(a$surface_ha) &&
-        est_vide(a$annee_fin)) {
-      stop("Un avenant change la possibilite, la surface ou la fin : ",
-           "`possibilite_m3_ha_an`, `surface_ha` et `annee_fin` ne peuvent ",
-           "manquer ensemble.", call. = FALSE)
+        est_vide(a$annee_fin) && est_vide(a$surface_regeneration_ha)) {
+      stop("Un avenant change la possibilite, la surface, la fin ou la ",
+           "surface a regenerer : `possibilite_m3_ha_an`, `surface_ha`, ",
+           "`annee_fin` et `surface_regeneration_ha` ne peuvent manquer ",
+           "ensemble.", call. = FALSE)
     }
     bloc$annee_fin <- si_present(a$annee_fin, annee, "amenagement$annee_fin")
   } else {
@@ -412,6 +419,12 @@ valider_amenagement <- function(amenagement, type_validation) {
                                         "amenagement$nature_volume",
                                         SOMMIER_NATURES_VOLUME)
     bloc$groupes <- valider_surfaces_groupes(a$groupes)
+    bloc$surface_regeneration_ha <- si_present(
+      a$surface_regeneration_ha, valider_nombre,
+      "amenagement$surface_regeneration_ha", min = 0
+    )
+  }
+  if (avenant) {
     bloc$surface_regeneration_ha <- si_present(
       a$surface_regeneration_ha, valider_nombre,
       "amenagement$surface_regeneration_ha", min = 0

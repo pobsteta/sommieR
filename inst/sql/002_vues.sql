@@ -140,7 +140,14 @@ SELECT
   a.surface_ha                                           AS surface_initiale_ha,
   a.possibilite_m3_ha_an * a.surface_ha                  AS possibilite_initiale_m3_an,
   a.ventilation, a.serie, a.tolerance_ans, a.source,
-  a.nature_volume, a.groupes, a.surface_regeneration_ha,
+  a.nature_volume, a.groupes,
+  COALESCE((
+    SELECT v.surface_regeneration_ha FROM v_amenagement_acte v
+     WHERE v.foret_id = a.foret_id AND v.amenagement_id = a.amenagement_id
+       AND v.type_validation = 'avenant'
+       AND v.surface_regeneration_ha IS NOT NULL
+     ORDER BY v.seq DESC LIMIT 1
+  ), a.surface_regeneration_ha)                          AS surface_regeneration_ha,
   a.reference, a.type_validation, a.acte_id, a.seq,
   a.date_evenement                                       AS date_acte,
   a.repris

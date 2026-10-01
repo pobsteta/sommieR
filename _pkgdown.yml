@@ -304,10 +304,12 @@ reference:
     - sommier_amenagement
     - sommier_avenant_possibilite
     - sommier_balance_possibilite
+    - sommier_balance_surface
     - sommier_martelages_hors_amenagement
     - sommier_reprendre_exercices
     - exercice_definir
     - SOMMIER_NATURES_VOLUME
+    - SOMMIER_NATURES_REGENERATION
 
   - title: "Repères de la possibilité : IFN, nemeton, SUFOSAT"
     desc: >
