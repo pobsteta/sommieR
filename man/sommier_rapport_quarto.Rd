@@ -71,9 +71,8 @@ capital. Des estimations, hors chaine, presentees comme telles.}
 \item{reference_ifn}{Prelevement de reference de l'IFN, pour situer la
 possibilite et le preleve (facultatif) : liste nommee portant
 \code{taux_m3_ha_an}, et facultativement \code{ser}, \code{nom}, \code{millesime}, \code{source}.
-Voir \code{\link[=sommier_ser]{sommier_ser()}} pour la sylvoecoregion ; le taux se tire par
-exemple de \code{nemeton::ifn_prelevement_essence_ser()}, somme des taux
-\code{maille} de la SER.}
+\code{\link[=sommier_reference_ifn]{sommier_reference_ifn()}} la rend toute faite, depuis la
+sylvoecoregion de la foret et les tables IFN de nemeton.}
 
 \item{coupes_detectees}{Coupes rases detectees, telles que les rend
 \code{\link[=sommier_coupes_sufosat]{sommier_coupes_sufosat()}} (facultatif) : celles qu'aucun martelage de la
