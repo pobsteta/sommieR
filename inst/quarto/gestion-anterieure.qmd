@@ -1162,10 +1162,12 @@ if (!is.null(hors) && nrow(hors) > 0L) {
 # sylvoécorégion. Le prélevé moyen ne porte que sur les exercices échus :
 # l'exercice en cours le tirerait vers le bas.
 ref <- rapport$reference_ifn
+lignes <- list()
+# Sans aménagement, la référence de l'IFN garde son sens : elle dit ce que
+# prélèvent les forêts voisines, à quoi une future possibilité se mesurera.
 if (!is.null(b) && nrow(b) > 0L) {
   courant <- as.integer(format(as.Date(rapport$edite_le, "%d/%m/%Y"), "%Y"))
   echus <- b[as.integer(b$exercice) < courant, , drop = FALSE]
-  lignes <- list()
   for (id in unique(b$amenagement_id)) {
     a <- b[b$amenagement_id == id, , drop = FALSE]
     e <- echus[echus$amenagement_id == id, , drop = FALSE]
@@ -1184,6 +1186,8 @@ if (!is.null(b) && nrow(b) > 0L) {
         check.names = FALSE, stringsAsFactors = FALSE)
     }
   }
+}
+if (length(lignes) > 0L || !is.null(ref)) {
   if (!is.null(ref)) {
     lignes[[length(lignes) + 1L]] <- data.frame(
       `Repère` = paste0("Prélèvement observé par l'IFN",
