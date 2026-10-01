@@ -99,6 +99,19 @@ euros <- function(x) {
   formatC(x, format = "f", digits = 0, big.mark = " ")
 }
 
+# Les suites des détections, et ce qu'une nature confirmée appelle. Partagé
+# entre la balance (coupes SUFOSAT) et la section des détections.
+libelles_statut <- c(confirme = "confirmée", ecarte = "écartée")
+libelles_nature <- c(crise_sanitaire = "crise sanitaire",
+                     tempete = "chablis (tempête)", secheresse = "sécheresse",
+                     degat_gibier = "dégâts de gibier", incendie = "incendie",
+                     gel = "gel", neige = "neige", inondation = "inondation",
+                     autre = "autre")
+# Une nature qui, confirmée, laisse des bois à exploiter hors martelage : un
+# produit accidentel, au registre 5.
+NATURES_ACCIDENTELLES <- c("crise_sanitaire", "tempete", "secheresse",
+                           "incendie", "neige", "gel")
+
 # Nombre à la française : virgule décimale, espace des milliers.
 nombre <- function(x, decimales = 1L) {
   formatC(as.numeric(x), format = "f", digits = decimales, big.mark = " ",
@@ -734,11 +747,11 @@ premiere_majuscule <- function(x) paste0(toupper(substr(x, 1L, 1L)),
 # La planche : quatre vignettes par ligne, la légende sous chacune. Écrite
 # directement en HTML et en LaTeX — la grille de figures de Quarto numérotait
 # chaque vignette « (a) », comme autant de sous-figures d'une figure absente.
-imprimer_planche <- function(montrees) {
+imprimer_planche <- function(montrees, libelles = libelles_etat) {
   legende <- paste0(
     ifelse(is.na(montrees$numero), "hors plan", montrees$numero), " · ",
     format(montrees$date_visite, "%d/%m/%Y"), " · ",
-    unname(libelles_etat[montrees$etat]), " · ",
+    unname(libelles[montrees$etat]), " · ",
     substr(montrees$sha256, 1L, 12L)
   )
   if (knitr::is_latex_output()) {
@@ -747,7 +760,7 @@ imprimer_planche <- function(montrees) {
     legende_latex <- paste0(
       ifelse(is.na(montrees$numero), "hors plan", montrees$numero),
       "\\newline ", format(montrees$date_visite, "%d/%m/%Y"), " · ",
-      unname(libelles_etat[montrees$etat]), "\\newline ",
+      unname(libelles[montrees$etat]), "\\newline ",
       "\\texttt{", substr(montrees$sha256, 1L, 12L), "}"
     )
     cellules <- paste0(
@@ -769,6 +782,51 @@ imprimer_planche <- function(montrees) {
                "\"><figcaption style=\"font-size:0.8em\">", legende,
                "</figcaption></figure>", collapse = "\n"),
         "\n</div>\n```\n\n", sep = "")
+  }
+}
+# Les photos d'une section : la planche, ce qui n'est pas montré et pourquoi,
+# ce que l'appareil déclare. Commune aux limites et aux détections. La
+# version publique n'en montre aucune.
+imprimer_photos <- function(photos, libelles) {
+  n_photos <- nrow(photos)
+  if (public) {
+    cat("::: {.callout-important}\n## Version publique\n\n",
+        "Ce document ne montre pas les ", n_photos, " photo(s) des constats : ",
+        "une photo peut montrer un riverain ou une plaque d'immatriculation. ",
+        "Elles sont au dépôt du gestionnaire, chacune identifiée par ",
+        "l'empreinte que la chaîne atteste.\n:::\n\n", sep = "")
+  } else if (is.null(photos$vignette)) {
+    cat("*", n_photos, " photo(s) au registre ; le dépôt n'a pas été fourni au ",
+        "rendu, la planche n'est donc pas montrée.*\n\n", sep = "")
+  } else {
+    cat("#### Planche photographique\n\n")
+    montrees <- photos[!is.na(photos$vignette), , drop = FALSE]
+    if (nrow(montrees) > 0L) {
+      imprimer_planche(montrees, libelles)
+    }
+    cachees <- photos[is.na(photos$vignette), , drop = FALSE]
+    if (nrow(cachees) > 0L) {
+      raison <- c(alteree = "contenu altéré depuis l'import, non montrée",
+                  manquante = "absente du dépôt",
+                  conforme = "format que le rendu ne sait pas réduire")
+      cat("*Non montrée(s) : ",
+          paste0(ifelse(is.na(cachees$numero), "hors plan", cachees$numero),
+                 " (", substr(cachees$sha256, 1L, 12L), ") — ",
+                 raison[cachees$statut], collapse = " ; "), ".*\n\n", sep = "")
+    }
+    declarees <- photos[!is.na(photos$exif_date) |
+                          !is.na(photos$exif_position), , drop = FALSE]
+    if (nrow(declarees) > 0L) {
+      cat("*Déclaré par l'appareil (EXIF) : ",
+          paste0(ifelse(is.na(declarees$numero), "hors plan", declarees$numero),
+                 " — ", ifelse(is.na(declarees$exif_date), "date non déclarée",
+                               sub("T", " ", declarees$exif_date)),
+                 ifelse(is.na(declarees$exif_position), "",
+                        paste0(", ", declarees$exif_position)),
+                 collapse = " ; "), ".*\n\n", sep = "")
+    }
+    cat("*Vignettes réduites au rendu : seul l'original, au dépôt, est ",
+        "attesté par son empreinte.*\n\n", sep = "")
   }
 }
 if (a_limites) {
@@ -924,48 +982,7 @@ cat("*Écart : distance entre la position relevée et celle du plan, avec la ",
 ```
 
 ```{r limites-photos, results='asis', eval=a_limites && sum(constats$nb_photos) > 0L}
-photos_limites <- limites$photos
-n_photos <- nrow(photos_limites)
-if (public) {
-  cat("::: {.callout-important}\n## Version publique\n\n",
-      "Ce document ne montre pas les ", n_photos, " photo(s) des constats : ",
-      "une photo peut montrer un riverain ou une plaque d'immatriculation. ",
-      "Elles sont au dépôt du gestionnaire, chacune identifiée par ",
-      "l'empreinte que la chaîne atteste.\n:::\n\n", sep = "")
-} else if (is.null(photos_limites$vignette)) {
-  cat("*", n_photos, " photo(s) au registre ; le dépôt n'a pas été fourni au ",
-      "rendu, la planche n'est donc pas montrée.*\n\n", sep = "")
-} else {
-  cat("#### Planche photographique\n\n")
-  montrees <- photos_limites[!is.na(photos_limites$vignette), , drop = FALSE]
-  if (nrow(montrees) > 0L) {
-    imprimer_planche(montrees)
-  }
-  cachees <- photos_limites[is.na(photos_limites$vignette), , drop = FALSE]
-  if (nrow(cachees) > 0L) {
-    raison <- c(alteree = "contenu altéré depuis l'import, non montrée",
-                manquante = "absente du dépôt",
-                conforme = "format que le rendu ne sait pas réduire")
-    cat("*Non montrée(s) : ",
-        paste0(ifelse(is.na(cachees$numero), "hors plan", cachees$numero),
-               " (", substr(cachees$sha256, 1L, 12L), ") — ",
-               raison[cachees$statut], collapse = " ; "), ".*\n\n", sep = "")
-  }
-  declarees <- photos_limites[!is.na(photos_limites$exif_date) |
-                                !is.na(photos_limites$exif_position), ,
-                              drop = FALSE]
-  if (nrow(declarees) > 0L) {
-    cat("*Déclaré par l'appareil (EXIF) : ",
-        paste0(ifelse(is.na(declarees$numero), "hors plan", declarees$numero),
-               " — ", ifelse(is.na(declarees$exif_date), "date non déclarée",
-                             sub("T", " ", declarees$exif_date)),
-               ifelse(is.na(declarees$exif_position), "",
-                      paste0(", ", declarees$exif_position)),
-               collapse = " ; "), ".*\n\n", sep = "")
-  }
-  cat("*Vignettes réduites au rendu : seul l'original, au dépôt, est ",
-      "attesté par son empreinte.*\n\n", sep = "")
-}
+imprimer_photos(limites$photos, libelles_etat)
 ```
 
 ### Intégrité du registre
@@ -1268,6 +1285,19 @@ cat("*", attr(ind, "source") %||% "nemeton", ", indices du ",
 # un constat.
 sans <- rapport$coupes_sans_martelage
 p <- rapport$coupes_detectees_parametres
+# Une coupe écartée sur le terrain n'en était pas une : elle sort du compte,
+# et se dit à part.
+ecartees <- if (!is.null(sans$suite)) sans[sans$suite == "ecarte", , drop = FALSE]
+if (!is.null(sans$suite)) sans <- sans[sans$suite != "ecarte", , drop = FALSE]
+sort_coupe <- function(x) {
+  if (is.null(x$suite)) return(rep("", nrow(x)))
+  ifelse(x$suite == "en_attente", ", inscrite, en attente de constat",
+         ifelse(x$suite == "confirme",
+                paste0(", confirmée sur le terrain : ",
+                       ifelse(is.na(x$nature_constatee), "nature non dite",
+                              gsub("_", " ", x$nature_constatee))),
+                ""))
+}
 if (is.null(sans) || nrow(sans) == 0L) {
   cat("*Les ", p$n, " coupe(s) rase(s) détectée(s) par SUFOSAT ont chacune ",
       "un martelage dans la même unité, l'exercice de la détection ou le ",
@@ -1278,12 +1308,31 @@ if (is.null(sans) || nrow(sans) == 0L) {
       nombre(sum(sans$surface_ha), 2L), " ha) qu'aucun martelage de la même ",
       "unité n'explique, l'exercice de la détection ou le précédent : ",
       paste0(sans$ug, " en ", sans$annee, " (", nombre(sans$surface_ha, 2L),
-             " ha)", collapse = " ; "),
+             " ha", sort_coupe(sans), ")", collapse = " ; "),
       ". La balance est peut-être incomplète — ou la coupe est un chablis, ",
       "une coupe sanitaire. À vérifier ; rien n'est corrigé d'office.\n\n",
+      if (!is.null(sans$suite) && any(sans$suite == "confirme" &
+                                      sans$nature_constatee %in% NATURES_ACCIDENTELLES))
+        paste0("Une coupe confirmée en crise sanitaire, chablis ou ",
+               "sécheresse n'est pas un oubli de martelage : c'est un ",
+               "produit accidentel, à inscrire au registre 5.\n\n"),
+      if (!is.null(sans$suite) && any(sans$suite == "confirme" &
+                                      sans$nature_constatee %in% "autre"))
+        paste0("Une coupe confirmée comme exploitation ordinaire appelle le ",
+               "martelage qui manque au registre 5.\n\n"),
+      if (!is.null(sans$suite) && any(sans$suite == "non_inscrite"))
+        paste0("Les coupes sans autre mention ne sont pas inscrites au ",
+               "registre 8 : elles ne sont pas encore proposées à la ",
+               "vérification de terrain.\n\n"),
       "*Probabilité d'au moins ", p$seuil_proba %||% 90, " %, détections ",
       "d'au moins ", nombre(p$surface_min_ha %||% 0.5, 1L), " ha par unité ",
       "et par année.*\n:::\n\n", sep = "")
+}
+if (!is.null(ecartees) && nrow(ecartees) > 0L) {
+  cat("*Écartée(s) sur le terrain, hors du compte : ",
+      paste0(ecartees$ug, " en ", ecartees$annee, " (",
+             nombre(ecartees$surface_ha, 2L), " ha)", collapse = " ; "),
+      ".*\n\n", sep = "")
 }
 ```
 
@@ -1373,9 +1422,13 @@ detections <- sections$detections
 suites <- sections$suites_detection
 a_detections <- !is.null(detections) && nrow(detections) > 0L
 a_suites <- !is.null(suites) && nrow(suites) > 0L
+# Les constats eux-memes, sans bornes de periode : le sort d'une detection
+# est un etat courant, comme la derniere visite d'une borne.
+constats_detection <- rapport$suites_detection$suites
+a_constats <- !is.null(constats_detection) && nrow(constats_detection) > 0L
 ```
 
-```{r detections, results='asis', eval=a_detections || a_suites}
+```{r detections, results='asis', eval=a_detections || a_suites || a_constats}
 cat("## Détections à vérifier sur le terrain {#sec-detections}\n\n")
 cat("Registre 8. Une chaîne de télédétection ne constate rien : elle ",
     "**propose**. Ses détections entrent au sommier avec le niveau de ",
@@ -1433,6 +1486,58 @@ if (a_suites) {
       " écartée(s). Les confirmées figurent parmi les évènements marquants, ",
       "avec leur constat de terrain.\n\n", sep = "")
 }
+
+if (a_constats) {
+  k <- constats_detection
+  cat("### Suites données sur le terrain\n\n")
+  cat("Chaque suite est un constat de terrain (NDP 0) qui rectifie la ",
+      "détection : celle-ci sort de la liste d'attente sans sortir de la ",
+      "chaîne. Une détection écartée est une erreur de la télédétection, qui ",
+      "reste lisible. Toutes les suites sont listées, quelle que soit la ",
+      "période du rapport.\n\n", sep = "")
+  tableau_suites <- data.frame(
+    `Unité` = ifelse(is.na(k$ug), "hors UG", k$ug),
+    Source = toupper(k$source),
+    `Détecté (ha)` = nombre(k$surface_detectee),
+    Constat = unname(libelles_statut[k$statut]),
+    `Nature retenue` = ifelse(k$statut == "confirme",
+                              unname(libelles_nature[k$nature]), "—"),
+    `Constaté (ha)` = ifelse(is.na(k$surface_constatee), "—",
+                             nombre(k$surface_constatee)),
+    Visite = format(k$date_visite, "%d/%m/%Y"),
+    Photos = as.character(k$nb_photos),
+    check.names = FALSE, stringsAsFactors = FALSE
+  )
+  imprimer_tableau_long(tableau_suites, "Suites données aux détections",
+                        droite = c("Détecté (ha)", "Constaté (ha)", "Photos"))
+  operateurs <- table(stats::na.omit(k$operateur))
+  if (length(operateurs) > 0L) {
+    cat("*Constats de ", paste0(names(operateurs), " (", operateurs, ")",
+                                collapse = ", "), ".*\n\n", sep = "")
+  }
+  accidentelles <- k$statut == "confirme" & k$nature %in% NATURES_ACCIDENTELLES
+  if (any(accidentelles)) {
+    cat("::: {.callout-note}\n## Des bois à exploiter hors martelage\n\n",
+        sum(accidentelles), " détection(s) confirmée(s) en ",
+        paste(unique(unname(libelles_nature[k$nature[accidentelles]])),
+              collapse = ", "),
+        " : si des bois en sont sortis, ce sont des produits accidentels, à ",
+        "inscrire au registre 5 avec leur volume. Le sommier ne l'écrit pas ",
+        "d'office — un volume ne se devine pas depuis une photo.\n:::\n\n",
+        sep = "")
+  }
+  notes <- !is.na(k$observations) & nzchar(k$observations)
+  if (any(notes)) {
+    cat("Observations de terrain :\n\n",
+        paste0("- **", ifelse(is.na(k$ug[notes]), "hors UG", k$ug[notes]),
+               "** (", format(k$date_visite[notes], "%d/%m/%Y"), ") — ",
+               k$observations[notes], "\n", collapse = ""), "\n", sep = "")
+  }
+  if (sum(k$nb_photos) > 0L) {
+    imprimer_photos(rapport$suites_detection$photos, libelles_statut)
+  }
+}
+
 ```
 
 ```{r carte-detections, fig.height=3.6, fig.width=7, fig.cap="Surface proposée par les détections en attente, par unité de gestion. Une proposition, pas un constat.", eval=a_detections && cartographiable}

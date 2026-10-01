@@ -473,8 +473,16 @@ sommier_ortho_ign <- function(emprise, chemin, resolution_m = 0.5,
       return(invisible(chemin))
     }
   }
-  stop("Le telechargement de l'ortho a echoue, rien n'est ecrit : ",
-       substr(motif, 1L, 300L), call. = FALSE)
+  message <- paste0("Le telechargement de l'ortho a echoue, rien n'est ",
+                    "ecrit : ", substr(motif, 1L, 300L))
+  # Un bloc que le service refuse deux fois de suite est une panne du
+  # service, pas une faute d'ici : l'echec le dit par sa classe, comme ceux du
+  # fond cadastral (voir `transferer()`).
+  classe <- if (grepl("Unable to download|IReadBlock failed", motif)) {
+    c("sommier_reseau_indisponible", "sommier_erreur_telechargement")
+  }
+  stop(structure(class = c(classe, "error", "condition"),
+                 list(message = message, call = NULL)))
 }
 
 # Un essai de telechargement. Rend NULL s'il aboutit, le motif sinon. Un bloc
