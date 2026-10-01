@@ -12,3 +12,7 @@ docs/
 # que pkgdown emporte vers le site à chaque build.
 vignettes/articles/rapport-gestion-anterieure.html
 *.qgs~
+
+# Traces des tests echoues, que testthat depose a cote des tests
+tests/testthat/_problems/
+tests/testthat/testthat-problems.rds
