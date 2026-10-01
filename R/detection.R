@@ -83,6 +83,10 @@ sommier_importer_detections <- function(con, foret_id, detections, source,
 #' comme un fait etabli. La difference tient au champ `statut_detection` du
 #' payload, que les vues exposent.
 #'
+#' Une detection ne se suit qu'une fois : une seconde suite est refusee. Pour
+#' revenir sur un constat, on corrige la suite elle-meme. Les constats d'une
+#' tournee QField s'importent par [sommier_importer_qfield_detections()].
+#'
 #' @param con Connexion DBI.
 #' @param detection_id UUID de l'entree de detection.
 #' @param auteur Identifiant de l'agent ayant constate.
@@ -93,6 +97,11 @@ sommier_importer_detections <- function(con, foret_id, detections, source,
 #' @param surface_ha Surface constatee (facultatif).
 #' @param volume_impacte_m3 Volume affecte (facultatif).
 #' @param observations Observations libres (facultatif).
+#' @param id UUID de l'entree a ecrire (facultatif) : celui du releve de
+#'   terrain, pour qu'un import se rejoue sans ecrire deux fois.
+#' @param ... Champs du constat de terrain : `geometrie`, `precision_m`,
+#'   `source_gnss`, `operateur`, `visite_le`, `releve_uuid`, `photos` (voir
+#'   [registre8_suite_detection()]).
 #'
 #' @return Invisiblement, l'entree chainee.
 #' @export
@@ -102,7 +111,27 @@ sommier_valider_detection <- function(con, detection_id, auteur, statut,
                                       nature = NULL,
                                       surface_ha = NULL,
                                       volume_impacte_m3 = NULL,
-                                      observations = NULL) {
+                                      observations = NULL,
+                                      id = uuid_v4(), ...) {
+  sommier_ajouter(con, entree_suite_detection(
+    con, detection_id, auteur = auteur, statut = statut,
+    description = description, date_evenement = date_evenement,
+    nature = nature, surface_ha = surface_ha,
+    volume_impacte_m3 = volume_impacte_m3, observations = observations,
+    id = id, ...
+  ))
+}
+
+# ---------------------------------------------------------------------------
+
+# L'entree de suite, sans l'ecrire : l'import d'une tournee les ecrit toutes
+# en une transaction. Une detection ne se suit qu'une fois - la base ne
+# l'interdit pas, `corrige_id` n'etant pas unique : c'est ici qu'on le refuse.
+entree_suite_detection <- function(con, detection_id, auteur, statut,
+                                   description, date_evenement = Sys.Date(),
+                                   nature = NULL, surface_ha = NULL,
+                                   volume_impacte_m3 = NULL,
+                                   observations = NULL, id = uuid_v4(), ...) {
   detection_id <- valider_uuid(detection_id, "detection_id")
   statut <- valider_choix(statut, "statut", c("confirme", "ecarte"))
 
@@ -125,8 +154,17 @@ sommier_valider_detection <- function(con, detection_id, auteur, statut,
          "(type_entree = ", payload$type_entree %||% "absent", ").",
          call. = FALSE)
   }
+  suite <- DBI::dbGetQuery(
+    con, "SELECT id::text AS id FROM entree_sommier WHERE corrige_id = $1",
+    params = list(detection_id)
+  )
+  if (nrow(suite) > 0L) {
+    stop("La detection ", detection_id, " a deja une suite (", suite$id[[1L]],
+         ") : une detection ne se confirme ou ne s'ecarte qu'une fois. Pour ",
+         "revenir sur un constat, on corrige la suite.", call. = FALSE)
+  }
 
-  sommier_ajouter(con, sommier_entree(
+  sommier_entree(
     foret_id = detection$foret_id[[1L]],
     registre = 8L,
     date_evenement = date_evenement,
@@ -134,6 +172,7 @@ sommier_valider_detection <- function(con, detection_id, auteur, statut,
     ug_uuid = if (est_vide(detection$ug_uuid[[1L]])) NULL else detection$ug_uuid[[1L]],
     ndp = 0L,                       # constat de terrain, par definition
     corrige_id = detection_id,
+    id = id,
     payload = registre8_suite_detection(
       statut = statut,
       detection_id = detection_id,
@@ -141,7 +180,8 @@ sommier_valider_detection <- function(con, detection_id, auteur, statut,
       description = description,
       surface_ha = surface_ha,
       volume_impacte_m3 = volume_impacte_m3,
-      observations = observations
+      observations = observations,
+      ...
     )
-  ))
+  )
 }

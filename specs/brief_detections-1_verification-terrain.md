@@ -96,13 +96,17 @@ détections.
 - `registre8_suite_detection()` gagne `geometrie`, `precision_m`,
   `source_gnss`, `releve_uuid`, `operateur`, `visite_le` et `photos`. Le
   schéma passe en `r8-1.3.0`.
-- `sommier_valider_detection()` gagne `id` et les mêmes champs.
+- `sommier_valider_detection()` gagne `id` et les mêmes champs, et refuse
+  une seconde suite pour une même détection (la base ne l'interdit pas :
+  `corrige_id` n'est pas unique).
 - `sommier_inscrire_coupes_sufosat(con, foret_id, coupes, auteur)` inscrit
   les coupes qu'aucun martelage n'explique.
-- `sommier_contours_detections(detections, rasters, emprise)` vectorise, par
-  unité, les pixels qui ont déclenché chaque détection.
+- `sommier_contours_detections(con, foret_id, reconfort = NULL,
+  sufosat = NULL, classe_min = 2, seuil_proba = 90)` vectorise, par unité,
+  les pixels qui ont déclenché chaque détection en attente.
 - `sommier_projet_qfield_detections(con, foret_id, dossier, operateur,
-  rasters = NULL, ortho = NULL, fond = NULL)` écrit le projet de tournée.
+  reconfort = NULL, sufosat = NULL, fond = NULL, ortho = NULL)` écrit le
+  projet de tournée.
 - `sommier_importer_qfield_detections(con, foret_id, dossier, depot,
   auteur)` relit les constats et écrit les suites, avec leurs photos déposées
   sous leur empreinte. `non_vu` n'écrit rien.

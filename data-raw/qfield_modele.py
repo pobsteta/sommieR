@@ -1,12 +1,16 @@
-"""Modele du projet QGIS/QField du suivi des limites.
+"""Modeles des projets QGIS/QField de terrain : limites et detections.
 
-Produit, une fois pour toutes, les deux fichiers que `sommier_projet_qfield()`
-copie a chaque tournee :
+Produit, une fois pour toutes, les fichiers que `sommier_projet_qfield()`
+copie a chaque tournee des limites :
 
 * inst/qgis/terrain.gpkg  -- le GeoPackage, couches vides, schema definitif ;
 * inst/qgis/limites.qgs   -- le projet : styles, formulaires, relation ;
 * inst/qgis/limites_attachments.zip -- la base de styles que le projet
   reference ; elle voyage avec lui, sous le meme nom.
+
+et ceux que `sommier_projet_qfield_detections()` copie a chaque tournee des
+detections : inst/qgis/detections.gpkg, detections.qgs et, s'il y a lieu,
+detections_attachments.zip.
 
 Pourquoi un script plutot qu'un .qgs ecrit a la main : un projet QGIS est un
 XML de plusieurs milliers de lignes, dont les formulaires, les relations et
@@ -16,7 +20,11 @@ qu'aux donnees et a quelques valeurs repere (@@...@@).
 
 A relancer apres toute modification, avec QGIS >= 3.40 (QField 4) :
 
-    QT_QPA_PLATFORM=offscreen python3 data-raw/qfield_modele.py
+    QT_QPA_PLATFORM=offscreen python3 data-raw/qfield_modele.py limites
+    QT_QPA_PLATFORM=offscreen python3 data-raw/qfield_modele.py detections
+
+Chaque modele se regenere seul : un modele deja recette sur le terrain n'est
+pas reecrit quand on touche a l'autre.
 
 Le nom des couches et des champs est un contrat avec R/qfield.R : le changer
 ici impose de le changer la-bas.
@@ -30,7 +38,8 @@ from qgis.core import (
     Qgis, QgsApplication, QgsAttributeEditorContainer, QgsAttributeEditorField,
     QgsAttributeEditorRelation, QgsAttributeEditorTextElement,
     QgsCategorizedSymbolRenderer, QgsCoordinateReferenceSystem,
-    QgsDefaultValue, QgsEditFormConfig, QgsEditorWidgetSetup, QgsFeature,
+    QgsDefaultValue, QgsEditFormConfig, QgsEditorWidgetSetup, QgsExpression,
+    QgsFeature, QgsOptionalExpression,
     QgsField, QgsFieldConstraints, QgsFields, QgsFillSymbol,
     QgsLineSymbol, QgsMarkerSymbol, QgsPalLayerSettings, QgsProject,
     QgsRasterLayer, QgsReferencedRectangle, QgsRectangle, QgsRelation,
@@ -88,10 +97,10 @@ A_VISITER = [("a_voir", "À voir", "#D32F2F"),
              ("perdu", "Non retrouvé ou détruit", "#212121")]
 
 
-def ecrire_gpkg():
-    if os.path.exists(GPKG):
-        os.remove(GPKG)
-    for nom, geometrie, champs in COUCHES:
+def ecrire_gpkg(couches=COUCHES, gpkg=GPKG):
+    if os.path.exists(gpkg):
+        os.remove(gpkg)
+    for nom, geometrie, champs in couches:
         fields = QgsFields()
         for champ, type_ in champs:
             fields.append(QgsField(champ, type_))
@@ -99,11 +108,11 @@ def ecrire_gpkg():
         options.driverName = "GPKG"
         options.layerName = nom
         options.actionOnExistingFile = (
-            QgsVectorFileWriter.CreateOrOverwriteLayer if os.path.exists(GPKG)
+            QgsVectorFileWriter.CreateOrOverwriteLayer if os.path.exists(gpkg)
             else QgsVectorFileWriter.CreateOrOverwriteFile)
         wkb = QgsWkbTypes.parseType(geometrie)
         writer = QgsVectorFileWriter.create(
-            GPKG, fields, wkb, L93, QgsCoordinateTransformContext(), options)
+            gpkg, fields, wkb, L93, QgsCoordinateTransformContext(), options)
         if writer.hasError() != QgsVectorFileWriter.NoError:
             sys.exit("Ecriture impossible : %s (%s)" % (nom, writer.errorMessage()))
         del writer
@@ -128,15 +137,15 @@ def ecrire_leurre(chemin):
     image = None
 
 
-def couche(nom, titre=None):
-    c = QgsVectorLayer("%s|layername=%s" % (GPKG, nom), titre or nom, "ogr")
+def couche(nom, titre=None, gpkg=GPKG, prefixe="limites_"):
+    c = QgsVectorLayer("%s|layername=%s" % (gpkg, nom), titre or nom, "ogr")
     if not c.isValid():
         sys.exit("Couche invalide : " + nom)
     # L'identifiant est le nom de la table, prefixe : stable d'une generation
     # a l'autre, et c'est par lui que `overlay_nearest()` designe la couche.
     # Le prefixe n'est pas decoratif : a la relecture, QGIS remplace par un
     # UUID tout identifiant sans tiret bas, et la relation se perd.
-    c.setId("limites_" + IDENTIFIANTS.get(nom, nom))
+    c.setId(prefixe + IDENTIFIANTS.get(nom, nom))
     return c
 
 
@@ -403,11 +412,291 @@ def principal():
     print("Ecrit :", QGS, "et", GPKG)
 
 
+# ===========================================================================
+# Le projet des detections
+# ===========================================================================
+
+GPKG_D = os.path.join(SORTIE, "detections.gpkg")
+QGS_D = os.path.join(SORTIE, "detections.qgs")
+
+COUCHES_D = [
+    ("detections", "MultiPolygon", [("id", TEXTE), ("numero", TEXTE),
+                                    ("libelle", TEXTE), ("ug", TEXTE),
+                                    ("source", TEXTE), ("nature", TEXTE),
+                                    ("surface_ha", REEL),
+                                    ("date_detection", DATE),
+                                    ("description", TEXTE),
+                                    ("contour", TEXTE)]),
+    ("constats", "Point", [("uuid", TEXTE), ("detection_id", TEXTE),
+                           ("etat", TEXTE), ("nature", TEXTE),
+                           ("surface_ha", REEL), ("volume_m3", REEL),
+                           ("visite_le", INSTANT), ("operateur", TEXTE),
+                           ("precision_m", REEL), ("source_gnss", TEXTE),
+                           ("observations", TEXTE)]),
+    ("photos", "NoGeometry", [("uuid", TEXTE), ("constat_uuid", TEXTE),
+                              ("fichier", TEXTE), ("prise_le", INSTANT)]),
+    ("foret", "MultiPolygon", [("nom", TEXTE)]),
+    ("ug", "MultiPolygon", [("numero", TEXTE)]),
+    ("parcelles", "MultiPolygon", [("reference", TEXTE),
+                                   ("designation", TEXTE)]),
+]
+
+# Les etats d'un constat, et leur couleur sur la carte.
+ETATS_D = [("confirme", "Confirmé", "#C62828"),
+           ("ecarte", "Écarté", "#757575"),
+           ("non_vu", "Non vu", "#F57C00")]
+
+# La nature retenue : SOMMIER_NATURES_PHENOMENE, dans cet ordre-la.
+NATURES_D = [("Crise sanitaire (scolytes, dépérissement…)", "crise_sanitaire"),
+             ("Sécheresse", "secheresse"), ("Chablis (tempête)", "tempete"),
+             ("Neige", "neige"), ("Gel", "gel"), ("Incendie", "incendie"),
+             ("Inondation", "inondation"),
+             ("Dégâts de gibier", "degat_gibier"),
+             ("Autre (coupe programmée…)", "autre")]
+
+# La source de la detection, et sa couleur.
+SOURCES_D = [("reconfort", "RECONFORT (dépérissement)", "#E65100"),
+             ("sufosat", "SUFOSAT (coupe rase)", "#6A1B9A"),
+             ("", "Autre source", "#1565C0")]
+
+
+def detections():
+    ecrire_gpkg(COUCHES_D, GPKG_D)
+    projet = QgsProject.instance()
+    projet.clear()
+    projet.setFileName(QGS_D)
+    projet.setCrs(L93)
+    projet.setTitle("@@TITRE@@")
+    projet.writeEntryBool("Paths", "/Absolute", False)
+
+    def c_(nom, titre):
+        return couche(nom, titre, GPKG_D, "detections_")
+
+    # --- Donnees en lecture seule --------------------------------------
+    detections_ = c_("detections", "Détections à vérifier")
+    # Un voile translucide : l'ortho doit rester lisible dessous. La couleur
+    # se donne en « r,g,b,a » - QGIS lit un « #RRGGBBAA » comme « #AARRGGBB ».
+    def voile(couleur):
+        r, g, b = (int(couleur[i:i + 2], 16) for i in (1, 3, 5))
+        return QgsFillSymbol.createSimple(
+            {"color": "%d,%d,%d,70" % (r, g, b), "outline_color": couleur,
+             "outline_width": "0.6"})
+    detections_.setRenderer(QgsCategorizedSymbolRenderer("source", [
+        QgsRendererCategory(valeur, voile(couleur), libelle)
+        for valeur, libelle, couleur in SOURCES_D]))
+    etiqueter(detections_, "numero", 9)
+    foret = c_("foret", "Forêt")
+    foret.setRenderer(foret.renderer().__class__(QgsFillSymbol.createSimple(
+        {"style": "no", "outline_color": "#1B5E20", "outline_width": "0.8"})))
+    ug = c_("ug", "Unités de gestion")
+    ug.setRenderer(ug.renderer().__class__(QgsFillSymbol.createSimple(
+        {"style": "no", "outline_color": "#33691E", "outline_width": "0.3"})))
+    etiqueter(ug, "numero", 8)
+    parcelles = c_("parcelles", "Parcelles cadastrales")
+    parcelles.setRenderer(parcelles.renderer().__class__(
+        QgsFillSymbol.createSimple({"style": "no", "outline_color": "#9E9E9E",
+                                    "outline_width": "0.2"})))
+    for c in (detections_, foret, ug, parcelles):
+        c.setReadOnly(True)
+
+    # --- Saisie : les constats -----------------------------------------
+    constats = c_("constats", "Constats")
+    constats.setRenderer(QgsCategorizedSymbolRenderer("etat", [
+        QgsRendererCategory(valeur, QgsMarkerSymbol.createSimple(
+            {"name": "diamond", "color": couleur, "size": "3.5",
+             "outline_color": "#FFFFFF"}), libelle)
+        for valeur, libelle, couleur in ETATS_D]))
+    champ = constats.fields().indexOf
+    widget(constats, "uuid", "Hidden")
+    defaut(constats, "uuid", "uuid('WithoutBraces')")
+    widget(constats, "detection_id", "ValueRelation", {
+        "Layer": detections_.id(), "LayerName": detections_.name(),
+        "Key": "id", "Value": "libelle", "OrderByValue": True,
+        "AllowNull": False, "UseCompleter": True})
+    # La detection sous les pieds de l'agent, ou la plus proche a 100 m. Son
+    # choix est garde : coalesce sur la valeur deja saisie.
+    defaut(constats, "detection_id", (
+        "coalesce(\"detection_id\","
+        "array_first(overlay_nearest('detections_detections', \"id\", "
+        "limit:=1, max_distance:=100)))"), a_la_mise_a_jour=True)
+    constats.setFieldConstraint(champ("detection_id"),
+                                QgsFieldConstraints.ConstraintNotNull,
+                                QgsFieldConstraints.ConstraintStrengthHard)
+    widget(constats, "etat", "ValueMap",
+           {"map": [{libelle: valeur} for valeur, libelle, _ in ETATS_D]})
+    constats.setFieldConstraint(champ("etat"),
+                                QgsFieldConstraints.ConstraintNotNull,
+                                QgsFieldConstraints.ConstraintStrengthHard)
+    widget(constats, "nature", "ValueMap",
+           {"map": [{libelle: valeur} for libelle, valeur in NATURES_D]})
+    # La nature n'a de sens que pour une detection confirmee ; elle y est
+    # exigee. C'est ce que la teledetection ne sait pas dire.
+    constats.setConstraintExpression(
+        champ("nature"),
+        "coalesce(\"etat\", '') <> 'confirme' OR \"nature\" IS NOT NULL",
+        "Une détection confirmée appelle sa nature : sanitaire, chablis, "
+        "sécheresse, coupe programmée…")
+    constats.setFieldConstraint(champ("nature"),
+                                QgsFieldConstraints.ConstraintExpression,
+                                QgsFieldConstraints.ConstraintStrengthHard)
+    for nom in ("surface_ha", "volume_m3"):
+        widget(constats, nom, "Range", {"AllowNull": True, "Min": 0.0,
+                                        "Max": 100000.0, "Precision": 2,
+                                        "Step": 0.1, "Style": "SpinBox"})
+    widget(constats, "visite_le", "DateTime",
+           {"field_format": "yyyy-MM-ddTHH:mm:ss", "display_format":
+            "dd/MM/yyyy HH:mm", "calendar_popup": True, "allow_null": False})
+    defaut(constats, "visite_le", "now()")
+    widget(constats, "operateur", "TextEdit")
+    defaut(constats, "operateur", "@operateur")
+    widget(constats, "precision_m", "TextEdit")
+    defaut(constats, "precision_m", "@position_horizontal_accuracy")
+    widget(constats, "source_gnss", "TextEdit")
+    defaut(constats, "source_gnss", "@position_source_name")
+    config = constats.editFormConfig()
+    for nom in ("precision_m", "source_gnss"):
+        config.setReadOnly(champ(nom), True)
+    constats.setEditFormConfig(config)
+    widget(constats, "observations", "TextEdit", {"IsMultiline": True})
+    for nom, alias in (("detection_id", "Détection"), ("etat", "État"),
+                       ("nature", "Nature retenue"),
+                       ("surface_ha", "Surface constatée (ha)"),
+                       ("volume_m3", "Volume touché (m³)"),
+                       ("visite_le", "Visite"), ("operateur", "Opérateur"),
+                       ("precision_m", "Précision GNSS (m)"),
+                       ("source_gnss", "Source GNSS"),
+                       ("observations", "Observations")):
+        constats.setFieldAlias(champ(nom), alias)
+
+    # --- Saisie : les photos --------------------------------------------
+    photos = c_("photos", "Photos")
+    widget(photos, "uuid", "Hidden")
+    defaut(photos, "uuid", "uuid('WithoutBraces')")
+    widget(photos, "constat_uuid", "Hidden")
+    widget(photos, "fichier", "ExternalResource", {
+        "DocumentViewer": 1, "DocumentViewerHeight": 0,
+        "DocumentViewerWidth": 0, "FileWidget": True, "FileWidgetButton": True,
+        "RelativeStorage": 1, "StorageMode": 0, "FullUrl": False})
+    photos.setFieldAlias(photos.fields().indexOf("fichier"), "Photo")
+    widget(photos, "prise_le", "DateTime",
+           {"field_format": "yyyy-MM-ddTHH:mm:ss",
+            "display_format": "dd/MM/yyyy HH:mm", "allow_null": True})
+    defaut(photos, "prise_le", "now()")
+    photos.setFieldAlias(photos.fields().indexOf("prise_le"), "Prise le")
+    photos.setCustomProperty("QFieldSync/attachment_naming", json.dumps({
+        "fichier": "'DCIM/detections_' || format_date(now(), 'yyyyMMdd_HHmmss_zzz') || '.{extension}'"}))
+
+    projet.addMapLayers([constats, detections_, ug, foret, parcelles, photos])
+
+    relation = QgsRelation()
+    relation.setId("photos_du_constat")
+    relation.setName("Photos du constat")
+    relation.setReferencingLayer(photos.id())
+    relation.setReferencedLayer(constats.id())
+    relation.addFieldPair("constat_uuid", "uuid")
+    relation.setStrength(Qgis.RelationshipStrength.Composition)
+    if not relation.isValid():
+        sys.exit("Relation invalide : " + relation.validationError())
+    projet.relationManager().addRelation(relation)
+
+    config = photos.editFormConfig()
+    config.setLayout(QgsEditFormConfig.TabLayout)
+    racine = config.invisibleRootContainer()
+    racine.clear()
+    consigne = QgsAttributeEditorTextElement("Consigne", racine)
+    consigne.setText(
+        "Une vue d'ensemble, puis le détail qui fonde le constat : houppiers "
+        "secs, souches fraîches, trouée. Éviter les personnes et les "
+        "véhicules : la photo est une pièce du sommier.")
+    racine.addChildElement(consigne)
+    for nom in ("fichier", "prise_le"):
+        racine.addChildElement(QgsAttributeEditorField(
+            nom, photos.fields().indexOf(nom), racine))
+    photos.setEditFormConfig(config)
+
+    # Formulaire des constats : la detection et l'etat ; ce qui a ete vu, si
+    # la detection est confirmee ; la visite ; les photos.
+    config = constats.editFormConfig()
+    config.setLayout(QgsEditFormConfig.TabLayout)
+    racine = config.invisibleRootContainer()
+    racine.clear()
+    for nom in ("detection_id", "etat"):
+        racine.addChildElement(QgsAttributeEditorField(nom, champ(nom), racine))
+    vu = QgsAttributeEditorContainer("Ce qui a été constaté", racine)
+    vu.setType(Qgis.AttributeEditorContainerType.GroupBox)
+    vu.setVisibilityExpression(QgsOptionalExpression(
+        QgsExpression("\"etat\" = 'confirme'"), True))
+    for nom in ("nature", "surface_ha", "volume_m3"):
+        vu.addChildElement(QgsAttributeEditorField(nom, champ(nom), vu))
+    racine.addChildElement(vu)
+    for nom in ("visite_le", "operateur", "precision_m", "source_gnss",
+                "observations"):
+        racine.addChildElement(QgsAttributeEditorField(nom, champ(nom), racine))
+    racine.addChildElement(QgsAttributeEditorRelation(relation, racine))
+    constats.setEditFormConfig(config)
+
+    ortho = QgsRasterLayer(
+        "contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&format=image/jpeg"
+        "&layers=ORTHOIMAGERY.ORTHOPHOTOS&styles=normal"
+        "&tileMatrixSet=PM_0_19&url=https://data.geopf.fr/wmts?"
+        "SERVICE%3DWMTS%26REQUEST%3DGetCapabilities",
+        "Orthophotographie IGN (réseau)", "wms")
+    projet.addMapLayer(ortho)
+    leurre = os.path.join(SORTIE, "ortho.tif")
+    ecrire_leurre(leurre)
+    locale = QgsRasterLayer(leurre, "Orthophotographie (hors ligne)", "gdal")
+    if not locale.isValid():
+        sys.exit("Ortho locale invalide.")
+    locale.setId("detections_ortho")
+    projet.addMapLayer(locale)
+
+    racine_arbre = projet.layerTreeRoot()
+    noeud = racine_arbre.findLayer(photos.id())
+    if noeud is not None:
+        noeud.setItemVisibilityChecked(False)
+    for couche_fond in (locale, ortho):
+        noeud = racine_arbre.findLayer(couche_fond.id())
+        clone = noeud.clone()
+        racine_arbre.insertChildNode(-1, clone)
+        racine_arbre.removeChildNode(noeud)
+
+    projet.setCustomVariables({
+        "operateur": "@@OPERATEUR@@",
+        "sommier_foret": "@@FORET@@",
+        "qfield_version_minimale": "4.3",
+    })
+    projet.viewSettings().setDefaultViewExtent(QgsReferencedRectangle(
+        QgsRectangle(111111, 2222222, 333333, 4444444), L93))
+    metadonnees = projet.metadata()
+    metadonnees.setTitle("@@TITRE@@")
+    metadonnees.setAbstract(
+        "Vérification sur le terrain des détections de télédétection "
+        "(RECONFORT, SUFOSAT). Projet engendré par sommieR ; à ouvrir avec "
+        "QField 4.3 ou plus récent. Les détections sont en lecture seule ; "
+        "un constat par détection visitée, avec ses photos.")
+    projet.setMetadata(metadonnees)
+
+    if not projet.write():
+        sys.exit("Ecriture du projet impossible.")
+    if os.path.exists(QGS_D + "~"):
+        os.remove(QGS_D + "~")
+    for reste in (leurre, leurre + ".aux.xml"):
+        if os.path.exists(reste):
+            os.remove(reste)
+    print("Ecrit :", QGS_D, "et", GPKG_D)
+
+
 if __name__ == "__main__":
+    modeles = sys.argv[1:] or ["limites", "detections"]
     QgsApplication.setPrefixPath("/usr", True)
     application = QgsApplication([], False)
     application.initQgis()
     try:
-        principal()
+        for modele in modeles:
+            {"limites": principal, "detections": detections}[modele]()
     finally:
         application.exitQgis()
+        # QGIS ecrit les statistiques du leurre en se fermant.
+        reste = os.path.join(SORTIE, "ortho.tif.aux.xml")
+        if os.path.exists(reste):
+            os.remove(reste)
