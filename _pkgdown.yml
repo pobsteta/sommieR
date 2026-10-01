@@ -30,6 +30,7 @@ articles:
     contents:
     - "articles/gestion-anterieure"
     - "articles/rapport-engendre"
+    - "articles/balance-possibilite"
 
 reference:
   - title: "Écrire et lire le sommier"
