@@ -351,6 +351,8 @@ test_that("le rapport montre les suites, leurs photos, et le sort des coupes", {
   expect_match(html, "sur le terrain, hors du compte : 12 en 2019", fixed = TRUE)
   expect_match(html, "pas encore proposées", fixed = TRUE)
   expect_match(html, "Suites données sur le terrain", fixed = TRUE)
+  # Rendu sans plan cadastral : la section le dit, au lieu de disparaitre.
+  expect_match(html, "Le plan cadastral (EDIGEO) n", fixed = TRUE)
   expect_match(html, "crise sanitaire", fixed = TRUE)
   expect_match(html, "Des bois à exploiter hors martelage", fixed = TRUE)
   expect_match(html, "Trouee ancienne", fixed = TRUE)

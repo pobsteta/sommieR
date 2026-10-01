@@ -350,6 +350,7 @@ test_that("le rapport montre ce que le terrain a vu, et la version publique le t
   html <- paste(readLines(chemin, warn = FALSE, encoding = "UTF-8"),
                 collapse = "\n")
   expect_match(html, "Vérification des limites sur le terrain", fixed = TRUE)
+  expect_no_match(html, "Le plan cadastral (EDIGEO) n", fixed = TRUE)
   expect_match(html, "Ce que la photo atteste", fixed = TRUE)
   expect_match(html, "hors tolérance", fixed = TRUE)
   expect_match(html, "pointé", fixed = TRUE)
