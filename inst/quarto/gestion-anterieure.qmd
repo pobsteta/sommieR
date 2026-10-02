@@ -1794,6 +1794,9 @@ sommier_verifier_manifeste("sommier-export.json")
 Toute entrée modifiée, retirée ou insérée après coup invalide l'empreinte de
 tête, et la vérification le dit.
 
+Le détail de chaque écriture, rectifiées comprises, est dans le sommier
+imprimé (`sommier_registre_quarto()`).
+
 ---
 
 *Engendré par [sommieR](https://github.com/pobsteta/sommieR)

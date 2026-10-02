@@ -1,3 +1,32 @@
+# sommieR 0.29.0
+
+Le sommier imprimé : le registre lu comme le classeur A50 (lot 1 du brief
+« Sommier »).
+
+- **`sommier_registre()`** extrait le sommier tel qu'il est chaîné : une
+  ligne par écriture, registre par registre, dans l'ordre de la chaîne,
+  **rectifiées comprises**. Une écriture rectifiée reste à sa place, avec le
+  numéro de celle qui la rectifie, et la rectification porte le numéro de sa
+  cible. Chaque ligne dit sa provenance (constat, ou transcription avec sa
+  pièce), son NDP, son auteur, son unité, ses dates d'événement et de saisie
+  et son empreinte.
+- **La fiche A10** ouvre le sommier : les actes de visa par exercice, signés
+  et horodatés ou non, et les exercices clos sans acte, dits non visés. Les
+  ancrages suivent.
+- **`jusqu_au_visa`** arrête l'édition à la tête signée d'un exercice, et dit
+  si la chaîne imprimée concorde avec l'empreinte visée. Un exercice non visé
+  est refusé.
+- **`sommier_registre_quarto()`** rend le document « Sommier de la forêt »,
+  en HTML autoportant ou en PDF A4 paysage : l'état de la chaîne, la fiche
+  A10, un tableau par registre et, en annexe, les empreintes complètes. Rien
+  de ce qui n'est pas dans la chaîne n'y figure. Le document dit qu'il n'est
+  pas la preuve, et renvoie au manifeste.
+- **`public = TRUE`** masque les tiers des registres 3 et 7 (titulaires,
+  garants, tiers d'une écriture) sans retirer de ligne ; les photos ne sont
+  jamais reproduites, seulement comptées.
+- Le bilan de gestion renvoie au sommier imprimé pour le détail de chaque
+  écriture.
+
 # sommieR 0.28.0
 
 Travaux, lot 1 : le registre du suivi sylvicole (brief `travaux-1`).
