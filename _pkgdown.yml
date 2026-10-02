@@ -65,6 +65,7 @@ reference:
     - registre2_foncier
     - SOMMIER_TYPES_FONCIER
     - SOMMIER_ETATS_LIMITE
+    - SOMMIER_ETATS_PAR_FORME
   - title: "Registre 3 — droits et concessions"
     desc: "Imprimé A50C, et l'affouage propre à la forêt communale."
     contents:

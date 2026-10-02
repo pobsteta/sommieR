@@ -69,8 +69,10 @@ sommier reste conforme.}
 \item{element_pci}{Pour une \code{reconnaissance_limite}, l'element du plan
 cadastral tel que l'agent l'a vu : liste nommee portant au moins \code{id}
 (\code{feuille:OBJECT_RID}, voir \code{\link[=sommier_elements_pci]{sommier_elements_pci()}}), et facultativement
-\code{numero}, \code{categorie}, \code{nature}, \code{texte}, \code{millesime}, \code{x}, \code{y}.
-Obligatoire sauf a l'etat \code{hors_plan}, ou il est refuse.}
+\code{numero}, \code{categorie}, \code{nature}, \code{texte}, \code{millesime}, \code{x}, \code{y}, et
+\code{forme} (\code{point}, \code{ligne}, \code{surface}). Quand la forme est donnee, l'etat
+doit etre de sa liste (voir \link{SOMMIER_ETATS_PAR_FORME}). Obligatoire sauf
+a l'etat \code{hors_plan}, ou il est refuse.}
 
 \item{visite_le}{Instant de la visite, tel que l'appareil l'a note
 (facultatif).}

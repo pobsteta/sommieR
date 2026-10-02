@@ -70,8 +70,9 @@ COUCHES = [
     ("elements_lignes", "MultiLineString", ELEMENTS),
     ("elements_surfaces", "MultiPolygon", ELEMENTS),
     ("elements", "Point", [("id", TEXTE), ("numero", TEXTE),
-                           ("libelle", TEXTE)]),
-    ("constats", "Point", [("uuid", TEXTE), ("element_id", TEXTE),
+                           ("libelle", TEXTE), ("forme", TEXTE)]),
+    ("constats", "Point", [("uuid", TEXTE), ("type_element", TEXTE),
+                           ("element_id", TEXTE),
                            ("etat", TEXTE), ("visite_le", INSTANT),
                            ("operateur", TEXTE), ("precision_m", REEL),
                            ("source_gnss", TEXTE), ("observations", TEXTE)]),
@@ -82,18 +83,38 @@ COUCHES = [
     ("ug", "MultiPolygon", [("numero", TEXTE)]),
     ("parcelles", "MultiPolygon", [("reference", TEXTE),
                                    ("designation", TEXTE)]),
+    ("etats", "NoGeometry", [("forme", TEXTE), ("valeur", TEXTE),
+                             ("libelle", TEXTE)]),
 ]
 
-ETATS = [("En place", "en_place"), ("Endommagé", "endommage"),
-         ("Non retrouvé", "non_retrouve"), ("Détruit", "detruit"),
-         ("Inaccessible", "inaccessible"), ("Hors plan", "hors_plan")]
+# Le type d'element, puis les etats de chaque type, dans l'ordre du
+# formulaire. Contrat avec SOMMIER_ETATS_PAR_FORME (R/registre2.R) : un test
+# verifie que la table du modele et la constante disent la meme chose.
+TYPES = [("Point (borne, signe…)", "point"), ("Ligne", "ligne"),
+         ("Surface", "surface"), ("Hors plan", "hors_plan")]
+ETATS_PAR_FORME = {
+    "point": [("en_place", "En place"), ("endommage", "Endommagé"),
+              ("non_retrouve", "Non retrouvé"), ("detruit", "Détruit"),
+              ("inaccessible", "Inaccessible")],
+    "ligne": [("visible", "Visible"),
+              ("partiellement_visible", "Partiellement visible"),
+              ("peu_visible", "Peu visible"), ("non_visible", "Non visible"),
+              ("inaccessible", "Inaccessible")],
+    "surface": [("conforme", "Conforme au plan"), ("modifiee", "Modifiée"),
+                ("degradee", "Dégradée"), ("disparue", "Disparue"),
+                ("inaccessible", "Inaccessible")],
+    "hors_plan": [("hors_plan", "Hors plan")],
+}
+COUCHE_DE_FORME = {"point": "limites_elements_points",
+                   "ligne": "limites_elements_lignes",
+                   "surface": "limites_elements_surfaces"}
 
 # « a_voir » : jamais vu, ou reste inaccessible. Les autres categories
 # disent le dernier etat constate.
 A_VISITER = [("a_voir", "À voir", "#D32F2F"),
              ("ancienne", "Vu il y a longtemps", "#F57C00"),
              ("vu", "Vu en place", "#388E3C"),
-             ("defaut", "Vu, endommagé", "#FBC02D"),
+             ("defaut", "Vu, en défaut", "#FBC02D"),
              ("perdu", "Non retrouvé ou détruit", "#212121")]
 
 
@@ -193,8 +214,29 @@ def styler_elements(c, geometrie):
     c.setReadOnly(True)
 
 
+def remplir_etats():
+    etats = QgsVectorLayer("%s|layername=etats" % GPKG, "etats", "ogr")
+    etats.startEditing()
+    for forme, liste in ETATS_PAR_FORME.items():
+        for valeur, libelle in liste:
+            f = QgsFeature(etats.fields())
+            f["forme"], f["valeur"], f["libelle"] = forme, valeur, libelle
+            etats.addFeature(f)
+    if not etats.commitChanges():
+        sys.exit("Table des etats : " + str(etats.commitErrors()))
+
+
+def etats_du_type():
+    """L'expression vraie si l'etat est de la liste du type choisi."""
+    return "CASE " + " ".join(
+        "WHEN \"type_element\" = '%s' THEN \"etat\" IN (%s)" % (
+            forme, ", ".join("'%s'" % v for v, _ in liste))
+        for forme, liste in ETATS_PAR_FORME.items()) + " ELSE FALSE END"
+
+
 def principal():
     ecrire_gpkg()
+    remplir_etats()
     projet = QgsProject.instance()
     projet.clear()
     projet.setFileName(QGS)
@@ -235,39 +277,95 @@ def principal():
     for c in (foret, tampon, ug, parcelles):
         c.setReadOnly(True)
 
+    # La table des etats par type : la liste du formulaire.
+    etats = couche("etats", "États par type d'élément")
+    etats.setReadOnly(True)
+
     # --- Saisie : les constats -----------------------------------------
     constats = couche("constats", "Constats")
     constats.renderer().setSymbol(QgsMarkerSymbol.createSimple(
         {"name": "diamond", "color": "#1565C0", "size": "3.5",
          "outline_color": "#FFFFFF"}))
+    idx = constats.fields().indexOf
     widget(constats, "uuid", "Hidden")
     defaut(constats, "uuid", "uuid('WithoutBraces')")
+
+    # Le type d'abord : point, ligne, surface ou hors plan. Par defaut, celui
+    # de l'element le plus proche, toutes formes confondues : la recette de
+    # terrain, avec les bornes toujours prioritaires a 30 m, ne pouvait viser
+    # que la borne. Il reste une priorite, courte : a 2 m d'une borne, on est
+    # venu pour elle - a Loury, une borne au bord d'un cours d'eau avait le
+    # contour de la surface a 38 cm. Calcule a la creation seulement : l'agent
+    # le change d'un geste, et son choix tient.
+    # Pour une surface, la distance a son contour : un point pris dedans en
+    # serait sinon toujours a zero metre, et la surface gagnerait contre la
+    # borne posee sur son bord. C'est d'ailleurs le contour que l'on constate.
+    def distance(couche, contour=False):
+        cible = "array_first(overlay_nearest('%s', $geometry, limit:=1, " \
+                "max_distance:=30))" % couche
+        if contour:
+            cible = "boundary(%s)" % cible
+        return "coalesce(distance($geometry, %s), 9999)" % cible
+    defaut(constats, "type_element", (
+        "with_variable('dp', %s, with_variable('dl', %s, with_variable('ds', %s, "
+        "CASE WHEN @dp = 9999 AND @dl = 9999 AND @ds = 9999 THEN NULL "
+        "WHEN @dp <= 2 OR (@dp <= @dl AND @dp <= @ds) THEN 'point' "
+        "WHEN @dl <= @ds THEN 'ligne' ELSE 'surface' END)))") % (
+            distance(COUCHE_DE_FORME["point"]),
+            distance(COUCHE_DE_FORME["ligne"]),
+            distance(COUCHE_DE_FORME["surface"], contour=True)))
+    widget(constats, "type_element", "ValueMap",
+           {"map": [{libelle: valeur} for libelle, valeur in TYPES]})
+    constats.setFieldConstraint(idx("type_element"),
+                                QgsFieldConstraints.ConstraintNotNull,
+                                QgsFieldConstraints.ConstraintStrengthHard)
+
+    # L'element, parmi ceux du type choisi : la liste est filtree, et le plus
+    # proche du type a 30 m est propose. Un choix de l'agent est garde tant
+    # qu'il est du bon type ; changer de type le remplace.
     widget(constats, "element_id", "ValueRelation", {
         "Layer": ancres.id(), "LayerName": ancres.name(),
         "Key": "id", "Value": "libelle", "OrderByValue": True,
-        "AllowNull": True, "UseCompleter": True})
-    # L'element le plus proche, a 30 m au plus : les bornes d'abord, puis les
-    # lignes, puis les surfaces. L'agent peut en choisir un autre : son choix
-    # est garde (coalesce sur la valeur deja saisie). Reevaluee a chaque
-    # changement, la valeur se vide quand l'etat passe a « Hors plan » - la
-    # recette de terrain montrait sinon un element propose a un constat qui
-    # n'en a pas.
+        "AllowNull": True, "UseCompleter": True,
+        "FilterExpression": "\"forme\" = current_value('type_element')"})
     defaut(constats, "element_id", (
-        "if(\"etat\" = 'hors_plan', NULL, coalesce(\"element_id\","
-        "array_first(overlay_nearest('limites_elements_points', \"id\", limit:=1, max_distance:=30)),"
-        "array_first(overlay_nearest('limites_elements_lignes', \"id\", limit:=1, max_distance:=30)),"
-        "array_first(overlay_nearest('limites_elements_surfaces', \"id\", limit:=1, max_distance:=30))))"),
+        "CASE WHEN \"type_element\" IS NULL OR \"type_element\" = 'hors_plan' "
+        "THEN NULL "
+        "WHEN \"element_id\" IS NOT NULL AND attribute(get_feature("
+        "'limites_elements', 'id', \"element_id\"), 'forme') = \"type_element\" "
+        "THEN \"element_id\" " + " ".join(
+            "WHEN \"type_element\" = '%s' THEN array_first(overlay_nearest("
+            "'%s', \"id\", limit:=1, max_distance:=30))" % (forme, couche)
+            for forme, couche in COUCHE_DE_FORME.items()) + " END"),
         a_la_mise_a_jour=True)
-    widget(constats, "etat", "ValueMap",
-           {"map": [{libelle: valeur} for libelle, valeur in ETATS]})
-    i = constats.fields().indexOf("etat")
-    constats.setFieldConstraint(i, QgsFieldConstraints.ConstraintNotNull,
+    constats.setConstraintExpression(
+        idx("element_id"),
+        "(\"type_element\" = 'hors_plan' AND \"element_id\" IS NULL) OR "
+        "(\"type_element\" <> 'hors_plan' AND \"element_id\" IS NOT NULL)",
+        "Un constat répond à un élément du plan, sauf « Hors plan ».")
+    constats.setFieldConstraint(idx("element_id"),
+                                QgsFieldConstraints.ConstraintExpression,
+                                QgsFieldConstraints.ConstraintStrengthHard)
+
+    # L'etat, parmi ceux du type : obligatoire, sans valeur vide, et vide de
+    # nouveau si l'on change de type (un etat de borne n'a pas de sens pour
+    # une ligne). « Hors plan » n'a qu'un etat, pose d'office.
+    widget(constats, "etat", "ValueRelation", {
+        "Layer": etats.id(), "LayerName": etats.name(),
+        "Key": "valeur", "Value": "libelle", "OrderByValue": False,
+        "AllowNull": False, "UseCompleter": False,
+        "FilterExpression": "\"forme\" = current_value('type_element')"})
+    defaut(constats, "etat", (
+        "CASE WHEN \"type_element\" = 'hors_plan' THEN 'hors_plan' "
+        "WHEN " + etats_du_type() + " THEN \"etat\" END"),
+        a_la_mise_a_jour=True)
+    constats.setFieldConstraint(idx("etat"),
+                                QgsFieldConstraints.ConstraintNotNull,
                                 QgsFieldConstraints.ConstraintStrengthHard)
     constats.setConstraintExpression(
-        constats.fields().indexOf("element_id"),
-        "\"etat\" = 'hors_plan' OR \"element_id\" IS NOT NULL",
-        "Un constat répond à un élément du plan, sauf « Hors plan ».")
-    constats.setFieldConstraint(constats.fields().indexOf("element_id"),
+        idx("etat"), etats_du_type(),
+        "L'état doit être choisi dans la liste du type d'élément.")
+    constats.setFieldConstraint(idx("etat"),
                                 QgsFieldConstraints.ConstraintExpression,
                                 QgsFieldConstraints.ConstraintStrengthHard)
     widget(constats, "visite_le", "DateTime",
@@ -285,7 +383,8 @@ def principal():
         config.setReadOnly(constats.fields().indexOf(champ), True)
         constats.setEditFormConfig(config)
     widget(constats, "observations", "TextEdit", {"IsMultiline": True})
-    for champ, alias in (("element_id", "Élément du plan"), ("etat", "État"),
+    for champ, alias in (("type_element", "Type d'élément"),
+                         ("element_id", "Élément du plan"), ("etat", "État"),
                          ("visite_le", "Visite"), ("operateur", "Opérateur"),
                          ("precision_m", "Précision GNSS (m)"),
                          ("source_gnss", "Source GNSS"),
@@ -313,7 +412,7 @@ def principal():
         "fichier": "'DCIM/limites_' || format_date(now(), 'yyyyMMdd_HHmmss_zzz') || '.{extension}'"}))
 
     projet.addMapLayers([constats, points, lignes, surfaces, ancres, ug,
-                         foret, tampon, parcelles, photos])
+                         foret, tampon, parcelles, photos, etats])
 
     relation = QgsRelation()
     relation.setId("photos_du_constat")
@@ -346,8 +445,8 @@ def principal():
     config.setLayout(QgsEditFormConfig.TabLayout)
     racine = config.invisibleRootContainer()
     racine.clear()
-    for champ in ("element_id", "etat", "visite_le", "operateur",
-                  "precision_m", "source_gnss", "observations"):
+    for champ in ("type_element", "element_id", "etat", "visite_le",
+                  "operateur", "precision_m", "source_gnss", "observations"):
         racine.addChildElement(QgsAttributeEditorField(
             champ, constats.fields().indexOf(champ), racine))
     racine.addChildElement(QgsAttributeEditorRelation(relation, racine))
@@ -375,7 +474,7 @@ def principal():
     projet.addMapLayer(locale)
 
     racine_arbre = projet.layerTreeRoot()
-    for c in (ancres, photos):
+    for c in (ancres, photos, etats):
         noeud = racine_arbre.findLayer(c.id())
         if noeud is not None:
             noeud.setItemVisibilityChecked(False)

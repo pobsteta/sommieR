@@ -1,3 +1,35 @@
+# sommieR 0.26.0
+
+Le formulaire de constat des limites selon le type d'élément.
+
+- **Le type d'abord.** Dans le projet QField des limites, un constat commence
+  par le type d'élément : point (borne, signe, détail ponctuel), ligne,
+  surface ou hors plan.
+  - Le type proposé est celui de l'élément le plus proche, toutes formes
+    confondues. Une surface se mesure à son contour, et une borne à moins de
+    2 m l'emporte.
+  - La liste des éléments ne montre que ceux du type choisi, et propose le plus
+    proche à 30 m. Près d'une borne, choisir « ligne » vise la voie d'à côté.
+    Avant, la borne était toujours retenue.
+- **L'état suit le type, et il est obligatoire.** Il est lu dans une table des
+  états du GeoPackage, filtrée par le type. Changer de type vide l'état, et un
+  formulaire sans état ou avec un état d'un autre type ne s'enregistre pas.
+  - Point : en place, endommagé, non retrouvé, détruit.
+  - Ligne, par sa visibilité : visible, partiellement visible, peu visible,
+    non visible.
+  - Surface : conforme au plan, modifiée, dégradée, disparue.
+  - Tous : inaccessible. Hors plan : hors plan.
+- `SOMMIER_ETATS_PAR_FORME` donne ces listes. `SOMMIER_ETATS_LIMITE` les
+  réunit.
+- **Registre 2 en `r2-1.4.0`.** Le constat recopie la forme de l'élément
+  (`element_pci$forme`), et un état hors de la liste de sa forme est refusé, à
+  la validation comme à l'import. L'import refuse aussi un type qui n'est pas
+  la forme de l'élément. Les constats et les projets antérieurs, sans forme,
+  restent valides avec les états d'une borne.
+- **La couleur de la dernière visite**, sur le terrain et dans le rapport,
+  range les nouveaux états : vu, vu en défaut, perdu (non retrouvé, détruit,
+  non visible, disparue), à voir.
+
 # sommieR 0.25.0
 
 Du constat de terrain au registre 5 : le produit accidentel d'une détection

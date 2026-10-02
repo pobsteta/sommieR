@@ -7,14 +7,35 @@
 SOMMIER_ETATS_LIMITE
 }
 \description{
+Tous les etats qu'un constat peut porter. Ils dependent de la forme de
+l'element (voir \link{SOMMIER_ETATS_PAR_FORME}).
+
+Un point - une borne, un signe, un detail ponctuel :
 \itemize{
 \item \code{en_place} : l'element est la, en etat ;
 \item \code{endommage} : il est la, abime (borne penchee, mur en partie effondre) ;
 \item \code{non_retrouve} : cherche sans succes ;
-\item \code{detruit} : ses vestiges sont constates ;
-\item \code{inaccessible} : on n'a pas pu l'approcher ;
-\item \code{hors_plan} : trouve sur le terrain, absent du plan cadastral.
+\item \code{detruit} : ses vestiges sont constates.
 }
+
+Une ligne - une voie, un fosse, un detail lineaire -, par sa visibilite :
+\itemize{
+\item \code{visible} : elle se suit sans peine ;
+\item \code{partiellement_visible} : elle se suit par endroits ;
+\item \code{peu_visible} : quelques traces seulement ;
+\item \code{non_visible} : aucune trace sur le terrain.
+}
+
+Une surface - un batiment, un cours d'eau, un detail surfacique :
+\itemize{
+\item \code{conforme} : presente, conforme au plan ;
+\item \code{modifiee} : presente, d'emprise ou de forme differente du plan ;
+\item \code{degradee} : en ruine, comblee, envahie ;
+\item \code{disparue} : plus rien sur le terrain.
+}
+
+Pour toutes : \code{inaccessible}, on n'a pas pu l'approcher. Et \code{hors_plan} :
+trouve sur le terrain, absent du plan cadastral.
 }
 \details{
 Des etats constates, pas des verdicts. Il n'y a pas d'etat « deplace » :
