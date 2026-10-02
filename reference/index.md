@@ -160,6 +160,10 @@ habitats — et ce qu’ils apportent à l’IBP.
   : Payload du registre 9 - habitat remarquable (imprime A50 r/h)
 - [`sommier_elements_ibp()`](https://pobsteta.github.io/sommieR/reference/sommier_elements_ibp.md)
   : Elements du sommier utiles a l'IBP
+- [`sommier_taxref()`](https://pobsteta.github.io/sommieR/reference/sommier_taxref.md)
+  : Referentiel taxonomique TAXREF
+- [`sommier_especes_observees()`](https://pobsteta.github.io/sommieR/reference/sommier_especes_observees.md)
+  : Especes observees dans la foret et a ses abords
 - [`SOMMIER_TYPES_REMARQUABLE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_REMARQUABLE.md)
   : Types de fiche du patrimoine remarquable (serie A50 r/\*)
 - [`SOMMIER_ETATS_SANITAIRES`](https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_SANITAIRES.md)

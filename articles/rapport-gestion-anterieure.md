@@ -57,7 +57,7 @@ document.
 | **État de la chaîne** | intacte |
 | **Entrées** | 67 |
 | **Séquence de tête** | 67 |
-| **Empreinte de tête** | `4d61b69bc9b7fc52ee5f936b42a4516fead2024b48e4cd4a004aabfb4dedab1a` |
+| **Empreinte de tête** | `26efea9e5712ff46555894563d90dac129159cdc78dcee94853f67fb1c3cba27` |
 
 ## 2 Provenance des écritures
 
@@ -299,5 +299,5 @@ l’empreinte de tête, et la vérification le dit.
 
 ------------------------------------------------------------------------
 
-*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.26.4 le
+*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.27.0 le
 02/10/2026.*

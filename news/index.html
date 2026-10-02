@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.26.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.27.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,20 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.27.0" id="sommier-0270">sommieR 0.27.0<a class="anchor" aria-label="anchor" href="#sommier-0270"></a></h2>
+<p>Les espèces observées dans la forêt et à ses abords, nommées dans TAXREF (lot 1 du brief « Patrimoine »).</p>
+<ul><li>
+<strong>TAXREF fait référence.</strong> <code><a href="../reference/sommier_taxref.html">sommier_taxref()</a></code> lit TAXREF, le référentiel taxonomique national, dans l’archive Darwin Core que PatriNat publie sur l’IPT de GBIF France, et la garde en cache, réduite aux espèces et à leurs noms valides. La version est lue dans l’archive (TAXREF v18.0 aujourd’hui) ; une archive qui ne la dit pas est refusée. Ni le rapport ni les fonctions qui s’en servent ne dépendent des serveurs du Muséum, coupés depuis l’été 2025.</li>
+<li>
+<strong><code><a href="../reference/sommier_especes_observees.html">sommier_especes_observees()</a></code></strong> rend les espèces que d’autres ont observées dans la forêt élargie d’un tampon (GBIF, par <code>rgbif</code>), une ligne par <code>CD_REF</code> : deux synonymes sont une espèce. Le nom de GBIF est rapproché de TAXREF dans le même règne, hors emplois erronés ; un homonyme se départage par l’auteur, et un nom que GBIF écrit autrement se retente sous le nom d’origine de l’observation. Ce qui reste ambigu est compté à part, pas deviné. Une observation n’est placée dans une unité que si sa position est connue à <code>incertitude_max_m</code> près.</li>
+<li>
+<strong>Hors registre.</strong> Rien n’entre dans la chaîne : le registre 9 et l’IBP ne changent pas.</li>
+<li>
+<strong>Le rapport</strong> gagne <code>especes_observees</code> : une sous-section du patrimoine liste ces espèces par groupe, avec leur <code>CD_REF</code>, dit la source, la date, les filtres, la version de TAXREF et les noms non rapprochés, signale celles qui ont aussi une fiche au registre 9 et cite les jeux de données avec leur licence. Un document public ne les rattache à aucune unité.</li>
+<li>
+<code>rgbif</code> rejoint les Suggests.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.26.4" id="sommier-0264">sommieR 0.26.4<a class="anchor" aria-label="anchor" href="#sommier-0264"></a></h2>
 <ul><li>

@@ -11,7 +11,7 @@ elements d'IBP et la desserte."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.26.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.27.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,6 +66,7 @@ elements d'IBP et la desserte.</p>
 <span>  indices <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  reference_ifn <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  coupes_detectees <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  especes_observees <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  quarto <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which</a></span><span class="op">(</span><span class="st">"quarto"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -155,6 +156,14 @@ sylvoecoregion de la foret et les tables IFN de nemeton.</p></dd>
 <code><a href="sommier_coupes_sufosat.html">sommier_coupes_sufosat()</a></code> (facultatif) : celles qu'aucun martelage de la
 meme unite n'explique, l'exercice de la detection ou le precedent, sont
 signalees sous la balance.</p></dd>
+
+
+<dt id="arg-especes-observees">especes_observees<a class="anchor" aria-label="anchor" href="#arg-especes-observees"></a></dt>
+<dd><p>Especes observees dans la foret et a ses abords,
+telles que les rend <code><a href="sommier_especes_observees.html">sommier_especes_observees()</a></code> (facultatif) : une
+sous-section du patrimoine les liste, nommees dans TAXREF, comme un
+contexte hors registre. Un document public ne les rattache a aucune
+unite de gestion.</p></dd>
 
 
 <dt id="arg-quarto">quarto<a class="anchor" aria-label="anchor" href="#arg-quarto"></a></dt>
