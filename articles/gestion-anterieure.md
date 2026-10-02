@@ -174,10 +174,10 @@ registre a bougé.
 verif <- sommier_verifier(con, foret)
 verif
 #> Verification de chaine - sommier
-#>   foret     : c2631330-7428-47b7-a69b-f8985ae05915
+#>   foret     : f5e1025f-3c14-4bbe-9efc-b75d10f17dfe
 #>   entrees   : 67
 #>   seq tete  : 67
-#>   hash tete : 458927f42901b1d4591c86d3fbaf499386fb01a83d7123170be587b68384f11a
+#>   hash tete : 31947aa9ec7846215b9f381fc0cb4bba298cc7eea66efdc638db182fd76f8fb5
 #>   etat      : chaine intacte
 ```
 
@@ -487,7 +487,7 @@ tableau(ga$sections$patrimoine, "Arbres, peuplements, vestiges, espèces, habita
 | arbre | Alisier de la lisiere sud | NA | NA | NA | bon | NA |
 | arbre | Chandelle du talus est | NA | NA | NA | mort | NA |
 | arbre | Chene de la Justice | NA | NA | NA | moyen | NA |
-| espece | NA | Cypripedium calceolus | NA | NA | NA | Directive Habitats, annexe II |
+| espece | Sabot de Venus | Cypripedium calceolus | NA | NA | NA | Directive Habitats, annexe II |
 | habitat | NA | NA | Pelouse calcicole seche | 1.3 | NA | NA |
 | vestige | Charbonniere de la section A | NA | NA | NA | NA | NA |
 
@@ -830,7 +830,7 @@ couche <- tempfile(fileext = ".geojson")
 export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
 str(export)
 #> List of 3
-#>  $ chemin               : chr "/tmp/RtmpWfWThE/file434664c16ff7.geojson"
+#>  $ chemin               : chr "/tmp/RtmpCnGz7l/file3b9121ce52d6.geojson"
 #>  $ n_unites             : int 3
 #>  $ unites_sans_geometrie: chr(0)
 ```
@@ -903,10 +903,10 @@ chemin <- tempfile(fileext = ".json")
 sommier_exporter_manifeste(con, foret, chemin)
 sommier_verifier_manifeste(chemin)
 #> Verification de chaine - sommier
-#>   foret     : c2631330-7428-47b7-a69b-f8985ae05915
+#>   foret     : f5e1025f-3c14-4bbe-9efc-b75d10f17dfe
 #>   entrees   : 67
 #>   seq tete  : 67
-#>   hash tete : 458927f42901b1d4591c86d3fbaf499386fb01a83d7123170be587b68384f11a
+#>   hash tete : 31947aa9ec7846215b9f381fc0cb4bba298cc7eea66efdc638db182fd76f8fb5
 #>   etat      : chaine intacte
 #>   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau
 ```
