@@ -1,3 +1,31 @@
+# sommieR 0.27.0
+
+Les espèces observées dans la forêt et à ses abords, nommées dans TAXREF
+(lot 1 du brief « Patrimoine »).
+
+- **TAXREF fait référence.** `sommier_taxref()` lit TAXREF, le référentiel
+  taxonomique national, dans l'archive Darwin Core que PatriNat publie sur
+  l'IPT de GBIF France, et la garde en cache, réduite aux espèces et à leurs
+  noms valides. La version est lue dans l'archive (TAXREF v18.0 aujourd'hui) ;
+  une archive qui ne la dit pas est refusée. Ni le rapport ni les fonctions qui
+  s'en servent ne dépendent des serveurs du Muséum, coupés depuis l'été 2025.
+- **`sommier_especes_observees()`** rend les espèces que d'autres ont
+  observées dans la forêt élargie d'un tampon (GBIF, par `rgbif`), une ligne
+  par `CD_REF` : deux synonymes sont une espèce. Le nom de GBIF est rapproché
+  de TAXREF dans le même règne, hors emplois erronés ; un homonyme se
+  départage par l'auteur, et un nom que GBIF écrit autrement se retente sous
+  le nom d'origine de l'observation. Ce qui reste ambigu est compté à part,
+  pas deviné. Une observation n'est placée dans une unité que si sa position
+  est connue à `incertitude_max_m` près.
+- **Hors registre.** Rien n'entre dans la chaîne : le registre 9 et l'IBP ne
+  changent pas.
+- **Le rapport** gagne `especes_observees` : une sous-section du patrimoine
+  liste ces espèces par groupe, avec leur `CD_REF`, dit la source, la date, les
+  filtres, la version de TAXREF et les noms non rapprochés, signale celles qui
+  ont aussi une fiche au registre 9 et cite les jeux de données avec leur
+  licence. Un document public ne les rattache à aucune unité.
+- `rgbif` rejoint les Suggests.
+
 # sommieR 0.26.4
 
 - **Les registres portent leurs accents.** `SOMMIER_REGISTRES$nom` dit
