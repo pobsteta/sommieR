@@ -35,9 +35,9 @@ SOMMIER_REGISTRES
 #> 2        2      Foncier & limites         A40   mixte       TRUE
 #> 3        3   Droits & concessions        A50C   mixte       TRUE
 #> 4        4        Infrastructures   A50D/Dbis   foret       TRUE
-#> 5        5      Coupes & recoltes    A50E/F/I   mixte       TRUE
+#> 5        5      Coupes & récoltes    A50E/F/I   mixte       TRUE
 #> 6        6                Travaux A50J/Jbis/H   mixte       TRUE
-#> 7        7           Comptabilite        A50G   foret       TRUE
-#> 8        8     Evenements & faune      A50K/L   mixte       TRUE
+#> 7        7           Comptabilité        A50G   foret       TRUE
+#> 8        8     Évènements & faune      A50K/L   mixte       TRUE
 #> 9        9 Patrimoine remarquable     A50 r/*   mixte       TRUE
 ```

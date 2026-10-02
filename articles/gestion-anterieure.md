@@ -174,10 +174,10 @@ registre a bougé.
 verif <- sommier_verifier(con, foret)
 verif
 #> Verification de chaine - sommier
-#>   foret     : f5e1025f-3c14-4bbe-9efc-b75d10f17dfe
+#>   foret     : 68e5692b-3411-41b1-81f2-aadc6eacf3f3
 #>   entrees   : 67
 #>   seq tete  : 67
-#>   hash tete : 31947aa9ec7846215b9f381fc0cb4bba298cc7eea66efdc638db182fd76f8fb5
+#>   hash tete : 4d61b69bc9b7fc52ee5f936b42a4516fead2024b48e4cd4a004aabfb4dedab1a
 #>   etat      : chaine intacte
 ```
 
@@ -220,10 +220,10 @@ tableau(
 | 2 | Foncier & limites | 0 | 1 | 1 | 2017-09-14 | 2017-09-14 |
 | 3 | Droits & concessions | 5 | 1 | 1 | 2018-04-01 | 2018-04-01 |
 | 4 | Infrastructures | 0 | 3 | 1 | 2016-06-01 | 2016-06-01 |
-| 5 | Coupes & recoltes | 6 | 5 | 1 | 2016-03-05 | 2020-03-05 |
+| 5 | Coupes & récoltes | 6 | 5 | 1 | 2016-03-05 | 2020-03-05 |
 | 6 | Travaux | 3 | 0 | 0 | NA | NA |
-| 7 | Comptabilite | 21 | 0 | 0 | NA | NA |
-| 8 | Evenements & faune | 9 | 1 | 1 | 2020-08-10 | 2020-08-10 |
+| 7 | Comptabilité | 21 | 0 | 0 | NA | NA |
+| 8 | Évènements & faune | 9 | 1 | 1 | 2020-08-10 | 2020-08-10 |
 | 9 | Patrimoine remarquable | 4 | 3 | 1 | 2016-07-12 | 2019-06-03 |
 
 Écritures en vigueur sur la période, par registre et par provenance
@@ -382,11 +382,11 @@ contrôle des plantations.
 tableau(ga$sections$travaux, "Travaux réalisés sur la période")
 ```
 
-| annee | nature_travaux | provenance | quantite | unite | montant_eur | taux_reprise_moyen_pct | n |
-|:---|:---|:---|---:|:---|---:|---:|---:|
-| 2022 | plantation | constate | 1.75 | ha | 5 130 | 78 | 1 |
-| 2023 | entretien de la desserte | constate | 1.04 | km | 1 980 | NA | 1 |
-| 2024 | degagement | constate | 1.75 | ha | 1 400 | 84 | 1 |
+| annee | ug | nature_travaux | provenance | quantite | unite | montant_eur | taux_reprise_moyen_pct | n |
+|:---|:---|:---|:---|---:|:---|---:|---:|---:|
+| 2022 | 35 | plantation | constate | 1.75 | ha | 5 130 | 78 | 1 |
+| 2023 | NA | entretien de la desserte | constate | 1.04 | km | 1 980 | NA | 1 |
+| 2024 | 35 | degagement | constate | 1.75 | ha | 1 400 | 84 | 1 |
 
 Travaux réalisés sur la période {.table}
 
@@ -830,7 +830,7 @@ couche <- tempfile(fileext = ".geojson")
 export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
 str(export)
 #> List of 3
-#>  $ chemin               : chr "/tmp/RtmpCnGz7l/file3b9121ce52d6.geojson"
+#>  $ chemin               : chr "/tmp/RtmpKHnaM1/file3bc068e49d48.geojson"
 #>  $ n_unites             : int 3
 #>  $ unites_sans_geometrie: chr(0)
 ```
@@ -903,10 +903,10 @@ chemin <- tempfile(fileext = ".json")
 sommier_exporter_manifeste(con, foret, chemin)
 sommier_verifier_manifeste(chemin)
 #> Verification de chaine - sommier
-#>   foret     : f5e1025f-3c14-4bbe-9efc-b75d10f17dfe
+#>   foret     : 68e5692b-3411-41b1-81f2-aadc6eacf3f3
 #>   entrees   : 67
 #>   seq tete  : 67
-#>   hash tete : 31947aa9ec7846215b9f381fc0cb4bba298cc7eea66efdc638db182fd76f8fb5
+#>   hash tete : 4d61b69bc9b7fc52ee5f936b42a4516fead2024b48e4cd4a004aabfb4dedab1a
 #>   etat      : chaine intacte
 #>   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau
 ```

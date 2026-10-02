@@ -134,7 +134,7 @@ sommier_reprise(
   )
 )
 #> <entree de sommier>
-#>   registre  : 5 - Coupes & recoltes
+#>   registre  : 5 - Coupes & récoltes
 #>   foret     : 3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
 #>   ug        : (echelle foret)
 #>   evenement : 1998-03-12

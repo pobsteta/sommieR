@@ -1,5 +1,18 @@
 # Changelog
 
+## sommieR 0.26.4
+
+- **Les registres portent leurs accents.** `SOMMIER_REGISTRES$nom` dit «
+  Coupes & récoltes », « Comptabilité » et « Évènements & faune », dans
+  le rapport comme dans les messages.
+
+## sommieR 0.26.3
+
+- **Les travaux nomment leurs unités.** Comme les coupes, le tableau des
+  travaux du rapport garde une ligne par année, nature et provenance, et
+  liste les unités de gestion concernées. Des travaux à l’échelle de la
+  forêt, une desserte par exemple, n’en nomment aucune.
+
 ## sommieR 0.26.2
 
 - **Patrimoine remarquable.** Une espèce n’a pas d’appellation : le
