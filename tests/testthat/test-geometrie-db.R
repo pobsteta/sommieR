@@ -200,7 +200,8 @@ test_that("le jeu de demonstration porte des objets localises", {
   demo <- sommier_demo_couchey(con, suffixe = substr(uuid_v4(), 1L, 8L))
   objets <- sommier_objets_localises(con, demo$foret_id)
   expect_gte(nrow(objets), 13L)
-  expect_setequal(sort(unique(objets$registre)), c(2L, 4L, 8L, 9L))
+  # Le registre 6 depuis la v0.28.0 : les placettes de suivi de l'UG 35.
+  expect_setequal(sort(unique(objets$registre)), c(2L, 4L, 6L, 8L, 9L))
   expect_true(all(c("ST_Point", "ST_LineString", "ST_Polygon") %in%
                     objets$type_geometrie))
   expect_true(sommier_verifier(con, demo$foret_id)$valide)

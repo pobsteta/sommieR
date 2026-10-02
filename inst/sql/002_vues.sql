@@ -313,13 +313,94 @@ SELECT
   (e.ug_uuid IS NULL)                         AS hors_unite_gestion,
   jsonb_exists(e.payload, 'reprise')          AS repris,
   (e.payload -> 'reprise' ->> 'source')       AS reprise_source,
-  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference
+  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference,
+  -- v0.28.0 : le code, l'execution, le prevu et la reception. En fin de
+  -- liste : CREATE OR REPLACE n'accepte une colonne nouvelle qu'apres les
+  -- autres.
+  (e.payload ->> 'code_travaux')::TEXT        AS code_travaux,
+  (e.payload ->> 'modalite')::TEXT            AS modalite,
+  (e.payload ->> 'essence_objectif')::TEXT    AS essence_objectif,
+  (e.payload ->> 'execution')::TEXT           AS execution,
+  (e.payload ->> 'intervenant')::TEXT         AS intervenant,
+  (e.payload ->> 'prevu')::TEXT               AS prevu,
+  (e.payload ->> 'motif_ecart')::TEXT         AS motif_ecart,
+  (e.payload ->> 'date_reception')::DATE      AS date_reception,
+  (e.geom IS NOT NULL)                        AS localise
 FROM v_entree_courante e
-WHERE e.registre = 6;
+WHERE e.registre = 6
+  -- Les placettes et leurs controles sont au registre 6, mais ce ne sont pas
+  -- des travaux : une entree sans type, d'avant la v0.28.0, en est un.
+  AND COALESCE(e.payload ->> 'type_entree', 'travaux') = 'travaux';
 
 COMMENT ON VIEW v_travaux IS
   'Imprimes A50J et A50J bis (par unite de gestion) et A50H '
-  '(hors unite de gestion, ug_uuid NULL).';
+  '(hors unite de gestion, ug_uuid NULL). Interventions seulement.';
+
+-- Placettes permanentes de suivi (v0.28.0), avec les travaux qu'elles suivent.
+CREATE OR REPLACE VIEW v_placette AS
+SELECT
+  p.id,
+  p.foret_id,
+  p.ug_uuid,
+  p.seq,
+  p.date_evenement                              AS installee_le,
+  p.auteur,
+  (p.payload ->> 'code_placette')::TEXT         AS code_placette,
+  (p.payload ->> 'rayon_m')::NUMERIC            AS rayon_m,
+  (p.payload ->> 'travaux_id')::UUID            AS travaux_id,
+  (p.payload ->> 'materialisation')::TEXT       AS materialisation,
+  t.annee                                       AS annee_travaux,
+  t.code_travaux,
+  t.nature_travaux,
+  p.geom
+FROM v_entree_courante p
+LEFT JOIN v_travaux t ON t.id = (p.payload ->> 'travaux_id')::UUID
+WHERE p.registre = 6 AND p.payload ->> 'type_entree' = 'placette';
+
+COMMENT ON VIEW v_placette IS
+  'Placettes de suivi courantes. travaux_id renvoie a la plantation ou a la '
+  'regeneration suivie.';
+
+-- Un controle par ligne. Taux de reprise, densite et abroutis se calculent :
+-- ils ne s'inscrivent pas.
+CREATE OR REPLACE VIEW v_controle_plantation AS
+SELECT
+  c.id,
+  c.foret_id,
+  c.ug_uuid,
+  c.seq,
+  c.date_evenement                              AS visite_le,
+  c.auteur,
+  (c.payload ->> 'placette_id')::UUID           AS placette_id,
+  p.code_placette,
+  p.travaux_id,
+  p.annee_travaux,
+  p.code_travaux,
+  (EXTRACT(YEAR FROM c.date_evenement)::INTEGER - p.annee_travaux)
+                                                AS age_ans,
+  (c.payload ->> 'nb_total')::INTEGER           AS nb_total,
+  (c.payload ->> 'nb_vivants')::INTEGER         AS nb_vivants,
+  (c.payload ->> 'h_moy_cm')::INTEGER           AS h_moy_cm,
+  (c.payload ->> 'nb_abroutis')::INTEGER        AS nb_abroutis,
+  (c.payload ->> 'concurrence')::TEXT           AS concurrence,
+  (c.payload ->> 'besoin')::TEXT                AS besoin,
+  (c.payload ->> 'operateur')::TEXT             AS operateur,
+  round(100 * (c.payload ->> 'nb_vivants')::NUMERIC
+        / NULLIF((c.payload ->> 'nb_total')::NUMERIC, 0), 1)
+                                                AS taux_reprise_pct,
+  round((c.payload ->> 'nb_vivants')::NUMERIC * 10000
+        / (pi() * p.rayon_m ^ 2)::NUMERIC, 0)   AS densite_ha,
+  round(100 * (c.payload ->> 'nb_abroutis')::NUMERIC
+        / NULLIF((c.payload ->> 'nb_vivants')::NUMERIC, 0), 1)
+                                                AS abroutis_pct
+FROM v_entree_courante c
+JOIN v_placette p ON p.id = (c.payload ->> 'placette_id')::UUID
+WHERE c.registre = 6 AND c.payload ->> 'type_entree' = 'controle';
+
+COMMENT ON VIEW v_controle_plantation IS
+  'Controles des placettes de suivi. age_ans : annee du controle moins annee '
+  'des travaux suivis. densite_ha : vivants rapportes a la surface de la '
+  'placette (pi r2).';
 
 -- ---------------------------------------------------------------------
 -- Etat de la chaine
