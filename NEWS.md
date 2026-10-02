@@ -1,3 +1,10 @@
+# sommieR 0.26.2
+
+- **Patrimoine remarquable.** Une espèce n'a pas d'appellation : le tableau
+  du rapport la nomme par son nom français, au lieu d'un tiret.
+- **Éléments utiles à l'IBP.** Le tableau a des en-têtes lisibles (Facteur
+  IBP, Élément, Valeur, Unité, Entrées) au lieu des noms de colonnes.
+
 # sommieR 0.26.1
 
 - **Les coupes par unité.** Dans le rapport, le tableau « Coupes et

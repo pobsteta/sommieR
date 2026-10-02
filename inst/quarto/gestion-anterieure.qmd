@@ -52,7 +52,8 @@ libelles_colonnes <- c(
   taux_abroutissement_pct = "Abroutissement (%)", diagnostic = "Diagnostic",
   type_fiche = "Fiche", appellation = "Appellation", nom_latin = "Nom latin",
   type_habitat = "Habitat", etat_sanitaire = "État sanitaire",
-  statut_protection = "Protection"
+  statut_protection = "Protection", facteur_ibp = "Facteur IBP",
+  element = "Élément", valeur = "Valeur", n_entrees = "Entrées"
 )
 
 # Une valeur absente s'écrit « — » et non « NA » ; un nombre s'écrit à la
@@ -1661,8 +1662,8 @@ cat("Ce que le registre 9 apporte à l'Indice de Biodiversité Potentielle. ",
     "**Ce n'est pas une cotation** : un facteur IBP se cote sur placette selon ",
     "son protocole de terrain, pas par comptage d'un registre qui n'inventorie ",
     "que le remarquable.\n\n", sep = "")
-print(knitr::kable(rapport$ibp, caption = "Éléments mobilisables pour l'IBP"))
-cat("\n\n")
+sections$ibp <- rapport$ibp
+tableau("ibp", "Éléments mobilisables pour l'IBP")
 ```
 
 ```{r desserte, results='asis', eval=!is.null(rapport$densite_voirie)}

@@ -193,8 +193,11 @@ sommier_gestion_anterieure <- function(con, foret_id, debut = NULL, fin = NULL,
          FROM v_equilibre_gibier
         WHERE foret_id = $1 AND date_evenement BETWEEN $2::date AND $3::date
         ORDER BY saison")
+    # Une espece n'a pas d'appellation : son nom francais en tient lieu, sans
+    # quoi la ligne ne se lirait que par son nom latin.
     sections$patrimoine <- lire_etat(
-      "SELECT type_fiche, appellation, nom_latin, type_habitat, surface_ha,
+      "SELECT type_fiche, COALESCE(appellation, nom_francais) AS appellation,
+              nom_latin, type_habitat, surface_ha,
               etat_sanitaire, statut_protection
          FROM v_remarquable_dernier_releve
         WHERE foret_id = $1
