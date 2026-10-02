@@ -24,10 +24,13 @@
 #' @export
 SOMMIER_REGISTRES <- data.frame(
   registre = 1:9,
+  # Les libelles se lisent dans le rapport et les messages : accentues, en
+  # echappements \u pour garder le code en ASCII.
   nom = c(
     "Validations", "Foncier & limites", "Droits & concessions",
-    "Infrastructures", "Coupes & recoltes", "Travaux",
-    "Comptabilite", "Evenements & faune", "Patrimoine remarquable"
+    "Infrastructures", "Coupes & r\u00e9coltes", "Travaux",
+    "Comptabilit\u00e9", "\u00c9v\u00e8nements & faune",
+    "Patrimoine remarquable"
   ),
   source_a50 = c(
     "A10", "A40", "A50C", "A50D/Dbis", "A50E/F/I",
