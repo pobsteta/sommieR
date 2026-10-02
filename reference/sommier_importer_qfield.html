@@ -11,7 +11,7 @@ empreinte."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.25.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.26.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -87,8 +87,10 @@ de chaque constat.</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><strong>Tout ou rien.</strong> Chaque constat est controle avant toute ecriture : etat
-connu, element present dans le projet (sauf <code>hors_plan</code>), date de visite,
-photos presentes. Une seule faute fait echouer l'import, qui les liste
+connu et de la liste du type choisi, type egal a la forme de l'element,
+element present dans le projet (sauf <code>hors_plan</code>), date de visite, photos
+presentes. Un projet engendre avant la v0.26.0 n'a pas de type : ses
+constats gardent les etats d'une borne. Une seule faute fait echouer l'import, qui les liste
 toutes a la fois : on corrige dans QField, puis on reimporte. Les entrees
 s'ecrivent ensuite en une transaction.</p>
 <p><strong>Rejouable.</strong> Chaque constat porte l'UUID que QField lui a donne a la

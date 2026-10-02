@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.25.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.26.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,28 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.26.0" id="sommier-0260">sommieR 0.26.0<a class="anchor" aria-label="anchor" href="#sommier-0260"></a></h2>
+<p>Le formulaire de constat des limites selon le type d’élément.</p>
+<ul><li>
+<strong>Le type d’abord.</strong> Dans le projet QField des limites, un constat commence par le type d’élément : point (borne, signe, détail ponctuel), ligne, surface ou hors plan.
+<ul><li>Le type proposé est celui de l’élément le plus proche, toutes formes confondues. Une surface se mesure à son contour, et une borne à moins de 2 m l’emporte.</li>
+<li>La liste des éléments ne montre que ceux du type choisi, et propose le plus proche à 30 m. Près d’une borne, choisir « ligne » vise la voie d’à côté. Avant, la borne était toujours retenue.</li>
+</ul></li>
+<li>
+<strong>L’état suit le type, et il est obligatoire.</strong> Il est lu dans une table des états du GeoPackage, filtrée par le type. Changer de type vide l’état, et un formulaire sans état ou avec un état d’un autre type ne s’enregistre pas.
+<ul><li>Point : en place, endommagé, non retrouvé, détruit.</li>
+<li>Ligne, par sa visibilité : visible, partiellement visible, peu visible, non visible.</li>
+<li>Surface : conforme au plan, modifiée, dégradée, disparue.</li>
+<li>Tous : inaccessible. Hors plan : hors plan.</li>
+</ul></li>
+<li>
+<code>SOMMIER_ETATS_PAR_FORME</code> donne ces listes. <code>SOMMIER_ETATS_LIMITE</code> les réunit.</li>
+<li>
+<strong>Registre 2 en <code>r2-1.4.0</code>.</strong> Le constat recopie la forme de l’élément (<code>element_pci$forme</code>), et un état hors de la liste de sa forme est refusé, à la validation comme à l’import. L’import refuse aussi un type qui n’est pas la forme de l’élément. Les constats et les projets antérieurs, sans forme, restent valides avec les états d’une borne.</li>
+<li>
+<strong>La couleur de la dernière visite</strong>, sur le terrain et dans le rapport, range les nouveaux états : vu, vu en défaut, perdu (non retrouvé, détruit, non visible, disparue), à voir.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.25.0" id="sommier-0250">sommieR 0.25.0<a class="anchor" aria-label="anchor" href="#sommier-0250"></a></h2>
 <p>Du constat de terrain au registre 5 : le produit accidentel d’une détection confirmée.</p>

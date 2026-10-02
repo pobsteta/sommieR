@@ -106,8 +106,10 @@ registre2_foncier(
   (`feuille:OBJECT_RID`, voir
   [`sommier_elements_pci()`](https://pobsteta.github.io/sommieR/reference/sommier_elements_pci.md)),
   et facultativement `numero`, `categorie`, `nature`, `texte`,
-  `millesime`, `x`, `y`. Obligatoire sauf a l'etat `hors_plan`, ou il
-  est refuse.
+  `millesime`, `x`, `y`, et `forme` (`point`, `ligne`, `surface`). Quand
+  la forme est donnee, l'etat doit etre de sa liste (voir
+  [SOMMIER_ETATS_PAR_FORME](https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_PAR_FORME.md)).
+  Obligatoire sauf a l'etat `hors_plan`, ou il est refuse.
 
 - visite_le:
 

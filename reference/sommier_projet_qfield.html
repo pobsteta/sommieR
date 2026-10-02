@@ -15,7 +15,7 @@ element visite, avec ses photos."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.25.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.26.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -128,10 +128,19 @@ possible, le dossier etant un projet QGIS ordinaire. En foret, le reseau
 manque souvent : <code>ortho</code> joint au projet une orthophotographie que QField
 affiche hors ligne (voir <code><a href="sommier_ortho_ign.html">sommier_ortho_ign()</a></code>). La couche de l'IGN en
 ligne reste dessous, pour qui a du reseau.</p>
-<p><strong>Le formulaire en fait le plus possible.</strong> Un nouveau constat propose
-l'element du plan le plus proche a moins de 30 m, et remplit la date,
-l'operateur, la precision et la source GNSS. L'etat, lui, doit etre choisi :
-c'est le constat.</p>
+<p><strong>Le type d'element d'abord.</strong> Un constat commence par le type : point
+(borne, signe, detail ponctuel), ligne, surface, ou hors plan. Il est
+propose d'apres l'element le plus proche, toutes formes confondues - une
+surface mesuree a son contour, et une borne a moins de 2 m l'emportant -,
+et l'agent le change d'un geste. La liste des elements ne montre alors que
+ceux du type, et le plus proche d'entre eux a moins de 30 m est propose :
+pres d'une borne, choisir « ligne » vise la voie qui passe a cote.</p>
+<p><strong>L'etat suit le type, et il est obligatoire.</strong> Un point est en place,
+endommage, non retrouve ou detruit ; une ligne visible, partiellement
+visible, peu visible ou non visible ; une surface conforme, modifiee,
+degradee ou disparue ; tous peuvent etre inaccessibles (voir
+<a href="SOMMIER_ETATS_PAR_FORME.html">SOMMIER_ETATS_PAR_FORME</a>). Changer de type vide l'etat. Le formulaire
+remplit la date, l'operateur, la precision et la source GNSS.</p>
 <p>Les elements sont colores selon leur derniere reconnaissance au sommier :
 a voir (jamais vu, ou reste inaccessible), vu il y a plus de
 <code>anciennete_ans</code> ans, vu en place, vu endommage, non retrouve ou detruit.</p>

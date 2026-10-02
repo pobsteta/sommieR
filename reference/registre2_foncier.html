@@ -9,7 +9,7 @@ application du regime forestier."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.25.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.26.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -146,8 +146,10 @@ sommier reste conforme.</p></dd>
 <dd><p>Pour une <code>reconnaissance_limite</code>, l'element du plan
 cadastral tel que l'agent l'a vu : liste nommee portant au moins <code>id</code>
 (<code>feuille:OBJECT_RID</code>, voir <code><a href="sommier_elements_pci.html">sommier_elements_pci()</a></code>), et facultativement
-<code>numero</code>, <code>categorie</code>, <code>nature</code>, <code>texte</code>, <code>millesime</code>, <code>x</code>, <code>y</code>.
-Obligatoire sauf a l'etat <code>hors_plan</code>, ou il est refuse.</p></dd>
+<code>numero</code>, <code>categorie</code>, <code>nature</code>, <code>texte</code>, <code>millesime</code>, <code>x</code>, <code>y</code>, et
+<code>forme</code> (<code>point</code>, <code>ligne</code>, <code>surface</code>). Quand la forme est donnee, l'etat
+doit etre de sa liste (voir <a href="SOMMIER_ETATS_PAR_FORME.html">SOMMIER_ETATS_PAR_FORME</a>). Obligatoire sauf
+a l'etat <code>hors_plan</code>, ou il est refuse.</p></dd>
 
 
 <dt id="arg-visite-le">visite_le<a class="anchor" aria-label="anchor" href="#arg-visite-le"></a></dt>

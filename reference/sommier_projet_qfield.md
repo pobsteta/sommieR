@@ -83,10 +83,22 @@ que QField affiche hors ligne (voir
 [`sommier_ortho_ign()`](https://pobsteta.github.io/sommieR/reference/sommier_ortho_ign.md)).
 La couche de l'IGN en ligne reste dessous, pour qui a du reseau.
 
-**Le formulaire en fait le plus possible.** Un nouveau constat propose
-l'element du plan le plus proche a moins de 30 m, et remplit la date,
-l'operateur, la precision et la source GNSS. L'etat, lui, doit etre
-choisi : c'est le constat.
+**Le type d'element d'abord.** Un constat commence par le type : point
+(borne, signe, detail ponctuel), ligne, surface, ou hors plan. Il est
+propose d'apres l'element le plus proche, toutes formes confondues - une
+surface mesuree a son contour, et une borne a moins de 2 m l'emportant
+-, et l'agent le change d'un geste. La liste des elements ne montre
+alors que ceux du type, et le plus proche d'entre eux a moins de 30 m
+est propose : pres d'une borne, choisir « ligne » vise la voie qui passe
+a cote.
+
+**L'etat suit le type, et il est obligatoire.** Un point est en place,
+endommage, non retrouve ou detruit ; une ligne visible, partiellement
+visible, peu visible ou non visible ; une surface conforme, modifiee,
+degradee ou disparue ; tous peuvent etre inaccessibles (voir
+[SOMMIER_ETATS_PAR_FORME](https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_PAR_FORME.md)).
+Changer de type vide l'etat. Le formulaire remplit la date, l'operateur,
+la precision et la source GNSS.
 
 Les elements sont colores selon leur derniere reconnaissance au sommier
 : a voir (jamais vu, ou reste inaccessible), vu il y a plus de

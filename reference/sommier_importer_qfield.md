@@ -41,10 +41,13 @@ photos deposees) et `entrees` (les entrees chainees).
 ## Details
 
 **Tout ou rien.** Chaque constat est controle avant toute ecriture :
-etat connu, element present dans le projet (sauf `hors_plan`), date de
-visite, photos presentes. Une seule faute fait echouer l'import, qui les
-liste toutes a la fois : on corrige dans QField, puis on reimporte. Les
-entrees s'ecrivent ensuite en une transaction.
+etat connu et de la liste du type choisi, type egal a la forme de
+l'element, element present dans le projet (sauf `hors_plan`), date de
+visite, photos presentes. Un projet engendre avant la v0.26.0 n'a pas de
+type : ses constats gardent les etats d'une borne. Une seule faute fait
+echouer l'import, qui les liste toutes a la fois : on corrige dans
+QField, puis on reimporte. Les entrees s'ecrivent ensuite en une
+transaction.
 
 **Rejouable.** Chaque constat porte l'UUID que QField lui a donne a la
 saisie ; il devient l'identifiant de l'entree. Reimporter le meme

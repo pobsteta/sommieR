@@ -525,6 +525,8 @@ Imprimé A40 : délimitation, bornage, acquisitions, servitudes.
   : Types d'entree du registre 2 (foncier et limites)
 - [`SOMMIER_ETATS_LIMITE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_LIMITE.md)
   : Etats constates d'un element de limite
+- [`SOMMIER_ETATS_PAR_FORME`](https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_PAR_FORME.md)
+  : Etats d'un element de limite, selon sa forme
 
 ## Registre 3 — droits et concessions
 
