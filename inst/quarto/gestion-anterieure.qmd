@@ -1069,7 +1069,7 @@ if (is.null(prov) || nrow(prov) == 0L) {
 ## Coupes et récoltes {#sec-coupes}
 
 ```{r coupes, results='asis'}
-tableau("coupes", "Coupes enregistrées sur la période, par exercice, unité et nature")
+tableau("coupes", "Coupes enregistrées sur la période, par exercice et nature, avec les unités parcourues")
 ```
 
 ```{r carte-coupes, fig.height=3.6, fig.width=7, fig.cap="Volume martelé par unité de gestion sur la période.", eval=cartographiable && porte_valeur(carte$volume_martele_m3)}
