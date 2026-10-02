@@ -1,6 +1,9 @@
-# Gestion antérieure
+# Bilan de gestion
 
-# Gestion antérieure
+# Bilan de gestion
+
+Foret communale de Couchey (jeu de demonstration) — du 01/01/2016 au
+31/12/2025 — Bilan de l’aménagement précédent
 
 ImportantDonnées de démonstration
 
@@ -57,7 +60,7 @@ document.
 | **État de la chaîne** | intacte |
 | **Entrées** | 67 |
 | **Séquence de tête** | 67 |
-| **Empreinte de tête** | `26efea9e5712ff46555894563d90dac129159cdc78dcee94853f67fb1c3cba27` |
+| **Empreinte de tête** | `cb66c13871573c3ac33fa24b17a89c96706ca78f6220b4112d82fd4ca24d892e` |
 
 ## 2 Provenance des écritures
 
@@ -299,5 +302,5 @@ l’empreinte de tête, et la vérification le dit.
 
 ------------------------------------------------------------------------
 
-*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.27.0 le
+*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.27.1 le
 02/10/2026.*

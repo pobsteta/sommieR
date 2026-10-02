@@ -1,4 +1,4 @@
-# Rapport de gestion anterieure en Quarto
+# Bilan de gestion en Quarto
 
 Rend la gestion anterieure sous forme de document Quarto — HTML
 autoportant ou PDF — en y joignant l'etat de la chaine, la balance de

@@ -221,7 +221,7 @@ vérifiable.
 - [`SOMMIER_COUCHES_SIG`](https://pobsteta.github.io/sommieR/reference/SOMMIER_COUCHES_SIG.md)
   : Couches d'export cartographique
 - [`sommier_rapport_quarto()`](https://pobsteta.github.io/sommieR/reference/sommier_rapport_quarto.md)
-  : Rapport de gestion anterieure en Quarto
+  : Bilan de gestion en Quarto
 - [`SOMMIER_FORMATS_QUARTO`](https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_QUARTO.md)
   : Formats de rendu Quarto
 
