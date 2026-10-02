@@ -149,22 +149,26 @@ sommier_gestion_anterieure <- function(con, foret_id, debut = NULL, fin = NULL,
          FROM v_martelage_hors_amenagement
         WHERE foret_id = $1
         ORDER BY exercice, date_evenement"),
-    # Par unite, comme les coupes ; des travaux a l'echelle de la foret (une
-    # desserte) n'en ont pas, et se lisent sous un tiret.
+    # Comme les coupes : une ligne par annee, nature et provenance, qui nomme
+    # les unites ou les travaux ont eu lieu. Des travaux a l'echelle de la
+    # foret (une desserte) n'en nomment aucune.
     travaux = lire(
-      "SELECT t.annee, u.numero_affichage AS ug, t.nature_travaux,
+      "SELECT t.annee,
+              string_agg(DISTINCT u.numero_affichage, ', '
+                         ORDER BY u.numero_affichage) AS ug,
+              t.nature_travaux,
               CASE WHEN t.repris THEN 'transcrit' ELSE 'constate' END
                 AS provenance,
               SUM(t.quantite) AS quantite,
               max(t.unite) AS unite, SUM(t.montant_eur) AS montant_eur,
               avg(t.taux_reprise_pct) AS taux_reprise_moyen_pct,
-              count(*) AS n
+              count(*)::integer AS n
          FROM v_travaux t
          LEFT JOIN ug u ON u.uuid = t.ug_uuid
         WHERE t.foret_id = $1
           AND t.date_evenement BETWEEN $2::date AND $3::date
-        GROUP BY t.annee, u.numero_affichage, t.nature_travaux, t.repris
-        ORDER BY t.annee, u.numero_affichage, t.nature_travaux, t.repris"),
+        GROUP BY t.annee, t.nature_travaux, t.repris
+        ORDER BY t.annee, t.nature_travaux, t.repris"),
     evenements = lire(
       "SELECT date_evenement, nature, description, surface_ha,
               volume_impacte_m3, ndp
