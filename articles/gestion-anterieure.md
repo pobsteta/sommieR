@@ -174,10 +174,10 @@ registre a bougé.
 verif <- sommier_verifier(con, foret)
 verif
 #> Verification de chaine - sommier
-#>   foret     : a0908e41-4d27-49eb-896b-96d257bf5e05
-#>   entrees   : 67
-#>   seq tete  : 67
-#>   hash tete : 3221bb5cf0cae492df9feb439fd0dbe1f97b17b59882ad6ce736894fac3b87e2
+#>   foret     : 4e3d31b0-0623-490e-bf0e-74bf4492e918
+#>   entrees   : 76
+#>   seq tete  : 76
+#>   hash tete : 2727424f508731a4569a22760ee4eb39bee82aa5f21254705f6f84300f1e6594
 #>   etat      : chaine intacte
 ```
 
@@ -221,7 +221,7 @@ tableau(
 | 3 | Droits & concessions | 5 | 1 | 1 | 2018-04-01 | 2018-04-01 |
 | 4 | Infrastructures | 0 | 3 | 1 | 2016-06-01 | 2016-06-01 |
 | 5 | Coupes & récoltes | 6 | 5 | 1 | 2016-03-05 | 2020-03-05 |
-| 6 | Travaux | 3 | 0 | 0 | NA | NA |
+| 6 | Travaux | 12 | 0 | 0 | NA | NA |
 | 7 | Comptabilité | 21 | 0 | 0 | NA | NA |
 | 8 | Évènements & faune | 9 | 1 | 1 | 2020-08-10 | 2020-08-10 |
 | 9 | Patrimoine remarquable | 4 | 3 | 1 | 2016-07-12 | 2019-06-03 |
@@ -286,12 +286,12 @@ tableau(
 
 | seq | registre | date_evenement | transcrit |
 |----:|---------:|:---------------|:----------|
-|  67 |        9 | 2018-10-04     | TRUE      |
-|  66 |        9 | 2019-06-03     | TRUE      |
-|  65 |        9 | 2016-07-12     | TRUE      |
-|  64 |        8 | 2020-08-10     | TRUE      |
-|  63 |        5 | 2020-03-05     | TRUE      |
-|  62 |        5 | 2019-03-05     | TRUE      |
+|  76 |        9 | 2018-10-04     | TRUE      |
+|  75 |        9 | 2019-06-03     | TRUE      |
+|  74 |        9 | 2016-07-12     | TRUE      |
+|  73 |        8 | 2020-08-10     | TRUE      |
+|  72 |        5 | 2020-03-05     | TRUE      |
+|  71 |        5 | 2019-03-05     | TRUE      |
 
 Les six dernières écritures de la chaîne : le bloc transcrit {.table}
 
@@ -384,9 +384,9 @@ tableau(ga$sections$travaux, "Travaux réalisés sur la période")
 
 | annee | ug | nature_travaux | provenance | quantite | unite | montant_eur | taux_reprise_moyen_pct | n |
 |:---|:---|:---|:---|---:|:---|---:|---:|---:|
-| 2022 | 35 | plantation | constate | 1.75 | ha | 5 130 | 78 | 1 |
+| 2022 | 35 | plantation | constate | 1.75 | ha | 5 130 | NA | 1 |
 | 2023 | NA | entretien de la desserte | constate | 1.04 | km | 1 980 | NA | 1 |
-| 2024 | 35 | degagement | constate | 1.75 | ha | 1 400 | 84 | 1 |
+| 2024 | 35 | degagement | constate | 1.75 | ha | 1 400 | NA | 1 |
 
 Travaux réalisés sur la période {.table}
 
@@ -559,7 +559,7 @@ tableau(
 |:-----------------|-----------:|----------:|------------------:|--------------------:|
 | 102              |       4.28 |         6 |               252 |                   0 |
 | 15               |       4.88 |         6 |               258 |                   0 |
-| 35               |       7.17 |         9 |               398 |               6 530 |
+| 35               |       7.17 |        18 |               398 |               6 530 |
 
 Ce que chaque unité porte sur la période {.table}
 
@@ -645,6 +645,9 @@ tableau(
 | 4 | 2016-06-01 | Chemin de la section A | ST_LineString |
 | 4 | 2016-06-01 | PD-01 | ST_Point |
 | 4 | 2016-06-01 | Piste de desserte est | ST_LineString |
+| 6 | 2022-12-02 | placette | ST_Point |
+| 6 | 2022-12-02 | placette | ST_Point |
+| 6 | 2022-12-02 | placette | ST_Point |
 | 8 | 2020-08-10 | secheresse | ST_Polygon |
 | 8 | 2022-02-17 | tempete | ST_Polygon |
 | 9 | 2016-07-12 | Chene de la Justice | ST_Point |
@@ -830,7 +833,7 @@ couche <- tempfile(fileext = ".geojson")
 export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
 str(export)
 #> List of 3
-#>  $ chemin               : chr "/tmp/Rtmp9tdNTR/file3af4332ed415.geojson"
+#>  $ chemin               : chr "/tmp/RtmpxOfN2Y/file3c0569fb1f7c.geojson"
 #>  $ n_unites             : int 3
 #>  $ unites_sans_geometrie: chr(0)
 ```
@@ -903,10 +906,10 @@ chemin <- tempfile(fileext = ".json")
 sommier_exporter_manifeste(con, foret, chemin)
 sommier_verifier_manifeste(chemin)
 #> Verification de chaine - sommier
-#>   foret     : a0908e41-4d27-49eb-896b-96d257bf5e05
-#>   entrees   : 67
-#>   seq tete  : 67
-#>   hash tete : 3221bb5cf0cae492df9feb439fd0dbe1f97b17b59882ad6ce736894fac3b87e2
+#>   foret     : 4e3d31b0-0623-490e-bf0e-74bf4492e918
+#>   entrees   : 76
+#>   seq tete  : 76
+#>   hash tete : 2727424f508731a4569a22760ee4eb39bee82aa5f21254705f6f84300f1e6594
 #>   etat      : chaine intacte
 #>   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau
 ```

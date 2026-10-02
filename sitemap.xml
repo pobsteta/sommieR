@@ -14,6 +14,8 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_AUTORITES.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_CATEGORIES_PCI.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_CHAMPS_EMPREINTE.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_CODES_TRAVAUX.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_CONCURRENCES.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_COUCHES_CADASTRE.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_COUCHES_PCI.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_COUCHES_SIG.html</loc></url>
@@ -22,6 +24,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_LIMITE.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_PAR_FORME.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_SANITAIRES.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_EXECUTIONS_TRAVAUX.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_MANIFESTE_LUS.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_QUARTO.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_SIG.html</loc></url>
@@ -31,6 +34,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_NATURES_VOLUME.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_PARCELLES_COUCHEY.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_POSTES_COMPTABLES.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_PREVUS_TRAVAUX.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_PROJECTIONS_EDIGEO.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_REFERENTIELS.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_REGIMES.html</loc></url>
@@ -50,6 +54,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_MARTELES.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_PHOTO.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_REMARQUABLE.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_TRAVAUX.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_VALIDATION.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_USAGES_VOIRIE.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_VERSION_CHAINE.html</loc></url>
@@ -84,6 +89,9 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/registre4_equipement.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/registre4_voirie.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/registre5_coupe.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/registre6_controle.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/registre6_depuis_payload.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/registre6_placette.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/registre6_travaux.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/registre7_ecriture.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/registre8_detection.html</loc></url>
@@ -109,6 +117,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_bilan_financier.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_chainer.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_contours_detections.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_controler_placette.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_couche_ug.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_coupes_sufosat.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_demo_couchey.html</loc></url>
@@ -138,6 +147,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_indicateurs_ug.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_init_schema.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_inscrire_coupes_sufosat.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_installer_placette.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_lire.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_lire_indices_nemeton.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_martelages_hors_amenagement.html</loc></url>

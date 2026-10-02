@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.27.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.28.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,22 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.28.0" id="sommier-0280">sommieR 0.28.0<a class="anchor" aria-label="anchor" href="#sommier-0280"></a></h2>
+<p>Travaux, lot 1 : le registre du suivi sylvicole (brief <code>travaux-1</code>).</p>
+<ul><li>
+<strong>L’intervention se code et se localise.</strong> <code><a href="../reference/registre6_travaux.html">registre6_travaux()</a></code> gagne <code>code_travaux</code>, dans la nomenclature fermée <code>SOMMIER_CODES_TRAVAUX</code>, celle du brief métier : 15 codes en 8 familles (préparation, plantation, protection, éducation, régénération, biodiversité, desserte, parcellaire). Le code fixe les unités et les formes de géométrie admises : une clôture se trace en ligne, en mètres ; un cloisonnement se mesure en mètres ou en hectares ; un regarni se place en surface ou en point. S’y ajoutent la modalité, l’essence objectif, l’exécution (régie, entreprise), l’intervenant, la date de réception, la géométrie, la précision GNSS et les photos.</li>
+<li>
+<strong>Prévu, reporté ou non prévu.</strong> <code>prevu</code> est un fait constaté à la réception ; hors <code>prevu</code>, <code>motif_ecart</code> est obligatoire. Aucun statut « programmé » n’entre au registre.</li>
+<li>
+<strong>Le résultat quitte l’intervention.</strong> Une placette permanente (<code><a href="../reference/registre6_placette.html">registre6_placette()</a></code>, <code><a href="../reference/sommier_installer_placette.html">sommier_installer_placette()</a></code>) suit une plantation ou une régénération de son unité ; chaque passage s’inscrit en contrôle (<code><a href="../reference/registre6_controle.html">registre6_controle()</a></code>, <code><a href="../reference/sommier_controler_placette.html">sommier_controler_placette()</a></code>) : plants comptés, vivants, hauteur, abroutis, concurrence, et le travail qui s’impose ensuite. Une placette inconnue, un code de placette déjà pris dans l’unité, un second contrôle le même jour, plus de vivants que de plants sont refusés.</li>
+<li>
+<strong>Les vues calculent, rien ne s’inscrit deux fois.</strong> <code>v_controle_plantation</code> donne l’âge, le taux de reprise, la densité à l’hectare et la part d’abroutis ; <code>v_placette</code> liste les placettes avec les travaux suivis. <code>v_travaux</code> gagne ses colonnes nouvelles en fin, et ne compte plus que les interventions.</li>
+<li>
+<strong>Registre 6 en <code>r6-1.2.0</code>.</strong> Les interventions déjà chaînées, sans type d’entrée, restent des travaux et se relisent à l’identique : <code><a href="../reference/registre6_depuis_payload.html">registre6_depuis_payload()</a></code> route la relecture.</li>
+<li>
+<strong>La démo de Couchey</strong> code sa plantation de 2022 (UG 35) et l’y suit sur trois placettes, contrôlées en 2023 et en 2025 ; le dégagement de 2024 perd son taux de reprise et devient « non prévu », avec son motif.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.27.1" id="sommier-0271">sommieR 0.27.1<a class="anchor" aria-label="anchor" href="#sommier-0271"></a></h2>
 <ul><li>

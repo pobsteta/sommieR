@@ -58,9 +58,9 @@ document.
 |  |  |
 |----|----|
 | **État de la chaîne** | intacte |
-| **Entrées** | 67 |
-| **Séquence de tête** | 67 |
-| **Empreinte de tête** | `3221bb5cf0cae492df9feb439fd0dbe1f97b17b59882ad6ce736894fac3b87e2` |
+| **Entrées** | 76 |
+| **Séquence de tête** | 76 |
+| **Empreinte de tête** | `2727424f508731a4569a22760ee4eb39bee82aa5f21254705f6f84300f1e6594` |
 
 ## 2 Provenance des écritures
 
@@ -78,7 +78,7 @@ tableaux qui suivent portent une colonne `provenance` pour le dire ligne
 | 3 — Droits & concessions | 5 | 1 | 1 | 2018-04-01 | 2018-04-01 |
 | 4 — Infrastructures | 0 | 3 | 1 | 2016-06-01 | 2016-06-01 |
 | 5 — Coupes & récoltes | 6 | 5 | 1 | 2016-03-05 | 2020-03-05 |
-| 6 — Travaux | 3 | 0 | 0 | — | — |
+| 6 — Travaux | 12 | 0 | 0 | — | — |
 | 7 — Comptabilité | 21 | 0 | 0 | — | — |
 | 8 — Évènements & faune | 9 | 1 | 1 | 2020-08-10 | 2020-08-10 |
 | 9 — Patrimoine remarquable | 4 | 3 | 1 | 2016-07-12 | 2019-06-03 |
@@ -88,7 +88,7 @@ tableaux qui suivent portent une colonne `provenance` pour le dire ligne
 
 NoteUne partie de ce document est transcrite
 
-15 écriture(s) sur 67 ont été recopiées de pièces antérieures au
+15 écriture(s) sur 76 ont été recopiées de pièces antérieures au
 sommier, chacune citant la sienne. Elles sont datées du fait, non de
 leur saisie : la chaîne les a écrites le jour de la transcription, et le
 dit.
@@ -170,9 +170,9 @@ Le taux de reprise est celui relevé au contrôle des plantations.
 
 | Année | Unité | Nature | Provenance | Quantité | Unité | Montant (€) | Reprise moyenne (%) | Entrées |
 |:---|:---|:---|:---|---:|:---|---:|---:|---:|
-| 2022 | 35 | plantation | constate | 1,8 | ha | 5 130 | 78 | 1 |
+| 2022 | 35 | plantation | constate | 1,8 | ha | 5 130 | — | 1 |
 | 2023 | — | entretien de la desserte | constate | 1,0 | km | 1 980 | — | 1 |
-| 2024 | 35 | degagement | constate | 1,8 | ha | 1 400 | 84 | 1 |
+| 2024 | 35 | degagement | constate | 1,8 | ha | 1 400 | — | 1 |
 
 Travaux réalisés sur la période, par année et nature, avec les unités
 concernées {.caption-top .table}
@@ -288,7 +288,7 @@ registre 2.
 
 Ce rapport est une **mise en forme**, pas la preuve. La valeur probante
 tient au registre lui-même : l’empreinte de tête donnée plus haut scelle
-les 67 entrées de la chaîne.
+les 76 entrées de la chaîne.
 
 Pour contrôler ces chiffres sans accès à la base, demander l’export
 manifeste et le vérifier hors ligne :
@@ -302,5 +302,5 @@ l’empreinte de tête, et la vérification le dit.
 
 ------------------------------------------------------------------------
 
-*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.27.1 le
+*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.28.0 le
 02/10/2026.*

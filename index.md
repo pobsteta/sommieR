@@ -88,22 +88,30 @@ sommier_ajouter(con, sommier_entree(
   )
 ))
 
-# Registre 6 — une plantation avec son taux de reprise (imprimé A50J)
-sommier_ajouter(con, sommier_entree(
+# Registre 6 — une plantation codée (imprimé A50J)…
+plantation <- sommier_ajouter(con, sommier_entree(
   foret_id = foret, ug_uuid = ug, registre = 6L,
   date_evenement = "2026-04-15", auteur = "agent-01",
   payload = registre6_travaux(
-    annee = 2026, nature_travaux = "plantation",
-    nb_plants = 1200, provenance_plants = "CHS — Bourgogne",
-    montant_eur = 4800, taux_reprise_pct = 87.5
+    annee = 2026, nature_travaux = "plantation", code_travaux = "PL",
+    quantite = 1.2, unite = "ha", nb_plants = 1200,
+    provenance_plants = "CHS — Bourgogne", montant_eur = 4800,
+    prevu = "prevu"
   )
-))
+))[[1]]
+# … et sa reprise, mesurée sur une placette permanente, à n+1
+placette <- sommier_installer_placette(
+  con, plantation$id, "P12-01", geom_point(4.931, 47.259), "agent-01"
+)[[1]]
+sommier_controler_placette(con, placette$id, nb_total = 20, nb_vivants = 17,
+                           auteur = "agent-01",
+                           visite_le = "2027-06-10T09:30:00Z")
 
 sommier_verifier(con, foret)
 #> Verification de chaine — sommier
 #>   foret     : …
-#>   entrees   : 2
-#>   seq tete  : 2
+#>   entrees   : 4
+#>   seq tete  : 4
 #>   hash tete : a6503cc7adc21c04…
 #>   etat      : chaine intacte
 

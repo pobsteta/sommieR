@@ -88,22 +88,30 @@ sommier_ajouter(con, sommier_entree(
   )
 ))
 
-# Registre 6 — une plantation avec son taux de reprise (imprimé A50J)
-sommier_ajouter(con, sommier_entree(
+# Registre 6 — une plantation codée (imprimé A50J)…
+plantation <- sommier_ajouter(con, sommier_entree(
   foret_id = foret, ug_uuid = ug, registre = 6L,
   date_evenement = "2026-04-15", auteur = "agent-01",
   payload = registre6_travaux(
-    annee = 2026, nature_travaux = "plantation",
-    nb_plants = 1200, provenance_plants = "CHS — Bourgogne",
-    montant_eur = 4800, taux_reprise_pct = 87.5
+    annee = 2026, nature_travaux = "plantation", code_travaux = "PL",
+    quantite = 1.2, unite = "ha", nb_plants = 1200,
+    provenance_plants = "CHS — Bourgogne", montant_eur = 4800,
+    prevu = "prevu"
   )
-))
+))[[1]]
+# … et sa reprise, mesurée sur une placette permanente, à n+1
+placette <- sommier_installer_placette(
+  con, plantation$id, "P12-01", geom_point(4.931, 47.259), "agent-01"
+)[[1]]
+sommier_controler_placette(con, placette$id, nb_total = 20, nb_vivants = 17,
+                           auteur = "agent-01",
+                           visite_le = "2027-06-10T09:30:00Z")
 
 sommier_verifier(con, foret)
 #> Verification de chaine — sommier
 #>   foret     : …
-#>   entrees   : 2
-#>   seq tete  : 2
+#>   entrees   : 4
+#>   seq tete  : 4
 #>   hash tete : a6503cc7adc21c04…
 #>   etat      : chaine intacte
 
@@ -570,10 +578,31 @@ Imprimés A50E, A50F et A50I.
 
 ## Registre 6 — travaux
 
-Imprimés A50J, A50J bis et A50H.
+Imprimés A50J, A50J bis et A50H : l’intervention codée et localisée, et
+le suivi des plantations sur placettes permanentes.
 
 - [`registre6_travaux()`](https://pobsteta.github.io/sommieR/reference/registre6_travaux.md)
   : Payload du registre 6 - travaux
+- [`registre6_placette()`](https://pobsteta.github.io/sommieR/reference/registre6_placette.md)
+  : Payload du registre 6 - placette de suivi
+- [`registre6_controle()`](https://pobsteta.github.io/sommieR/reference/registre6_controle.md)
+  : Payload du registre 6 - controle d'une placette
+- [`registre6_depuis_payload()`](https://pobsteta.github.io/sommieR/reference/registre6_depuis_payload.md)
+  : Relecture d'un payload du registre 6
+- [`sommier_installer_placette()`](https://pobsteta.github.io/sommieR/reference/sommier_installer_placette.md)
+  : Installer une placette de suivi
+- [`sommier_controler_placette()`](https://pobsteta.github.io/sommieR/reference/sommier_controler_placette.md)
+  : Controler une placette de suivi
+- [`SOMMIER_CODES_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_CODES_TRAVAUX.md)
+  : Codes des travaux sylvicoles
+- [`SOMMIER_TYPES_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_TRAVAUX.md)
+  : Types d'entree du registre 6
+- [`SOMMIER_EXECUTIONS_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_EXECUTIONS_TRAVAUX.md)
+  : Modes d'execution des travaux
+- [`SOMMIER_PREVUS_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_PREVUS_TRAVAUX.md)
+  : Travaux prevus, reportes ou non prevus
+- [`SOMMIER_CONCURRENCES`](https://pobsteta.github.io/sommieR/reference/SOMMIER_CONCURRENCES.md)
+  : Niveaux de concurrence d'une plantation
 
 ## Registre 7 — comptabilité
 

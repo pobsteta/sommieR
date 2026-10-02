@@ -96,10 +96,31 @@ Imprimés A50E, A50F et A50I.
 
 ## Registre 6 — travaux
 
-Imprimés A50J, A50J bis et A50H.
+Imprimés A50J, A50J bis et A50H : l’intervention codée et localisée, et
+le suivi des plantations sur placettes permanentes.
 
 - [`registre6_travaux()`](https://pobsteta.github.io/sommieR/reference/registre6_travaux.md)
   : Payload du registre 6 - travaux
+- [`registre6_placette()`](https://pobsteta.github.io/sommieR/reference/registre6_placette.md)
+  : Payload du registre 6 - placette de suivi
+- [`registre6_controle()`](https://pobsteta.github.io/sommieR/reference/registre6_controle.md)
+  : Payload du registre 6 - controle d'une placette
+- [`registre6_depuis_payload()`](https://pobsteta.github.io/sommieR/reference/registre6_depuis_payload.md)
+  : Relecture d'un payload du registre 6
+- [`sommier_installer_placette()`](https://pobsteta.github.io/sommieR/reference/sommier_installer_placette.md)
+  : Installer une placette de suivi
+- [`sommier_controler_placette()`](https://pobsteta.github.io/sommieR/reference/sommier_controler_placette.md)
+  : Controler une placette de suivi
+- [`SOMMIER_CODES_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_CODES_TRAVAUX.md)
+  : Codes des travaux sylvicoles
+- [`SOMMIER_TYPES_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_TRAVAUX.md)
+  : Types d'entree du registre 6
+- [`SOMMIER_EXECUTIONS_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_EXECUTIONS_TRAVAUX.md)
+  : Modes d'execution des travaux
+- [`SOMMIER_PREVUS_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_PREVUS_TRAVAUX.md)
+  : Travaux prevus, reportes ou non prevus
+- [`SOMMIER_CONCURRENCES`](https://pobsteta.github.io/sommieR/reference/SOMMIER_CONCURRENCES.md)
+  : Niveaux de concurrence d'une plantation
 
 ## Registre 7 — comptabilité
 

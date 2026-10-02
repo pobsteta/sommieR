@@ -24,7 +24,7 @@
 
     <a class="navbar-brand me-2" href="index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.27.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.28.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -154,22 +154,30 @@
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Registre 6 — une plantation avec son taux de reprise (imprimé A50J)</span></span>
-<span><span class="fu"><a href="reference/sommier_ajouter.html">sommier_ajouter</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="reference/sommier_entree.html">sommier_entree</a></span><span class="op">(</span></span>
+<span><span class="co"># Registre 6 — une plantation codée (imprimé A50J)…</span></span>
+<span><span class="va">plantation</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sommier_ajouter.html">sommier_ajouter</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="reference/sommier_entree.html">sommier_entree</a></span><span class="op">(</span></span>
 <span>  foret_id <span class="op">=</span> <span class="va">foret</span>, ug_uuid <span class="op">=</span> <span class="va">ug</span>, registre <span class="op">=</span> <span class="fl">6L</span>,</span>
 <span>  date_evenement <span class="op">=</span> <span class="st">"2026-04-15"</span>, auteur <span class="op">=</span> <span class="st">"agent-01"</span>,</span>
 <span>  payload <span class="op">=</span> <span class="fu"><a href="reference/registre6_travaux.html">registre6_travaux</a></span><span class="op">(</span></span>
-<span>    annee <span class="op">=</span> <span class="fl">2026</span>, nature_travaux <span class="op">=</span> <span class="st">"plantation"</span>,</span>
-<span>    nb_plants <span class="op">=</span> <span class="fl">1200</span>, provenance_plants <span class="op">=</span> <span class="st">"CHS — Bourgogne"</span>,</span>
-<span>    montant_eur <span class="op">=</span> <span class="fl">4800</span>, taux_reprise_pct <span class="op">=</span> <span class="fl">87.5</span></span>
+<span>    annee <span class="op">=</span> <span class="fl">2026</span>, nature_travaux <span class="op">=</span> <span class="st">"plantation"</span>, code_travaux <span class="op">=</span> <span class="st">"PL"</span>,</span>
+<span>    quantite <span class="op">=</span> <span class="fl">1.2</span>, unite <span class="op">=</span> <span class="st">"ha"</span>, nb_plants <span class="op">=</span> <span class="fl">1200</span>,</span>
+<span>    provenance_plants <span class="op">=</span> <span class="st">"CHS — Bourgogne"</span>, montant_eur <span class="op">=</span> <span class="fl">4800</span>,</span>
+<span>    prevu <span class="op">=</span> <span class="st">"prevu"</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="co"># … et sa reprise, mesurée sur une placette permanente, à n+1</span></span>
+<span><span class="va">placette</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sommier_installer_placette.html">sommier_installer_placette</a></span><span class="op">(</span></span>
+<span>  <span class="va">con</span>, <span class="va">plantation</span><span class="op">$</span><span class="va">id</span>, <span class="st">"P12-01"</span>, <span class="fu"><a href="reference/geometries.html">geom_point</a></span><span class="op">(</span><span class="fl">4.931</span>, <span class="fl">47.259</span><span class="op">)</span>, <span class="st">"agent-01"</span></span>
+<span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="fu"><a href="reference/sommier_controler_placette.html">sommier_controler_placette</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">placette</span><span class="op">$</span><span class="va">id</span>, nb_total <span class="op">=</span> <span class="fl">20</span>, nb_vivants <span class="op">=</span> <span class="fl">17</span>,</span>
+<span>                           auteur <span class="op">=</span> <span class="st">"agent-01"</span>,</span>
+<span>                           visite_le <span class="op">=</span> <span class="st">"2027-06-10T09:30:00Z"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/sommier_verifier.html">sommier_verifier</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Verification de chaine — sommier</span></span>
 <span><span class="co">#&gt;   foret     : …</span></span>
-<span><span class="co">#&gt;   entrees   : 2</span></span>
-<span><span class="co">#&gt;   seq tete  : 2</span></span>
+<span><span class="co">#&gt;   entrees   : 4</span></span>
+<span><span class="co">#&gt;   seq tete  : 4</span></span>
 <span><span class="co">#&gt;   hash tete : a6503cc7adc21c04…</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span>
 <span></span>
