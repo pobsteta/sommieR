@@ -166,6 +166,8 @@ reference:
     - SOMMIER_COUCHES_SIG
     - sommier_rapport_quarto
     - SOMMIER_FORMATS_QUARTO
+    - sommier_registre
+    - sommier_registre_quarto
   - title: "Cartographie"
     desc: >
       Ce que le sommier sait porter sur une carte : les contours des unités de
