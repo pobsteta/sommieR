@@ -13,10 +13,14 @@
 
 # sommieR 0.26.1
 
-- **Les coupes par unité.** Dans le rapport, le tableau « Coupes et
-  récoltes » regroupe aussi par unité de gestion et l'affiche. Avant, deux
-  martelages de même nature le même exercice se fondaient en une ligne, et
-  on ne savait plus où ils avaient été faits.
+- **Les coupes nomment leurs unités.** Dans le rapport, le tableau « Coupes
+  et récoltes » garde une ligne par exercice, nature et provenance, et liste
+  les unités de gestion parcourues (« 1110, 1123, 1124 »). « Entrées » compte
+  les martelages de la ligne.
+- **La surface d'une unité compte une fois.** Plusieurs coupons d'une même
+  unité ne multiplient plus sa surface : elle vaut la surface de l'unité, ou
+  la plus grande saisie. Les écritures sans unité gardent leurs surfaces
+  additionnées.
 
 # sommieR 0.26.0
 

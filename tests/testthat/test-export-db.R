@@ -44,24 +44,32 @@ test_that("la gestion anterieure rassemble les sections attendues", {
   expect_equal(nrow(ga$sections$equilibre_gibier), 1L)
 })
 
-test_that("les coupes se ventilent par unite", {
+test_that("les coupes nomment leurs unites, dont la surface compte une fois", {
   con <- base_export()
   foret <- foret_creer(con, "Foret de Chaux", "communal", surface_ha = 500)
   unites <- c(A = ug_creer(con, foret, "A", "2010-01-01"),
               B = ug_creer(con, foret, "B", "2010-01-01"))
-  for (u in names(unites)) {
+  marteler <- function(unite, volume, surface, nature = "amelioration") {
     sommier_ajouter(con, sommier_entree(
       foret_id = foret, registre = 5L, date_evenement = "2024-03-01",
-      auteur = "agent-01", ug_uuid = unites[[u]],
-      payload = registre5_coupe("martelage", 2024, "amelioration",
-                                if (u == "A") 120 else 80)
+      auteur = "agent-01", ug_uuid = unites[[unite]],
+      payload = registre5_coupe("martelage", 2024, nature, volume,
+                                surface_ha = surface)
     ))
   }
+  # Deux coupons dans A, un dans B, et une autre nature dans B.
+  marteler("A", 120, 10)
+  marteler("A", 60, 10)
+  marteler("B", 80, 6)
+  marteler("B", 40, 6, nature = "sanitaire")
   coupes <- sommier_gestion_anterieure(con, foret, "2024-01-01",
                                        "2024-12-31")$sections$coupes
-  # Meme exercice, meme nature : deux lignes, une par unite.
-  expect_equal(coupes$ug, c("A", "B"))
-  expect_equal(as.numeric(coupes$volume_m3), c(120, 80))
+  expect_equal(coupes$nature_coupe, c("amelioration", "sanitaire"))
+  expect_equal(coupes$ug, c("A, B", "B"))
+  expect_equal(as.integer(coupes$n), c(3L, 1L))
+  expect_equal(as.numeric(coupes$volume_m3), c(260, 40))
+  # A compte 10 ha et non 20 : ses deux coupons parcourent la meme unite.
+  expect_equal(as.numeric(coupes$surface_ha), c(16, 6))
 })
 
 test_that("les travaux se ventilent par unite", {
