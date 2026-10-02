@@ -170,6 +170,11 @@ test_that("le rapport Quarto se rend et porte l'empreinte de tete", {
   expect_match(html, tete, fixed = TRUE)
   expect_match(html, "intacte", fixed = TRUE)
 
+  # Le titre est fixe, le sous-titre dit la foret, la periode et l'objet.
+  expect_match(html, "<title>Bilan de gestion", fixed = TRUE)
+  expect_match(html, "depuis l.ouverture du sommier", perl = TRUE)
+  expect_match(html, "nagement précédent", fixed = TRUE)
+
   # La bannière de donnees fictives doit y etre : un rapport de demonstration
   # qui ne se signale pas est exactement ce qu'on veut eviter.
   expect_match(html, "monstration", fixed = TRUE)

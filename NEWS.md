@@ -1,3 +1,11 @@
+# sommieR 0.27.1
+
+- **Le rapport s'intitule « Bilan de gestion ».** « Gestion antérieure »
+  ne disait plus ce que le document contient. Un sous-titre dit la forêt, la
+  période et l'objet du bilan selon le référentiel : bilan de l'aménagement
+  précédent, gestion antérieure du plan simple de gestion, ou évaluation de
+  fin de plan (CT88).
+
 # sommieR 0.27.0
 
 Les espèces observées dans la forêt et à ses abords, nommées dans TAXREF

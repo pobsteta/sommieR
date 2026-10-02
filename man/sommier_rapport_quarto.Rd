@@ -2,7 +2,7 @@
 % Please edit documentation in R/quarto.R
 \name{sommier_rapport_quarto}
 \alias{sommier_rapport_quarto}
-\title{Rapport de gestion anterieure en Quarto}
+\title{Bilan de gestion en Quarto}
 \usage{
 sommier_rapport_quarto(
   con,

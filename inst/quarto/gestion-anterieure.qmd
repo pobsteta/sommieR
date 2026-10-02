@@ -1,5 +1,6 @@
 ---
-title: "Gestion antérieure"
+title: "Bilan de gestion"
+subtitle: @@SOUS_TITRE@@
 lang: fr
 params:
   donnees: "donnees.rds"
