@@ -97,8 +97,10 @@ comme des `travaux`.
    `travaux` (compatibilité). `registre6_depuis_payload()` route la relecture,
    et `valider_payload()` l'appelle au lieu de `registre6_travaux()`.
 2. **Un code fermé à côté du libellé.** `SOMMIER_CODES_TRAVAUX` (data.frame :
-   `code`, `famille`, `libelle`, `unite`, `forme`) reprend la nomenclature
-   métier : PS, PL, RG, PG, PI, DG, CL, NT, TF, EL, DE, RN, BI, DS, PA.
+   `code`, `famille`, `libelle`, `unites`, `formes`) reprend la nomenclature
+   métier : PS, PL, RG, PG, PI, DG, CL, NT, TF, EL, DE, RN, BI, DS, PA. Un code
+   peut admettre deux unités (« m ou ha ») et deux formes (« polygone ou
+   point ») : `unites` et `formes` les listent, séparées par une virgule.
    `nature_travaux` reste le libellé libre de l'A50J, `code_travaux` devient
    le champ qu'on agrège.
 3. **Le résultat quitte l'intervention.** Le taux de reprise se mesure sur des

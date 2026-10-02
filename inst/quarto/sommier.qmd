@@ -1,0 +1,253 @@
+---
+title: "Sommier de la forêt"
+subtitle: @@SOUS_TITRE@@
+lang: fr
+params:
+  donnees: "donnees.rds"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    theme: cosmo
+    embed-resources: true
+    tbl-cap-location: top
+  pdf:
+    toc: true
+    number-sections: true
+    documentclass: scrartcl
+    papersize: a4
+    geometry:
+      - landscape
+      - margin=1.5cm
+    fontsize: 9pt
+knitr:
+  opts_chunk:
+    echo: false
+    warning: false
+    message: false
+---
+
+```{r préparation}
+donnees <- readRDS(params$donnees)
+s <- donnees$sommier
+e <- s$ecritures
+registres <- sommieR::SOMMIER_REGISTRES
+
+# Un payload se lit en ligne : chaque champ sous son libellé, dans l'ordre de
+# l'imprimé quand le type en a un, puis tout le reste. Rien n'est omis : un
+# champ sans libellé garde son nom.
+libelles <- c(
+  exercice = "Exercice", annee = "Année", campagne = "Campagne",
+  saison = "Saison", nature_coupe = "Nature", nature_travaux = "Nature",
+  nature = "Nature", volume_m3 = "Volume (m³)", surface_ha = "Surface (ha)",
+  essence = "Essence", coupon = "Coupon", localisation = "Localisation",
+  repere_plan = "Repère", quantite = "Quantité", unite = "Unité",
+  nb_plants = "Plants", provenance_plants = "Provenance des plants",
+  montant_eur = "Montant (€)", taux_reprise_pct = "Reprise (%)",
+  description = "Description", etat = "État", element_pci = "Élément",
+  visite_le = "Visite", operateur = "Opérateur", precision_m = "Précision (m)",
+  source_gnss = "GNSS", statut_detection = "Suite", indice = "Indice",
+  source = "Source", appellation = "Appellation", interet = "Intérêt",
+  circonference_cm = "Circonférence (cm)", hauteur_m = "Hauteur (m)",
+  etat_sanitaire = "État sanitaire", nom_francais = "Nom",
+  nom_latin = "Nom latin", statut_protection = "Protection",
+  effectif = "Effectif", type_habitat = "Habitat",
+  code_natura2000 = "Natura 2000", etat_conservation = "Conservation",
+  autorite = "Autorité", nom_qualite = "Nom et qualité",
+  reference = "Référence", portee = "Portée", type_validation = "Acte",
+  poste = "Poste", libelle = "Libellé", tiers = "Tiers",
+  titulaire = "Titulaire", garants = "Garants",
+  nb_affouagistes = "Affouagistes", taxe_eur = "Taxe (€)",
+  mode_partage = "Partage", numero = "Numéro", nom = "Nom",
+  revetement = "Revêtement", longueur_m = "Longueur (m)",
+  date_debut = "Début", date_expiration = "Expiration",
+  redevance_eur = "Redevance (€)", observations = "Observations",
+  amenagement = "Aménagement", detection_id = "Détection",
+  constat_id = "Constat", surface_constatee_ha = "Surface constatée (ha)",
+  volume_constate_m3 = "Volume constaté (m³)"
+)
+# Les champs qui ont leur colonne, ou ne se lisent pas en ligne.
+hors_ligne <- c("type_entree", "type_fiche", "reprise", "geometrie", "photos",
+                "releve_uuid")
+
+nettoyer <- function(x) {
+  x <- gsub("[\r\n]+", " ", x)
+  x <- gsub("|", "\\|", x, fixed = TRUE)
+  x <- gsub("*", "\\*", x, fixed = TRUE)
+  gsub("_", " ", x, fixed = TRUE)
+}
+
+valeur <- function(v) {
+  if (is.null(v)) return("—")
+  if (is.list(v)) {
+    if (!is.null(v$numero) && !is.null(v$categorie)) {
+      return(paste0(v$numero, " (", v$categorie, ")"))
+    }
+    if (!is.null(names(v)) && all(nzchar(names(v)))) {
+      return(paste0(names(v), " = ", vapply(v, function(x)
+        paste(unlist(x), collapse = " "), character(1)), collapse = ", "))
+    }
+    return(paste(unlist(v), collapse = ", "))
+  }
+  paste(v, collapse = ", ")
+}
+
+ecriture <- function(payload) {
+  p <- jsonlite::fromJSON(payload, simplifyVector = FALSE)
+  champs <- setdiff(names(p), hors_ligne)
+  champs <- c(intersect(names(libelles), champs), setdiff(champs, names(libelles)))
+  morceaux <- vapply(champs, function(n) {
+    nom <- if (n %in% names(libelles)) libelles[[n]] else n
+    paste0(nom, " : ", valeur(p[[n]]))
+  }, character(1))
+  if (!is.null(p$geometrie$type)) {
+    morceaux <- c(morceaux, paste0("localisée (", p$geometrie$type, ")"))
+  }
+  if (length(p$photos) > 0L) {
+    morceaux <- c(morceaux, paste0(length(p$photos), " photo(s)"))
+  }
+  nettoyer(paste(morceaux, collapse = " ; "))
+}
+
+provenance <- function(i) {
+  x <- if (e$provenance[[i]] == "transcription") {
+    paste0("transcrite — ", e$piece[[i]])
+  } else "constat"
+  if (!is.na(e$rectifie[[i]])) {
+    x <- paste0(x, " ; rectifie le n° ", format(e$rectifie[[i]], scientific = FALSE))
+  }
+  if (!is.na(e$rectifiee_par[[i]])) {
+    x <- paste0(x, " ; **rectifiée par le n° ",
+                format(e$rectifiee_par[[i]], scientific = FALSE), "**")
+  }
+  x
+}
+
+# Un tableau pipe aux largeurs choisies : kable les déduit du contenu le plus
+# long, et la colonne de l'écriture écrasait les dates sur trois lignes.
+tableau_pipe <- function(df, largeurs, legende, droite = character(0)) {
+  entete <- paste0("| ", paste(names(df), collapse = " | "), " |")
+  regle <- paste0("|", paste0(ifelse(names(df) %in% droite,
+                                     paste0(strrep("-", largeurs - 1L), ":"),
+                                     strrep("-", largeurs)), collapse = "|"),
+                  "|")
+  lignes <- apply(df, 1L, function(l) paste0("| ", paste(l, collapse = " | "),
+                                             " |"))
+  cat(entete, regle, lignes, "", paste0(": ", legende), "", sep = "\n")
+}
+
+oui_non <- function(x) ifelse(is.na(x), "—", ifelse(x, "oui", "non"))
+numero <- function(x) ifelse(is.na(x), "—", format(x, scientific = FALSE, trim = TRUE))
+```
+
+`r if (isTRUE(donnees$public)) "::: {.callout-important}\n## Version à transmettre\n\nLes noms de tiers des registres 3 et 7 (titulaires, garants, tiers d'une écriture) sont masqués. Chaque écriture reste, avec son montant et son empreinte.\n:::"`
+
+::: {.callout-note}
+## Ce document n'est pas la preuve
+
+Il donne à lire le sommier tel que la chaîne le porte, écriture par écriture.
+La valeur probante reste dans la chaîne : `sommier_exporter_manifeste()` la
+transporte, et `sommier_verifier()` la recalcule. Les empreintes de l'annexe
+permettent de confronter ce document à la chaîne.
+:::
+
+```{r etat, results='asis'}
+v <- s$verification
+cat("| | |\n|---|---|\n",
+    "| **Forêt** | ", s$foret$nom, " (", s$foret$regime, ") |\n",
+    "| **Écritures imprimées** | ", nrow(e), " (registres ",
+    paste(s$registres, collapse = ", "), ") |\n",
+    "| **Chaîne** | ", if (isTRUE(v$valide)) "intacte" else "**altérée**",
+    ", ", v$n_entrees, " écriture(s) vérifiée(s) |\n",
+    "| **Tête** | n° ", numero(v$seq_tete), " — `", v$hash_tete, "` |\n",
+    if (!is.null(s$visa)) paste0(
+      "| **Arrêté au visa** | exercice ", s$visa$exercice, ", ",
+      s$visa$autorite, ", ", s$visa$date_visa, " — ",
+      if (isTRUE(s$visa$concorde)) "la tête imprimée est celle visée"
+      else "**la tête imprimée ne concorde pas avec celle visée**", " |\n"),
+    "| **Édité le** | ", donnees$edite_le, " (sommieR ",
+    donnees$version_sommier, ") |\n\n", sep = "")
+```
+
+# Tenue du sommier (A10)
+
+```{r tenue, results='asis'}
+t <- s$tenue
+if (is.null(t) || nrow(t) == 0L) {
+  cat("*Aucun exercice ouvert.*\n\n")
+} else {
+  tableau <- data.frame(
+    Exercice = as.character(t$exercice),
+    Acte = ifelse(is.na(t$autorite), "**non visé**",
+                  paste0(t$autorite, ", ", ifelse(is.na(t$nom_qualite), "—",
+                                                  t$nom_qualite))),
+    `Acte du` = ifelse(is.na(t$date_acte), "—", t$date_acte),
+    Signé = oui_non(t$signe),
+    Horodaté = oui_non(t$horodate),
+    `Tête visée` = numero(t$seq_tete),
+    check.names = FALSE, stringsAsFactors = FALSE
+  )
+  print(knitr::kable(tableau, caption = "Visas par exercice"))
+  cat("\n\n")
+}
+a <- s$ancrages
+if (is.null(a) || nrow(a) == 0L) {
+  cat("*Aucun ancrage horodaté.*\n\n")
+} else {
+  print(knitr::kable(data.frame(
+    `Tête ancrée` = numero(a$seq_tete), Date = a$date_ancrage,
+    Empreinte = paste0("`", substr(a$hash_tete, 1L, 12L), "`"),
+    check.names = FALSE), caption = "Ancrages horodatés"))
+  cat("\n\n")
+}
+```
+
+```{r registres, results='asis'}
+for (r in s$registres) {
+  info <- registres[registres$registre == r, ]
+  lignes <- which(e$registre == r)
+  cat("# Registre ", r, " — ", info$nom, " (", info$source_a50, ")\n\n",
+      sep = "")
+  if (length(lignes) == 0L) {
+    cat("*Aucune écriture.*\n\n")
+    next
+  }
+  cat(length(lignes), " écriture(s), dans l'ordre de la chaîne.\n\n", sep = "")
+  tableau <- data.frame(
+    `N°` = numero(e$seq[lignes]),
+    Type = nettoyer(ifelse(is.na(e$type_entree[lignes]), "—",
+                           e$type_entree[lignes])),
+    `Événement` = e$date_evenement[lignes],
+    Saisie = e$date_saisie[lignes],
+    Auteur = nettoyer(e$auteur[lignes]),
+    NDP = as.character(e$ndp[lignes]),
+    UG = ifelse(is.na(e$ug[lignes]), "—", e$ug[lignes]),
+    Provenance = nettoyer(vapply(lignes, provenance, character(1))),
+    `Écriture` = vapply(e$payload[lignes], ecriture, character(1)),
+    Empreinte = paste0("`", substr(e$hash[lignes], 1L, 12L), "`"),
+    check.names = FALSE, stringsAsFactors = FALSE
+  )
+  tableau_pipe(tableau, c(5L, 9L, 10L, 10L, 10L, 4L, 6L, 18L, 52L, 14L),
+               paste0("Registre ", r, " — ", info$nom), droite = c("N°", "NDP"))
+}
+```
+
+# Annexe : empreintes {.unnumbered}
+
+Les empreintes complètes des écritures imprimées, dans l'ordre de la chaîne.
+Chacune scelle l'écriture et la précédente : c'est ce qu'un auditeur recopie
+pour confronter ce document à la chaîne.
+
+```{r empreintes, results='asis'}
+if (nrow(e) == 0L) {
+  cat("*Aucune écriture.*\n\n")
+} else {
+  ordre <- order(e$seq)
+  print(knitr::kable(data.frame(
+    `N°` = numero(e$seq[ordre]), Registre = as.character(e$registre[ordre]),
+    Empreinte = paste0("`", e$hash[ordre], "`"), check.names = FALSE
+  ), row.names = FALSE, caption = "Empreintes des écritures"))
+  cat("\n\n")
+}
+```

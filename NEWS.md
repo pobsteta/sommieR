@@ -1,3 +1,68 @@
+# sommieR 0.29.0
+
+Le sommier imprimé : le registre lu comme le classeur A50 (lot 1 du brief
+« Sommier »).
+
+- **`sommier_registre()`** extrait le sommier tel qu'il est chaîné : une
+  ligne par écriture, registre par registre, dans l'ordre de la chaîne,
+  **rectifiées comprises**. Une écriture rectifiée reste à sa place, avec le
+  numéro de celle qui la rectifie, et la rectification porte le numéro de sa
+  cible. Chaque ligne dit sa provenance (constat, ou transcription avec sa
+  pièce), son NDP, son auteur, son unité, ses dates d'événement et de saisie
+  et son empreinte.
+- **La fiche A10** ouvre le sommier : les actes de visa par exercice, signés
+  et horodatés ou non, et les exercices clos sans acte, dits non visés. Les
+  ancrages suivent.
+- **`jusqu_au_visa`** arrête l'édition à la tête signée d'un exercice, et dit
+  si la chaîne imprimée concorde avec l'empreinte visée. Un exercice non visé
+  est refusé.
+- **`sommier_registre_quarto()`** rend le document « Sommier de la forêt »,
+  en HTML autoportant ou en PDF A4 paysage : l'état de la chaîne, la fiche
+  A10, un tableau par registre et, en annexe, les empreintes complètes. Rien
+  de ce qui n'est pas dans la chaîne n'y figure. Le document dit qu'il n'est
+  pas la preuve, et renvoie au manifeste.
+- **`public = TRUE`** masque les tiers des registres 3 et 7 (titulaires,
+  garants, tiers d'une écriture) sans retirer de ligne ; les photos ne sont
+  jamais reproduites, seulement comptées.
+- Le bilan de gestion renvoie au sommier imprimé pour le détail de chaque
+  écriture.
+
+# sommieR 0.28.0
+
+Travaux, lot 1 : le registre du suivi sylvicole (brief `travaux-1`).
+
+- **L'intervention se code et se localise.** `registre6_travaux()` gagne
+  `code_travaux`, dans la nomenclature fermée `SOMMIER_CODES_TRAVAUX`, celle du
+  brief métier : 15 codes en 8 familles (préparation, plantation, protection,
+  éducation, régénération, biodiversité, desserte, parcellaire). Le code fixe
+  les unités et les formes de géométrie admises : une clôture se trace en
+  ligne, en mètres ; un cloisonnement se mesure en mètres ou en hectares ; un
+  regarni se place en surface ou en point. S'y
+  ajoutent la modalité, l'essence objectif, l'exécution (régie, entreprise),
+  l'intervenant, la date de réception, la géométrie, la précision GNSS et les
+  photos.
+- **Prévu, reporté ou non prévu.** `prevu` est un fait constaté à la
+  réception ; hors `prevu`, `motif_ecart` est obligatoire. Aucun statut
+  « programmé » n'entre au registre.
+- **Le résultat quitte l'intervention.** Une placette permanente
+  (`registre6_placette()`, `sommier_installer_placette()`) suit une plantation
+  ou une régénération de son unité ; chaque passage s'inscrit en contrôle
+  (`registre6_controle()`, `sommier_controler_placette()`) : plants comptés,
+  vivants, hauteur, abroutis, concurrence, et le travail qui s'impose ensuite.
+  Une placette inconnue, un code de placette déjà pris dans l'unité, un
+  second contrôle le même jour, plus de vivants que de plants sont refusés.
+- **Les vues calculent, rien ne s'inscrit deux fois.** `v_controle_plantation`
+  donne l'âge, le taux de reprise, la densité à l'hectare et la part
+  d'abroutis ; `v_placette` liste les placettes avec les travaux suivis.
+  `v_travaux` gagne ses colonnes nouvelles en fin, et ne compte plus que les
+  interventions.
+- **Registre 6 en `r6-1.2.0`.** Les interventions déjà chaînées, sans type
+  d'entrée, restent des travaux et se relisent à l'identique :
+  `registre6_depuis_payload()` route la relecture.
+- **La démo de Couchey** code sa plantation de 2022 (UG 35) et l'y suit sur
+  trois placettes, contrôlées en 2023 et en 2025 ; le dégagement de 2024 perd
+  son taux de reprise et devient « non prévu », avec son motif.
+
 # sommieR 0.27.1
 
 - **Le rapport s'intitule « Bilan de gestion ».** « Gestion antérieure »
