@@ -126,6 +126,8 @@ reference:
     - registre9_espece
     - registre9_habitat
     - sommier_elements_ibp
+    - sommier_taxref
+    - sommier_especes_observees
     - SOMMIER_TYPES_REMARQUABLE
     - SOMMIER_ETATS_SANITAIRES
     - SOMMIER_SEUIL_TGB_CM

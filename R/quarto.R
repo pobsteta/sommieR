@@ -73,6 +73,11 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 #'   [sommier_coupes_sufosat()] (facultatif) : celles qu'aucun martelage de la
 #'   meme unite n'explique, l'exercice de la detection ou le precedent, sont
 #'   signalees sous la balance.
+#' @param especes_observees Especes observees dans la foret et a ses abords,
+#'   telles que les rend [sommier_especes_observees()] (facultatif) : une
+#'   sous-section du patrimoine les liste, nommees dans TAXREF, comme un
+#'   contexte hors registre. Un document public ne les rattache a aucune
+#'   unite de gestion.
 #' @param quarto Chemin de l'executable Quarto.
 #'
 #' @return Invisiblement, le chemin du document produit.
@@ -91,6 +96,7 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
                                    public = FALSE, indices = NULL,
                                    reference_ifn = NULL,
                                    coupes_detectees = NULL,
+                                   especes_observees = NULL,
                                    quarto = Sys.which("quarto")) {
   format <- valider_choix(format, "format", SOMMIER_FORMATS_QUARTO)
   chemin <- valider_texte(chemin, "chemin")
@@ -156,6 +162,7 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
       surface_min_ha = attr(coupes_detectees, "surface_min_ha"),
       n = nrow(coupes_detectees)
     ),
+    especes_observees = valider_especes_observees(especes_observees, public),
     version_sommier = as.character(utils::packageVersion("sommieR")),
     edite_le        = format(Sys.Date(), "%d/%m/%Y")
   )
@@ -281,6 +288,24 @@ environnement_utf8 <- function() {
     return(character(0))
   }
   c(paste0("LC_ALL=", retenue[[1L]]), paste0("LANG=", retenue[[1L]]))
+}
+
+# Un document public ne place aucune observation dans une unite : sans les
+# statuts, on ne sait pas quelle espece est sensible.
+valider_especes_observees <- function(especes, public) {
+  if (is.null(especes)) {
+    return(NULL)
+  }
+  if (!is.data.frame(especes) || is.null(attr(especes, "taxref")) ||
+      !all(c("cd_ref", "nom_valide", "groupe", "n_observations") %in%
+             names(especes))) {
+    stop("`especes_observees` doit venir de sommier_especes_observees().",
+         call. = FALSE)
+  }
+  if (isTRUE(public)) {
+    especes$ug <- NULL
+  }
+  especes
 }
 
 valider_reference_ifn <- function(reference) {

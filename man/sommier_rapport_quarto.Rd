@@ -19,6 +19,7 @@ sommier_rapport_quarto(
   indices = NULL,
   reference_ifn = NULL,
   coupes_detectees = NULL,
+  especes_observees = NULL,
   quarto = Sys.which("quarto")
 )
 }
@@ -79,6 +80,12 @@ sylvoecoregion de la foret et les tables IFN de nemeton.}
 \code{\link[=sommier_coupes_sufosat]{sommier_coupes_sufosat()}} (facultatif) : celles qu'aucun martelage de la
 meme unite n'explique, l'exercice de la detection ou le precedent, sont
 signalees sous la balance.}
+
+\item{especes_observees}{Especes observees dans la foret et a ses abords,
+telles que les rend \code{\link[=sommier_especes_observees]{sommier_especes_observees()}} (facultatif) : une
+sous-section du patrimoine les liste, nommees dans TAXREF, comme un
+contexte hors registre. Un document public ne les rattache a aucune
+unite de gestion.}
 
 \item{quarto}{Chemin de l'executable Quarto.}
 }
