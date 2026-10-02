@@ -1,3 +1,75 @@
+# sommieR 0.27.1
+
+- **Le rapport s'intitule « Bilan de gestion ».** « Gestion antérieure »
+  ne disait plus ce que le document contient. Un sous-titre dit la forêt, la
+  période et l'objet du bilan selon le référentiel : bilan de l'aménagement
+  précédent, gestion antérieure du plan simple de gestion, ou évaluation de
+  fin de plan (CT88).
+
+# sommieR 0.27.0
+
+Les espèces observées dans la forêt et à ses abords, nommées dans TAXREF
+(lot 1 du brief « Patrimoine »).
+
+- **TAXREF fait référence.** `sommier_taxref()` lit TAXREF, le référentiel
+  taxonomique national, dans l'archive Darwin Core que PatriNat publie sur
+  l'IPT de GBIF France, et la garde en cache, réduite aux espèces et à leurs
+  noms valides. La version est lue dans l'archive (TAXREF v18.0 aujourd'hui) ;
+  une archive qui ne la dit pas est refusée. Ni le rapport ni les fonctions qui
+  s'en servent ne dépendent des serveurs du Muséum, coupés depuis l'été 2025.
+- **`sommier_especes_observees()`** rend les espèces que d'autres ont
+  observées dans la forêt élargie d'un tampon (GBIF, par `rgbif`), une ligne
+  par `CD_REF` : deux synonymes sont une espèce. Le nom de GBIF est rapproché
+  de TAXREF dans le même règne, hors emplois erronés ; un homonyme se
+  départage par l'auteur, et un nom que GBIF écrit autrement se retente sous
+  le nom d'origine de l'observation. Ce qui reste ambigu est compté à part,
+  pas deviné. Une observation n'est placée dans une unité que si sa position
+  est connue à `incertitude_max_m` près.
+- **Hors registre.** Rien n'entre dans la chaîne : le registre 9 et l'IBP ne
+  changent pas.
+- **Le rapport** gagne `especes_observees` : une sous-section du patrimoine
+  liste ces espèces par groupe, avec leur `CD_REF`, dit la source, la date, les
+  filtres, la version de TAXREF et les noms non rapprochés, signale celles qui
+  ont aussi une fiche au registre 9 et cite les jeux de données avec leur
+  licence. Un document public ne les rattache à aucune unité.
+- `rgbif` rejoint les Suggests.
+
+# sommieR 0.26.4
+
+- **Les registres portent leurs accents.** `SOMMIER_REGISTRES$nom` dit
+  « Coupes & récoltes », « Comptabilité » et « Évènements & faune », dans le
+  rapport comme dans les messages.
+
+# sommieR 0.26.3
+
+- **Les travaux nomment leurs unités.** Comme les coupes, le tableau des
+  travaux du rapport garde une ligne par année, nature et provenance, et liste
+  les unités de gestion concernées. Des travaux à l'échelle de la forêt, une
+  desserte par exemple, n'en nomment aucune.
+
+# sommieR 0.26.2
+
+- **Patrimoine remarquable.** Une espèce n'a pas d'appellation : le tableau
+  du rapport la nomme par son nom français, au lieu d'un tiret.
+- **Éléments utiles à l'IBP.** Le tableau a des en-têtes lisibles (Facteur
+  IBP, Élément, Valeur, Unité, Entrées) au lieu des noms de colonnes.
+- **Les cartes sous leur titre.** La carte du patrimoine remarquable se
+  plaçait avant le titre de sa section, sous l'équilibre forêt-gibier ; elle
+  suit maintenant le tableau du patrimoine. La carte des détections en
+  attente suit leur liste, avant les suites données sur le terrain, sous
+  lesquelles elle tombait dès qu'un constat existait.
+
+# sommieR 0.26.1
+
+- **Les coupes nomment leurs unités.** Dans le rapport, le tableau « Coupes
+  et récoltes » garde une ligne par exercice, nature et provenance, et liste
+  les unités de gestion parcourues (« 1110, 1123, 1124 »). « Entrées » compte
+  les martelages de la ligne.
+- **La surface d'une unité compte une fois.** Plusieurs coupons d'une même
+  unité ne multiplient plus sa surface : elle vaut la surface de l'unité, ou
+  la plus grande saisie. Les écritures sans unité gardent leurs surfaces
+  additionnées.
+
 # sommieR 0.26.0
 
 Le formulaire de constat des limites selon le type d'élément.

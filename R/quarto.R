@@ -2,7 +2,7 @@
 #' @export
 SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 
-#' Rapport de gestion anterieure en Quarto
+#' Bilan de gestion en Quarto
 #'
 #' @description
 #' Rend la gestion anterieure sous forme de document Quarto — HTML autoportant
@@ -73,6 +73,11 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 #'   [sommier_coupes_sufosat()] (facultatif) : celles qu'aucun martelage de la
 #'   meme unite n'explique, l'exercice de la detection ou le precedent, sont
 #'   signalees sous la balance.
+#' @param especes_observees Especes observees dans la foret et a ses abords,
+#'   telles que les rend [sommier_especes_observees()] (facultatif) : une
+#'   sous-section du patrimoine les liste, nommees dans TAXREF, comme un
+#'   contexte hors registre. Un document public ne les rattache a aucune
+#'   unite de gestion.
 #' @param quarto Chemin de l'executable Quarto.
 #'
 #' @return Invisiblement, le chemin du document produit.
@@ -91,6 +96,7 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
                                    public = FALSE, indices = NULL,
                                    reference_ifn = NULL,
                                    coupes_detectees = NULL,
+                                   especes_observees = NULL,
                                    quarto = Sys.which("quarto")) {
   format <- valider_choix(format, "format", SOMMIER_FORMATS_QUARTO)
   chemin <- valider_texte(chemin, "chemin")
@@ -156,6 +162,7 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
       surface_min_ha = attr(coupes_detectees, "surface_min_ha"),
       n = nrow(coupes_detectees)
     ),
+    especes_observees = valider_especes_observees(especes_observees, public),
     version_sommier = as.character(utils::packageVersion("sommieR")),
     edite_le        = format(Sys.Date(), "%d/%m/%Y")
   )
@@ -173,6 +180,9 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
 
   source_qmd <- file.path(atelier, "rapport.qmd")
   file.copy(modele, source_qmd)
+  # Le titre est fixe ; le sous-titre dit la foret, la periode et l'objet du
+  # bilan, que l'en-tete YAML ne sait pas calculer : il se pose dans la copie.
+  poser_sous_titre(source_qmd, sous_titre_bilan(gestion))
   # Les vignettes se deposent dans l'atelier, a cote du document : un rendu
   # public n'en fabrique aucune.
   if (!isTRUE(public) && !est_vide(photos)) {
@@ -281,6 +291,52 @@ environnement_utf8 <- function() {
     return(character(0))
   }
   c(paste0("LC_ALL=", retenue[[1L]]), paste0("LANG=", retenue[[1L]]))
+}
+
+# Un document public ne place aucune observation dans une unite : sans les
+# statuts, on ne sait pas quelle espece est sensible.
+valider_especes_observees <- function(especes, public) {
+  if (is.null(especes)) {
+    return(NULL)
+  }
+  if (!is.data.frame(especes) || is.null(attr(especes, "taxref")) ||
+      !all(c("cd_ref", "nom_valide", "groupe", "n_observations") %in%
+             names(especes))) {
+    stop("`especes_observees` doit venir de sommier_especes_observees().",
+         call. = FALSE)
+  }
+  if (isTRUE(public)) {
+    especes$ug <- NULL
+  }
+  especes
+}
+
+# Ce que le bilan sert a reviser, dans les termes de chaque referentiel.
+SOMMIER_OBJETS_BILAN <- c(
+  psg = "Gestion ant\u00e9rieure du plan simple de gestion",
+  amenagement = "Bilan de l'am\u00e9nagement pr\u00e9c\u00e9dent",
+  ct88 = "\u00c9valuation de fin de plan (CT88)"
+)
+
+sous_titre_bilan <- function(gestion) {
+  debut <- if (identical(gestion$debut, "0001-01-01")) {
+    "depuis l'ouverture du sommier"
+  } else {
+    paste("du", format(as.Date(gestion$debut), "%d/%m/%Y"))
+  }
+  fin <- if (identical(gestion$fin, "9999-12-31")) "\u00e0 ce jour" else
+    paste("au", format(as.Date(gestion$fin), "%d/%m/%Y"))
+  paste0(gestion$foret, " \u2014 ", debut, " ", fin, " \u2014 ",
+         SOMMIER_OBJETS_BILAN[[gestion$referentiel]])
+}
+
+# Une chaine YAML entre apostrophes double ses apostrophes : "Foret
+# domaniale d'Orleans" ne doit pas fermer la chaine.
+poser_sous_titre <- function(qmd, sous_titre) {
+  lignes <- readLines(qmd, encoding = "UTF-8", warn = FALSE)
+  yaml <- paste0("'", gsub("'", "''", sous_titre, fixed = TRUE), "'")
+  lignes <- sub("@@SOUS_TITRE@@", yaml, lignes, fixed = TRUE)
+  writeLines(enc2utf8(lignes), qmd, useBytes = TRUE)
 }
 
 valider_reference_ifn <- function(reference) {

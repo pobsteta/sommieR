@@ -135,8 +135,31 @@ test_that("le rapport Quarto se rend et porte l'empreinte de tete", {
   demo <- sommier_demo_couchey(con, suffixe = suffixe_test("rapport"))
   chemin <- withr::local_tempfile(fileext = ".html")
 
+  # Des especes observees, comme les rend sommier_especes_observees() : dont
+  # le sabot de Venus, que le registre 9 de la demo porte deja.
+  especes <- data.frame(
+    cd_ref = c(3619L, 82291L), nom_valide = c(
+      "Dendrocopos medius (Linnaeus, 1758)", "Cypripedium calceolus L., 1753"),
+    nom_vernaculaire = c("Pic mar (Le)", "Sabot de Venus"),
+    groupe = c("Oiseaux", "Plantes"), n_observations = c(4L, 2L),
+    premiere_annee = c(2010L, 2019L), derniere_annee = c(2023L, 2021L),
+    ug = c("A 35", NA), n_jeux = c(2L, 1L), stringsAsFactors = FALSE
+  )
+  attr(especes, "source") <- "gbif"
+  attr(especes, "extrait_le") <- "2026-10-02"
+  attr(especes, "parametres") <- list(tampon_m = 500, depuis = 2000,
+                                      incertitude_max_m = 100)
+  attr(especes, "taxref") <- "TAXREF v18.0"
+  attr(especes, "tronque") <- FALSE
+  attr(especes, "non_rapprochees") <- data.frame(
+    nom = "Natrix natrix", n_observations = 1L)
+  attr(especes, "jeux") <- data.frame(
+    cle = "jeu-1", n_observations = 7L, titre = "Donnees STOC-EPS",
+    licence = "http://creativecommons.org/licenses/by/4.0/legalcode")
+
   sommier_rapport_quarto(con, demo$foret_id, chemin, format = "html",
-                         referentiel = "amenagement")
+                         referentiel = "amenagement",
+                         especes_observees = especes)
   expect_true(file.exists(chemin))
   html <- paste(readLines(chemin, warn = FALSE, encoding = "UTF-8"),
                 collapse = "\n")
@@ -146,6 +169,11 @@ test_that("le rapport Quarto se rend et porte l'empreinte de tete", {
   tete <- sommier_verifier(con, demo$foret_id)$hash_tete
   expect_match(html, tete, fixed = TRUE)
   expect_match(html, "intacte", fixed = TRUE)
+
+  # Le titre est fixe, le sous-titre dit la foret, la periode et l'objet.
+  expect_match(html, "<title>Bilan de gestion", fixed = TRUE)
+  expect_match(html, "depuis l.ouverture du sommier", perl = TRUE)
+  expect_match(html, "nagement précédent", fixed = TRUE)
 
   # La bannière de donnees fictives doit y etre : un rapport de demonstration
   # qui ne se signale pas est exactement ce qu'on veut eviter.
@@ -158,6 +186,27 @@ test_that("le rapport Quarto se rend et porte l'empreinte de tete", {
   # Sans fond cadastral, le recapitulatif dit pourquoi il n'a pas de tenements.
   expect_match(html, "Récapitulatif du parcellaire", fixed = TRUE)
   expect_match(html, "Fond cadastral non fourni", fixed = TRUE)
+
+  # Une espece se nomme par son nom francais, faute d'appellation ; et le
+  # tableau IBP parle au lecteur, pas en noms de colonnes.
+  expect_match(html, "<td style=\"text-align: left;\">Sabot de Venus</td>",
+               fixed = TRUE)
+  expect_match(html, "Facteur IBP", fixed = TRUE)
+  expect_no_match(html, "facteur_ibp", fixed = TRUE)
+  # La carte du patrimoine suit le titre de sa section : un bloc de figure
+  # place avant le titre la rangeait sous l'equilibre foret-gibier.
+  titre <- regexpr("id=\"sec-patrimoine\"", html, fixed = TRUE)
+  carte <- regexpr("Patrimoine remarquable localis", html, fixed = TRUE)
+  expect_true(titre > 0L && carte > titre)
+
+  # Les especes observees : hors registre, nommees dans TAXREF, citees.
+  expect_match(html, "Espèces observées dans la forêt", fixed = TRUE)
+  expect_match(html, "TAXREF v18.0", fixed = TRUE)
+  expect_match(html, "Pic mar</td>", fixed = TRUE)
+  expect_match(html, "Natrix natrix", fixed = TRUE)
+  expect_match(html, "aussi une fiche au registre 9", fixed = TRUE)
+  expect_match(html, "Donnees STOC-EPS — 7 observation(s), CC BY 4.0",
+               fixed = TRUE)
 
   # Aucun caractere ne doit sortir echappe : sous une locale non UTF-8, R
   # rendrait les accents en <U+00E9> sans echouer, et le defaut passerait

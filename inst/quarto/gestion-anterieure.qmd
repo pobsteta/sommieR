@@ -1,5 +1,6 @@
 ---
-title: "Gestion antérieure"
+title: "Bilan de gestion"
+subtitle: @@SOUS_TITRE@@
 lang: fr
 params:
   donnees: "donnees.rds"
@@ -31,7 +32,7 @@ sections <- ga$sections
 # Les colonnes des vues parlent SQL ; le lecteur du rapport, non. Une colonne
 # absente du dictionnaire garde son nom plutôt que d'en recevoir un inventé.
 libelles_colonnes <- c(
-  exercice = "Exercice", annee = "Année", type_entree = "Type",
+  exercice = "Exercice", annee = "Année", ug = "Unité", type_entree = "Type",
   nature_coupe = "Nature", nature_travaux = "Nature", provenance = "Provenance",
   volume_m3 = "Volume (m³)", surface_ha = "Surface (ha)", n = "Entrées",
   quantite = "Quantité", unite = "Unité", montant_eur = "Montant (€)",
@@ -52,7 +53,8 @@ libelles_colonnes <- c(
   taux_abroutissement_pct = "Abroutissement (%)", diagnostic = "Diagnostic",
   type_fiche = "Fiche", appellation = "Appellation", nom_latin = "Nom latin",
   type_habitat = "Habitat", etat_sanitaire = "État sanitaire",
-  statut_protection = "Protection"
+  statut_protection = "Protection", facteur_ibp = "Facteur IBP",
+  element = "Élément", valeur = "Valeur", n_entrees = "Entrées"
 )
 
 # Une valeur absente s'écrit « — » et non « NA » ; un nombre s'écrit à la
@@ -1069,7 +1071,7 @@ if (is.null(prov) || nrow(prov) == 0L) {
 ## Coupes et récoltes {#sec-coupes}
 
 ```{r coupes, results='asis'}
-tableau("coupes", "Coupes enregistrées sur la période, par exercice et nature")
+tableau("coupes", "Coupes enregistrées sur la période, par exercice et nature, avec les unités parcourues")
 ```
 
 ```{r carte-coupes, fig.height=3.6, fig.width=7, fig.cap="Volume martelé par unité de gestion sur la période.", eval=cartographiable && porte_valeur(carte$volume_martele_m3)}
@@ -1431,7 +1433,7 @@ if (nrow(r5) == 1L && r5$n_transcrit > 0) {
 Le taux de reprise est celui relevé au contrôle des plantations.
 
 ```{r travaux, results='asis'}
-tableau("travaux", "Travaux réalisés sur la période")
+tableau("travaux", "Travaux réalisés sur la période, par année et nature, avec les unités concernées")
 ```
 
 ```{r carte-travaux, fig.height=3.6, fig.width=7, fig.cap="Montant des travaux par unité de gestion. Les travaux hors unité de gestion n'y figurent pas : ils ne se localisent pas.", eval=cartographiable && porte_valeur(carte$montant_travaux_eur)}
@@ -1517,7 +1519,23 @@ if (a_detections) {
 } else {
   cat("*Aucune détection en attente.*\n\n")
 }
+```
 
+```{r carte-detections, fig.height=3.6, fig.width=7, fig.cap="Surface proposée par les détections en attente, par unité de gestion. Une proposition, pas un constat.", eval=a_detections && cartographiable}
+par_ug <- tapply(detections$surface_ha, detections$ug, sum, na.rm = TRUE)
+surface_detectee <- unname(par_ug[carte$numero_affichage])
+surface_detectee[is.na(surface_detectee)] <- 0
+dessiner(surface_detectee,
+         etiquettes = ifelse(surface_detectee > 0,
+                             paste0(carte$numero_affichage, "\n",
+                                    nombre(surface_detectee), " ha"),
+                             carte$numero_affichage),
+         legende = "Détecté", unite = "ha")
+```
+
+```{r detections-suites, results='asis', eval=a_suites || a_constats}
+# La carte porte sur les détections en attente : elle les suit, avant les
+# suites données sur le terrain.
 if (a_suites) {
   compte <- function(statut) sum(suites$n[suites$statut_detection == statut])
   cat("Suites données sur la période : ", compte("confirme"),
@@ -1588,18 +1606,6 @@ if (a_constats) {
 
 ```
 
-```{r carte-detections, fig.height=3.6, fig.width=7, fig.cap="Surface proposée par les détections en attente, par unité de gestion. Une proposition, pas un constat.", eval=a_detections && cartographiable}
-par_ug <- tapply(detections$surface_ha, detections$ug, sum, na.rm = TRUE)
-surface_detectee <- unname(par_ug[carte$numero_affichage])
-surface_detectee[is.na(surface_detectee)] <- 0
-dessiner(surface_detectee,
-         etiquettes = ifelse(surface_detectee > 0,
-                             paste0(carte$numero_affichage, "\n",
-                                    nombre(surface_detectee), " ha"),
-                             carte$numero_affichage),
-         legende = "Détecté", unite = "ha")
-```
-
 ```{r detections-libelles, results='asis', eval=a_detections}
 # Le libellé de chaque détection est reproduit tel que le registre le porte :
 # c'est là que la chaîne a écrit ses propres réserves - domaine de
@@ -1643,10 +1649,6 @@ cat("Obligatoire dans les plans simples de gestion depuis la loi d'avenir ",
 tableau("equilibre_gibier", "Constats d'équilibre forêt-gibier")
 ```
 
-```{r carte-patrimoine, fig.height=3.6, fig.width=7, fig.cap="Patrimoine remarquable localisé : arbres, vestiges, espèces, habitats.", eval=!is.null(sections$patrimoine)}
-dessiner_objets(9L)
-```
-
 ```{r patrimoine, results='asis', eval=!is.null(sections$patrimoine)}
 cat("## Patrimoine remarquable {#sec-patrimoine}\n\n")
 cat("Dernier relevé connu de chaque sujet : le patrimoine est ",
@@ -1655,14 +1657,107 @@ cat("Dernier relevé connu de chaque sujet : le patrimoine est ",
 tableau("patrimoine", "Arbres, peuplements, vestiges, espèces et habitats")
 ```
 
+```{r carte-patrimoine, fig.height=3.6, fig.width=7, fig.cap="Patrimoine remarquable localisé : arbres, vestiges, espèces, habitats.", eval=!is.null(sections$patrimoine)}
+dessiner_objets(9L)
+```
+
 ```{r ibp, results='asis', eval=!is.null(rapport$ibp)}
 cat("### Éléments utiles à l'IBP\n\n")
 cat("Ce que le registre 9 apporte à l'Indice de Biodiversité Potentielle. ",
     "**Ce n'est pas une cotation** : un facteur IBP se cote sur placette selon ",
     "son protocole de terrain, pas par comptage d'un registre qui n'inventorie ",
     "que le remarquable.\n\n", sep = "")
-print(knitr::kable(rapport$ibp, caption = "Éléments mobilisables pour l'IBP"))
-cat("\n\n")
+sections$ibp <- rapport$ibp
+tableau("ibp", "Éléments mobilisables pour l'IBP")
+```
+
+```{r especes-observees, results='asis', eval=!is.null(rapport$especes_observees) && !is.null(sections$patrimoine)}
+# Des observations de tiers, nommées dans TAXREF : un contexte, comme la
+# référence IFN, pas un inventaire du registre. Le registre 9 et l'IBP n'en
+# tiennent aucun compte.
+e <- rapport$especes_observees
+p <- attr(e, "parametres")
+orphelines <- attr(e, "non_rapprochees")
+jeux <- attr(e, "jeux")
+cat("### Espèces observées dans la forêt et à ses abords {#sec-especes-observees}\n\n")
+cat("::: {.callout-note}\n## Hors registre\n\n",
+    "Observations publiées par d'autres que le gestionnaire, extraites de ",
+    toupper(attr(e, "source")), " le ",
+    format(as.Date(attr(e, "extrait_le")), "%d/%m/%Y"), " : la forêt élargie de ",
+    nombre(p$tampon_m, 0L), " m, observations depuis ", p$depuis, ". ",
+    "Les noms sont ceux de **", attr(e, "taxref"), "**, le référentiel ",
+    "taxonomique national ; deux synonymes comptent pour une espèce. ",
+    "Ce ne sont pas des constats : le registre 9 n'en est pas complété.",
+    if (nrow(orphelines) > 0L) paste0(
+      " ", sum(orphelines$n_observations), " observation(s) n'ont pas été ",
+      "rapprochées de TAXREF sans ambiguïté et ne sont pas comptées (",
+      paste0("*", orphelines$nom, "*", collapse = ", "), ")."),
+    if (isTRUE(attr(e, "tronque"))) paste0(
+      " La source portait plus d'observations que la limite de lecture : ",
+      "la liste est incomplète."),
+    "\n:::\n\n", sep = "")
+if (nrow(e) == 0L) {
+  cat("*Aucune espèce observée dans l'emprise.*\n\n")
+} else {
+  cat(nrow(e), " espèce(s), ", sum(e$n_observations), " observation(s).",
+      if (!is.null(e$ug)) paste0(
+        " Une observation n'est rattachée à une unité de gestion que si sa ",
+        "position est connue à ", nombre(p$incertitude_max_m, 0L),
+        " m près."),
+      if (isTRUE(rapport$public)) paste0(
+        " Document public : les observations ne sont rattachées à aucune ",
+        "unité, la position d'une espèce sensible ne se publie pas."),
+      "\n\n", sep = "")
+  # Un tableau par groupe : la colonne du groupe, répétée sur 178 lignes,
+  # mangeait la largeur d'une page A4.
+  for (g in unique(e$groupe)) {
+    eg <- e[e$groupe == g, , drop = FALSE]
+    tableau_especes <- data.frame(
+      # TAXREF range l'article à la fin : « Triton palmé (Le) ».
+      `Nom vernaculaire` = ifelse(is.na(eg$nom_vernaculaire), "—",
+                                  sub(" \\((Le|La|Les|L')\\)", "",
+                                      eg$nom_vernaculaire)),
+      `Nom valide (TAXREF)` = paste0("*", sub("^(\\S+\\s+\\S+)", "\\1*",
+                                              eg$nom_valide)),
+      `CD_REF` = as.character(eg$cd_ref),
+      Obs. = as.character(eg$n_observations),
+      `Dernière` = ifelse(is.na(eg$derniere_annee), "—",
+                          as.character(eg$derniere_annee)),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+    if (!is.null(eg$ug)) {
+      tableau_especes$`Unités` <- ifelse(is.na(eg$ug), "—", eg$ug)
+    }
+    print(knitr::kable(
+      tableau_especes,
+      caption = paste0(g, " — ", nrow(eg), " espèce(s) observée(s), hors registre"),
+      align = ifelse(names(tableau_especes) %in% c("CD_REF", "Obs.", "Dernière"),
+                     "r", "l")
+    ))
+    cat("\n\n")
+  }
+  # Une espèce que le registre porte déjà : le nom latin de la fiche, réduit
+  # au binôme, contre le nom valide.
+  latins <- sections$patrimoine$nom_latin[
+    sections$patrimoine$type_fiche == "espece"]
+  binome <- function(x) sub("^(\\S+\\s+\\S+).*$", "\\1", x)
+  communes <- unique(binome(e$nom_valide)[binome(e$nom_valide) %in%
+                                            binome(latins)])
+  if (length(communes) > 0L) {
+    cat("Espèce(s) observée(s) qui ont aussi une fiche au registre 9 : ",
+        paste0("*", communes, "*", collapse = ", "), ".\n\n", sep = "")
+  }
+  if (nrow(jeux) > 0L) {
+    jeux <- jeux[order(-jeux$n_observations), , drop = FALSE]
+    licence <- sub("^.*/licenses/([^/]+)/([^/]+)/.*$", "CC \\U\\1 \\2",
+                   jeux$licence, perl = TRUE)
+    cat("**Jeux de données cités** (", toupper(attr(e, "source")), ") :\n\n",
+        paste0("- ", ifelse(is.na(jeux$titre), jeux$cle, jeux$titre), " — ",
+               jeux$n_observations, " observation(s), ",
+               ifelse(is.na(licence), "licence non précisée", licence),
+               collapse = "\n"), "\n\n", sep = "")
+  }
+}
 ```
 
 ```{r desserte, results='asis', eval=!is.null(rapport$densite_voirie)}

@@ -96,15 +96,33 @@ sommier_gestion_anterieure <- function(con, foret_id, debut = NULL, fin = NULL,
 
   sections <- list(
     provenance = sommier_provenance(con, foret_id, debut = debut, fin = fin),
+    # Une ligne par exercice, nature et provenance, qui nomme ses unites. Un
+    # martelage parcourt son unite : plusieurs coupons d'une meme unite ne
+    # multiplient pas sa surface, qui compte une fois (celle de l'unite, ou
+    # la plus grande saisie). Sans unite, les surfaces s'additionnent.
     coupes = lire(
-      "SELECT exercice, type_entree, nature_coupe,
-              CASE WHEN repris THEN 'transcrit' ELSE 'constate' END AS provenance,
-              SUM(volume_m3) AS volume_m3, SUM(surface_ha) AS surface_ha,
-              count(*) AS n
-         FROM v_coupe
-        WHERE foret_id = $1 AND date_evenement BETWEEN $2::date AND $3::date
-        GROUP BY exercice, type_entree, nature_coupe, repris
-        ORDER BY exercice, type_entree, nature_coupe, repris"),
+      "WITH par_ug AS (
+         SELECT exercice, type_entree, nature_coupe, repris, ug_uuid,
+                SUM(volume_m3) AS volume_m3,
+                CASE WHEN ug_uuid IS NULL THEN SUM(surface_ha)
+                     ELSE MAX(surface_ha) END AS surface_ha,
+                count(*) AS n
+           FROM v_coupe
+          WHERE foret_id = $1
+            AND date_evenement BETWEEN $2::date AND $3::date
+          GROUP BY exercice, type_entree, nature_coupe, repris, ug_uuid)
+       SELECT p.exercice,
+              string_agg(u.numero_affichage, ', '
+                         ORDER BY u.numero_affichage) AS ug,
+              p.type_entree, p.nature_coupe,
+              CASE WHEN p.repris THEN 'transcrit' ELSE 'constate' END
+                AS provenance,
+              SUM(p.volume_m3) AS volume_m3, SUM(p.surface_ha) AS surface_ha,
+              SUM(p.n)::integer AS n
+         FROM par_ug p
+         LEFT JOIN ug u ON u.uuid = p.ug_uuid
+        GROUP BY p.exercice, p.type_entree, p.nature_coupe, p.repris
+        ORDER BY p.exercice, p.type_entree, p.nature_coupe, p.repris"),
     balance = lire(
       "SELECT amenagement_id, amenagement, exercice, possibilite_m3_ha_an,
               possibilite_m3_an, volume_martele_m3, prelevement_m3_ha,
@@ -131,16 +149,26 @@ sommier_gestion_anterieure <- function(con, foret_id, debut = NULL, fin = NULL,
          FROM v_martelage_hors_amenagement
         WHERE foret_id = $1
         ORDER BY exercice, date_evenement"),
+    # Comme les coupes : une ligne par annee, nature et provenance, qui nomme
+    # les unites ou les travaux ont eu lieu. Des travaux a l'echelle de la
+    # foret (une desserte) n'en nomment aucune.
     travaux = lire(
-      "SELECT annee, nature_travaux,
-              CASE WHEN repris THEN 'transcrit' ELSE 'constate' END AS provenance,
-              SUM(quantite) AS quantite,
-              max(unite) AS unite, SUM(montant_eur) AS montant_eur,
-              avg(taux_reprise_pct) AS taux_reprise_moyen_pct, count(*) AS n
-         FROM v_travaux
-        WHERE foret_id = $1 AND date_evenement BETWEEN $2::date AND $3::date
-        GROUP BY annee, nature_travaux, repris
-        ORDER BY annee, nature_travaux, repris"),
+      "SELECT t.annee,
+              string_agg(DISTINCT u.numero_affichage, ', '
+                         ORDER BY u.numero_affichage) AS ug,
+              t.nature_travaux,
+              CASE WHEN t.repris THEN 'transcrit' ELSE 'constate' END
+                AS provenance,
+              SUM(t.quantite) AS quantite,
+              max(t.unite) AS unite, SUM(t.montant_eur) AS montant_eur,
+              avg(t.taux_reprise_pct) AS taux_reprise_moyen_pct,
+              count(*)::integer AS n
+         FROM v_travaux t
+         LEFT JOIN ug u ON u.uuid = t.ug_uuid
+        WHERE t.foret_id = $1
+          AND t.date_evenement BETWEEN $2::date AND $3::date
+        GROUP BY t.annee, t.nature_travaux, t.repris
+        ORDER BY t.annee, t.nature_travaux, t.repris"),
     evenements = lire(
       "SELECT date_evenement, nature, description, surface_ha,
               volume_impacte_m3, ndp
@@ -185,8 +213,11 @@ sommier_gestion_anterieure <- function(con, foret_id, debut = NULL, fin = NULL,
          FROM v_equilibre_gibier
         WHERE foret_id = $1 AND date_evenement BETWEEN $2::date AND $3::date
         ORDER BY saison")
+    # Une espece n'a pas d'appellation : son nom francais en tient lieu, sans
+    # quoi la ligne ne se lirait que par son nom latin.
     sections$patrimoine <- lire_etat(
-      "SELECT type_fiche, appellation, nom_latin, type_habitat, surface_ha,
+      "SELECT type_fiche, COALESCE(appellation, nom_francais) AS appellation,
+              nom_latin, type_habitat, surface_ha,
               etat_sanitaire, statut_protection
          FROM v_remarquable_dernier_releve
         WHERE foret_id = $1

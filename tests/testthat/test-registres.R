@@ -6,6 +6,10 @@ test_that("la table des registres couvre les neuf du sommier unifie", {
     SOMMIER_REGISTRES$registre[SOMMIER_REGISTRES$implemente],
     SOMMIER_REGISTRES_OUVERTS
   )
+  # Les libelles se lisent dans le rapport : ils portent leurs accents.
+  expect_equal(SOMMIER_REGISTRES$nom[c(5L, 7L, 8L)],
+               c("Coupes & r\u00e9coltes", "Comptabilit\u00e9",
+                 "\u00c9v\u00e8nements & faune"))
 })
 
 test_that("le registre 5 construit un payload minimal valide", {
