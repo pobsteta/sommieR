@@ -740,18 +740,30 @@ limites <- rapport$limites
 a_limites <- !is.null(limites) && !is.null(limites$constats) &&
   nrow(limites$constats) > 0L
 public <- isTRUE(rapport$public)
+# Les états dépendent de la forme de l'élément : point, ligne, surface
+# (SOMMIER_ETATS_PAR_FORME). Chacun se range dans une classe, pour la couleur
+# de la dernière visite - copie de `classe_etat_limite()`, le rendu ne lisant
+# que le RDS.
 libelles_etat <- c(en_place = "en place", endommage = "endommagé",
                    non_retrouve = "non retrouvé", detruit = "détruit",
+                   visible = "visible",
+                   partiellement_visible = "partiellement visible",
+                   peu_visible = "peu visible", non_visible = "non visible",
+                   conforme = "conforme au plan", modifiee = "modifiée",
+                   degradee = "dégradée", disparue = "disparue",
                    inaccessible = "inaccessible", hors_plan = "hors plan")
 classe_visite <- function(etat) {
   ifelse(is.na(etat) | etat == "inaccessible", "a_voir",
-         ifelse(etat %in% c("non_retrouve", "detruit"), "perdu",
-                ifelse(etat == "endommage", "defaut", "vu")))
+    ifelse(etat %in% c("non_retrouve", "detruit", "non_visible", "disparue"),
+           "perdu",
+      ifelse(etat %in% c("endommage", "partiellement_visible", "peu_visible",
+                         "modifiee", "degradee"), "defaut", "vu")))
 }
 couleurs_visite <- c(a_voir = "#D32F2F", vu = "#388E3C", defaut = "#F9A825",
                      perdu = "#212121")
 libelles_visite <- c(a_voir = "à voir", vu = "vu en place",
-                     defaut = "vu endommagé", perdu = "non retrouvé ou détruit")
+                     defaut = "vu, en défaut",
+                     perdu = "non retrouvé, détruit ou disparu")
 premiere_majuscule <- function(x) paste0(toupper(substr(x, 1L, 1L)),
                                          substr(x, 2L, nchar(x)))
 
@@ -864,8 +876,8 @@ if (!a_limites) {
       g <- classe[fond_pci$categorie == k]
       cat("- **", premiere_majuscule(k), "** : ", sum(g %in% c("vu", "defaut")),
           " vu(s) sur ", length(g), ", dont ", sum(g == "defaut"),
-          " endommagé(s) ; ", sum(g == "perdu"),
-          " non retrouvé(s) ou détruit(s) ; ", sum(g == "a_voir"),
+          " en défaut ; ", sum(g == "perdu"),
+          " non retrouvé(s), détruit(s) ou disparu(s) ; ", sum(g == "a_voir"),
           " à voir.\n", sep = "")
     }
     ailleurs <- setdiff(derniers$element_id, fond_pci$id)
@@ -877,7 +889,8 @@ if (!a_limites) {
     for (k in unique(derniers$categorie)) {
       g <- classe_visite(derniers$etat[derniers$categorie %in% k])
       cat("- **", premiere_majuscule(k), "** : ", sum(g %in% c("vu", "defaut")),
-          " vu(s), ", sum(g == "perdu"), " non retrouvé(s) ou détruit(s).\n",
+          " vu(s), ", sum(g == "perdu"),
+          " non retrouvé(s), détruit(s) ou disparu(s).\n",
           sep = "")
     }
   }

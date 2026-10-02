@@ -59,9 +59,14 @@ saisir <- function(dossier, constats, photos = NULL) {
   }
 }
 
+# Le type d'element, que le formulaire fait choisir d'abord : celui d'une
+# borne par defaut, « hors plan » pour un element hors plan.
 constat <- function(uuid, element_id, etat, x, y,
-                    visite = "2026-10-12 10:31:05", precision = 0.02) {
-  sf::st_sf(uuid = uuid, element_id = element_id, etat = etat,
+                    visite = "2026-10-12 10:31:05", precision = 0.02,
+                    type = if (identical(etat, "hors_plan")) "hors_plan" else
+                      "point") {
+  sf::st_sf(uuid = uuid, type_element = type, element_id = element_id,
+            etat = etat,
             visite_le = as.POSIXct(visite, tz = "UTC"),
             operateur = "P. O.", precision_m = precision,
             source_gnss = "rtk", observations = NA_character_,
@@ -372,4 +377,100 @@ test_that("le rapport montre ce que le terrain a vu, et la version publique le t
   expect_match(html, "Version publique", fixed = TRUE)
   expect_no_match(html, "Planche photographique", fixed = TRUE)
   expect_no_match(html, "<figure style=", fixed = TRUE)
+})
+
+# Une borne a moins de 30 m d'une ligne du plan, et cette ligne.
+borne_et_ligne <- function(elements) {
+  formes <- sf::st_as_sfc(elements$wkt, crs = 2154)
+  dimension <- sf::st_dimension(formes)
+  bornes <- which(elements$couche == "bornes")
+  lignes <- which(dimension == 1L)
+  for (b in bornes) {
+    d <- as.numeric(sf::st_distance(formes[b], formes[lignes]))
+    if (min(d) < 25) {
+      return(list(borne = elements[b, ], ligne = elements[lignes[which.min(d)], ],
+                  distance = min(d)))
+    }
+  }
+  skip("Aucune borne a moins de 25 m d'une ligne sur la feuille.")
+}
+
+test_that("le type d'abord : pres d'une borne, on vise la ligne d'a cote", {
+  con <- base_limites()
+  fond <- fond_zk01()
+  foret <- foret_zk01(con, fond)
+  elements <- sommier_elements_pci(fond, sommier_couche_ug(con, foret))
+  bl <- borne_et_ligne(elements)
+  b <- bl$borne
+  dossier <- file.path(withr::local_tempdir(), "limites")
+  qgs <- sommier_projet_qfield(con, foret, elements, dossier,
+                               operateur = "P. O.")
+  ancres <- sf::read_sf(file.path(dossier, "terrain.gpkg"), "elements")
+  expect_equal(ancres$forme[ancres$id == b$id], "point")
+  expect_equal(ancres$forme[ancres$id == bl$ligne$id], "ligne")
+
+  saisir(dossier, rbind(
+    # A 50 cm de la borne, type « ligne » choisi : la ligne est proposee.
+    constat(uuid_v4(), NA_character_, "visible", b$x + 0.5, b$y,
+            type = "ligne"),
+    # Un etat de ligne sur une borne : le formulaire le refuse.
+    constat(uuid_v4(), b$id, "visible", b$x + 0.5, b$y),
+    # Sans etat : refuse aussi.
+    constat(uuid_v4(), b$id, NA_character_, b$x + 0.5, b$y)
+  ))
+  ouvert <- ouvrir_dans_qgis(qgs)
+  expect_true(ouvert$couches$limites_etats$valide)
+  p <- ouvert$propositions
+  # Le type propose est celui de la borne, la plus proche.
+  expect_equal(p[[1L]]$type_propose, "point")
+  expect_equal(p[[1L]]$propose, b$id)
+  # Le type change en « ligne » : la ligne d'a cote est proposee.
+  expect_equal(p[[1L]]$reevalue, bl$ligne$id)
+  expect_true("etat" %in% unlist(p[[2L]]$refus))
+  expect_true("etat" %in% unlist(p[[3L]]$refus))
+})
+
+test_that("l'import refuse un etat qui n'est pas celui de la forme", {
+  con <- base_limites()
+  fond <- fond_zk01()
+  foret <- foret_zk01(con, fond)
+  elements <- sommier_elements_pci(fond, sommier_couche_ug(con, foret))
+  bl <- borne_et_ligne(elements)
+  b <- bl$borne
+  l <- bl$ligne
+  dossier <- file.path(withr::local_tempdir(), "limites")
+  sommier_projet_qfield(con, foret, elements, dossier, operateur = "P. O.")
+  saisir(dossier, rbind(
+    constat(uuid_v4(), b$id, "visible", b$x, b$y),
+    constat(uuid_v4(), l$id, "en_place", b$x, b$y, type = "ligne"),
+    constat(uuid_v4(), l$id, "peu_visible", b$x, b$y, type = "point")
+  ))
+  erreur <- tryCatch(
+    sommier_importer_qfield(con, foret, dossier, withr::local_tempdir(),
+                            auteur = "test"),
+    error = conditionMessage
+  )
+  expect_match(erreur, "etat visible impossible pour le type point")
+  expect_match(erreur, "etat en_place impossible pour le type ligne")
+  expect_match(erreur, "type point pour un element de forme ligne")
+  expect_equal(nrow(sommier_lire(con, foret)), 0L)
+
+  bon <- file.path(withr::local_tempdir(), "limites")
+  sommier_projet_qfield(con, foret, elements, bon, operateur = "P. O.")
+  u <- c(uuid_v4(), uuid_v4())
+  saisir(bon, rbind(
+    constat(u[[1L]], b$id, "en_place", b$x, b$y),
+    constat(u[[2L]], l$id, "peu_visible", b$x, b$y, type = "ligne")
+  ))
+  bilan <- sommier_importer_qfield(con, foret, bon, withr::local_tempdir(),
+                                   auteur = "test")
+  expect_equal(bilan$ecrits, 2L)
+  formes <- vapply(bilan$entrees, function(e) e$payload$element_pci$forme, "")
+  expect_equal(formes, c("point", "ligne"))
+  expect_equal(bilan$entrees[[1L]]$schema_version, "r2-1.4.0")
+  # La couleur du projet suivant : la ligne peu visible est « en defaut ».
+  suivant <- file.path(withr::local_tempdir(), "limites-2")
+  sommier_projet_qfield(con, foret, elements, suivant, operateur = "P. O.")
+  lignes <- sf::read_sf(file.path(suivant, "terrain.gpkg"), "elements_lignes")
+  expect_equal(lignes$a_visiter[lignes$id == l$id], "defaut")
 })

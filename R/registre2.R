@@ -20,12 +20,29 @@ SOMMIER_TYPES_FONCIER <- c(
 #' Etats constates d'un element de limite
 #'
 #' @description
+#' Tous les etats qu'un constat peut porter. Ils dependent de la forme de
+#' l'element (voir [SOMMIER_ETATS_PAR_FORME]).
+#'
+#' Un point - une borne, un signe, un detail ponctuel :
 #' * `en_place` : l'element est la, en etat ;
 #' * `endommage` : il est la, abime (borne penchee, mur en partie effondre) ;
 #' * `non_retrouve` : cherche sans succes ;
-#' * `detruit` : ses vestiges sont constates ;
-#' * `inaccessible` : on n'a pas pu l'approcher ;
-#' * `hors_plan` : trouve sur le terrain, absent du plan cadastral.
+#' * `detruit` : ses vestiges sont constates.
+#'
+#' Une ligne - une voie, un fosse, un detail lineaire -, par sa visibilite :
+#' * `visible` : elle se suit sans peine ;
+#' * `partiellement_visible` : elle se suit par endroits ;
+#' * `peu_visible` : quelques traces seulement ;
+#' * `non_visible` : aucune trace sur le terrain.
+#'
+#' Une surface - un batiment, un cours d'eau, un detail surfacique :
+#' * `conforme` : presente, conforme au plan ;
+#' * `modifiee` : presente, d'emprise ou de forme differente du plan ;
+#' * `degradee` : en ruine, comblee, envahie ;
+#' * `disparue` : plus rien sur le terrain.
+#'
+#' Pour toutes : `inaccessible`, on n'a pas pu l'approcher. Et `hors_plan` :
+#' trouve sur le terrain, absent du plan cadastral.
 #'
 #' @details
 #' Des etats constates, pas des verdicts. Il n'y a pas d'etat « deplace » :
@@ -35,7 +52,29 @@ SOMMIER_TYPES_FONCIER <- c(
 #'
 #' @export
 SOMMIER_ETATS_LIMITE <- c("en_place", "endommage", "non_retrouve", "detruit",
-                          "inaccessible", "hors_plan")
+                          "inaccessible", "hors_plan", "visible",
+                          "partiellement_visible", "peu_visible",
+                          "non_visible", "conforme", "modifiee", "degradee",
+                          "disparue")
+
+#' Etats d'un element de limite, selon sa forme
+#'
+#' @description
+#' Une liste nommee : `point`, `ligne`, `surface`, `hors_plan`. Chacune donne
+#' les etats qu'un constat peut porter pour un element de cette forme, dans
+#' l'ordre ou le formulaire de terrain les propose. La forme est celle de
+#' l'objet du plan, non sa categorie : un cours d'eau est une ligne sur une
+#' feuille, une surface sur une autre. Voir [SOMMIER_ETATS_LIMITE].
+#'
+#' @export
+SOMMIER_ETATS_PAR_FORME <- list(
+  point = c("en_place", "endommage", "non_retrouve", "detruit",
+            "inaccessible"),
+  ligne = c("visible", "partiellement_visible", "peu_visible", "non_visible",
+            "inaccessible"),
+  surface = c("conforme", "modifiee", "degradee", "disparue", "inaccessible"),
+  hors_plan = "hors_plan"
+)
 
 #' Payload du registre 2 - foncier et limites (imprime A40)
 #'
@@ -79,8 +118,10 @@ SOMMIER_ETATS_LIMITE <- c("en_place", "endommage", "non_retrouve", "detruit",
 #' @param element_pci Pour une `reconnaissance_limite`, l'element du plan
 #'   cadastral tel que l'agent l'a vu : liste nommee portant au moins `id`
 #'   (`feuille:OBJECT_RID`, voir [sommier_elements_pci()]), et facultativement
-#'   `numero`, `categorie`, `nature`, `texte`, `millesime`, `x`, `y`.
-#'   Obligatoire sauf a l'etat `hors_plan`, ou il est refuse.
+#'   `numero`, `categorie`, `nature`, `texte`, `millesime`, `x`, `y`, et
+#'   `forme` (`point`, `ligne`, `surface`). Quand la forme est donnee, l'etat
+#'   doit etre de sa liste (voir [SOMMIER_ETATS_PAR_FORME]). Obligatoire sauf
+#'   a l'etat `hors_plan`, ou il est refuse.
 #' @param visite_le Instant de la visite, tel que l'appareil l'a note
 #'   (facultatif).
 #' @param operateur Agent qui a constate (facultatif).
@@ -149,6 +190,19 @@ registre2_foncier <- function(type_entree,
       stop("`element_pci` est obligatoire : un constat repond a un element ",
            "du plan, sauf a l'etat `hors_plan`.", call. = FALSE)
     }
+    # Un constat recopie la forme de l'element depuis la v0.26.0 ; l'etat doit
+    # alors etre de sa liste. Les constats anterieurs n'en portent pas, et
+    # n'avaient que les etats d'un point.
+    forme <- if (is.list(element_pci)) element_pci$forme
+    if (!est_vide(forme)) {
+      forme <- valider_choix(forme, "element_pci$forme",
+                             c("point", "ligne", "surface"))
+      if (!etat %in% SOMMIER_ETATS_PAR_FORME[[forme]]) {
+        stop("Etat `", etat, "` impossible pour un element de forme ", forme,
+             " : ", paste(SOMMIER_ETATS_PAR_FORME[[forme]], collapse = ", "),
+             ".", call. = FALSE)
+      }
+    }
   }
 
   # Une repartition qui ne totalise pas le cout est une erreur de saisie.
@@ -216,7 +270,8 @@ valider_element_pci <- function(element) {
     stop("`element_pci` doit etre une liste nommee.", call. = FALSE)
   }
   inconnus <- setdiff(names(element), c("id", "numero", "categorie", "nature",
-                                        "texte", "millesime", "x", "y"))
+                                        "texte", "millesime", "x", "y",
+                                        "forme"))
   if (length(inconnus) > 0L) {
     stop("`element_pci` : champ(s) inconnu(s) : ",
          paste(inconnus, collapse = ", "), ".", call. = FALSE)
@@ -236,7 +291,9 @@ valider_element_pci <- function(element) {
     millesime = si_present(element$millesime, format_date,
                            "element_pci$millesime"),
     x         = si_present(element$x, valider_nombre, "element_pci$x"),
-    y         = si_present(element$y, valider_nombre, "element_pci$y")
+    y         = si_present(element$y, valider_nombre, "element_pci$y"),
+    forme     = si_present(element$forme, valider_choix, "element_pci$forme",
+                           c("point", "ligne", "surface"))
   ))
 }
 

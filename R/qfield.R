@@ -21,10 +21,20 @@
 #' affiche hors ligne (voir [sommier_ortho_ign()]). La couche de l'IGN en
 #' ligne reste dessous, pour qui a du reseau.
 #'
-#' **Le formulaire en fait le plus possible.** Un nouveau constat propose
-#' l'element du plan le plus proche a moins de 30 m, et remplit la date,
-#' l'operateur, la precision et la source GNSS. L'etat, lui, doit etre choisi :
-#' c'est le constat.
+#' **Le type d'element d'abord.** Un constat commence par le type : point
+#' (borne, signe, detail ponctuel), ligne, surface, ou hors plan. Il est
+#' propose d'apres l'element le plus proche, toutes formes confondues - une
+#' surface mesuree a son contour, et une borne a moins de 2 m l'emportant -,
+#' et l'agent le change d'un geste. La liste des elements ne montre alors que
+#' ceux du type, et le plus proche d'entre eux a moins de 30 m est propose :
+#' pres d'une borne, choisir « ligne » vise la voie qui passe a cote.
+#'
+#' **L'etat suit le type, et il est obligatoire.** Un point est en place,
+#' endommage, non retrouve ou detruit ; une ligne visible, partiellement
+#' visible, peu visible ou non visible ; une surface conforme, modifiee,
+#' degradee ou disparue ; tous peuvent etre inaccessibles (voir
+#' [SOMMIER_ETATS_PAR_FORME]). Changer de type vide l'etat. Le formulaire
+#' remplit la date, l'operateur, la precision et la source GNSS.
 #'
 #' Les elements sont colores selon leur derniere reconnaissance au sommier :
 #' a voir (jamais vu, ou reste inaccessible), vu il y a plus de
@@ -116,8 +126,10 @@ sommier_projet_qfield <- function(con, foret_id, elements, dossier, operateur,
 #'
 #' @details
 #' **Tout ou rien.** Chaque constat est controle avant toute ecriture : etat
-#' connu, element present dans le projet (sauf `hors_plan`), date de visite,
-#' photos presentes. Une seule faute fait echouer l'import, qui les liste
+#' connu et de la liste du type choisi, type egal a la forme de l'element,
+#' element present dans le projet (sauf `hors_plan`), date de visite, photos
+#' presentes. Un projet engendre avant la v0.26.0 n'a pas de type : ses
+#' constats gardent les etats d'une borne. Une seule faute fait echouer l'import, qui les liste
 #' toutes a la fois : on corrige dans QField, puis on reimporte. Les entrees
 #' s'ecrivent ensuite en une transaction.
 #'
@@ -191,7 +203,8 @@ sommier_importer_qfield <- function(con, foret_id, dossier, depot, auteur) {
     deposees <- deposer_photos_constat(c$uuid, photos, dossier, depot)
     n_photos <<- n_photos + length(deposees)
     element <- if (is.na(c$element_id)) NULL else
-      element_vu(elements[elements$id == c$element_id, , drop = FALSE])
+      element_vu(elements[elements$id == c$element_id, , drop = FALSE],
+                 avec_forme = !is.null(c$type_element))
     visite <- as.POSIXct(c$visite_le)
     sommier_entree(
       foret_id = foret_id,
@@ -250,12 +263,10 @@ etat_des_elements <- function(con, foret_id, elements, anciennete_ans) {
   elements$dernier_etat <- dernieres$etat[rang]
   limite <- seq(Sys.Date(), by = paste0("-", anciennete_ans, " years"),
                 length.out = 2L)[[2L]]
-  etat <- elements$dernier_etat
+  classe <- classe_etat_limite(elements$dernier_etat)
   elements$a_visiter <- ifelse(
-    is.na(etat) | etat == "inaccessible", "a_voir",
-    ifelse(etat %in% c("non_retrouve", "detruit"), "perdu",
-           ifelse(elements$derniere_visite < limite, "ancienne",
-                  ifelse(etat == "endommage", "defaut", "vu"))))
+    classe %in% c("a_voir", "perdu"), classe,
+    ifelse(elements$derniere_visite < limite, "ancienne", classe))
   elements$designation <- designation_element(elements)
   elements
 }
@@ -280,6 +291,7 @@ ecrire_couches_elements <- function(elements, gpkg) {
   ancres <- sf::st_as_sf(
     data.frame(id = elements$id, numero = elements$numero,
                libelle = paste0(elements$numero, " - ", elements$designation),
+               forme = forme_de(dimension),
                x = elements$x, y = elements$y, stringsAsFactors = FALSE),
     coords = c("x", "y"), crs = 2154
   )
@@ -364,6 +376,23 @@ poser_cadre_projet <- function(qgs, titre, operateur, foret_id, emprise) {
     'xmax="333333"' = sprintf('xmax="%.2f"', cadre[["xmax"]]),
     'ymax="4444444"' = sprintf('ymax="%.2f"', cadre[["ymax"]])
   ))
+}
+
+# La classe d'un etat, pour la couleur de la derniere visite : vu, vu en
+# defaut, perdu, ou a voir (jamais vu, ou reste inaccessible). Le rapport en
+# porte une copie.
+classe_etat_limite <- function(etat) {
+  ifelse(is.na(etat) | etat == "inaccessible", "a_voir",
+    ifelse(etat %in% c("non_retrouve", "detruit", "non_visible", "disparue"),
+           "perdu",
+      ifelse(etat %in% c("endommage", "partiellement_visible", "peu_visible",
+                         "modifiee", "degradee"), "defaut", "vu")))
+}
+
+# La forme d'un objet du plan, d'apres sa geometrie : un cours d'eau est une
+# ligne sur une feuille, une surface sur une autre.
+forme_de <- function(dimension) {
+  c("point", "ligne", "surface")[dimension + 1L]
 }
 
 # Une couche de donnees est remplacee ; les autres couches du GeoPackage -
@@ -522,11 +551,15 @@ echapper_xml <- function(x) {
 }
 
 lire_elements_projet <- function(gpkg) {
-  morceaux <- lapply(c("elements_points", "elements_lignes",
-                       "elements_surfaces"), function(nom) {
-    couche <- tryCatch(sf::read_sf(gpkg, layer = nom), error = function(e) NULL)
+  couches <- c(point = "elements_points", ligne = "elements_lignes",
+               surface = "elements_surfaces")
+  morceaux <- lapply(names(couches), function(forme) {
+    couche <- tryCatch(sf::read_sf(gpkg, layer = couches[[forme]]),
+                       error = function(e) NULL)
     if (is.null(couche) || nrow(couche) == 0L) return(NULL)
-    as.data.frame(sf::st_drop_geometry(couche))
+    lus <- as.data.frame(sf::st_drop_geometry(couche))
+    lus$forme <- forme
+    lus
   })
   garde <- morceaux[!vapply(morceaux, is.null, logical(1))]
   if (length(garde) == 0L) {
@@ -543,9 +576,33 @@ controler_constats <- function(constats, photos, elements, dossier) {
     if (is.na(c$uuid) || !grepl(MOTIF_UUID, tolower(c$uuid))) {
       fautes <- c(fautes, paste0(nom, " : identifiant absent ou invalide"))
     }
+    forme <- if (!is.na(c$element_id) && c$element_id %in% elements$id) {
+      elements$forme[match(c$element_id, elements$id)]
+    }
+    # Le type choisi dans le formulaire doit etre la forme de l'element. Un
+    # projet anterieur n'a pas de type : ses constats n'avaient que les etats
+    # d'une borne, quelle que soit la forme.
+    type <- if (!is.null(c$type_element)) c$type_element else NA_character_
+    if (!is.na(type) && !is.null(forme) && !identical(type, forme)) {
+      fautes <- c(fautes, paste0(nom, " : type ", type, " pour un element de ",
+                                 "forme ", forme))
+    }
+    permis <- if (is.null(c$type_element)) {
+      c(SOMMIER_ETATS_PAR_FORME$point, "hors_plan")
+    } else if (!is.na(type)) {
+      SOMMIER_ETATS_PAR_FORME[[type]]
+    } else if (!is.null(forme)) {
+      SOMMIER_ETATS_PAR_FORME[[forme]]
+    } else {
+      SOMMIER_ETATS_LIMITE
+    }
     if (is.na(c$etat) || !c$etat %in% SOMMIER_ETATS_LIMITE) {
       fautes <- c(fautes, paste0(nom, " : etat inconnu (",
                                  if (is.na(c$etat)) "vide" else c$etat, ")"))
+    } else if (!c$etat %in% permis) {
+      fautes <- c(fautes, paste0(nom, " : etat ", c$etat, " impossible pour ",
+                                 if (!is.na(type)) paste("le type", type) else
+                                   paste("un element de forme", forme)))
     } else if (identical(c$etat, "hors_plan") && !is.na(c$element_id)) {
       fautes <- c(fautes, paste0(nom, " : un element hors plan ne se ",
                                  "rattache a aucun element du plan"))
@@ -607,7 +664,7 @@ positions_wgs84 <- function(constats) {
   })
 }
 
-element_vu <- function(e) {
+element_vu <- function(e, avec_forme = TRUE) {
   vide <- function(x) is.null(x) || length(x) == 0L || is.na(x)
   compacter(list(
     id = e$id[[1L]],
@@ -617,7 +674,8 @@ element_vu <- function(e) {
     texte = if (!vide(e$texte)) e$texte[[1L]],
     millesime = if (!vide(e$millesime)) format(as.Date(e$millesime[[1L]])),
     x = if (!vide(e$x)) as.numeric(e$x[[1L]]),
-    y = if (!vide(e$y)) as.numeric(e$y[[1L]])
+    y = if (!vide(e$y)) as.numeric(e$y[[1L]]),
+    forme = if (avec_forme && !vide(e$forme)) e$forme[[1L]]
   ))
 }
 

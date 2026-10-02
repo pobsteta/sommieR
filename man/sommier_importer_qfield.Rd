@@ -29,8 +29,10 @@ empreinte.
 }
 \details{
 \strong{Tout ou rien.} Chaque constat est controle avant toute ecriture : etat
-connu, element present dans le projet (sauf \code{hors_plan}), date de visite,
-photos presentes. Une seule faute fait echouer l'import, qui les liste
+connu et de la liste du type choisi, type egal a la forme de l'element,
+element present dans le projet (sauf \code{hors_plan}), date de visite, photos
+presentes. Un projet engendre avant la v0.26.0 n'a pas de type : ses
+constats gardent les etats d'une borne. Une seule faute fait echouer l'import, qui les liste
 toutes a la fois : on corrige dans QField, puis on reimporte. Les entrees
 s'ecrivent ensuite en une transaction.
 

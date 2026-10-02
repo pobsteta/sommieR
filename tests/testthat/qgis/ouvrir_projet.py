@@ -43,11 +43,24 @@ if constats is not None:
         valeur = expression.evaluate(contexte)
         return valeur if valeur else None
 
+    # Le projet des limites propose d'abord un type d'element ; l'element en
+    # depend. On l'evalue donc en premier, sur le constat neuf.
+    i_type = constats.fields().indexOf("type_element")
+    expression_type = QgsExpression(
+        constats.defaultValueDefinition(i_type).expression()) if i_type >= 0 else None
+
     for saisi in constats.getFeatures():
         # Un constat neuf a cet endroit, puis le constat tel qu'il a ete saisi
         # (la valeur est reevaluee a chaque changement d'attribut).
         nouveau = QgsFeature(constats.fields())
         nouveau.setGeometry(saisi.geometry())
+        type_propose = None
+        if expression_type is not None:
+            contexte = QgsExpressionContext(
+                QgsExpressionContextUtils.globalProjectLayerScopes(constats))
+            contexte.setFeature(nouveau)
+            type_propose = expression_type.evaluate(contexte) or None
+            nouveau["type_element"] = type_propose
         # Les contraintes du formulaire, sur le constat tel qu'il a ete saisi.
         refus = [constats.fields().at(i).name()
                  for i in range(constats.fields().count())
@@ -55,7 +68,8 @@ if constats is not None:
                      constats, saisi, i,
                      QgsFieldConstraints.ConstraintStrengthHard)[0]]
         resultat["propositions"].append({
-            "uuid": saisi["uuid"], "propose": evaluer(nouveau),
+            "uuid": saisi["uuid"], "type_propose": type_propose,
+            "propose": evaluer(nouveau),
             "reevalue": evaluer(saisi), "refus": refus})
 application.exitQgis()
 print("JSON:" + json.dumps(resultat))

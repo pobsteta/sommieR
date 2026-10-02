@@ -19,7 +19,7 @@ test_that("une reconnaissance porte un etat et l'element vu", {
   expect_equal(p$visite_le, "2026-10-12T10:31:05Z")
   # Le payload passe la validation generale et se canonise.
   expect_type(jcs(valider_payload(2L, p)), "character")
-  expect_equal(SOMMIER_SCHEMA_VERSIONS[["2"]], "r2-1.3.0")
+  expect_equal(SOMMIER_SCHEMA_VERSIONS[["2"]], "r2-1.4.0")
 })
 
 test_that("les etats sont des constats, pas des verdicts", {
@@ -177,7 +177,8 @@ test_that("le modele QGIS est livre, avec ses reperes et ses couches", {
   couches <- sf::st_layers(file.path(modele, "terrain.gpkg"))$name
   expect_setequal(couches, c("elements_points", "elements_lignes",
                              "elements_surfaces", "elements", "constats",
-                             "photos", "foret", "tampon", "ug", "parcelles"))
+                             "photos", "foret", "tampon", "ug", "parcelles",
+                             "etats"))
 })
 
 test_that("l'ortho IGN se demande explicitement, et n'ecrase rien", {
@@ -210,3 +211,25 @@ test_that("l'ortho IGN se demande explicitement, et n'ecrase rien", {
   expect_equal(lengths(regmatches(info, gregexpr("Band [0-9]", info))), 3L)
 })
 
+
+test_that("la table des etats du modele QField est SOMMIER_ETATS_PAR_FORME", {
+  skip_if_not_installed("sf")
+  gpkg <- system.file("qgis", "terrain.gpkg", package = "sommieR")
+  etats <- as.data.frame(sf::read_sf(gpkg, layer = "etats"))
+  # Dans l'ordre du formulaire, forme par forme.
+  lu <- split(etats$valeur, factor(etats$forme, levels = unique(etats$forme)))
+  expect_equal(lapply(lu, as.character)[names(SOMMIER_ETATS_PAR_FORME)],
+               SOMMIER_ETATS_PAR_FORME)
+  expect_setequal(unlist(SOMMIER_ETATS_PAR_FORME), SOMMIER_ETATS_LIMITE)
+  # Chaque etat de reconnaissance est valide pour sa forme, et refuse ailleurs.
+  element <- list(id = "45188000ZK01:Objet_1", forme = "ligne")
+  expect_silent(registre2_foncier("reconnaissance_limite", "x",
+                                  etat = "peu_visible", element_pci = element))
+  expect_error(registre2_foncier("reconnaissance_limite", "x",
+                                 etat = "en_place", element_pci = element),
+               "impossible pour un element de forme ligne")
+  # Un constat d'avant, sans forme, reste valide.
+  expect_silent(registre2_foncier("reconnaissance_limite", "x",
+                                  etat = "en_place",
+                                  element_pci = list(id = "45188000ZK01:Objet_1")))
+})

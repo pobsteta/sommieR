@@ -24,6 +24,8 @@ cette entree a ete ecrite sous ce schema-la.
 
 Le registre 2 est passe en \verb{1.3.0} avec la reconnaissance de limite : un
 etat constate, l'element du plan recopie, et les photos par leur empreinte.
+Il est passe en \verb{1.4.0} quand l'etat s'est mis a dependre de la forme de
+l'element - point, ligne, surface -, que le constat recopie.
 Le registre 5 est passe en \verb{1.3.0} quand un produit accidentel a pu
 renvoyer au constat de terrain dont il procede (\code{constat_id}).
 Le registre 8 est passe en \verb{1.3.0} quand la suite d'une detection est
