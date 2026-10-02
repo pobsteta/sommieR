@@ -52,7 +52,8 @@ libelles_colonnes <- c(
   taux_abroutissement_pct = "Abroutissement (%)", diagnostic = "Diagnostic",
   type_fiche = "Fiche", appellation = "Appellation", nom_latin = "Nom latin",
   type_habitat = "Habitat", etat_sanitaire = "État sanitaire",
-  statut_protection = "Protection"
+  statut_protection = "Protection", facteur_ibp = "Facteur IBP",
+  element = "Élément", valeur = "Valeur", n_entrees = "Entrées"
 )
 
 # Une valeur absente s'écrit « — » et non « NA » ; un nombre s'écrit à la
@@ -1517,7 +1518,23 @@ if (a_detections) {
 } else {
   cat("*Aucune détection en attente.*\n\n")
 }
+```
 
+```{r carte-detections, fig.height=3.6, fig.width=7, fig.cap="Surface proposée par les détections en attente, par unité de gestion. Une proposition, pas un constat.", eval=a_detections && cartographiable}
+par_ug <- tapply(detections$surface_ha, detections$ug, sum, na.rm = TRUE)
+surface_detectee <- unname(par_ug[carte$numero_affichage])
+surface_detectee[is.na(surface_detectee)] <- 0
+dessiner(surface_detectee,
+         etiquettes = ifelse(surface_detectee > 0,
+                             paste0(carte$numero_affichage, "\n",
+                                    nombre(surface_detectee), " ha"),
+                             carte$numero_affichage),
+         legende = "Détecté", unite = "ha")
+```
+
+```{r detections-suites, results='asis', eval=a_suites || a_constats}
+# La carte porte sur les détections en attente : elle les suit, avant les
+# suites données sur le terrain.
 if (a_suites) {
   compte <- function(statut) sum(suites$n[suites$statut_detection == statut])
   cat("Suites données sur la période : ", compte("confirme"),
@@ -1588,18 +1605,6 @@ if (a_constats) {
 
 ```
 
-```{r carte-detections, fig.height=3.6, fig.width=7, fig.cap="Surface proposée par les détections en attente, par unité de gestion. Une proposition, pas un constat.", eval=a_detections && cartographiable}
-par_ug <- tapply(detections$surface_ha, detections$ug, sum, na.rm = TRUE)
-surface_detectee <- unname(par_ug[carte$numero_affichage])
-surface_detectee[is.na(surface_detectee)] <- 0
-dessiner(surface_detectee,
-         etiquettes = ifelse(surface_detectee > 0,
-                             paste0(carte$numero_affichage, "\n",
-                                    nombre(surface_detectee), " ha"),
-                             carte$numero_affichage),
-         legende = "Détecté", unite = "ha")
-```
-
 ```{r detections-libelles, results='asis', eval=a_detections}
 # Le libellé de chaque détection est reproduit tel que le registre le porte :
 # c'est là que la chaîne a écrit ses propres réserves - domaine de
@@ -1643,10 +1648,6 @@ cat("Obligatoire dans les plans simples de gestion depuis la loi d'avenir ",
 tableau("equilibre_gibier", "Constats d'équilibre forêt-gibier")
 ```
 
-```{r carte-patrimoine, fig.height=3.6, fig.width=7, fig.cap="Patrimoine remarquable localisé : arbres, vestiges, espèces, habitats.", eval=!is.null(sections$patrimoine)}
-dessiner_objets(9L)
-```
-
 ```{r patrimoine, results='asis', eval=!is.null(sections$patrimoine)}
 cat("## Patrimoine remarquable {#sec-patrimoine}\n\n")
 cat("Dernier relevé connu de chaque sujet : le patrimoine est ",
@@ -1655,14 +1656,18 @@ cat("Dernier relevé connu de chaque sujet : le patrimoine est ",
 tableau("patrimoine", "Arbres, peuplements, vestiges, espèces et habitats")
 ```
 
+```{r carte-patrimoine, fig.height=3.6, fig.width=7, fig.cap="Patrimoine remarquable localisé : arbres, vestiges, espèces, habitats.", eval=!is.null(sections$patrimoine)}
+dessiner_objets(9L)
+```
+
 ```{r ibp, results='asis', eval=!is.null(rapport$ibp)}
 cat("### Éléments utiles à l'IBP\n\n")
 cat("Ce que le registre 9 apporte à l'Indice de Biodiversité Potentielle. ",
     "**Ce n'est pas une cotation** : un facteur IBP se cote sur placette selon ",
     "son protocole de terrain, pas par comptage d'un registre qui n'inventorie ",
     "que le remarquable.\n\n", sep = "")
-print(knitr::kable(rapport$ibp, caption = "Éléments mobilisables pour l'IBP"))
-cat("\n\n")
+sections$ibp <- rapport$ibp
+tableau("ibp", "Éléments mobilisables pour l'IBP")
 ```
 
 ```{r desserte, results='asis', eval=!is.null(rapport$densite_voirie)}

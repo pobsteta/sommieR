@@ -159,6 +159,18 @@ test_that("le rapport Quarto se rend et porte l'empreinte de tete", {
   expect_match(html, "Récapitulatif du parcellaire", fixed = TRUE)
   expect_match(html, "Fond cadastral non fourni", fixed = TRUE)
 
+  # Une espece se nomme par son nom francais, faute d'appellation ; et le
+  # tableau IBP parle au lecteur, pas en noms de colonnes.
+  expect_match(html, "<td style=\"text-align: left;\">Sabot de Venus</td>",
+               fixed = TRUE)
+  expect_match(html, "Facteur IBP", fixed = TRUE)
+  expect_no_match(html, "facteur_ibp", fixed = TRUE)
+  # La carte du patrimoine suit le titre de sa section : un bloc de figure
+  # place avant le titre la rangeait sous l'equilibre foret-gibier.
+  titre <- regexpr("id=\"sec-patrimoine\"", html, fixed = TRUE)
+  carte <- regexpr("Patrimoine remarquable localis", html, fixed = TRUE)
+  expect_true(titre > 0L && carte > titre)
+
   # Aucun caractere ne doit sortir echappe : sous une locale non UTF-8, R
   # rendrait les accents en <U+00E9> sans echouer, et le defaut passerait
   # inapercu.

@@ -1,3 +1,15 @@
+# sommieR 0.26.2
+
+- **Patrimoine remarquable.** Une espèce n'a pas d'appellation : le tableau
+  du rapport la nomme par son nom français, au lieu d'un tiret.
+- **Éléments utiles à l'IBP.** Le tableau a des en-têtes lisibles (Facteur
+  IBP, Élément, Valeur, Unité, Entrées) au lieu des noms de colonnes.
+- **Les cartes sous leur titre.** La carte du patrimoine remarquable se
+  plaçait avant le titre de sa section, sous l'équilibre forêt-gibier ; elle
+  suit maintenant le tableau du patrimoine. La carte des détections en
+  attente suit leur liste, avant les suites données sur le terrain, sous
+  lesquelles elle tombait dès qu'un constat existait.
+
 # sommieR 0.26.1
 
 - **Les coupes nomment leurs unités.** Dans le rapport, le tableau « Coupes
