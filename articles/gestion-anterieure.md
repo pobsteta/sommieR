@@ -174,10 +174,10 @@ registre a bougé.
 verif <- sommier_verifier(con, foret)
 verif
 #> Verification de chaine - sommier
-#>   foret     : 9c05e481-779e-4107-8c77-84a17c1fb0c4
+#>   foret     : c2631330-7428-47b7-a69b-f8985ae05915
 #>   entrees   : 67
 #>   seq tete  : 67
-#>   hash tete : 066cbc64bd79ab19224af30c428dca4b9d87ac54acdb215c2e7b279b3296eb81
+#>   hash tete : 458927f42901b1d4591c86d3fbaf499386fb01a83d7123170be587b68384f11a
 #>   etat      : chaine intacte
 ```
 
@@ -304,21 +304,22 @@ Imprimés A50E, A50F et A50I.
 tableau(ga$sections$coupes, "Coupes de la période, par exercice et nature")
 ```
 
-| exercice | type_entree        | nature_coupe | provenance | volume_m3 | surface_ha |   n |
-|:---------|:-------------------|:-------------|:-----------|----------:|-----------:|----:|
-| 2016     | martelage          | reguliere    | transcrit  |        86 |     7.1900 |   1 |
-| 2017     | martelage          | sanitaire    | transcrit  |        98 |     4.3095 |   1 |
-| 2018     | martelage          | amelioration | transcrit  |        80 |     4.8750 |   1 |
-| 2019     | martelage          | reguliere    | transcrit  |        92 |     7.1900 |   1 |
-| 2020     | martelage          | sanitaire    | transcrit  |        74 |     4.3095 |   1 |
-| 2021     | martelage          | amelioration | constate   |        86 |     4.8750 |   1 |
-| 2022     | martelage          | reguliere    | constate   |        98 |     7.1900 |   1 |
-| 2022     | produit_accidentel | chablis      | constate   |        48 |     1.7500 |   1 |
-| 2023     | martelage          | sanitaire    | constate   |        80 |     4.3095 |   1 |
-| 2024     | martelage          | amelioration | constate   |        92 |     4.8750 |   1 |
-| 2025     | martelage          | reguliere    | constate   |        74 |     7.1900 |   1 |
+| exercice | ug | type_entree | nature_coupe | provenance | volume_m3 | surface_ha | n |
+|:---|:---|:---|:---|:---|---:|---:|---:|
+| 2016 | 35 | martelage | reguliere | transcrit | 86 | 7.1900 | 1 |
+| 2017 | 102 | martelage | sanitaire | transcrit | 98 | 4.3095 | 1 |
+| 2018 | 15 | martelage | amelioration | transcrit | 80 | 4.8750 | 1 |
+| 2019 | 35 | martelage | reguliere | transcrit | 92 | 7.1900 | 1 |
+| 2020 | 102 | martelage | sanitaire | transcrit | 74 | 4.3095 | 1 |
+| 2021 | 15 | martelage | amelioration | constate | 86 | 4.8750 | 1 |
+| 2022 | 35 | martelage | reguliere | constate | 98 | 7.1900 | 1 |
+| 2022 | 35 | produit_accidentel | chablis | constate | 48 | 1.7500 | 1 |
+| 2023 | 102 | martelage | sanitaire | constate | 80 | 4.3095 | 1 |
+| 2024 | 15 | martelage | amelioration | constate | 92 | 4.8750 | 1 |
+| 2025 | 35 | martelage | reguliere | constate | 74 | 7.1900 | 1 |
 
-Coupes de la période, par exercice et nature {.table}
+Coupes de la période, par exercice et nature {.table
+style="width:100%;"}
 
 ### Balance de possibilité
 
@@ -829,7 +830,7 @@ couche <- tempfile(fileext = ".geojson")
 export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
 str(export)
 #> List of 3
-#>  $ chemin               : chr "/tmp/RtmpKo8Zqi/file3b00162a5502.geojson"
+#>  $ chemin               : chr "/tmp/RtmpWfWThE/file434664c16ff7.geojson"
 #>  $ n_unites             : int 3
 #>  $ unites_sans_geometrie: chr(0)
 ```
@@ -902,10 +903,10 @@ chemin <- tempfile(fileext = ".json")
 sommier_exporter_manifeste(con, foret, chemin)
 sommier_verifier_manifeste(chemin)
 #> Verification de chaine - sommier
-#>   foret     : 9c05e481-779e-4107-8c77-84a17c1fb0c4
+#>   foret     : c2631330-7428-47b7-a69b-f8985ae05915
 #>   entrees   : 67
 #>   seq tete  : 67
-#>   hash tete : 066cbc64bd79ab19224af30c428dca4b9d87ac54acdb215c2e7b279b3296eb81
+#>   hash tete : 458927f42901b1d4591c86d3fbaf499386fb01a83d7123170be587b68384f11a
 #>   etat      : chaine intacte
 #>   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau
 ```

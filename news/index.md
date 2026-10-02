@@ -1,5 +1,16 @@
 # Changelog
 
+## sommieR 0.26.1
+
+- **Les coupes nomment leurs unités.** Dans le rapport, le tableau «
+  Coupes et récoltes » garde une ligne par exercice, nature et
+  provenance, et liste les unités de gestion parcourues (« 1110, 1123,
+  1124 »). « Entrées » compte les martelages de la ligne.
+- **La surface d’une unité compte une fois.** Plusieurs coupons d’une
+  même unité ne multiplient plus sa surface : elle vaut la surface de
+  l’unité, ou la plus grande saisie. Les écritures sans unité gardent
+  leurs surfaces additionnées.
+
 ## sommieR 0.26.0
 
 Le formulaire de constat des limites selon le type d’élément.
