@@ -96,15 +96,33 @@ sommier_gestion_anterieure <- function(con, foret_id, debut = NULL, fin = NULL,
 
   sections <- list(
     provenance = sommier_provenance(con, foret_id, debut = debut, fin = fin),
+    # Une ligne par exercice, nature et provenance, qui nomme ses unites. Un
+    # martelage parcourt son unite : plusieurs coupons d'une meme unite ne
+    # multiplient pas sa surface, qui compte une fois (celle de l'unite, ou
+    # la plus grande saisie). Sans unite, les surfaces s'additionnent.
     coupes = lire(
-      "SELECT exercice, type_entree, nature_coupe,
-              CASE WHEN repris THEN 'transcrit' ELSE 'constate' END AS provenance,
-              SUM(volume_m3) AS volume_m3, SUM(surface_ha) AS surface_ha,
-              count(*) AS n
-         FROM v_coupe
-        WHERE foret_id = $1 AND date_evenement BETWEEN $2::date AND $3::date
-        GROUP BY exercice, type_entree, nature_coupe, repris
-        ORDER BY exercice, type_entree, nature_coupe, repris"),
+      "WITH par_ug AS (
+         SELECT exercice, type_entree, nature_coupe, repris, ug_uuid,
+                SUM(volume_m3) AS volume_m3,
+                CASE WHEN ug_uuid IS NULL THEN SUM(surface_ha)
+                     ELSE MAX(surface_ha) END AS surface_ha,
+                count(*) AS n
+           FROM v_coupe
+          WHERE foret_id = $1
+            AND date_evenement BETWEEN $2::date AND $3::date
+          GROUP BY exercice, type_entree, nature_coupe, repris, ug_uuid)
+       SELECT p.exercice,
+              string_agg(u.numero_affichage, ', '
+                         ORDER BY u.numero_affichage) AS ug,
+              p.type_entree, p.nature_coupe,
+              CASE WHEN p.repris THEN 'transcrit' ELSE 'constate' END
+                AS provenance,
+              SUM(p.volume_m3) AS volume_m3, SUM(p.surface_ha) AS surface_ha,
+              SUM(p.n)::integer AS n
+         FROM par_ug p
+         LEFT JOIN ug u ON u.uuid = p.ug_uuid
+        GROUP BY p.exercice, p.type_entree, p.nature_coupe, p.repris
+        ORDER BY p.exercice, p.type_entree, p.nature_coupe, p.repris"),
     balance = lire(
       "SELECT amenagement_id, amenagement, exercice, possibilite_m3_ha_an,
               possibilite_m3_an, volume_martele_m3, prelevement_m3_ha,

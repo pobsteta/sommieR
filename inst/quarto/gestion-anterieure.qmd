@@ -31,7 +31,7 @@ sections <- ga$sections
 # Les colonnes des vues parlent SQL ; le lecteur du rapport, non. Une colonne
 # absente du dictionnaire garde son nom plutôt que d'en recevoir un inventé.
 libelles_colonnes <- c(
-  exercice = "Exercice", annee = "Année", type_entree = "Type",
+  exercice = "Exercice", annee = "Année", ug = "Unité", type_entree = "Type",
   nature_coupe = "Nature", nature_travaux = "Nature", provenance = "Provenance",
   volume_m3 = "Volume (m³)", surface_ha = "Surface (ha)", n = "Entrées",
   quantite = "Quantité", unite = "Unité", montant_eur = "Montant (€)",
@@ -1069,7 +1069,7 @@ if (is.null(prov) || nrow(prov) == 0L) {
 ## Coupes et récoltes {#sec-coupes}
 
 ```{r coupes, results='asis'}
-tableau("coupes", "Coupes enregistrées sur la période, par exercice et nature")
+tableau("coupes", "Coupes enregistrées sur la période, par exercice et nature, avec les unités parcourues")
 ```
 
 ```{r carte-coupes, fig.height=3.6, fig.width=7, fig.cap="Volume martelé par unité de gestion sur la période.", eval=cartographiable && porte_valeur(carte$volume_martele_m3)}
