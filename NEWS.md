@@ -1,3 +1,9 @@
+# sommieR 0.26.4
+
+- **Les registres portent leurs accents.** `SOMMIER_REGISTRES$nom` dit
+  « Coupes & récoltes », « Comptabilité » et « Évènements & faune », dans le
+  rapport comme dans les messages.
+
 # sommieR 0.26.3
 
 - **Les travaux nomment leurs unités.** Comme les coupes, le tableau des
