@@ -37,11 +37,21 @@ test_that("le code fixe l'unite et la forme", {
                                  geometrie = polygone()),
                "LineString")
   expect_silent(registre6_travaux(
-    2026, "cloture", code_travaux = "PG", quantite = 250, unite = "ml",
+    2026, "cloture", code_travaux = "PG", quantite = 250, unite = "m",
     geometrie = geom_ligne(rbind(c(4.95, 47.27), c(4.952, 47.271)))
   ))
-  expect_true(all(SOMMIER_CODES_TRAVAUX$forme %in%
-                    c("point", "ligne", "surface")))
+  formes <- unlist(strsplit(SOMMIER_CODES_TRAVAUX$formes, ",\\s*"))
+  expect_true(all(formes %in% c("point", "ligne", "surface")))
+  # Deux unites, deux formes admises : un cloisonnement en m ou en ha, un
+  # regarni en surface ou en point.
+  expect_silent(registre6_travaux(2026, "cloisonnement", code_travaux = "CL",
+                                  quantite = 2, unite = "ha"))
+  expect_silent(registre6_travaux(2026, "regarni", code_travaux = "RG",
+                                  quantite = 40, unite = "plants",
+                                  geometrie = geom_point(4.95, 47.27)))
+  expect_error(registre6_travaux(2026, "cloisonnement", code_travaux = "CL",
+                                 quantite = 2, unite = "plants"),
+               "m ou ha")
   expect_false(anyDuplicated(SOMMIER_CODES_TRAVAUX$code) > 0L)
 })
 

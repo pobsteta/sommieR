@@ -1,38 +1,48 @@
 #' Codes des travaux sylvicoles
 #'
 #' @description
-#' La nomenclature fermee des travaux du registre 6 : le code qu'on agrege, a
-#' cote du libelle libre de l'A50J. Chaque code fixe sa famille, l'unite de sa
-#' quantite et la forme de sa geometrie (`point`, `ligne` ou `surface`).
+#' La nomenclature fermee des travaux du registre 6, celle du brief metier du
+#' suivi sylvicole : le code qu'on agrege, a cote du libelle libre de l'A50J.
+#' Chaque code fixe sa famille, les unites admises pour sa quantite et les
+#' formes admises pour sa geometrie (`point`, `ligne`, `surface`). Une
+#' plantation se mesure en hectares, ses plants dans `nb_plants`.
 #'
-#' @format Un `data.frame` : `code`, `famille`, `libelle`, `unite`, `forme`.
+#' @format Un `data.frame` : `code`, `famille`, `libelle`, `unites` et
+#'   `formes` (une ou plusieurs valeurs, separees par une virgule).
 #'
 #' @seealso [registre6_travaux()]
 #'
 #' @export
 SOMMIER_CODES_TRAVAUX <- data.frame(
-  code = c("PS", "PL", "RG", "PA", "PG", "PI", "DG", "DS", "BI", "CL", "NT",
-           "DE", "TF", "EL", "RN"),
-  famille = c(
-    "plantation", "plantation", "plantation", "plantation",
-    "protection", "protection",
-    "entretien", "entretien", "entretien", "entretien",
-    "amelioration", "amelioration", "amelioration", "amelioration",
-    "regeneration"
-  ),
+  code = c("PS", "PL", "RG", "PG", "PI", "DG", "CL", "NT", "TF", "EL", "DE",
+           "RN", "BI", "DS", "PA"),
+  famille = c("preparation", "plantation", "plantation", "protection",
+              "protection", "education", "education", "education",
+              "education", "education", "education", "regeneration",
+              "biodiversite", "desserte", "parcellaire"),
   libelle = c(
-    "Pr\u00e9paration du sol", "Plantation", "Regarni", "Paillage",
-    "Protection contre le gibier (cl\u00f4ture)", "Protection individuelle",
-    "D\u00e9gagement", "D\u00e9broussaillement", "Broyage en interbande",
-    "Cloisonnement", "Nettoiement", "D\u00e9pressage",
-    "Taille de formation", "\u00c9lagage",
-    "Travaux de r\u00e9g\u00e9n\u00e9ration naturelle"
+    "Pr\u00e9paration du sol (broyage, andainage, crochetage, potets)",
+    "Plantation en plein, placeaux, enrichissement",
+    "Regarnis, compl\u00e9ments",
+    "Cl\u00f4ture",
+    "Protections individuelles, r\u00e9pulsifs",
+    "D\u00e9gagement (manuel, m\u00e9canique)",
+    "Cloisonnement sylvicole (ouverture, entretien)",
+    "Nettoiement, d\u00e9pressage",
+    "Taille de formation",
+    "\u00c9lagage",
+    "D\u00e9signation d'arbres objectif",
+    "Travaux en r\u00e9g\u00e9n\u00e9ration naturelle (d\u00e9gagement de semis, crochetage localis\u00e9)",
+    "\u00celots, arbres habitat, mares, lisi\u00e8res",
+    "Entretien de piste, foss\u00e9s, places de d\u00e9p\u00f4t",
+    "Entretien des limites (peinture, bornes)"
   ),
-  unite = c("ha", "ha", "plants", "ha", "ml", "u", "ha", "ha", "ha", "km",
-            "ha", "ha", "ha", "ha", "ha"),
-  forme = c("surface", "surface", "point", "surface", "ligne", "surface",
-            "surface", "surface", "surface", "ligne", "surface", "surface",
-            "surface", "surface", "surface"),
+  unites = c("ha", "ha", "plants", "m", "nb", "ha", "m, ha", "ha", "tiges",
+             "tiges", "tiges", "ha", "ha, nb", "m", "m"),
+  formes = c("surface", "surface", "surface, point", "ligne", "surface",
+             "surface", "ligne", "surface", "surface", "surface",
+             "surface, point", "surface", "surface, point", "ligne",
+             "ligne"),
   stringsAsFactors = FALSE
 )
 
@@ -205,7 +215,8 @@ registre6_depuis_payload <- function(payload) {
   ), arguments)
 }
 
-# La forme d'un code, en types GeoJSON.
-FORMES_GEOJSON <- list(
-  point = "Point", ligne = "LineString", surface = "Polygon"
-)
+# Les formes d'un code, en types GeoJSON.
+FORMES_GEOJSON <- c(point = "Point", ligne = "LineString", surface = "Polygon")
+
+# "m, ha" -> c("m", "ha")
+alternatives <- function(x) strsplit(x, ",\\s*")[[1L]]

@@ -5,15 +5,18 @@
 \alias{SOMMIER_CODES_TRAVAUX}
 \title{Codes des travaux sylvicoles}
 \format{
-Un \code{data.frame} : \code{code}, \code{famille}, \code{libelle}, \code{unite}, \code{forme}.
+Un \code{data.frame} : \code{code}, \code{famille}, \code{libelle}, \code{unites} et
+\code{formes} (une ou plusieurs valeurs, separees par une virgule).
 }
 \usage{
 SOMMIER_CODES_TRAVAUX
 }
 \description{
-La nomenclature fermee des travaux du registre 6 : le code qu'on agrege, a
-cote du libelle libre de l'A50J. Chaque code fixe sa famille, l'unite de sa
-quantite et la forme de sa geometrie (\code{point}, \code{ligne} ou \code{surface}).
+La nomenclature fermee des travaux du registre 6, celle du brief metier du
+suivi sylvicole : le code qu'on agrege, a cote du libelle libre de l'A50J.
+Chaque code fixe sa famille, les unites admises pour sa quantite et les
+formes admises pour sa geometrie (\code{point}, \code{ligne}, \code{surface}). Une
+plantation se mesure en hectares, ses plants dans \code{nb_plants}.
 }
 \seealso{
 \code{\link[=registre6_travaux]{registre6_travaux()}}

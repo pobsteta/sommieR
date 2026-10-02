@@ -194,8 +194,9 @@ registre5_coupe <- function(type_entree,
 #' @details
 #' **Le libelle et le code.** `nature_travaux` reste le libelle libre de
 #' l'A50J ; `code_travaux`, dans [SOMMIER_CODES_TRAVAUX], est ce qu'on
-#' agrege. Le code fixe l'unite de la quantite et la forme de la geometrie :
-#' une cloture se trace en ligne, une plantation en surface.
+#' agrege. Le code fixe les unites admises pour la quantite et les formes
+#' admises pour la geometrie : une cloture se trace en ligne, en metres ; une
+#' plantation en surface, en hectares.
 #'
 #' **Prevu, ou non.** `prevu` est un fait constate a la reception : l'amenagement
 #' ou le PSG prevoyait-il l'intervention ? Hors `prevu`, `motif_ecart` est
@@ -218,7 +219,7 @@ registre5_coupe <- function(type_entree,
 #'   unite de gestion.
 #' @param repere_plan Repere sur le plan (facultatif).
 #' @param quantite,unite Quantite realisee et son unite (facultatif). Avec un
-#'   `code_travaux`, l'unite est celle du code.
+#'   `code_travaux`, l'unite est l'une de celles du code.
 #' @param nb_plants,provenance_plants Nombre de plants et provenance,
 #'   pour les travaux de reboisement (facultatif).
 #' @param montant_eur Montant en euros (facultatif).
@@ -289,11 +290,13 @@ registre6_travaux <- function(annee,
   formes <- c("Point", "LineString", "Polygon")
   if (!is.null(code)) {
     attendu <- SOMMIER_CODES_TRAVAUX[SOMMIER_CODES_TRAVAUX$code == code, ]
-    if (!est_vide(unite) && !identical(unite, attendu$unite)) {
+    unites <- alternatives(attendu$unites)
+    if (!est_vide(unite) && !unite %in% unites) {
       stop("Les travaux ", code, " (", attendu$libelle, ") se mesurent en ",
-           attendu$unite, ", pas en ", unite, ".", call. = FALSE)
+           paste(unites, collapse = " ou "), ", pas en ", unite, ".",
+           call. = FALSE)
     }
-    formes <- FORMES_GEOJSON[[attendu$forme]]
+    formes <- unname(FORMES_GEOJSON[alternatives(attendu$formes)])
   }
   prevu <- si_present(prevu, valider_choix, "prevu", SOMMIER_PREVUS_TRAVAUX)
   if (!is.null(prevu) && prevu != "prevu" && est_vide(motif_ecart)) {

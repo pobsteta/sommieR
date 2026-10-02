@@ -43,7 +43,7 @@ unite de gestion.}
 \item{repere_plan}{Repere sur le plan (facultatif).}
 
 \item{quantite, unite}{Quantite realisee et son unite (facultatif). Avec un
-\code{code_travaux}, l'unite est celle du code.}
+\code{code_travaux}, l'unite est l'une de celles du code.}
 
 \item{nb_plants, provenance_plants}{Nombre de plants et provenance,
 pour les travaux de reboisement (facultatif).}
@@ -91,8 +91,9 @@ hors unite de gestion).
 \details{
 \strong{Le libelle et le code.} \code{nature_travaux} reste le libelle libre de
 l'A50J ; \code{code_travaux}, dans \link{SOMMIER_CODES_TRAVAUX}, est ce qu'on
-agrege. Le code fixe l'unite de la quantite et la forme de la geometrie :
-une cloture se trace en ligne, une plantation en surface.
+agrege. Le code fixe les unites admises pour la quantite et les formes
+admises pour la geometrie : une cloture se trace en ligne, en metres ; une
+plantation en surface, en hectares.
 
 \strong{Prevu, ou non.} \code{prevu} est un fait constate a la reception : l'amenagement
 ou le PSG prevoyait-il l'intervention ? Hors \code{prevu}, \code{motif_ecart} est

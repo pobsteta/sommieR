@@ -3,9 +3,12 @@
 Travaux, lot 1 : le registre du suivi sylvicole (brief `travaux-1`).
 
 - **L'intervention se code et se localise.** `registre6_travaux()` gagne
-  `code_travaux`, dans la nomenclature fermée `SOMMIER_CODES_TRAVAUX` (code,
-  famille, libellé, unité, forme). Le code fixe l'unité de la quantité et la
-  forme de la géométrie : une clôture saisie en surface est refusée. S'y
+  `code_travaux`, dans la nomenclature fermée `SOMMIER_CODES_TRAVAUX`, celle du
+  brief métier : 15 codes en 8 familles (préparation, plantation, protection,
+  éducation, régénération, biodiversité, desserte, parcellaire). Le code fixe
+  les unités et les formes de géométrie admises : une clôture se trace en
+  ligne, en mètres ; un cloisonnement se mesure en mètres ou en hectares ; un
+  regarni se place en surface ou en point. S'y
   ajoutent la modalité, l'essence objectif, l'exécution (régie, entreprise),
   l'intervenant, la date de réception, la géométrie, la précision GNSS et les
   photos.
