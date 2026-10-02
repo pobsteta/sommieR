@@ -245,6 +245,10 @@ vérifiable.
   : Bilan de gestion en Quarto
 - [`SOMMIER_FORMATS_QUARTO`](https://pobsteta.github.io/sommieR/reference/SOMMIER_FORMATS_QUARTO.md)
   : Formats de rendu Quarto
+- [`sommier_registre()`](https://pobsteta.github.io/sommieR/reference/sommier_registre.md)
+  : Sommier : le registre, ecriture par ecriture
+- [`sommier_registre_quarto()`](https://pobsteta.github.io/sommieR/reference/sommier_registre_quarto.md)
+  : Sommier imprime en Quarto
 
 ## Cartographie
 

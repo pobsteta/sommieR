@@ -60,7 +60,7 @@ document.
 | **État de la chaîne** | intacte |
 | **Entrées** | 76 |
 | **Séquence de tête** | 76 |
-| **Empreinte de tête** | `2727424f508731a4569a22760ee4eb39bee82aa5f21254705f6f84300f1e6594` |
+| **Empreinte de tête** | `421c67eb5cd1251f4cea6c922b9f6f2edd386fe38e41a3d984bab9afa9f46e86` |
 
 ## 2 Provenance des écritures
 
@@ -300,7 +300,10 @@ sommier_verifier_manifeste("sommier-export.json")
 Toute entrée modifiée, retirée ou insérée après coup invalide
 l’empreinte de tête, et la vérification le dit.
 
+Le détail de chaque écriture, rectifiées comprises, est dans le sommier
+imprimé (`sommier_registre_quarto()`).
+
 ------------------------------------------------------------------------
 
-*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.28.0 le
+*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.29.0 le
 02/10/2026.*

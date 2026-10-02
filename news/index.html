@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.28.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.29.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,21 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.29.0" id="sommier-0290">sommieR 0.29.0<a class="anchor" aria-label="anchor" href="#sommier-0290"></a></h2>
+<p>Le sommier imprimé : le registre lu comme le classeur A50 (lot 1 du brief « Sommier »).</p>
+<ul><li>
+<strong><code><a href="../reference/sommier_registre.html">sommier_registre()</a></code></strong> extrait le sommier tel qu’il est chaîné : une ligne par écriture, registre par registre, dans l’ordre de la chaîne, <strong>rectifiées comprises</strong>. Une écriture rectifiée reste à sa place, avec le numéro de celle qui la rectifie, et la rectification porte le numéro de sa cible. Chaque ligne dit sa provenance (constat, ou transcription avec sa pièce), son NDP, son auteur, son unité, ses dates d’événement et de saisie et son empreinte.</li>
+<li>
+<strong>La fiche A10</strong> ouvre le sommier : les actes de visa par exercice, signés et horodatés ou non, et les exercices clos sans acte, dits non visés. Les ancrages suivent.</li>
+<li>
+<strong><code>jusqu_au_visa</code></strong> arrête l’édition à la tête signée d’un exercice, et dit si la chaîne imprimée concorde avec l’empreinte visée. Un exercice non visé est refusé.</li>
+<li>
+<strong><code><a href="../reference/sommier_registre_quarto.html">sommier_registre_quarto()</a></code></strong> rend le document « Sommier de la forêt », en HTML autoportant ou en PDF A4 paysage : l’état de la chaîne, la fiche A10, un tableau par registre et, en annexe, les empreintes complètes. Rien de ce qui n’est pas dans la chaîne n’y figure. Le document dit qu’il n’est pas la preuve, et renvoie au manifeste.</li>
+<li>
+<strong><code>public = TRUE</code></strong> masque les tiers des registres 3 et 7 (titulaires, garants, tiers d’une écriture) sans retirer de ligne ; les photos ne sont jamais reproduites, seulement comptées.</li>
+<li>Le bilan de gestion renvoie au sommier imprimé pour le détail de chaque écriture.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.28.0" id="sommier-0280">sommieR 0.28.0<a class="anchor" aria-label="anchor" href="#sommier-0280"></a></h2>
 <p>Travaux, lot 1 : le registre du suivi sylvicole (brief <code>travaux-1</code>).</p>
