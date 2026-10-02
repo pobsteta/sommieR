@@ -88,9 +88,21 @@ reference:
     - SOMMIER_TYPES_COUPE
     - SOMMIER_TYPES_MARTELES
   - title: "Registre 6 — travaux"
-    desc: "Imprimés A50J, A50J bis et A50H."
+    desc: >
+      Imprimés A50J, A50J bis et A50H : l'intervention codée et localisée, et
+      le suivi des plantations sur placettes permanentes.
     contents:
     - registre6_travaux
+    - registre6_placette
+    - registre6_controle
+    - registre6_depuis_payload
+    - sommier_installer_placette
+    - sommier_controler_placette
+    - SOMMIER_CODES_TRAVAUX
+    - SOMMIER_TYPES_TRAVAUX
+    - SOMMIER_EXECUTIONS_TRAVAUX
+    - SOMMIER_PREVUS_TRAVAUX
+    - SOMMIER_CONCURRENCES
   - title: "Registre 7 — comptabilité"
     desc: >
       Imprimé A50G, budget prévisionnel et bilan financier.

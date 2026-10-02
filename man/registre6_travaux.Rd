@@ -15,13 +15,26 @@ registre6_travaux(
   provenance_plants = NULL,
   montant_eur = NULL,
   taux_reprise_pct = NULL,
-  observations = NULL
+  observations = NULL,
+  type_entree = NULL,
+  code_travaux = NULL,
+  modalite = NULL,
+  essence_objectif = NULL,
+  execution = NULL,
+  intervenant = NULL,
+  prevu = NULL,
+  motif_ecart = NULL,
+  date_reception = NULL,
+  geometrie = NULL,
+  precision_m = NULL,
+  source_gnss = NULL,
+  photos = NULL
 )
 }
 \arguments{
 \item{annee}{Annee de realisation (entier).}
 
-\item{nature_travaux}{Nature des travaux.}
+\item{nature_travaux}{Nature des travaux, en clair.}
 
 \item{localisation}{Localisation en clair - a renseigner pour les travaux
 hors unite de gestion (imprime A50H), ou l'entree n'est ancree sur aucune
@@ -29,7 +42,8 @@ unite de gestion.}
 
 \item{repere_plan}{Repere sur le plan (facultatif).}
 
-\item{quantite, unite}{Quantite realisee et son unite (facultatif).}
+\item{quantite, unite}{Quantite realisee et son unite (facultatif). Avec un
+\code{code_travaux}, l'unite est celle du code.}
 
 \item{nb_plants, provenance_plants}{Nombre de plants et provenance,
 pour les travaux de reboisement (facultatif).}
@@ -37,24 +51,73 @@ pour les travaux de reboisement (facultatif).}
 \item{montant_eur}{Montant en euros (facultatif).}
 
 \item{taux_reprise_pct}{Taux de reprise en pourcentage, 0 a 100
-(facultatif).}
+(facultatif) : la colonne de l'A50J, pour la reprise de l'existant.}
 
 \item{observations}{Observations libres (facultatif).}
+
+\item{type_entree}{\code{"travaux"}, ou \code{NULL} (le defaut, qui vaut travaux).}
+
+\item{code_travaux}{L'un des codes de \link{SOMMIER_CODES_TRAVAUX} (facultatif).}
+
+\item{modalite}{Modalite d'execution, courte ("mecanique en ligne").}
+
+\item{essence_objectif}{Code de l'essence objectif.}
+
+\item{execution}{L'un de \link{SOMMIER_EXECUTIONS_TRAVAUX}.}
+
+\item{intervenant}{Entreprise ou equipe.}
+
+\item{prevu}{L'un de \link{SOMMIER_PREVUS_TRAVAUX}.}
+
+\item{motif_ecart}{Raison d'un ecart au prevu ; obligatoire hors \code{prevu}.}
+
+\item{date_reception}{Date de reception des travaux.}
+
+\item{geometrie}{Emprise, en WGS84 : surface, ligne ou point selon le code
+(voir \code{\link[=geom_polygone]{geom_polygone()}}).}
+
+\item{precision_m, source_gnss}{Precision et source de la position relevee.}
+
+\item{photos}{Photos, par leur empreinte (voir \code{\link[=sommier_deposer_photo]{sommier_deposer_photo()}}).}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.
 }
 \description{
-Construit et valide le payload d'une entree du registre 6 (imprimes A50J,
-A50J bis pour les travaux par unite de gestion, A50H pour les travaux hors
-unite de gestion). Le taux de reprise est le champ "\% de reprise" de
-l'imprime A50J, releve lors du controle des plantations.
+Construit et valide le payload d'une intervention du registre 6 (imprimes
+A50J, A50J bis pour les travaux par unite de gestion, A50H pour les travaux
+hors unite de gestion).
+}
+\details{
+\strong{Le libelle et le code.} \code{nature_travaux} reste le libelle libre de
+l'A50J ; \code{code_travaux}, dans \link{SOMMIER_CODES_TRAVAUX}, est ce qu'on
+agrege. Le code fixe l'unite de la quantite et la forme de la geometrie :
+une cloture se trace en ligne, une plantation en surface.
+
+\strong{Prevu, ou non.} \code{prevu} est un fait constate a la reception : l'amenagement
+ou le PSG prevoyait-il l'intervention ? Hors \code{prevu}, \code{motif_ecart} est
+obligatoire. Aucun statut "programme" n'entre au registre, qui n'inscrit que
+ce qui a ete fait.
+
+\strong{Le resultat quitte l'intervention.} La reprise se mesure sur des
+placettes, a des dates (\code{\link[=registre6_placette]{registre6_placette()}}, \code{\link[=registre6_controle]{registre6_controle()}}).
+\code{taux_reprise_pct} reste admis pour transcrire la colonne "\% de reprise" de
+l'A50J papier.
+
+\strong{Le type d'entree.} Une intervention n'ecrit \code{type_entree} que s'il est
+passe : les interventions inscrites avant la v0.28.0 n'en portent pas, et
+doivent se relire a l'identique.
 }
 \examples{
 registre6_travaux(
   annee = 2026, nature_travaux = "plantation",
   nb_plants = 1200, provenance_plants = "CHS - Bourgogne",
-  montant_eur = 4800, taux_reprise_pct = 87.5
+  montant_eur = 4800, code_travaux = "PL", quantite = 1.2, unite = "ha",
+  prevu = "prevu"
 )
 
+}
+\seealso{
+\code{\link[=registre6_placette]{registre6_placette()}}, \code{\link[=registre6_controle]{registre6_controle()}},
+\link{SOMMIER_CODES_TRAVAUX}
 }

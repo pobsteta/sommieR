@@ -346,16 +346,49 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
     observations = "Suites du coup de vent de fevrier"
   ), "2022-03-20", unite = ug[["35"]])
 
-  # Registre 6 - travaux, avec taux de reprise.
-  ecrire(6L, registre6_travaux(
+  # Registre 6 - travaux. La plantation porte son code ; sa reprise ne
+  # s'inscrit plus sur l'intervention mais se mesure sur des placettes.
+  plantation <- ecrire(6L, registre6_travaux(
     2022, "plantation", nb_plants = 1050, provenance_plants = "CHS - Bourgogne",
-    quantite = 1.75, unite = "ha", montant_eur = 5130, taux_reprise_pct = 78,
-    repere_plan = "P-22-A"
-  ), "2022-11-08", unite = ug[["35"]])
+    quantite = 1.75, unite = "ha", montant_eur = 5130,
+    repere_plan = "P-22-A", code_travaux = "PL", essence_objectif = "CHS",
+    execution = "entreprise", prevu = "prevu", date_reception = "2022-12-02"
+  ), "2022-11-08", unite = ug[["35"]])[[1L]]
   ecrire(6L, registre6_travaux(
     2024, "degagement", quantite = 1.75, unite = "ha", montant_eur = 1400,
-    taux_reprise_pct = 84
+    code_travaux = "DG", execution = "regie", prevu = "non_prevu",
+    motif_ecart = "Concurrence de la ronce signalee au controle de 2023"
   ), "2024-06-18", unite = ug[["35"]])
+
+  # Trois placettes de 50 m2 dans la plantation, controlees a n+1 et n+3.
+  centres <- list(c(4.93250, 47.25910), c(4.93300, 47.25940),
+                  c(4.93350, 47.25900))
+  placettes <- vapply(seq_along(centres), function(k) {
+    sommier_installer_placette(
+      con, plantation$id, sprintf("P35-%02d", k),
+      geom_point(centres[[k]][[1L]], centres[[k]][[2L]]), auteur,
+      date_evenement = "2022-12-02", materialisation = "piquet bois"
+    )[[1L]]$id
+  }, character(1))
+  releves <- data.frame(
+    annee = c(2023L, 2023L, 2023L, 2025L, 2025L, 2025L),
+    k = c(1L, 2L, 3L, 1L, 2L, 3L),
+    vivants = c(17L, 18L, 15L, 16L, 17L, 13L),
+    hauteur = c(38L, 41L, 33L, 92L, 101L, 74L),
+    abroutis = c(3L, 2L, 5L, 1L, 2L, 4L),
+    concurrence = c("forte", "moyenne", "forte", "moyenne", "faible", "forte"),
+    besoin = c("DG", "aucun", "DG", "aucun", "aucun", "DG")
+  )
+  for (i in seq_len(nrow(releves))) {
+    r <- releves[i, ]
+    sommier_controler_placette(
+      con, placettes[[r$k]], nb_total = 20L, nb_vivants = r$vivants, auteur,
+      visite_le = sprintf("%d-06-1%dT09:30:00Z", r$annee, r$k),
+      h_moy_cm = r$hauteur, nb_abroutis = r$abroutis,
+      concurrence = r$concurrence, besoin = r$besoin,
+      operateur = "Agent patrimonial"
+    )
+  }
   ecrire(6L, registre6_travaux(
     2023, "entretien de la desserte", localisation = "Chemin de la section A",
     quantite = 1.04, unite = "km", montant_eur = 1980

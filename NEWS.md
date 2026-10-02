@@ -1,3 +1,36 @@
+# sommieR 0.28.0
+
+Travaux, lot 1 : le registre du suivi sylvicole (brief `travaux-1`).
+
+- **L'intervention se code et se localise.** `registre6_travaux()` gagne
+  `code_travaux`, dans la nomenclature fermée `SOMMIER_CODES_TRAVAUX` (code,
+  famille, libellé, unité, forme). Le code fixe l'unité de la quantité et la
+  forme de la géométrie : une clôture saisie en surface est refusée. S'y
+  ajoutent la modalité, l'essence objectif, l'exécution (régie, entreprise),
+  l'intervenant, la date de réception, la géométrie, la précision GNSS et les
+  photos.
+- **Prévu, reporté ou non prévu.** `prevu` est un fait constaté à la
+  réception ; hors `prevu`, `motif_ecart` est obligatoire. Aucun statut
+  « programmé » n'entre au registre.
+- **Le résultat quitte l'intervention.** Une placette permanente
+  (`registre6_placette()`, `sommier_installer_placette()`) suit une plantation
+  ou une régénération de son unité ; chaque passage s'inscrit en contrôle
+  (`registre6_controle()`, `sommier_controler_placette()`) : plants comptés,
+  vivants, hauteur, abroutis, concurrence, et le travail qui s'impose ensuite.
+  Une placette inconnue, un code de placette déjà pris dans l'unité, un
+  second contrôle le même jour, plus de vivants que de plants sont refusés.
+- **Les vues calculent, rien ne s'inscrit deux fois.** `v_controle_plantation`
+  donne l'âge, le taux de reprise, la densité à l'hectare et la part
+  d'abroutis ; `v_placette` liste les placettes avec les travaux suivis.
+  `v_travaux` gagne ses colonnes nouvelles en fin, et ne compte plus que les
+  interventions.
+- **Registre 6 en `r6-1.2.0`.** Les interventions déjà chaînées, sans type
+  d'entrée, restent des travaux et se relisent à l'identique :
+  `registre6_depuis_payload()` route la relecture.
+- **La démo de Couchey** code sa plantation de 2022 (UG 35) et l'y suit sur
+  trois placettes, contrôlées en 2023 et en 2025 ; le dégagement de 2024 perd
+  son taux de reprise et devient « non prévu », avec son motif.
+
 # sommieR 0.27.1
 
 - **Le rapport s'intitule « Bilan de gestion ».** « Gestion antérieure »

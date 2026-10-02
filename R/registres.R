@@ -118,7 +118,7 @@ SOMMIER_TYPES_MARTELES <- c("martelage", "produit_accidentel", "bois_delivre")
 #' @export
 SOMMIER_SCHEMA_VERSIONS <- c(
   "1" = "r1-1.2.0", "2" = "r2-1.4.0", "3" = "r3-1.1.0",
-  "4" = "r4-1.2.0", "5" = "r5-1.3.0", "6" = "r6-1.1.0",
+  "4" = "r4-1.2.0", "5" = "r5-1.3.0", "6" = "r6-1.2.0",
   "7" = "r7-1.1.0", "8" = "r8-1.3.0", "9" = "r9-1.2.0"
 )
 
@@ -187,32 +187,69 @@ registre5_coupe <- function(type_entree,
 #' Payload du registre 6 - travaux
 #'
 #' @description
-#' Construit et valide le payload d'une entree du registre 6 (imprimes A50J,
-#' A50J bis pour les travaux par unite de gestion, A50H pour les travaux hors
-#' unite de gestion). Le taux de reprise est le champ "% de reprise" de
-#' l'imprime A50J, releve lors du controle des plantations.
+#' Construit et valide le payload d'une intervention du registre 6 (imprimes
+#' A50J, A50J bis pour les travaux par unite de gestion, A50H pour les travaux
+#' hors unite de gestion).
+#'
+#' @details
+#' **Le libelle et le code.** `nature_travaux` reste le libelle libre de
+#' l'A50J ; `code_travaux`, dans [SOMMIER_CODES_TRAVAUX], est ce qu'on
+#' agrege. Le code fixe l'unite de la quantite et la forme de la geometrie :
+#' une cloture se trace en ligne, une plantation en surface.
+#'
+#' **Prevu, ou non.** `prevu` est un fait constate a la reception : l'amenagement
+#' ou le PSG prevoyait-il l'intervention ? Hors `prevu`, `motif_ecart` est
+#' obligatoire. Aucun statut "programme" n'entre au registre, qui n'inscrit que
+#' ce qui a ete fait.
+#'
+#' **Le resultat quitte l'intervention.** La reprise se mesure sur des
+#' placettes, a des dates ([registre6_placette()], [registre6_controle()]).
+#' `taux_reprise_pct` reste admis pour transcrire la colonne "% de reprise" de
+#' l'A50J papier.
+#'
+#' **Le type d'entree.** Une intervention n'ecrit `type_entree` que s'il est
+#' passe : les interventions inscrites avant la v0.28.0 n'en portent pas, et
+#' doivent se relire a l'identique.
 #'
 #' @param annee Annee de realisation (entier).
-#' @param nature_travaux Nature des travaux.
+#' @param nature_travaux Nature des travaux, en clair.
 #' @param localisation Localisation en clair - a renseigner pour les travaux
 #'   hors unite de gestion (imprime A50H), ou l'entree n'est ancree sur aucune
 #'   unite de gestion.
 #' @param repere_plan Repere sur le plan (facultatif).
-#' @param quantite,unite Quantite realisee et son unite (facultatif).
+#' @param quantite,unite Quantite realisee et son unite (facultatif). Avec un
+#'   `code_travaux`, l'unite est celle du code.
 #' @param nb_plants,provenance_plants Nombre de plants et provenance,
 #'   pour les travaux de reboisement (facultatif).
 #' @param montant_eur Montant en euros (facultatif).
 #' @param taux_reprise_pct Taux de reprise en pourcentage, 0 a 100
-#'   (facultatif).
+#'   (facultatif) : la colonne de l'A50J, pour la reprise de l'existant.
 #' @param observations Observations libres (facultatif).
+#' @param type_entree `"travaux"`, ou `NULL` (le defaut, qui vaut travaux).
+#' @param code_travaux L'un des codes de [SOMMIER_CODES_TRAVAUX] (facultatif).
+#' @param modalite Modalite d'execution, courte ("mecanique en ligne").
+#' @param essence_objectif Code de l'essence objectif.
+#' @param execution L'un de [SOMMIER_EXECUTIONS_TRAVAUX].
+#' @param intervenant Entreprise ou equipe.
+#' @param prevu L'un de [SOMMIER_PREVUS_TRAVAUX].
+#' @param motif_ecart Raison d'un ecart au prevu ; obligatoire hors `prevu`.
+#' @param date_reception Date de reception des travaux.
+#' @param geometrie Emprise, en WGS84 : surface, ligne ou point selon le code
+#'   (voir [geom_polygone()]).
+#' @param precision_m,source_gnss Precision et source de la position relevee.
+#' @param photos Photos, par leur empreinte (voir [sommier_deposer_photo()]).
 #'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
+#'
+#' @seealso [registre6_placette()], [registre6_controle()],
+#'   [SOMMIER_CODES_TRAVAUX]
 #'
 #' @examples
 #' registre6_travaux(
 #'   annee = 2026, nature_travaux = "plantation",
 #'   nb_plants = 1200, provenance_plants = "CHS - Bourgogne",
-#'   montant_eur = 4800, taux_reprise_pct = 87.5
+#'   montant_eur = 4800, code_travaux = "PL", quantite = 1.2, unite = "ha",
+#'   prevu = "prevu"
 #' )
 #'
 #' @export
@@ -226,11 +263,42 @@ registre6_travaux <- function(annee,
                               provenance_plants = NULL,
                               montant_eur = NULL,
                               taux_reprise_pct = NULL,
-                              observations = NULL) {
+                              observations = NULL,
+                              type_entree = NULL,
+                              code_travaux = NULL,
+                              modalite = NULL,
+                              essence_objectif = NULL,
+                              execution = NULL,
+                              intervenant = NULL,
+                              prevu = NULL,
+                              motif_ecart = NULL,
+                              date_reception = NULL,
+                              geometrie = NULL,
+                              precision_m = NULL,
+                              source_gnss = NULL,
+                              photos = NULL) {
   if (!est_vide(quantite) && est_vide(unite)) {
     stop("`unite` est obligatoire des lors que `quantite` est renseignee : ",
          "un nombre sans unite n'est pas exploitable dans un registre.",
          call. = FALSE)
+  }
+  type_entree <- si_present(type_entree, valider_choix, "type_entree",
+                            "travaux")
+  code <- si_present(code_travaux, valider_choix, "code_travaux",
+                     SOMMIER_CODES_TRAVAUX$code)
+  formes <- c("Point", "LineString", "Polygon")
+  if (!is.null(code)) {
+    attendu <- SOMMIER_CODES_TRAVAUX[SOMMIER_CODES_TRAVAUX$code == code, ]
+    if (!est_vide(unite) && !identical(unite, attendu$unite)) {
+      stop("Les travaux ", code, " (", attendu$libelle, ") se mesurent en ",
+           attendu$unite, ", pas en ", unite, ".", call. = FALSE)
+    }
+    formes <- FORMES_GEOJSON[[attendu$forme]]
+  }
+  prevu <- si_present(prevu, valider_choix, "prevu", SOMMIER_PREVUS_TRAVAUX)
+  if (!is.null(prevu) && prevu != "prevu" && est_vide(motif_ecart)) {
+    stop("Des travaux `", prevu, "` doivent dire pourquoi : `motif_ecart` ",
+         "est obligatoire hors `prevu`.", call. = FALSE)
   }
   compacter(list(
     annee             = valider_entier(annee, "annee", min = 1500, max = 2999),
@@ -244,7 +312,24 @@ registre6_travaux <- function(annee,
     montant_eur       = si_present(montant_eur, valider_nombre, "montant_eur"),
     taux_reprise_pct  = si_present(taux_reprise_pct, valider_nombre,
                                    "taux_reprise_pct", min = 0, max = 100),
-    observations      = si_present(observations, valider_texte, "observations")
+    observations      = si_present(observations, valider_texte, "observations"),
+    type_entree       = type_entree,
+    code_travaux      = code,
+    modalite          = si_present(modalite, valider_texte, "modalite"),
+    essence_objectif  = si_present(essence_objectif, valider_texte,
+                                   "essence_objectif"),
+    execution         = si_present(execution, valider_choix, "execution",
+                                   SOMMIER_EXECUTIONS_TRAVAUX),
+    intervenant       = si_present(intervenant, valider_texte, "intervenant"),
+    prevu             = prevu,
+    motif_ecart       = si_present(motif_ecart, valider_texte, "motif_ecart"),
+    date_reception    = si_present(date_reception, format_date,
+                                   "date_reception"),
+    geometrie         = geometrie_si_presente(geometrie, formes),
+    precision_m       = si_present(precision_m, valider_nombre, "precision_m",
+                                   min = 0),
+    source_gnss       = si_present(source_gnss, valider_texte, "source_gnss"),
+    photos            = valider_photos(photos)
   ))
 }
 
@@ -292,7 +377,7 @@ valider_payload <- function(registre, payload) {
     "3" = do.call(registre3_depuis_payload, list(payload)),
     "4" = do.call(registre4_depuis_payload, list(payload)),
     "5" = do.call(registre5_coupe, payload),
-    "6" = do.call(registre6_travaux, payload),
+    "6" = do.call(registre6_depuis_payload, list(payload)),
     "7" = do.call(registre7_ecriture, payload_r7(payload)),
     "8" = do.call(registre8_depuis_payload, list(payload)),
     "9" = do.call(registre9_depuis_payload, list(payload))
