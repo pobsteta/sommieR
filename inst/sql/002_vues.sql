@@ -67,7 +67,11 @@ SELECT
     WHEN e.payload ? 'surface_ha' THEN 'saisie'
     WHEN e.payload ->> 'type_entree' = 'martelage'
          AND unite.surface_ha IS NOT NULL THEN 'unite'
-  END                                          AS surface_source
+  END                                          AS surface_source,
+  -- v0.25.0 : le constat de terrain dont la coupe procede (un produit
+  -- accidentel apres une detection confirmee). En fin de liste : CREATE OR
+  -- REPLACE n'accepte une colonne nouvelle qu'apres les autres.
+  (e.payload ->> 'constat_id')::UUID           AS constat_id
 FROM v_entree_courante e
 LEFT JOIN LATERAL (
   SELECT (ST_Area(g.geom) / 10000)::NUMERIC AS surface_ha

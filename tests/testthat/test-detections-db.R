@@ -368,3 +368,83 @@ test_that("le rapport montre les suites, leurs photos, et le sort des coupes", {
   expect_match(html, "Version publique", fixed = TRUE)
   expect_no_match(html, "<figure style=", fixed = TRUE)
 })
+
+test_that("un produit accidentel s'inscrit depuis le constat, une fois", {
+  con <- base_detections()
+  f <- foret_detections(con)
+  suite <- sommier_valider_detection(
+    con, f$reconfort, "agent-01", "confirme", "Chenes secs sur 0,8 ha",
+    date_evenement = "2026-10-14", surface_ha = 0.8
+  )[[1L]]
+  ecartee <- sommier_valider_detection(con, f$sufosat, "agent-01", "ecarte",
+                                       "Trouee ancienne")[[1L]]
+
+  produit <- sommier_produit_accidentel(con, suite$id, volume_m3 = 45,
+                                        auteur = "test",
+                                        date_evenement = "2026-11-20")[[1L]]
+  p <- produit$payload
+  expect_equal(produit$registre, 5L)
+  expect_equal(produit$ug_uuid, f$ug)
+  expect_equal(p$type_entree, "produit_accidentel")
+  expect_equal(p$nature_coupe, "coupe sanitaire")
+  expect_equal(p$exercice, 2026L)
+  expect_equal(p$surface_ha, 0.8)
+  expect_equal(p$constat_id, suite$id)
+  expect_equal(produit$schema_version, "r5-1.3.0")
+  coupe <- DBI::dbGetQuery(con, "SELECT constat_id::text AS c, volume_m3
+                                   FROM v_coupe WHERE id = $1",
+                           params = list(produit$id))
+  expect_equal(coupe$c, suite$id)
+
+  expect_error(sommier_produit_accidentel(con, suite$id, 10, "test"),
+               "deja a ce constat")
+  expect_error(sommier_produit_accidentel(con, ecartee$id, 10, "test"),
+               "ecartee")
+  expect_error(sommier_produit_accidentel(con, f$sufosat, 10, "test"),
+               "pas la suite")
+  expect_true(sommier_verifier(con, f$foret)$valide)
+
+  lu <- lire_suites_detection(con, f$foret)$suites
+  expect_equal(lu$produit_m3[lu$statut == "confirme"], 45)
+})
+
+test_that("une exploitation ordinaire n'est pas un produit accidentel", {
+  con <- base_detections()
+  f <- foret_detections(con)
+  suite <- sommier_valider_detection(con, f$sufosat, "agent-01", "confirme",
+                                     "Coupe rase reguliere",
+                                     nature = "autre")[[1L]]
+  expect_error(sommier_produit_accidentel(con, suite$id, 10, "test"),
+               "martelage")
+})
+
+test_that("le rapport separe les produits inscrits de ceux a inscrire", {
+  skip_if(!nzchar(Sys.which("quarto")), "Quarto n'est pas installe.")
+  con <- base_detections()
+  f <- foret_detections(con)
+  # La coupe SUFOSAT de 2019, confirmee en chablis, produit inscrit ; le
+  # deperissement confirme, produit a inscrire.
+  chablis <- sommier_valider_detection(con, f$sufosat, "agent-01", "confirme",
+                                       "Chablis", nature = "tempete")[[1L]]
+  sommier_produit_accidentel(con, chablis$id, 30, "test")
+  sommier_valider_detection(con, f$reconfort, "agent-01", "confirme",
+                            "Chenes secs", nature = "crise_sanitaire")
+  coupes <- data.frame(ug = "12", annee = 2019L, surface_ha = 0.5,
+                       date_mediane = as.Date("2019-08-28"),
+                       debut = as.Date("2019-08-01"),
+                       fin = as.Date("2019-09-01"), proba_moyenne = 95,
+                       stringsAsFactors = FALSE)
+  attr(coupes, "seuil_proba") <- 90
+  attr(coupes, "surface_min_ha") <- 0.5
+  chemin <- withr::local_tempfile(fileext = ".html")
+  sommier_rapport_quarto(con, f$foret, chemin, format = "html",
+                         referentiel = "amenagement",
+                         coupes_detectees = coupes)
+  html <- paste(readLines(chemin, warn = FALSE, encoding = "UTF-8"),
+                collapse = "\n")
+  expect_match(html, "Produits accidentels inscrits au registre 5", fixed = TRUE)
+  expect_match(html, "12 (30,0 m³, chablis (tempête))", fixed = TRUE)
+  expect_match(html, "1 détection(s) confirmée(s) en crise sanitaire", fixed = TRUE)
+  expect_match(html, "Expliquée(s) par un produit accidentel", fixed = TRUE)
+  expect_no_match(html, "Coupes détectées sans martelage inscrit", fixed = TRUE)
+})

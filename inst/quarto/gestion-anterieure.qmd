@@ -108,7 +108,8 @@ libelles_nature <- c(crise_sanitaire = "crise sanitaire",
                      gel = "gel", neige = "neige", inondation = "inondation",
                      autre = "autre")
 # Une nature qui, confirmée, laisse des bois à exploiter hors martelage : un
-# produit accidentel, au registre 5.
+# produit accidentel, au registre 5. Copie de SOMMIER_NATURES_ACCIDENTELLES :
+# le rendu ne lit que le RDS, sans charger le paquet.
 NATURES_ACCIDENTELLES <- c("crise_sanitaire", "tempete", "secheresse",
                            "incendie", "neige", "gel")
 
@@ -1298,7 +1299,16 @@ p <- rapport$coupes_detectees_parametres
 # Une coupe écartée sur le terrain n'en était pas une : elle sort du compte,
 # et se dit à part.
 ecartees <- if (!is.null(sans$suite)) sans[sans$suite == "ecarte", , drop = FALSE]
-if (!is.null(sans$suite)) sans <- sans[sans$suite != "ecarte", , drop = FALSE]
+# De même, une coupe confirmée dont le produit accidentel est inscrit depuis
+# le constat est expliquée, quel que soit l'exercice de l'inscription.
+expliquees <- if (!is.null(sans$produit_m3)) {
+  sans[sans$suite == "confirme" & !is.na(sans$produit_m3), , drop = FALSE]
+}
+if (!is.null(sans$suite)) {
+  sans <- sans[sans$suite != "ecarte" &
+                 !(sans$suite == "confirme" & !is.na(sans$produit_m3)), ,
+               drop = FALSE]
+}
 sort_coupe <- function(x) {
   if (is.null(x$suite)) return(rep("", nrow(x)))
   ifelse(x$suite == "en_attente", ", inscrite, en attente de constat",
@@ -1337,6 +1347,12 @@ if (is.null(sans) || nrow(sans) == 0L) {
       "*Probabilité d'au moins ", p$seuil_proba %||% 90, " %, détections ",
       "d'au moins ", nombre(p$surface_min_ha %||% 0.5, 1L), " ha par unité ",
       "et par année.*\n:::\n\n", sep = "")
+}
+if (!is.null(expliquees) && nrow(expliquees) > 0L) {
+  cat("*Expliquée(s) par un produit accidentel inscrit depuis le constat de ",
+      "terrain : ", paste0(expliquees$ug, " en ", expliquees$annee, " (",
+                           nombre(expliquees$produit_m3), " m³)",
+                           collapse = " ; "), ".*\n\n", sep = "")
 }
 if (!is.null(ecartees) && nrow(ecartees) > 0L) {
   cat("*Écartée(s) sur le terrain, hors du compte : ",
@@ -1526,15 +1542,24 @@ if (a_constats) {
                                 collapse = ", "), ".*\n\n", sep = "")
   }
   accidentelles <- k$statut == "confirme" & k$nature %in% NATURES_ACCIDENTELLES
-  if (any(accidentelles)) {
+  inscrits <- accidentelles & !is.na(k$produit_m3)
+  a_inscrire <- accidentelles & is.na(k$produit_m3)
+  if (any(a_inscrire)) {
     cat("::: {.callout-note}\n## Des bois à exploiter hors martelage\n\n",
-        sum(accidentelles), " détection(s) confirmée(s) en ",
-        paste(unique(unname(libelles_nature[k$nature[accidentelles]])),
-              collapse = ", "),
-        " : si des bois en sont sortis, ce sont des produits accidentels, à ",
+        sum(a_inscrire), " détection(s) confirmée(s) en ",
+        paste(unique(unname(libelles_nature[k$nature[a_inscrire]])),
+              collapse = ", "), " (unité(s) ",
+        paste(unique(k$ug[a_inscrire]), collapse = ", "),
+        ") : si des bois en sont sortis, ce sont des produits accidentels, à ",
         "inscrire au registre 5 avec leur volume. Le sommier ne l'écrit pas ",
         "d'office — un volume ne se devine pas depuis une photo.\n:::\n\n",
         sep = "")
+  }
+  if (any(inscrits)) {
+    cat("*Produits accidentels inscrits au registre 5 depuis un constat : ",
+        paste0(k$ug[inscrits], " (", nombre(k$produit_m3[inscrits]), " m³, ",
+               unname(libelles_nature[k$nature[inscrits]]), ")",
+               collapse = " ; "), ".*\n\n", sep = "")
   }
   notes <- !is.na(k$observations) & nzchar(k$observations)
   if (any(notes)) {

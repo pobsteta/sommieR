@@ -1,3 +1,28 @@
+# sommieR 0.25.0
+
+Du constat de terrain au registre 5 : le produit accidentel d'une détection
+confirmée.
+
+- `sommier_produit_accidentel()` inscrit au registre 5 le produit accidentel
+  (bois sanitaires, chablis) qu'une détection confirmée a laissé. L'entrée
+  reprend du constat l'unité, la nature et la surface, et y renvoie par
+  `constat_id`. Seul le volume est à saisir : il vient du cubage, ni la
+  télédétection ni une photo ne le donnent.
+- Sont refusés :
+  - un constat qui n'est pas la suite d'une détection ;
+  - une détection écartée ;
+  - une nature qui ne laisse pas de produit accidentel : une exploitation
+    ordinaire s'inscrit comme martelage ;
+  - un second produit pour le même constat : on corrige alors le premier.
+- `SOMMIER_NATURES_ACCIDENTELLES` liste ces natures : crise sanitaire,
+  tempête, sécheresse, incendie, neige, gel.
+- Registre 5 en `r5-1.3.0` : le payload porte `constat_id`, que `v_coupe`
+  expose en dernière colonne.
+- Le rapport sépare les produits déjà inscrits, avec leur volume, de ceux qui
+  restent à inscrire. Une coupe SUFOSAT confirmée dont le produit est inscrit
+  depuis le constat est expliquée, quel que soit l'exercice d'inscription :
+  elle sort du compte des coupes sans martelage.
+
 # sommieR 0.24.1
 
 - **Couleurs du projet QField des limites.** QGIS lit une couleur `#RRGGBBAA`

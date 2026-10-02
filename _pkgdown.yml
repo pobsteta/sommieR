@@ -222,6 +222,8 @@ reference:
     - sommier_contours_detections
     - sommier_projet_qfield_detections
     - sommier_importer_qfield_detections
+    - sommier_produit_accidentel
+    - SOMMIER_NATURES_ACCIDENTELLES
 
   - title: "Géométrie des payloads"
     desc: >

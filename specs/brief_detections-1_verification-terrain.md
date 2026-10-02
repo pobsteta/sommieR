@@ -121,6 +121,17 @@ détections.
   confirmée en coupe sanitaire ou en chablis, elle le dit : ce n'était pas un
   oubli de martelage, mais un produit accidentel à inscrire au registre 5.
 
+**Lot 3 : du constat au registre 5** *(ajouté le 2 octobre 2026)*
+
+- `sommier_produit_accidentel(con, constat_id, volume_m3, auteur, ...)`
+  inscrit le produit accidentel d'une détection confirmée en crise sanitaire,
+  chablis, sécheresse, incendie, neige ou gel. Il reprend l'unité, la nature
+  et la surface du constat, et y renvoie par `constat_id` (registre 5 en
+  `r5-1.3.0`). Le volume reste saisi par le gestionnaire.
+- Le rapport sépare les produits inscrits de ceux qui restent à inscrire. Une
+  coupe SUFOSAT dont le produit est inscrit n'est plus comptée sans
+  martelage.
+
 ## Critères d'acceptation
 
 - Sur une copie d'Orléans, le projet contient les 14 détections RECONFORT, et
@@ -143,7 +154,8 @@ détections.
   tournée ne porte que les 14 détections RECONFORT.
 - ~~Un seul projet pour tout ?~~ **Tranché le 1er octobre 2026 : deux
   projets QField**, l'un pour les limites, l'autre pour les détections.
-- **Une coupe confirmée appelle-t-elle un martelage ?** Une coupe sanitaire ou
-  un chablis constatés devraient avoir un produit accidentel au registre 5. Le
-  lot le signale, il ne l'écrit pas : le volume ne se devine pas depuis une
-  photo.
+- ~~Une coupe confirmée appelle-t-elle un martelage ?~~ **Tranché au lot 3 :**
+  une coupe sanitaire ou un chablis constatés appellent un produit accidentel,
+  que `sommier_produit_accidentel()` inscrit depuis le constat, avec le volume
+  saisi par le gestionnaire. Une exploitation ordinaire appelle un
+  martelage.
