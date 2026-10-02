@@ -1,3 +1,9 @@
+# sommieR 0.26.3
+
+- **Les travaux par unité.** Comme les coupes, le tableau des travaux du
+  rapport regroupe aussi par unité de gestion et l'affiche. Des travaux à
+  l'échelle de la forêt, une desserte par exemple, se lisent sous un tiret.
+
 # sommieR 0.26.2
 
 - **Patrimoine remarquable.** Une espèce n'a pas d'appellation : le tableau
