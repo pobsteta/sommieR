@@ -2,7 +2,7 @@
 #' @export
 SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 
-#' Rapport de gestion anterieure en Quarto
+#' Bilan de gestion en Quarto
 #'
 #' @description
 #' Rend la gestion anterieure sous forme de document Quarto — HTML autoportant
@@ -180,6 +180,9 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
 
   source_qmd <- file.path(atelier, "rapport.qmd")
   file.copy(modele, source_qmd)
+  # Le titre est fixe ; le sous-titre dit la foret, la periode et l'objet du
+  # bilan, que l'en-tete YAML ne sait pas calculer : il se pose dans la copie.
+  poser_sous_titre(source_qmd, sous_titre_bilan(gestion))
   # Les vignettes se deposent dans l'atelier, a cote du document : un rendu
   # public n'en fabrique aucune.
   if (!isTRUE(public) && !est_vide(photos)) {
@@ -306,6 +309,34 @@ valider_especes_observees <- function(especes, public) {
     especes$ug <- NULL
   }
   especes
+}
+
+# Ce que le bilan sert a reviser, dans les termes de chaque referentiel.
+SOMMIER_OBJETS_BILAN <- c(
+  psg = "Gestion ant\u00e9rieure du plan simple de gestion",
+  amenagement = "Bilan de l'am\u00e9nagement pr\u00e9c\u00e9dent",
+  ct88 = "\u00c9valuation de fin de plan (CT88)"
+)
+
+sous_titre_bilan <- function(gestion) {
+  debut <- if (identical(gestion$debut, "0001-01-01")) {
+    "depuis l'ouverture du sommier"
+  } else {
+    paste("du", format(as.Date(gestion$debut), "%d/%m/%Y"))
+  }
+  fin <- if (identical(gestion$fin, "9999-12-31")) "\u00e0 ce jour" else
+    paste("au", format(as.Date(gestion$fin), "%d/%m/%Y"))
+  paste0(gestion$foret, " \u2014 ", debut, " ", fin, " \u2014 ",
+         SOMMIER_OBJETS_BILAN[[gestion$referentiel]])
+}
+
+# Une chaine YAML entre apostrophes double ses apostrophes : "Foret
+# domaniale d'Orleans" ne doit pas fermer la chaine.
+poser_sous_titre <- function(qmd, sous_titre) {
+  lignes <- readLines(qmd, encoding = "UTF-8", warn = FALSE)
+  yaml <- paste0("'", gsub("'", "''", sous_titre, fixed = TRUE), "'")
+  lignes <- sub("@@SOUS_TITRE@@", yaml, lignes, fixed = TRUE)
+  writeLines(enc2utf8(lignes), qmd, useBytes = TRUE)
 }
 
 valider_reference_ifn <- function(reference) {
