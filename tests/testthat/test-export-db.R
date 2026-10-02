@@ -72,6 +72,30 @@ test_that("les coupes nomment leurs unites, dont la surface compte une fois", {
   expect_equal(as.numeric(coupes$surface_ha), c(16, 6))
 })
 
+test_that("les travaux nomment leurs unites", {
+  con <- base_export()
+  foret <- foret_creer(con, "Foret de Chaux", "communal", surface_ha = 500)
+  unites <- c(A = ug_creer(con, foret, "A", "2010-01-01"),
+              B = ug_creer(con, foret, "B", "2010-01-01"))
+  ecrire <- function(unite, montant) {
+    sommier_ajouter(con, sommier_entree(
+      foret_id = foret, registre = 6L, date_evenement = "2024-09-01",
+      auteur = "agent-01", ug_uuid = unite,
+      payload = registre6_travaux(2024, "cloisonnement", quantite = 5,
+                                  unite = "ha", montant_eur = montant)
+    ))
+  }
+  ecrire(unites[["A"]], 2000)
+  ecrire(unites[["B"]], 1500)
+  ecrire(unites[["B"]], 500)
+  travaux <- sommier_gestion_anterieure(con, foret, "2024-01-01",
+                                        "2024-12-31")$sections$travaux
+  # Meme annee, meme nature : une ligne, qui nomme A et B une fois chacune.
+  expect_equal(travaux$ug, "A, B")
+  expect_equal(as.numeric(travaux$montant_eur), 4000)
+  expect_equal(as.integer(travaux$n), 3L)
+})
+
 test_that("chaque referentiel retient les sections qui le concernent", {
   con <- base_export()
   foret <- foret_garnie(con)
