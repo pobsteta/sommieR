@@ -165,6 +165,11 @@ test_that("le rapport Quarto se rend et porte l'empreinte de tete", {
                fixed = TRUE)
   expect_match(html, "Facteur IBP", fixed = TRUE)
   expect_no_match(html, "facteur_ibp", fixed = TRUE)
+  # La carte du patrimoine suit le titre de sa section : un bloc de figure
+  # place avant le titre la rangeait sous l'equilibre foret-gibier.
+  titre <- regexpr("id=\"sec-patrimoine\"", html, fixed = TRUE)
+  carte <- regexpr("Patrimoine remarquable localis", html, fixed = TRUE)
+  expect_true(titre > 0L && carte > titre)
 
   # Aucun caractere ne doit sortir echappe : sous une locale non UTF-8, R
   # rendrait les accents en <U+00E9> sans echouer, et le defaut passerait
