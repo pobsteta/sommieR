@@ -44,6 +44,26 @@ test_that("la gestion anterieure rassemble les sections attendues", {
   expect_equal(nrow(ga$sections$equilibre_gibier), 1L)
 })
 
+test_that("les coupes se ventilent par unite", {
+  con <- base_export()
+  foret <- foret_creer(con, "Foret de Chaux", "communal", surface_ha = 500)
+  unites <- c(A = ug_creer(con, foret, "A", "2010-01-01"),
+              B = ug_creer(con, foret, "B", "2010-01-01"))
+  for (u in names(unites)) {
+    sommier_ajouter(con, sommier_entree(
+      foret_id = foret, registre = 5L, date_evenement = "2024-03-01",
+      auteur = "agent-01", ug_uuid = unites[[u]],
+      payload = registre5_coupe("martelage", 2024, "amelioration",
+                                if (u == "A") 120 else 80)
+    ))
+  }
+  coupes <- sommier_gestion_anterieure(con, foret, "2024-01-01",
+                                       "2024-12-31")$sections$coupes
+  # Meme exercice, meme nature : deux lignes, une par unite.
+  expect_equal(coupes$ug, c("A", "B"))
+  expect_equal(as.numeric(coupes$volume_m3), c(120, 80))
+})
+
 test_that("chaque referentiel retient les sections qui le concernent", {
   con <- base_export()
   foret <- foret_garnie(con)

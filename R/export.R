@@ -96,15 +96,23 @@ sommier_gestion_anterieure <- function(con, foret_id, debut = NULL, fin = NULL,
 
   sections <- list(
     provenance = sommier_provenance(con, foret_id, debut = debut, fin = fin),
+    # Par unite : deux martelages de meme nature le meme exercice ne se
+    # fondent pas en une ligne dont on ne saurait plus ou elle a ete coupee.
     coupes = lire(
-      "SELECT exercice, type_entree, nature_coupe,
-              CASE WHEN repris THEN 'transcrit' ELSE 'constate' END AS provenance,
-              SUM(volume_m3) AS volume_m3, SUM(surface_ha) AS surface_ha,
+      "SELECT c.exercice, u.numero_affichage AS ug, c.type_entree,
+              c.nature_coupe,
+              CASE WHEN c.repris THEN 'transcrit' ELSE 'constate' END
+                AS provenance,
+              SUM(c.volume_m3) AS volume_m3, SUM(c.surface_ha) AS surface_ha,
               count(*) AS n
-         FROM v_coupe
-        WHERE foret_id = $1 AND date_evenement BETWEEN $2::date AND $3::date
-        GROUP BY exercice, type_entree, nature_coupe, repris
-        ORDER BY exercice, type_entree, nature_coupe, repris"),
+         FROM v_coupe c
+         LEFT JOIN ug u ON u.uuid = c.ug_uuid
+        WHERE c.foret_id = $1
+          AND c.date_evenement BETWEEN $2::date AND $3::date
+        GROUP BY c.exercice, u.numero_affichage, c.type_entree,
+                 c.nature_coupe, c.repris
+        ORDER BY c.exercice, u.numero_affichage, c.type_entree,
+                 c.nature_coupe, c.repris"),
     balance = lire(
       "SELECT amenagement_id, amenagement, exercice, possibilite_m3_ha_an,
               possibilite_m3_an, volume_martele_m3, prelevement_m3_ha,

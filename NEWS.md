@@ -1,3 +1,10 @@
+# sommieR 0.26.1
+
+- **Les coupes par unité.** Dans le rapport, le tableau « Coupes et
+  récoltes » regroupe aussi par unité de gestion et l'affiche. Avant, deux
+  martelages de même nature le même exercice se fondaient en une ligne, et
+  on ne savait plus où ils avaient été faits.
+
 # sommieR 0.26.0
 
 Le formulaire de constat des limites selon le type d'élément.
