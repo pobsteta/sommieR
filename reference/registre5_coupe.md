@@ -17,7 +17,8 @@ registre5_coupe(
   essence = NULL,
   coupon = NULL,
   observations = NULL,
-  geometrie = NULL
+  geometrie = NULL,
+  constat_id = NULL
 )
 ```
 
@@ -66,6 +67,12 @@ registre5_coupe(
   [`geom_polygone()`](https://pobsteta.github.io/sommieR/reference/geometries.md).
   Facultative — un gestionnaire sans releve continue de saisir sans, et
   son sommier reste conforme.
+
+- constat_id:
+
+  UUID du constat de terrain dont la coupe procede - la suite d'une
+  detection, au registre 8 (facultatif). Voir
+  [`sommier_produit_accidentel()`](https://pobsteta.github.io/sommieR/reference/sommier_produit_accidentel.md).
 
 ## Value
 

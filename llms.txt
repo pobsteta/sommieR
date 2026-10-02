@@ -777,6 +777,10 @@ tout ou rien et rejouable.
   : Projet QGIS/QField pour verifier les detections sur le terrain
 - [`sommier_importer_qfield_detections()`](https://pobsteta.github.io/sommieR/reference/sommier_importer_qfield_detections.md)
   : Import des constats d'une tournee de verification des detections
+- [`sommier_produit_accidentel()`](https://pobsteta.github.io/sommieR/reference/sommier_produit_accidentel.md)
+  : Produit accidentel issu d'un constat de terrain
+- [`SOMMIER_NATURES_ACCIDENTELLES`](https://pobsteta.github.io/sommieR/reference/SOMMIER_NATURES_ACCIDENTELLES.md)
+  : Natures de phenomene qui laissent des produits accidentels
 
 ## Géométrie des payloads
 

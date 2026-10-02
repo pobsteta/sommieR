@@ -13,7 +13,7 @@ tard ne ressemble pas a une correction de valeur."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.24.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.25.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,8 @@ tard ne ressemble pas a une correction de valeur.</p>
 <span>  essence <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  coupon <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  observations <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  geometrie <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  geometrie <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  constat_id <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -111,6 +112,12 @@ toute la surface de l'unite (voir la colonne <code>surface_source</code> de
 <dd><p>Emprise de la coupe, en WGS84 : voir <code><a href="geometries.html">geom_polygone()</a></code>.
 Facultative — un gestionnaire sans releve continue de saisir sans, et son
 sommier reste conforme.</p></dd>
+
+
+<dt id="arg-constat-id">constat_id<a class="anchor" aria-label="anchor" href="#arg-constat-id"></a></dt>
+<dd><p>UUID du constat de terrain dont la coupe procede - la
+suite d'une detection, au registre 8 (facultatif). Voir
+<code><a href="sommier_produit_accidentel.html">sommier_produit_accidentel()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
