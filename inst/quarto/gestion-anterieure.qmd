@@ -1432,7 +1432,7 @@ if (nrow(r5) == 1L && r5$n_transcrit > 0) {
 Le taux de reprise est celui relevé au contrôle des plantations.
 
 ```{r travaux, results='asis'}
-tableau("travaux", "Travaux réalisés sur la période, par année, unité et nature")
+tableau("travaux", "Travaux réalisés sur la période, par année et nature, avec les unités concernées")
 ```
 
 ```{r carte-travaux, fig.height=3.6, fig.width=7, fig.cap="Montant des travaux par unité de gestion. Les travaux hors unité de gestion n'y figurent pas : ils ne se localisent pas.", eval=cartographiable && porte_valeur(carte$montant_travaux_eur)}
