@@ -1,3 +1,35 @@
+# sommieR 0.31.0
+
+Travaux, lot 2 : le terrain, avec QField (brief `travaux-1`).
+
+- **`sommier_projet_qfield_travaux()`** écrit un troisième projet de terrain,
+  à côté des limites et des détections. On y relève les travaux faits, chacun
+  dessiné en surface, en ligne ou en point selon son code ; la couche des
+  surfaces ne propose que les codes qui admettent une surface, et l'unité par
+  défaut est la première du code. Les codes viennent de
+  `SOMMIER_CODES_TRAVAUX`, écrits à chaque projet.
+- **Les placettes déjà installées sont dans le projet**, colorées selon leur
+  dernier contrôle : besoin signalé, sans besoin, jamais contrôlée. On les
+  contrôle en ajoutant un contrôle à la placette ; on en installe une
+  nouvelle en plaçant un point, rattaché à des travaux d'une unité.
+- **Un contrôle a une position, et choisit sa placette.** Ajouté depuis la
+  fiche d'une placette, il s'y rattache ; ajouté depuis la couche des
+  contrôles, il propose la placette la plus proche à 15 m, qu'on peut changer
+  dans la liste, et ne s'enregistre pas sans placette. À l'import, un contrôle
+  sans placette est rattaché à la plus proche de sa position, à 15 m près, ou
+  refusé.
+- **`sommier_importer_qfield_travaux()`** relit la tournée et inscrit, en une
+  transaction et dans cet ordre, les travaux, les placettes, puis les
+  contrôles : une placette peut suivre une plantation relevée le jour même,
+  un contrôle porter sur une placette qui vient d'être installée. Tout ou
+  rien : une saisie fautive (code qui n'admet pas la forme de la couche,
+  écart au prévu sans motif, placette sans travaux connus, plus de vivants
+  que de plants) fait échouer l'import, qui les liste toutes. Rejouable par
+  l'UUID de chaque saisie. L'unité d'une intervention est celle qui contient
+  sa géométrie ; les photos sont déposées sous leur empreinte.
+- Le modèle `inst/qgis/travaux.qgs` est produit par
+  `data-raw/qfield_modele.py travaux` (QGIS 3.40 ou plus, QField 4.3).
+
 # sommieR 0.30.0
 
 Travaux, lot 3 : les indicateurs et le rapport (brief `travaux-1`).

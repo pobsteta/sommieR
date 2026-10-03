@@ -101,6 +101,8 @@ reference:
     - sommier_suivi_plantations
     - sommier_bilan_travaux
     - SOMMIER_SEUIL_REPRISE_PCT
+    - sommier_projet_qfield_travaux
+    - sommier_importer_qfield_travaux
     - SOMMIER_CODES_TRAVAUX
     - SOMMIER_TYPES_TRAVAUX
     - SOMMIER_EXECUTIONS_TRAVAUX
