@@ -31,7 +31,9 @@ photos deposees sous leur empreinte.
 connu et forme de la couche admise par le code, unite du code, motif d'un
 ecart au prevu, placette rattachee a des travaux connus, controle sur une
 placette connue, vivants et abroutis coherents, photos presentes. Une faute
-fait echouer l'import, qui les liste toutes. L'ecriture se fait en une
+fait echouer l'import, qui les liste toutes. Un controle ajoute depuis sa
+couche, sans placette choisie, se rattache a la placette la plus proche de
+sa position, a 15 m pres. L'ecriture se fait en une
 transaction, dans cet ordre : travaux, placettes, controles - une placette
 peut suivre des travaux releves dans la meme tournee, un controle porter sur
 une placette qui vient d'etre installee.

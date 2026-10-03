@@ -120,7 +120,9 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
 #' connu et forme de la couche admise par le code, unite du code, motif d'un
 #' ecart au prevu, placette rattachee a des travaux connus, controle sur une
 #' placette connue, vivants et abroutis coherents, photos presentes. Une faute
-#' fait echouer l'import, qui les liste toutes. L'ecriture se fait en une
+#' fait echouer l'import, qui les liste toutes. Un controle ajoute depuis sa
+#' couche, sans placette choisie, se rattache a la placette la plus proche de
+#' sa position, a 15 m pres. L'ecriture se fait en une
 #' transaction, dans cet ordre : travaux, placettes, controles - une placette
 #' peut suivre des travaux releves dans la meme tournee, un controle porter sur
 #' une placette qui vient d'etre installee.
@@ -171,7 +173,7 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
     t
   }))
   placettes <- lire("placettes")
-  controles <- as.data.frame(lire("controles"))
+  controles <- rattacher_controles(lire("controles"), placettes)
   photos <- as.data.frame(lire("photos"))
   bilan <- list(travaux = 0L, placettes = 0L, controles = 0L,
                 deja_presents = 0L, photos = 0L, entrees = list())
@@ -279,6 +281,25 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
 
 # ---------------------------------------------------------------------------
 
+# Un controle saisi depuis sa couche, et non depuis la fiche d'une placette,
+# n'en porte pas l'identifiant : il se rattache a la placette du projet la
+# plus proche de sa position, a RAYON_RATTACHEMENT_M pres. Au-dela, il reste
+# sans placette, et l'import le refuse.
+RAYON_RATTACHEMENT_M <- 15
+
+rattacher_controles <- function(controles, placettes) {
+  manquants <- is.na(controles$placette_uuid) &
+    !sf::st_is_empty(sf::st_geometry(controles))
+  if (any(manquants) && nrow(placettes) > 0L) {
+    proches <- sf::st_nearest_feature(controles[manquants, ], placettes)
+    distances <- as.numeric(sf::st_distance(
+      controles[manquants, ], placettes[proches, ], by_element = TRUE))
+    controles$placette_uuid[manquants] <- ifelse(
+      distances <= RAYON_RATTACHEMENT_M, placettes$uuid[proches], NA_character_)
+  }
+  as.data.frame(sf::st_drop_geometry(controles))
+}
+
 # Les couches de saisie des travaux, et la forme qu'elles portent.
 COUCHES_TRAVAUX <- c(travaux_surf = "surface", travaux_lin = "ligne",
                      travaux_pt = "point")
@@ -375,7 +396,10 @@ controler_tournee_travaux <- function(travaux, placettes, controles, photos,
     if (is.na(x$uuid) || !grepl(MOTIF_UUID, x$uuid)) {
       fautes <- c(fautes, paste0(nom, " : identifiant absent ou invalide"))
     }
-    if (is.na(x$placette_uuid) || !tolower(x$placette_uuid) %in% connues) {
+    if (is.na(x$placette_uuid)) {
+      fautes <- c(fautes, paste0(nom, " : aucune placette choisie, ni a moins ",
+                                 "de ", RAYON_RATTACHEMENT_M, " m"))
+    } else if (!tolower(x$placette_uuid) %in% connues) {
       fautes <- c(fautes, paste0(nom, " : placette inconnue"))
     }
     if (is.na(x$visite_le)) {
@@ -393,8 +417,9 @@ controler_tournee_travaux <- function(travaux, placettes, controles, photos,
     if (!is.null(essai)) fautes <- c(fautes, paste0(nom, " : ", essai))
     fautes <- c(fautes, controler_photos_constat(x, nom, photos, dossier))
   }
-  jours <- paste(tolower(controles$placette_uuid),
-                 substr(as.character(controles$visite_le), 1L, 10L))
+  avec <- !is.na(controles$placette_uuid)
+  jours <- paste(tolower(controles$placette_uuid[avec]),
+                 substr(as.character(controles$visite_le[avec]), 1L, 10L))
   if (any(duplicated(jours))) {
     fautes <- c(fautes, "deux controles d'une meme placette le meme jour")
   }

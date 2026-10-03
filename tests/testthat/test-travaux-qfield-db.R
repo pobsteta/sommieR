@@ -60,12 +60,14 @@ intervention <- function(uuid, code, geometrie, quantite, unite, prevu,
   )
 }
 
-controle <- function(uuid, placette, vivants, jour, besoin = "aucun") {
-  data.frame(uuid = uuid, placette_uuid = placette, nb_total = 20L,
-             nb_vivants = vivants, h_moy_cm = 40L, nb_abroutis = 1L,
-             concurrence = "moyenne", besoin = besoin,
-             visite_le = as.POSIXct(paste(jour, "09:00:00"), tz = "UTC"),
-             operateur = "P. O.", observations = NA_character_)
+controle <- function(uuid, placette, vivants, jour, besoin = "aucun",
+                     x = 600150, y = 6700100) {
+  sf::st_sf(uuid = uuid, placette_uuid = placette, nb_total = 20L,
+            nb_vivants = vivants, h_moy_cm = 40L, nb_abroutis = 1L,
+            concurrence = "moyenne", besoin = besoin,
+            visite_le = as.POSIXct(paste(jour, "09:00:00"), tz = "UTC"),
+            operateur = "P. O.", observations = NA_character_,
+            geometry = sf::st_sfc(sf::st_point(c(x, y)), crs = 2154))
 }
 
 carre <- function(x0, y0, cote) {
@@ -147,7 +149,7 @@ test_that("la tournee s'importe dans l'ordre, une seule fois", {
     dernier_besoin = NA_character_,
     geometry = sf::st_sfc(sf::st_point(c(600400, 6700100)), crs = 2154)))
   saisir(dossier, "controles", rbind(
-    controle(u$k1, u$placette, 20, "2026-03-02"),
+    controle(u$k1, u$placette, 20, "2026-03-02", x = 600400, y = 6700100),
     controle(u$k2, f$placette, 18, "2026-06-12", besoin = "aucun")
   ))
   file.copy(testthat::test_path("fixtures", "photo-exif-ii.jpg"),
@@ -227,4 +229,35 @@ test_that("une tournee fautive n'ecrit rien et dit tout", {
   expect_match(erreur, "travaux suivis inconnus")
   expect_match(erreur, "Plus de plants vivants")
   expect_equal(sommier_verifier(con, f$foret)$hash_tete, avant)
+})
+
+test_that("un controle saisi depuis sa couche se rattache a la placette proche", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.")
+  # Sans placette choisie : a 5 m de P12-01, il s'y rattache.
+  k <- uuid_v4()
+  saisir(dossier, "controles", controle(k, NA_character_, 18, "2026-06-12",
+                                        x = 600153, y = 6700104))
+  bilan <- sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                           withr::local_tempdir(),
+                                           auteur = "test")
+  expect_equal(bilan$controles, 1L)
+  p <- DBI::dbGetQuery(con, "SELECT placette_id::text AS p
+                               FROM v_controle_plantation WHERE id = $1",
+                       params = list(k))$p
+  expect_equal(p, f$placette)
+
+  # A 40 m de toute placette : refuse, et rien n'est ecrit.
+  autre <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(con, f$foret, autre, "P. O.")
+  saisir(autre, "controles", controle(uuid_v4(), NA_character_, 18,
+                                      "2026-06-13", x = 600150, y = 6700140))
+  expect_error(sommier_importer_qfield_travaux(con, f$foret, autre,
+                                               withr::local_tempdir(),
+                                               auteur = "test"),
+               "aucune placette choisie, ni a moins de 15 m")
 })

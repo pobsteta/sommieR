@@ -814,7 +814,9 @@ COUCHES_T = [
                             ("materialisation", TEXTE), ("ug", TEXTE),
                             ("etat_suivi", TEXTE), ("dernier_controle", DATE),
                             ("dernier_besoin", TEXTE)]),
-    ("controles", "NoGeometry", [("uuid", TEXTE), ("placette_uuid", TEXTE),
+    # Le controle a une position : ajoute depuis la couche, et non depuis la
+    # fiche d'une placette, il s'y rattache par la plus proche.
+    ("controles", "Point", [("uuid", TEXTE), ("placette_uuid", TEXTE),
                                  ("nb_total", ENTIER), ("nb_vivants", ENTIER),
                                  ("h_moy_cm", ENTIER), ("nb_abroutis", ENTIER),
                                  ("concurrence", TEXTE), ("besoin", TEXTE),
@@ -1032,7 +1034,22 @@ def travaux():
     champ = controles.fields().indexOf
     widget(controles, "uuid", "Hidden")
     defaut(controles, "uuid", "uuid('WithoutBraces')")
-    widget(controles, "placette_uuid", "Hidden")
+    controles.setRenderer(controles.renderer().__class__(
+        QgsMarkerSymbol.createSimple({"name": "cross", "color": "#1565C0",
+                                      "size": "3"})))
+    # La placette : celle de la fiche d'ou l'on ajoute le controle, sinon la
+    # plus proche a 15 m ; on peut la choisir dans la liste. Obligatoire.
+    widget(controles, "placette_uuid", "ValueRelation", {
+        "Layer": placettes.id(), "LayerName": placettes.name(),
+        "Key": "uuid", "Value": "code_placette", "OrderByValue": True,
+        "AllowNull": False, "UseCompleter": True})
+    defaut(controles, "placette_uuid", (
+        "coalesce(\"placette_uuid\","
+        "array_first(overlay_nearest('travaux_placettes', \"uuid\", "
+        "limit:=1, max_distance:=15)))"), a_la_mise_a_jour=True)
+    controles.setFieldConstraint(champ("placette_uuid"),
+                                 QgsFieldConstraints.ConstraintNotNull,
+                                 QgsFieldConstraints.ConstraintStrengthHard)
     for n in ("nb_total", "nb_vivants"):
         widget(controles, n, "Range", {"AllowNull": False, "Min": 0,
                                        "Max": 10000, "Step": 1,
@@ -1073,7 +1090,8 @@ def travaux():
     widget(controles, "operateur", "TextEdit")
     defaut(controles, "operateur", "@operateur")
     widget(controles, "observations", "TextEdit", {"IsMultiline": True})
-    for n, alias in (("nb_total", "Plants comptés"),
+    for n, alias in (("placette_uuid", "Placette"),
+                     ("nb_total", "Plants comptés"),
                      ("nb_vivants", "Vivants"),
                      ("h_moy_cm", "Hauteur moyenne (cm)"),
                      ("nb_abroutis", "Abroutis"),
@@ -1177,9 +1195,9 @@ def travaux():
     config.setLayout(QgsEditFormConfig.TabLayout)
     racine = config.invisibleRootContainer()
     racine.clear()
-    for n in ("nb_total", "nb_vivants", "h_moy_cm", "nb_abroutis",
-              "concurrence", "besoin", "visite_le", "operateur",
-              "observations"):
+    for n in ("placette_uuid", "nb_total", "nb_vivants", "h_moy_cm",
+              "nb_abroutis", "concurrence", "besoin", "visite_le",
+              "operateur", "observations"):
         racine.addChildElement(QgsAttributeEditorField(n, champ(n), racine))
     racine.addChildElement(QgsAttributeEditorRelation(
         relations_photos[controles.id()], racine))
@@ -1211,7 +1229,7 @@ def travaux():
     projet.addMapLayer(locale)
 
     racine_arbre = projet.layerTreeRoot()
-    for cachee in (photos, controles, suivis, codes):
+    for cachee in (photos, suivis, codes):
         noeud = racine_arbre.findLayer(cachee.id())
         if noeud is not None:
             noeud.setItemVisibilityChecked(False)

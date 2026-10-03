@@ -12,6 +12,12 @@ Travaux, lot 2 : le terrain, avec QField (brief `travaux-1`).
   dernier contrôle : besoin signalé, sans besoin, jamais contrôlée. On les
   contrôle en ajoutant un contrôle à la placette ; on en installe une
   nouvelle en plaçant un point, rattaché à des travaux d'une unité.
+- **Un contrôle a une position, et choisit sa placette.** Ajouté depuis la
+  fiche d'une placette, il s'y rattache ; ajouté depuis la couche des
+  contrôles, il propose la placette la plus proche à 15 m, qu'on peut changer
+  dans la liste, et ne s'enregistre pas sans placette. À l'import, un contrôle
+  sans placette est rattaché à la plus proche de sa position, à 15 m près, ou
+  refusé.
 - **`sommier_importer_qfield_travaux()`** relit la tournée et inscrit, en une
   transaction et dans cet ordre, les travaux, les placettes, puis les
   contrôles : une placette peut suivre une plantation relevée le jour même,
