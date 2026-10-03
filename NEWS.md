@@ -1,3 +1,10 @@
+# sommieR 0.31.1
+
+- **Une tournée de travaux de l'ancien format s'importe.** Un projet engendré
+  avant la 0.31.0 n'a pas de position aux contrôles ; l'import plantait sur
+  le rattachement à la placette la plus proche. La placette saisie y fait foi ;
+  sans placette, le contrôle est refusé.
+
 # sommieR 0.31.0
 
 Travaux, lot 2 : le terrain, avec QField (brief `travaux-1`).

@@ -261,3 +261,32 @@ test_that("un controle saisi depuis sa couche se rattache a la placette proche",
                                                auteur = "test"),
                "aucune placette choisie, ni a moins de 15 m")
 })
+
+test_that("une tournee de l'ancien format, sans position aux controles, s'importe", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.")
+  # Les controles d'avant la v0.31.0 : une table, sans geometrie.
+  k <- uuid_v4()
+  sf::st_write(sf::st_drop_geometry(controle(k, f$placette, 18, "2026-06-12")),
+               file.path(dossier, "travaux.gpkg"), layer = "controles",
+               delete_layer = TRUE, quiet = TRUE)
+  bilan <- sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                           withr::local_tempdir(),
+                                           auteur = "test")
+  expect_equal(bilan$controles, 1L)
+  # Sans placette ni position, il est refuse.
+  autre <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(con, f$foret, autre, "P. O.")
+  sf::st_write(sf::st_drop_geometry(controle(uuid_v4(), NA_character_, 18,
+                                             "2026-06-13")),
+               file.path(autre, "travaux.gpkg"), layer = "controles",
+               delete_layer = TRUE, quiet = TRUE)
+  expect_error(sommier_importer_qfield_travaux(con, f$foret, autre,
+                                               withr::local_tempdir(),
+                                               auteur = "test"),
+               "aucune placette choisie")
+})
