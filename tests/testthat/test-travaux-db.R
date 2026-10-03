@@ -106,3 +106,81 @@ test_that("v_travaux ne compte que les interventions, anciennes comprises", {
   ga <- sommier_gestion_anterieure(con, f$foret)
   expect_equal(sum(ga$sections$travaux$n), 2)
 })
+
+test_that("le suivi rend la reprise par age, et ce qu'il reste a programmer", {
+  con <- base_travaux()
+  f <- foret_travaux(con)
+  ids <- vapply(1:2, function(i) {
+    sommier_installer_placette(con, f$plantation, sprintf("P35-0%d", i),
+                               geom_point(4.93, 47.26), "agent-01",
+                               date_evenement = "2022-12-02")[[1L]]$id
+  }, character(1))
+  sommier_controler_placette(con, ids[[1L]], 20, 14, "agent-01",
+                             visite_le = "2023-06-11T09:00:00Z", besoin = "RG")
+  sommier_controler_placette(con, ids[[2L]], 20, 16, "agent-01",
+                             visite_le = "2023-06-12T09:00:00Z", besoin = "DG")
+  sommier_controler_placette(con, ids[[1L]], 20, 18, "agent-01",
+                             visite_le = "2025-06-11T09:00:00Z",
+                             besoin = "aucun")
+
+  s <- sommier_suivi_plantations(con, f$foret)
+  expect_equal(s$age_ans, c(1L, 3L))
+  expect_equal(s$n_placettes, c(2L, 1L))
+  # n+1 : 70 % et 80 %, soit 75 % en moyenne ; RG et DG signales.
+  expect_equal(s$taux_reprise_pct, c(75, 90))
+  expect_equal(s$besoins, c("DG, RG", NA))
+
+  # La premiere placette n'a plus de besoin a son dernier controle ; la
+  # seconde garde le sien.
+  a <- placettes_a_programmer(con, f$foret)
+  expect_equal(a$code_placette, "P35-02")
+  expect_equal(a$besoin, "DG")
+
+  i <- sommier_indicateurs_ug(con, f$foret)
+  # Dernier controle de chaque placette : 90 % et 80 %.
+  expect_equal(i$dernier_taux_reprise_pct[i$uuid == f$ug[["a"]]], 85)
+  expect_true(is.na(i$dernier_taux_reprise_pct[i$uuid == f$ug[["b"]]]))
+})
+
+test_that("le bilan des travaux range par famille et par ecart au prevu", {
+  con <- base_travaux()
+  f <- foret_travaux(con)
+  DBI::dbExecute(con,
+    "INSERT INTO ug_geometrie (ug_uuid, version, geom, source, date_debut)
+     VALUES ($1, 1, ST_Multi(ST_GeomFromText('POLYGON((600000 6700000,
+       600200 6700000, 600200 6700100, 600000 6700100, 600000 6700000))',
+       2154)), 'test', '2010-01-01')", params = list(f$ug[["a"]]))
+  ecrire <- function(payload, date, unite = NULL) {
+    sommier_ajouter(con, sommier_entree(
+      foret_id = f$foret, registre = 6L, date_evenement = date,
+      auteur = "agent-01", ug_uuid = unite, payload = payload))
+  }
+  ecrire(registre6_travaux(2023, "degagement", code_travaux = "DG",
+                           quantite = 1.5, unite = "ha", montant_eur = 600,
+                           prevu = "non_prevu", motif_ecart = "Ronce"),
+         "2023-06-01", f$ug[["a"]])
+  ecrire(registre6_travaux(2023, "cloture", code_travaux = "PG", quantite = 300,
+                           unite = "m", montant_eur = 1800, prevu = "prevu"),
+         "2023-09-01", f$ug[["a"]])
+  ecrire(registre6_travaux(2023, "fosses", code_travaux = "DS", quantite = 100,
+                           unite = "m", montant_eur = 500, prevu = "prevu"),
+         "2023-10-01")
+
+  b <- sommier_bilan_travaux(con, f$foret, "2023-01-01", "2023-12-31")
+  cout <- b$cout[b$cout$ug == "35", ]
+  expect_equal(sort(cout$famille), c("education", "protection"))
+  # L'unite fait 2 ha : 600 EUR de degagement, soit 300 EUR/ha.
+  expect_equal(cout$cout_ha_eur[cout$famille == "education"], 300)
+  expect_equal(b$hors_ug_eur, 500)
+  p <- b$prevu
+  expect_equal(p$hectares[p$prevu == "non_prevu"], 1.5)
+  # Cloture et fosses en metres : prevus, sans hectare.
+  expect_equal(p$n_sans_hectares[p$prevu == "prevu"], 2L)
+  # Hors periode, rien.
+  vide <- sommier_bilan_travaux(con, f$foret, "2030-01-01", "2030-12-31")
+  expect_equal(nrow(vide$cout), 0L)
+
+  i <- sommier_indicateurs_ug(con, f$foret)
+  # 2 400 EUR dans l'unite a sa plantation pres (sans montant) : 1 200 EUR/ha.
+  expect_equal(i$cout_travaux_ha[i$uuid == f$ug[["a"]]], 1200)
+})

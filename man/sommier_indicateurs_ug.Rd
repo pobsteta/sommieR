@@ -15,7 +15,11 @@ sommier_indicateurs_ug(con, foret_id, debut = NULL, fin = NULL)
 }
 \value{
 Un \code{data.frame} : \code{uuid}, \code{n_entrees}, \code{volume_martele_m3},
-\code{surface_coupee_ha}, \code{montant_travaux_eur}, \code{n_travaux}.
+\code{surface_coupee_ha}, \code{montant_travaux_eur}, \code{n_travaux},
+\code{cout_travaux_ha} (montant rapporte a la surface du contour en vigueur)
+et \code{dernier_taux_reprise_pct} (moyenne, sur les placettes de l'unite,
+du taux de reprise a leur dernier controle de la periode ; \code{NA} sans
+placette).
 }
 \description{
 Agrege par unite de gestion, sur une periode, ce que le sommier permet de

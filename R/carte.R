@@ -84,7 +84,11 @@ sommier_geometrie_ug <- function(con, foret_id, a_la_date = Sys.Date()) {
 #' @param debut,fin Bornes de la periode (`NULL` : sans borne).
 #'
 #' @return Un `data.frame` : `uuid`, `n_entrees`, `volume_martele_m3`,
-#'   `surface_coupee_ha`, `montant_travaux_eur`, `n_travaux`.
+#'   `surface_coupee_ha`, `montant_travaux_eur`, `n_travaux`,
+#'   `cout_travaux_ha` (montant rapporte a la surface du contour en vigueur)
+#'   et `dernier_taux_reprise_pct` (moyenne, sur les placettes de l'unite,
+#'   du taux de reprise a leur dernier controle de la periode ; `NA` sans
+#'   placette).
 #'
 #' @seealso [sommier_geometrie_ug()]
 #'
@@ -108,8 +112,27 @@ sommier_indicateurs_ug <- function(con, foret_id, debut = NULL, fin = NULL) {
             coalesce(c.volume_martele_m3, 0)   AS volume_martele_m3,
             coalesce(c.surface_coupee_ha, 0)   AS surface_coupee_ha,
             coalesce(t.montant_travaux_eur, 0) AS montant_travaux_eur,
-            coalesce(t.n_travaux, 0)           AS n_travaux
+            coalesce(t.n_travaux, 0)           AS n_travaux,
+            -- v0.30.0, en fin : le cout a l'hectare de l'unite, et la reprise
+            -- au dernier controle de chacune de ses placettes.
+            (coalesce(t.montant_travaux_eur, 0) /
+               NULLIF(ST_Area(g.geom) / 10000, 0))::float8 AS cout_travaux_ha,
+            r.dernier_taux_reprise_pct
        FROM ug u
+       LEFT JOIN LATERAL (
+         SELECT geom FROM ug_geometrie WHERE ug_uuid = u.uuid
+          ORDER BY (date_fin IS NULL) DESC, version DESC LIMIT 1
+       ) g ON TRUE
+       LEFT JOIN (
+         SELECT ug_uuid,
+                round(avg(taux_reprise_pct), 1)::float8 AS dernier_taux_reprise_pct
+           FROM (SELECT DISTINCT ON (placette_id) ug_uuid, taux_reprise_pct
+                   FROM v_controle_plantation
+                  WHERE foret_id = $1
+                    AND visite_le BETWEEN $2::date AND $3::date
+                  ORDER BY placette_id, visite_le DESC, seq DESC) d
+          GROUP BY ug_uuid
+       ) r ON r.ug_uuid = u.uuid
        LEFT JOIN (
          SELECT ug_uuid, count(*) AS n_entrees
            FROM v_entree_courante

@@ -1430,7 +1430,9 @@ if (nrow(r5) == 1L && r5$n_transcrit > 0) {
 
 ## Travaux {#sec-travaux}
 
-Le taux de reprise est celui relevé au contrôle des plantations.
+La reprise d'une plantation se mesure sur des placettes permanentes,
+contrôlées à n+1, n+3 et n+5 ; le taux de l'imprimé A50J ne figure que pour
+les travaux transcrits de l'existant.
 
 ```{r travaux, results='asis'}
 tableau("travaux", "Travaux réalisés sur la période, par année et nature, avec les unités concernées")
@@ -1442,6 +1444,156 @@ dessiner(carte$montant_travaux_eur,
                              euros(carte$montant_travaux_eur), " ",
                              symbole_euro),
          legende = "Travaux", unite = symbole_euro)
+```
+
+```{r travaux-preparation}
+suivi <- rapport$suivi_plantations
+bt <- rapport$bilan_travaux
+a_programmer <- rapport$a_programmer
+libelle_code <- function(code) {
+  l <- rapport$codes_travaux$libelle[match(code, rapport$codes_travaux$code)]
+  ifelse(is.na(l), code, paste0(code, " — ", l))
+}
+```
+
+```{r travaux-reprise-titre, results='asis', eval=!is.null(suivi)}
+cat("### Suivi des plantations\n\n")
+cat(length(unique(suivi$travaux_id)), " plantation(s) suivie(s) sur ",
+    sum(tapply(suivi$n_placettes, suivi$travaux_id, max)),
+    " placette(s). Chaque point est la moyenne des placettes contrôlées à cet ",
+    "âge ; la ligne pointillée marque le seuil de ",
+    rapport$seuil_reprise, " %, sous lequel une plantation appelle un ",
+    "regarni.\n\n", sep = "")
+```
+
+```{r travaux-reprise, fig.height=3.4, fig.width=7, fig.cap="Taux de reprise par âge de plantation, une ligne par plantation suivie.", eval=!is.null(suivi)}
+plantations <- unique(suivi[, c("travaux_id", "ug", "annee_travaux")])
+couleurs <- grDevices::hcl.colors(max(3L, nrow(plantations)), "Dark 3")
+op <- par(mar = c(4, 4.5, 1, 9), cex = 0.85, xpd = FALSE)
+plot(NA, xlim = c(0, max(5, suivi$age_ans, na.rm = TRUE)),
+     ylim = c(min(50, suivi$taux_reprise_pct, na.rm = TRUE), 100),
+     xlab = "Âge de la plantation (ans)", ylab = "Taux de reprise (%)",
+     panel.first = grid(col = "grey90", lty = 1))
+abline(h = rapport$seuil_reprise, lty = 2, col = "grey40")
+for (k in seq_len(nrow(plantations))) {
+  x <- suivi[suivi$travaux_id == plantations$travaux_id[[k]], , drop = FALSE]
+  x <- x[order(x$age_ans), , drop = FALSE]
+  lines(x$age_ans, x$taux_reprise_pct, lwd = 2, col = couleurs[[k]])
+  points(x$age_ans, x$taux_reprise_pct, pch = 19, col = couleurs[[k]])
+}
+par(xpd = TRUE)
+legend(par("usr")[2] + 0.3, par("usr")[4],
+       legend = paste0("UG ", plantations$ug, " (", plantations$annee_travaux, ")"),
+       col = couleurs[seq_len(nrow(plantations))], lwd = 2, pch = 19,
+       bty = "n", cex = 0.9)
+par(op)
+```
+
+```{r travaux-suivi-tableau, results='asis', eval=!is.null(suivi)}
+t <- data.frame(
+  `Unité` = suivi$ug, Plantation = as.character(suivi$annee_travaux),
+  `Âge (ans)` = as.character(suivi$age_ans),
+  Placettes = as.character(suivi$n_placettes),
+  `Reprise (%)` = nombre(suivi$taux_reprise_pct),
+  `Densité (tiges/ha)` = nombre(suivi$densite_ha, 0L),
+  `Hauteur (cm)` = nombre(suivi$h_moy_cm, 0L),
+  `Abroutis (%)` = nombre(suivi$abroutis_pct),
+  Besoins = ifelse(is.na(suivi$besoins), "—", suivi$besoins),
+  check.names = FALSE, stringsAsFactors = FALSE
+)
+print(knitr::kable(t, caption = "Mesures des placettes, par plantation et par âge",
+                   align = c("l", "l", rep("r", 6), "l")))
+cat("\n\n")
+```
+
+```{r travaux-programmer, results='asis', eval=!is.null(a_programmer)}
+cat("### À programmer\n\n")
+cat("Les placettes dont le dernier contrôle signale un besoin. Un état ",
+    "courant : il n'est pas borné par la période du rapport.\n\n", sep = "")
+t <- data.frame(
+  `Unité` = a_programmer$ug, Placette = a_programmer$code_placette,
+  `Dernier contrôle` = format(as.Date(a_programmer$visite_le), "%d/%m/%Y"),
+  `Âge (ans)` = as.character(a_programmer$age_ans),
+  `Reprise (%)` = nombre(a_programmer$taux_reprise_pct),
+  `Abroutis (%)` = nombre(a_programmer$abroutis_pct),
+  Concurrence = ifelse(is.na(a_programmer$concurrence), "—",
+                       a_programmer$concurrence),
+  Besoin = libelle_code(a_programmer$besoin),
+  check.names = FALSE, stringsAsFactors = FALSE
+)
+print(knitr::kable(t, caption = "Travaux à programmer d'après les placettes",
+                   align = c("l", "l", "l", "r", "r", "r", "l", "l")))
+cat("\n\n")
+```
+
+```{r travaux-cout-titre, results='asis', eval=!is.null(bt) && nrow(bt$cout) > 0L && sum(bt$cout$montant_eur, na.rm = TRUE) > 0}
+cat("### Coût à l'hectare\n\n")
+cat("Le montant cumulé des travaux de chaque unité, rapporté à la surface de ",
+    "son contour, par famille de travaux. Les travaux inscrits avant le code ",
+    "des travaux sont rangés « non codés ».",
+    if (bt$hors_ug_eur > 0) paste0(" Les travaux hors unité de gestion (",
+      euros(bt$hors_ug_eur), " ", symbole_euro, ") n'y figurent pas."),
+    "\n\n", sep = "")
+```
+
+```{r travaux-cout, fig.height=3.6, fig.width=7, fig.cap="Coût cumulé des travaux à l'hectare, par unité de gestion et par famille.", eval=!is.null(bt) && nrow(bt$cout) > 0L && sum(bt$cout$montant_eur, na.rm = TRUE) > 0}
+c0 <- bt$cout[!is.na(bt$cout$cout_ha_eur) & bt$cout$cout_ha_eur > 0, ]
+familles <- sort(unique(c0$famille))
+ugs <- sort(unique(c0$ug))
+m <- matrix(0, nrow = length(familles), ncol = length(ugs),
+            dimnames = list(familles, ugs))
+for (i in seq_len(nrow(c0))) m[c0$famille[[i]], c0$ug[[i]]] <- c0$cout_ha_eur[[i]]
+couleurs <- grDevices::hcl.colors(length(familles), "Set 2")
+op <- par(mar = c(4, 4.5, 1, 9), cex = 0.85)
+barplot(m, col = couleurs, border = NA, las = 2,
+        ylab = paste0("Coût cumulé (", symbole_euro, "/ha)"),
+        xlab = "", panel.first = grid(nx = NA, ny = NULL, col = "grey90", lty = 1))
+mtext("Unité de gestion", side = 1, line = 3, cex = 0.85)
+par(xpd = TRUE)
+libelles_familles <- c(preparation = "préparation", plantation = "plantation",
+                       protection = "protection", education = "éducation",
+                       regeneration = "régénération",
+                       biodiversite = "biodiversité", desserte = "desserte",
+                       parcellaire = "parcellaire", non_codee = "non codée")
+legend(par("usr")[2] + 0.3, par("usr")[4],
+       legend = ifelse(is.na(libelles_familles[familles]), familles,
+                       libelles_familles[familles]),
+       fill = couleurs, border = NA, bty = "n", cex = 0.9)
+par(op)
+```
+
+```{r travaux-prevu-titre, results='asis', eval=!is.null(bt) && nrow(bt$prevu) > 0L && sum(bt$prevu$hectares) > 0}
+cat("### Prévu, reporté, non prévu\n\n")
+sans <- sum(bt$prevu$n_sans_hectares)
+cat("Les hectares traités chaque année, selon que l'intervention était prévue ",
+    "par le document de gestion, reportée d'un autre exercice, ou non prévue. ",
+    "« Non renseigné » : des travaux inscrits avant que le registre le demande.",
+    if (sans > 0) paste0(" ", sans, " intervention(s) mesurée(s) autrement ",
+      "qu'en hectares (mètres de clôture, tiges) n'y figurent pas."),
+    "\n\n", sep = "")
+```
+
+```{r travaux-prevu, fig.height=3.2, fig.width=7, fig.cap="Hectares traités par année, selon l'écart au prévu.", eval=!is.null(bt) && nrow(bt$prevu) > 0L && sum(bt$prevu$hectares) > 0}
+etats <- c("prevu", "reporte", "non_prevu", "non_renseigne")
+libelles <- c("prévu", "reporté", "non prévu", "non renseigné")
+couleurs <- c("#2E7D32", "#F9A825", "#C62828", "#BDBDBD")
+annees <- sort(unique(bt$prevu$annee))
+m <- matrix(0, nrow = length(etats), ncol = length(annees),
+            dimnames = list(etats, annees))
+for (i in seq_len(nrow(bt$prevu))) {
+  m[bt$prevu$prevu[[i]], as.character(bt$prevu$annee[[i]])] <- bt$prevu$hectares[[i]]
+}
+# Une annee qui n'a traite que des metres ou des tiges n'a rien a montrer ici.
+garde <- rowSums(m) > 0
+m <- m[, colSums(m) > 0, drop = FALSE]
+op <- par(mar = c(4, 4.5, 1, 9), cex = 0.85)
+barplot(m[garde, , drop = FALSE], col = couleurs[garde], border = NA,
+        ylab = "Hectares traités", xlab = "Année",
+        panel.first = grid(nx = NA, ny = NULL, col = "grey90", lty = 1))
+par(xpd = TRUE)
+legend(par("usr")[2] + 0.3, par("usr")[4], legend = libelles[garde],
+       fill = couleurs[garde], border = NA, bty = "n", cex = 0.9)
+par(op)
 ```
 
 ## Évènements marquants {#sec-evenements}
