@@ -199,6 +199,16 @@ test_that("le rapport Quarto se rend et porte l'empreinte de tete", {
   carte <- regexpr("Patrimoine remarquable localis", html, fixed = TRUE)
   expect_true(titre > 0L && carte > titre)
 
+  # Le suivi des plantations de l'UG 35 : la courbe, et la seule placette dont
+  # le dernier controle signale encore un besoin.
+  expect_match(html, "Suivi des plantations", fixed = TRUE)
+  expect_match(html, "Taux de reprise par", fixed = TRUE)
+  expect_match(html, "<td style=\"text-align: left;\">P35-03</td>", fixed = TRUE)
+  expect_no_match(html, "<td style=\"text-align: left;\">P35-01</td>",
+                  fixed = TRUE)
+  expect_match(html, "Coût cumulé des travaux", fixed = TRUE)
+  expect_match(html, "Hectares traités par année", fixed = TRUE)
+
   # Les especes observees : hors registre, nommees dans TAXREF, citees.
   expect_match(html, "Espèces observées dans la forêt", fixed = TRUE)
   expect_match(html, "TAXREF v18.0", fixed = TRUE)

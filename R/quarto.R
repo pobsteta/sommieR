@@ -163,6 +163,15 @@ sommier_rapport_quarto <- function(con, foret_id, chemin, format = "html",
       n = nrow(coupes_detectees)
     ),
     especes_observees = valider_especes_observees(especes_observees, public),
+    # Le suivi des plantations et ce qu'il reste a programmer sont des etats
+    # courants ; le cout et l'ecart au prevu se bornent a la periode.
+    suivi_plantations = essayer_section(sommier_suivi_plantations(con, foret_id)),
+    a_programmer    = essayer_section(placettes_a_programmer(con, foret_id)),
+    bilan_travaux   = essayer_section(sommier_bilan_travaux(
+      con, foret_id, debut = debut, fin = fin
+    )),
+    seuil_reprise   = SOMMIER_SEUIL_REPRISE_PCT,
+    codes_travaux   = SOMMIER_CODES_TRAVAUX,
     version_sommier = as.character(utils::packageVersion("sommieR")),
     edite_le        = format(Sys.Date(), "%d/%m/%Y")
   )

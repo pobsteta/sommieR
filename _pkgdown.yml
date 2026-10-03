@@ -98,6 +98,9 @@ reference:
     - registre6_depuis_payload
     - sommier_installer_placette
     - sommier_controler_placette
+    - sommier_suivi_plantations
+    - sommier_bilan_travaux
+    - SOMMIER_SEUIL_REPRISE_PCT
     - SOMMIER_CODES_TRAVAUX
     - SOMMIER_TYPES_TRAVAUX
     - SOMMIER_EXECUTIONS_TRAVAUX
