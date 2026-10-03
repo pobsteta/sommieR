@@ -288,6 +288,11 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
 RAYON_RATTACHEMENT_M <- 15
 
 rattacher_controles <- function(controles, placettes) {
+  # Un projet engendre avant la v0.31.0 n'a pas de position aux controles :
+  # la placette saisie fait foi, a defaut l'import refuse.
+  if (!inherits(controles, "sf")) {
+    return(as.data.frame(controles))
+  }
   manquants <- is.na(controles$placette_uuid) &
     !sf::st_is_empty(sf::st_geometry(controles))
   if (any(manquants) && nrow(placettes) > 0L) {
