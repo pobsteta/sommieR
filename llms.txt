@@ -599,6 +599,10 @@ le suivi des plantations sur placettes permanentes.
   : Bilan des travaux : cout a l'hectare et ecart au prevu
 - [`SOMMIER_SEUIL_REPRISE_PCT`](https://pobsteta.github.io/sommieR/reference/SOMMIER_SEUIL_REPRISE_PCT.md)
   : Seuil de reprise d'une plantation
+- [`sommier_projet_qfield_travaux()`](https://pobsteta.github.io/sommieR/reference/sommier_projet_qfield_travaux.md)
+  : Projet QField pour les travaux et le suivi des plantations
+- [`sommier_importer_qfield_travaux()`](https://pobsteta.github.io/sommieR/reference/sommier_importer_qfield_travaux.md)
+  : Import d'une tournee de travaux et de suivi des plantations
 - [`SOMMIER_CODES_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_CODES_TRAVAUX.md)
   : Codes des travaux sylvicoles
 - [`SOMMIER_TYPES_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_TRAVAUX.md)

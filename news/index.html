@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.30.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.31.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,19 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.31.0" id="sommier-0310">sommieR 0.31.0<a class="anchor" aria-label="anchor" href="#sommier-0310"></a></h2>
+<p>Travaux, lot 2 : le terrain, avec QField (brief <code>travaux-1</code>).</p>
+<ul><li>
+<strong><code><a href="../reference/sommier_projet_qfield_travaux.html">sommier_projet_qfield_travaux()</a></code></strong> écrit un troisième projet de terrain, à côté des limites et des détections. On y relève les travaux faits, chacun dessiné en surface, en ligne ou en point selon son code ; la couche des surfaces ne propose que les codes qui admettent une surface, et l’unité par défaut est la première du code. Les codes viennent de <code>SOMMIER_CODES_TRAVAUX</code>, écrits à chaque projet.</li>
+<li>
+<strong>Les placettes déjà installées sont dans le projet</strong>, colorées selon leur dernier contrôle : besoin signalé, sans besoin, jamais contrôlée. On les contrôle en ajoutant un contrôle à la placette ; on en installe une nouvelle en plaçant un point, rattaché à des travaux d’une unité.</li>
+<li>
+<strong>Un contrôle a une position, et choisit sa placette.</strong> Ajouté depuis la fiche d’une placette, il s’y rattache ; ajouté depuis la couche des contrôles, il propose la placette la plus proche à 15 m, qu’on peut changer dans la liste, et ne s’enregistre pas sans placette. À l’import, un contrôle sans placette est rattaché à la plus proche de sa position, à 15 m près, ou refusé.</li>
+<li>
+<strong><code><a href="../reference/sommier_importer_qfield_travaux.html">sommier_importer_qfield_travaux()</a></code></strong> relit la tournée et inscrit, en une transaction et dans cet ordre, les travaux, les placettes, puis les contrôles : une placette peut suivre une plantation relevée le jour même, un contrôle porter sur une placette qui vient d’être installée. Tout ou rien : une saisie fautive (code qui n’admet pas la forme de la couche, écart au prévu sans motif, placette sans travaux connus, plus de vivants que de plants) fait échouer l’import, qui les liste toutes. Rejouable par l’UUID de chaque saisie. L’unité d’une intervention est celle qui contient sa géométrie ; les photos sont déposées sous leur empreinte.</li>
+<li>Le modèle <code>inst/qgis/travaux.qgs</code> est produit par <code>data-raw/qfield_modele.py travaux</code> (QGIS 3.40 ou plus, QField 4.3).</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.30.0" id="sommier-0300">sommieR 0.30.0<a class="anchor" aria-label="anchor" href="#sommier-0300"></a></h2>
 <p>Travaux, lot 3 : les indicateurs et le rapport (brief <code>travaux-1</code>).</p>
