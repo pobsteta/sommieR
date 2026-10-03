@@ -42,6 +42,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_REGISTRES_OUVERTS.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_REVETEMENTS.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_SCHEMA_VERSIONS.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_SEUIL_REPRISE_PCT.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_SEUIL_TGB_CM.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_SOURCES_REPRISE.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/SOMMIER_STATUTS_TSA.html</loc></url>
@@ -115,6 +116,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_balance_possibilite.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_balance_surface.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_bilan_financier.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_bilan_travaux.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_chainer.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_contours_detections.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_controler_placette.html</loc></url>
@@ -168,6 +170,7 @@
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_revoquer_mutations.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_ser.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_signataire.html</loc></url>
+<url><loc>https://pobsteta.github.io/sommieR/reference/sommier_suivi_plantations.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_taxref.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_valider_detection.html</loc></url>
 <url><loc>https://pobsteta.github.io/sommieR/reference/sommier_verifier.html</loc></url>

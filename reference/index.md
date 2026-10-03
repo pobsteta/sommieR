@@ -111,6 +111,12 @@ le suivi des plantations sur placettes permanentes.
   : Installer une placette de suivi
 - [`sommier_controler_placette()`](https://pobsteta.github.io/sommieR/reference/sommier_controler_placette.md)
   : Controler une placette de suivi
+- [`sommier_suivi_plantations()`](https://pobsteta.github.io/sommieR/reference/sommier_suivi_plantations.md)
+  : Suivi des plantations
+- [`sommier_bilan_travaux()`](https://pobsteta.github.io/sommieR/reference/sommier_bilan_travaux.md)
+  : Bilan des travaux : cout a l'hectare et ecart au prevu
+- [`SOMMIER_SEUIL_REPRISE_PCT`](https://pobsteta.github.io/sommieR/reference/SOMMIER_SEUIL_REPRISE_PCT.md)
+  : Seuil de reprise d'une plantation
 - [`SOMMIER_CODES_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_CODES_TRAVAUX.md)
   : Codes des travaux sylvicoles
 - [`SOMMIER_TYPES_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_TRAVAUX.md)

@@ -1,5 +1,31 @@
 # Changelog
 
+## sommieR 0.30.0
+
+Travaux, lot 3 : les indicateurs et le rapport (brief `travaux-1`).
+
+- **[`sommier_suivi_plantations()`](https://pobsteta.github.io/sommieR/reference/sommier_suivi_plantations.md)**
+  rend, par unité, par plantation suivie et par âge, la reprise, la
+  densité à l’hectare, la hauteur et la part d’abroutis, en moyenne des
+  placettes contrôlées, et les besoins signalés.
+- **[`sommier_bilan_travaux()`](https://pobsteta.github.io/sommieR/reference/sommier_bilan_travaux.md)**
+  rend le coût cumulé et le coût à l’hectare par unité et par famille de
+  travaux, et les hectares traités chaque année selon qu’ils étaient
+  prévus, reportés ou non prévus. Les hectares d’une intervention sont
+  sa quantité en hectares, à défaut l’aire de sa surface ; une
+  intervention mesurée en mètres ou en tiges est comptée à part.
+- **[`sommier_indicateurs_ug()`](https://pobsteta.github.io/sommieR/reference/sommier_indicateurs_ug.md)**
+  gagne `cout_travaux_ha` et `dernier_taux_reprise_pct`, en fin de
+  colonnes.
+- **Le Bilan de gestion** gagne, dans sa section Travaux : la reprise
+  par âge de plantation, une ligne par plantation et le seuil de 80 %
+  (`SOMMIER_SEUIL_REPRISE_PCT`) en pointillé ; le tableau des mesures
+  des placettes ; la liste « À programmer », les placettes dont le
+  dernier contrôle signale un besoin ; le coût à l’hectare par unité, en
+  barres empilées par famille ; les hectares prévus, reportés et non
+  prévus par année. Les travaux inscrits avant le code sont rangés « non
+  codés ».
+
 ## sommieR 0.29.0
 
 Le sommier imprimé : le registre lu comme le classeur A50 (lot 1 du

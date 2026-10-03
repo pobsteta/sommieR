@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.29.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.30.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,18 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.30.0" id="sommier-0300">sommieR 0.30.0<a class="anchor" aria-label="anchor" href="#sommier-0300"></a></h2>
+<p>Travaux, lot 3 : les indicateurs et le rapport (brief <code>travaux-1</code>).</p>
+<ul><li>
+<strong><code><a href="../reference/sommier_suivi_plantations.html">sommier_suivi_plantations()</a></code></strong> rend, par unité, par plantation suivie et par âge, la reprise, la densité à l’hectare, la hauteur et la part d’abroutis, en moyenne des placettes contrôlées, et les besoins signalés.</li>
+<li>
+<strong><code><a href="../reference/sommier_bilan_travaux.html">sommier_bilan_travaux()</a></code></strong> rend le coût cumulé et le coût à l’hectare par unité et par famille de travaux, et les hectares traités chaque année selon qu’ils étaient prévus, reportés ou non prévus. Les hectares d’une intervention sont sa quantité en hectares, à défaut l’aire de sa surface ; une intervention mesurée en mètres ou en tiges est comptée à part.</li>
+<li>
+<strong><code><a href="../reference/sommier_indicateurs_ug.html">sommier_indicateurs_ug()</a></code></strong> gagne <code>cout_travaux_ha</code> et <code>dernier_taux_reprise_pct</code>, en fin de colonnes.</li>
+<li>
+<strong>Le Bilan de gestion</strong> gagne, dans sa section Travaux : la reprise par âge de plantation, une ligne par plantation et le seuil de 80 % (<code>SOMMIER_SEUIL_REPRISE_PCT</code>) en pointillé ; le tableau des mesures des placettes ; la liste « À programmer », les placettes dont le dernier contrôle signale un besoin ; le coût à l’hectare par unité, en barres empilées par famille ; les hectares prévus, reportés et non prévus par année. Les travaux inscrits avant le code sont rangés « non codés ».</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.29.0" id="sommier-0290">sommieR 0.29.0<a class="anchor" aria-label="anchor" href="#sommier-0290"></a></h2>
 <p>Le sommier imprimé : le registre lu comme le classeur A50 (lot 1 du brief « Sommier »).</p>

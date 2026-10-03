@@ -27,7 +27,11 @@ sommier_indicateurs_ug(con, foret_id, debut = NULL, fin = NULL)
 ## Value
 
 Un `data.frame` : `uuid`, `n_entrees`, `volume_martele_m3`,
-`surface_coupee_ha`, `montant_travaux_eur`, `n_travaux`.
+`surface_coupee_ha`, `montant_travaux_eur`, `n_travaux`,
+`cout_travaux_ha` (montant rapporte a la surface du contour en vigueur)
+et `dernier_taux_reprise_pct` (moyenne, sur les placettes de l'unite, du
+taux de reprise a leur dernier controle de la periode ; `NA` sans
+placette).
 
 ## Details
 
