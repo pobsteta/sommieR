@@ -1,4 +1,4 @@
-"""Modeles des projets QGIS/QField de terrain : limites et detections.
+"""Modeles des projets QGIS/QField de terrain : limites, detections, travaux.
 
 Produit, une fois pour toutes, les fichiers que `sommier_projet_qfield()`
 copie a chaque tournee des limites :
@@ -10,7 +10,9 @@ copie a chaque tournee des limites :
 
 et ceux que `sommier_projet_qfield_detections()` copie a chaque tournee des
 detections : inst/qgis/detections.gpkg, detections.qgs et, s'il y a lieu,
-detections_attachments.zip.
+detections_attachments.zip ; et ceux que `sommier_projet_qfield_travaux()`
+copie a chaque tournee des travaux : inst/qgis/travaux.gpkg, travaux.qgs et,
+s'il y a lieu, travaux_attachments.zip.
 
 Pourquoi un script plutot qu'un .qgs ecrit a la main : un projet QGIS est un
 XML de plusieurs milliers de lignes, dont les formulaires, les relations et
@@ -22,6 +24,7 @@ A relancer apres toute modification, avec QGIS >= 3.40 (QField 4) :
 
     QT_QPA_PLATFORM=offscreen python3 data-raw/qfield_modele.py limites
     QT_QPA_PLATFORM=offscreen python3 data-raw/qfield_modele.py detections
+    QT_QPA_PLATFORM=offscreen python3 data-raw/qfield_modele.py travaux
 
 Chaque modele se regenere seul : un modele deja recette sur le terrain n'est
 pas reecrit quand on touche a l'autre.
@@ -788,14 +791,472 @@ def detections():
     print("Ecrit :", QGS_D, "et", GPKG_D)
 
 
+GPKG_T = os.path.join(SORTIE, "travaux.gpkg")
+QGS_T = os.path.join(SORTIE, "travaux.qgs")
+ENTIER = QMetaType.Type.Int
+
+# Les champs d'une intervention, communs aux trois couches de saisie : une
+# surface, une ligne, un point selon ce que le code admet.
+CHAMPS_TRAVAUX = [
+    ("uuid", TEXTE), ("code_travaux", TEXTE), ("nature_travaux", TEXTE),
+    ("annee", ENTIER), ("quantite", REEL), ("unite", TEXTE),
+    ("nb_plants", ENTIER), ("montant_eur", REEL), ("modalite", TEXTE),
+    ("essence_objectif", TEXTE), ("execution", TEXTE), ("intervenant", TEXTE),
+    ("prevu", TEXTE), ("motif_ecart", TEXTE), ("date_reception", DATE),
+    ("visite_le", INSTANT), ("operateur", TEXTE), ("precision_m", REEL),
+    ("source_gnss", TEXTE), ("observations", TEXTE)]
+COUCHES_T = [
+    ("travaux_surf", "Polygon", CHAMPS_TRAVAUX),
+    ("travaux_lin", "LineString", CHAMPS_TRAVAUX),
+    ("travaux_pt", "Point", CHAMPS_TRAVAUX),
+    ("placettes", "Point", [("uuid", TEXTE), ("code_placette", TEXTE),
+                            ("travaux_id", TEXTE), ("rayon_m", REEL),
+                            ("materialisation", TEXTE), ("ug", TEXTE),
+                            ("etat_suivi", TEXTE), ("dernier_controle", DATE),
+                            ("dernier_besoin", TEXTE)]),
+    ("controles", "NoGeometry", [("uuid", TEXTE), ("placette_uuid", TEXTE),
+                                 ("nb_total", ENTIER), ("nb_vivants", ENTIER),
+                                 ("h_moy_cm", ENTIER), ("nb_abroutis", ENTIER),
+                                 ("concurrence", TEXTE), ("besoin", TEXTE),
+                                 ("visite_le", INSTANT), ("operateur", TEXTE),
+                                 ("observations", TEXTE)]),
+    ("photos", "NoGeometry", [("uuid", TEXTE), ("constat_uuid", TEXTE),
+                              ("fichier", TEXTE), ("prise_le", INSTANT)]),
+    # Ecrites par R a chaque projet : les travaux qu'une placette peut suivre,
+    # et la nomenclature, tiree de SOMMIER_CODES_TRAVAUX.
+    ("suivis", "NoGeometry", [("id", TEXTE), ("libelle", TEXTE),
+                              ("ug", TEXTE)]),
+    ("codes", "NoGeometry", [("code", TEXTE), ("libelle", TEXTE),
+                             ("unites", TEXTE), ("formes", TEXTE)]),
+    ("foret", "MultiPolygon", [("nom", TEXTE)]),
+    ("ug", "MultiPolygon", [("numero", TEXTE)]),
+    ("parcelles", "MultiPolygon", [("reference", TEXTE),
+                                   ("designation", TEXTE)]),
+]
+
+# Les listes fermees : contrats avec SOMMIER_EXECUTIONS_TRAVAUX,
+# SOMMIER_PREVUS_TRAVAUX et SOMMIER_CONCURRENCES (R/registre6.R).
+EXECUTIONS_T = [("Régie", "regie"), ("Entreprise", "entreprise"),
+                ("Autre", "autre")]
+PREVUS_T = [("Prévu", "prevu"), ("Reporté", "reporte"),
+            ("Non prévu", "non_prevu")]
+CONCURRENCES_T = [("Faible", "faible"), ("Moyenne", "moyenne"),
+                  ("Forte", "forte")]
+# L'etat de suivi d'une placette, et sa couleur sur la carte.
+SUIVI_T = [("a_programmer", "Besoin signalé", "#E65100"),
+           ("a_jour", "Sans besoin", "#2E7D32"),
+           ("jamais", "Jamais contrôlée", "#757575"),
+           ("nouvelle", "Installée dans cette tournée", "#1565C0")]
+# Le type de geometrie de chaque couche de saisie, et le mot qui le dit dans
+# la colonne `formes` des codes.
+FORMES_T = {"travaux_surf": ("surface", "Travaux (surfaces)", "#6A1B9A"),
+            "travaux_lin": ("ligne", "Travaux (lignes)", "#AD1457"),
+            "travaux_pt": ("point", "Travaux (points)", "#4527A0")}
+
+
+def travaux():
+    ecrire_gpkg(COUCHES_T, GPKG_T)
+    projet = QgsProject.instance()
+    projet.clear()
+    projet.setFileName(QGS_T)
+    projet.setCrs(L93)
+    projet.setTitle("@@TITRE@@")
+    projet.writeEntryBool("Paths", "/Absolute", False)
+
+    def c_(nom, titre):
+        return couche(nom, titre, GPKG_T, "travaux_")
+
+    # --- Donnees en lecture seule --------------------------------------
+    foret = c_("foret", "Forêt")
+    foret.setRenderer(foret.renderer().__class__(QgsFillSymbol.createSimple(
+        {"style": "no", "outline_color": "#1B5E20", "outline_width": "0.8"})))
+    ug = c_("ug", "Unités de gestion")
+    ug.setRenderer(ug.renderer().__class__(QgsFillSymbol.createSimple(
+        {"style": "no", "outline_color": "#33691E", "outline_width": "0.3"})))
+    etiqueter(ug, "numero", 8)
+    parcelles = c_("parcelles", "Parcelles cadastrales")
+    parcelles.setRenderer(parcelles.renderer().__class__(
+        QgsFillSymbol.createSimple({"style": "no", "outline_color": "#9E9E9E",
+                                    "outline_width": "0.2"})))
+    suivis = c_("suivis", "Travaux suivis")
+    codes = c_("codes", "Codes des travaux")
+    for c in (foret, ug, parcelles, suivis, codes):
+        c.setReadOnly(True)
+
+    def code_attr(attribut):
+        return ("attribute(get_feature('travaux_codes', 'code', "
+                "\"code_travaux\"), '%s')" % attribut)
+
+    # --- Saisie : les interventions ------------------------------------
+    couches_travaux = []
+    for nom, (forme, titre, couleur) in FORMES_T.items():
+        t = c_(nom, titre)
+        geometrie = {"surface": "surface", "ligne": "ligne",
+                     "point": "point"}[forme]
+        t.setRenderer(t.renderer().__class__(symbole(geometrie, couleur)))
+        etiqueter(t, "code_travaux", 8)
+        champ = t.fields().indexOf
+        widget(t, "uuid", "Hidden")
+        defaut(t, "uuid", "uuid('WithoutBraces')")
+        # Seuls les codes qui admettent la forme de la couche : une cloture ne
+        # se propose pas dans les surfaces.
+        widget(t, "code_travaux", "ValueRelation", {
+            "Layer": codes.id(), "LayerName": codes.name(), "Key": "code",
+            "Value": "libelle", "OrderByValue": False, "AllowNull": False,
+            "UseCompleter": True,
+            "FilterExpression": "\"formes\" LIKE '%%%s%%'" % forme})
+        t.setFieldConstraint(champ("code_travaux"),
+                             QgsFieldConstraints.ConstraintNotNull,
+                             QgsFieldConstraints.ConstraintStrengthHard)
+        widget(t, "nature_travaux", "TextEdit")
+        defaut(t, "nature_travaux",
+               "coalesce(\"nature_travaux\", %s)" % code_attr("libelle"),
+               a_la_mise_a_jour=True)
+        widget(t, "annee", "Range", {"AllowNull": False, "Min": 1900,
+                                     "Max": 2999, "Step": 1,
+                                     "Style": "SpinBox"})
+        defaut(t, "annee", "year(now())")
+        widget(t, "quantite", "Range", {"AllowNull": True, "Min": 0.0,
+                                        "Max": 1000000.0, "Precision": 2,
+                                        "Step": 0.1, "Style": "SpinBox"})
+        # L'unite par defaut est la premiere du code ; une autre doit etre de
+        # sa liste.
+        widget(t, "unite", "TextEdit")
+        defaut(t, "unite", "coalesce(\"unite\", regexp_substr(%s, '^[^,]+'))"
+               % code_attr("unites"), a_la_mise_a_jour=True)
+        t.setConstraintExpression(
+            champ("unite"),
+            "\"unite\" IS NULL OR array_contains(string_to_array("
+            "replace(%s, ' ', ''), ','), \"unite\")" % code_attr("unites"),
+            "L'unité doit être l'une de celles du code.")
+        t.setFieldConstraint(champ("unite"),
+                             QgsFieldConstraints.ConstraintExpression,
+                             QgsFieldConstraints.ConstraintStrengthHard)
+        widget(t, "nb_plants", "Range", {"AllowNull": True, "Min": 0,
+                                         "Max": 1000000, "Step": 10,
+                                         "Style": "SpinBox"})
+        widget(t, "montant_eur", "Range", {"AllowNull": True, "Min": 0.0,
+                                           "Max": 10000000.0, "Precision": 2,
+                                           "Step": 10.0, "Style": "SpinBox"})
+        widget(t, "execution", "ValueMap",
+               {"map": [{libelle: valeur} for libelle, valeur in EXECUTIONS_T]})
+        widget(t, "prevu", "ValueMap",
+               {"map": [{libelle: valeur} for libelle, valeur in PREVUS_T]})
+        t.setFieldConstraint(champ("prevu"),
+                             QgsFieldConstraints.ConstraintNotNull,
+                             QgsFieldConstraints.ConstraintStrengthHard)
+        t.setConstraintExpression(
+            champ("motif_ecart"),
+            "coalesce(\"prevu\", 'prevu') = 'prevu' OR "
+            "length(trim(coalesce(\"motif_ecart\", ''))) > 0",
+            "Des travaux reportés ou non prévus disent pourquoi.")
+        t.setFieldConstraint(champ("motif_ecart"),
+                             QgsFieldConstraints.ConstraintExpression,
+                             QgsFieldConstraints.ConstraintStrengthHard)
+        widget(t, "motif_ecart", "TextEdit", {"IsMultiline": True})
+        widget(t, "date_reception", "DateTime",
+               {"field_format": "yyyy-MM-dd", "display_format": "dd/MM/yyyy",
+                "calendar_popup": True, "allow_null": True})
+        widget(t, "visite_le", "DateTime",
+               {"field_format": "yyyy-MM-ddTHH:mm:ss",
+                "display_format": "dd/MM/yyyy HH:mm", "calendar_popup": True,
+                "allow_null": False})
+        defaut(t, "visite_le", "now()")
+        widget(t, "operateur", "TextEdit")
+        defaut(t, "operateur", "@operateur")
+        widget(t, "precision_m", "TextEdit")
+        defaut(t, "precision_m", "@position_horizontal_accuracy")
+        widget(t, "source_gnss", "TextEdit")
+        defaut(t, "source_gnss", "@position_source_name")
+        config = t.editFormConfig()
+        for n in ("precision_m", "source_gnss"):
+            config.setReadOnly(champ(n), True)
+        t.setEditFormConfig(config)
+        for n in ("modalite", "essence_objectif", "intervenant"):
+            widget(t, n, "TextEdit")
+        widget(t, "observations", "TextEdit", {"IsMultiline": True})
+        for n, alias in (("code_travaux", "Code"), ("nature_travaux", "Libellé"),
+                         ("annee", "Année"), ("quantite", "Quantité"),
+                         ("unite", "Unité"), ("nb_plants", "Plants"),
+                         ("montant_eur", "Montant (€)"),
+                         ("modalite", "Modalité"),
+                         ("essence_objectif", "Essence objectif"),
+                         ("execution", "Exécution"),
+                         ("intervenant", "Intervenant"),
+                         ("prevu", "Prévu au document de gestion"),
+                         ("motif_ecart", "Motif de l'écart"),
+                         ("date_reception", "Réception"),
+                         ("visite_le", "Relevé le"), ("operateur", "Opérateur"),
+                         ("precision_m", "Précision GNSS (m)"),
+                         ("source_gnss", "Source GNSS"),
+                         ("observations", "Observations")):
+            t.setFieldAlias(champ(n), alias)
+        couches_travaux.append(t)
+
+    # --- Saisie : les placettes et leurs controles ----------------------
+    placettes = c_("placettes", "Placettes de suivi")
+    placettes.setRenderer(QgsCategorizedSymbolRenderer("etat_suivi", [
+        QgsRendererCategory(valeur, QgsMarkerSymbol.createSimple(
+            {"name": "circle", "color": couleur, "size": "3.5",
+             "outline_color": "#FFFFFF", "outline_width": "0.5"}), libelle)
+        for valeur, libelle, couleur in SUIVI_T]))
+    etiqueter(placettes, "code_placette", 8)
+    champ = placettes.fields().indexOf
+    widget(placettes, "uuid", "Hidden")
+    defaut(placettes, "uuid", "uuid('WithoutBraces')")
+    for n in ("ug", "etat_suivi", "dernier_controle", "dernier_besoin"):
+        widget(placettes, n, "Hidden")
+    defaut(placettes, "etat_suivi", "'nouvelle'")
+    placettes.setFieldConstraint(champ("code_placette"),
+                                 QgsFieldConstraints.ConstraintNotNull,
+                                 QgsFieldConstraints.ConstraintStrengthHard)
+    widget(placettes, "travaux_id", "ValueRelation", {
+        "Layer": suivis.id(), "LayerName": suivis.name(), "Key": "id",
+        "Value": "libelle", "OrderByValue": True, "AllowNull": False,
+        "UseCompleter": True})
+    placettes.setFieldConstraint(champ("travaux_id"),
+                                 QgsFieldConstraints.ConstraintNotNull,
+                                 QgsFieldConstraints.ConstraintStrengthHard)
+    widget(placettes, "rayon_m", "Range", {"AllowNull": False, "Min": 0.5,
+                                           "Max": 50.0, "Precision": 2,
+                                           "Step": 0.01, "Style": "SpinBox"})
+    defaut(placettes, "rayon_m", "3.99")
+    widget(placettes, "materialisation", "TextEdit")
+    for n, alias in (("code_placette", "Code de la placette"),
+                     ("travaux_id", "Travaux suivis"),
+                     ("rayon_m", "Rayon (m)"),
+                     ("materialisation", "Matérialisation")):
+        placettes.setFieldAlias(champ(n), alias)
+
+    controles = c_("controles", "Contrôles")
+    champ = controles.fields().indexOf
+    widget(controles, "uuid", "Hidden")
+    defaut(controles, "uuid", "uuid('WithoutBraces')")
+    widget(controles, "placette_uuid", "Hidden")
+    for n in ("nb_total", "nb_vivants"):
+        widget(controles, n, "Range", {"AllowNull": False, "Min": 0,
+                                       "Max": 10000, "Step": 1,
+                                       "Style": "SpinBox"})
+        controles.setFieldConstraint(champ(n),
+                                     QgsFieldConstraints.ConstraintNotNull,
+                                     QgsFieldConstraints.ConstraintStrengthHard)
+    controles.setConstraintExpression(
+        champ("nb_vivants"), "\"nb_vivants\" <= \"nb_total\"",
+        "Pas plus de vivants que de plants comptés.")
+    controles.setFieldConstraint(champ("nb_vivants"),
+                                 QgsFieldConstraints.ConstraintExpression,
+                                 QgsFieldConstraints.ConstraintStrengthHard)
+    for n in ("h_moy_cm", "nb_abroutis"):
+        widget(controles, n, "Range", {"AllowNull": True, "Min": 0,
+                                       "Max": 10000, "Step": 1,
+                                       "Style": "SpinBox"})
+    controles.setConstraintExpression(
+        champ("nb_abroutis"),
+        "\"nb_abroutis\" IS NULL OR \"nb_abroutis\" <= \"nb_vivants\"",
+        "L'abroutissement se compte sur les vivants.")
+    controles.setFieldConstraint(champ("nb_abroutis"),
+                                 QgsFieldConstraints.ConstraintExpression,
+                                 QgsFieldConstraints.ConstraintStrengthHard)
+    widget(controles, "concurrence", "ValueMap",
+           {"map": [{libelle: valeur} for libelle, valeur in CONCURRENCES_T]})
+    # Le besoin : un code des travaux, ou « aucun » (une ligne de la table
+    # des codes, sans forme, qu'aucune couche de travaux ne propose).
+    widget(controles, "besoin", "ValueRelation", {
+        "Layer": codes.id(), "LayerName": codes.name(), "Key": "code",
+        "Value": "libelle", "OrderByValue": False, "AllowNull": True,
+        "UseCompleter": True})
+    widget(controles, "visite_le", "DateTime",
+           {"field_format": "yyyy-MM-ddTHH:mm:ss",
+            "display_format": "dd/MM/yyyy HH:mm", "calendar_popup": True,
+            "allow_null": False})
+    defaut(controles, "visite_le", "now()")
+    widget(controles, "operateur", "TextEdit")
+    defaut(controles, "operateur", "@operateur")
+    widget(controles, "observations", "TextEdit", {"IsMultiline": True})
+    for n, alias in (("nb_total", "Plants comptés"),
+                     ("nb_vivants", "Vivants"),
+                     ("h_moy_cm", "Hauteur moyenne (cm)"),
+                     ("nb_abroutis", "Abroutis"),
+                     ("concurrence", "Concurrence"),
+                     ("besoin", "Travail qui s'impose"),
+                     ("visite_le", "Contrôlé le"), ("operateur", "Opérateur"),
+                     ("observations", "Observations")):
+        controles.setFieldAlias(champ(n), alias)
+
+    # --- Saisie : les photos --------------------------------------------
+    photos = c_("photos", "Photos")
+    widget(photos, "uuid", "Hidden")
+    defaut(photos, "uuid", "uuid('WithoutBraces')")
+    widget(photos, "constat_uuid", "Hidden")
+    widget(photos, "fichier", "ExternalResource", {
+        "DocumentViewer": 1, "DocumentViewerHeight": 0,
+        "DocumentViewerWidth": 0, "FileWidget": True, "FileWidgetButton": True,
+        "RelativeStorage": 1, "StorageMode": 0, "FullUrl": False})
+    photos.setFieldAlias(photos.fields().indexOf("fichier"), "Photo")
+    widget(photos, "prise_le", "DateTime",
+           {"field_format": "yyyy-MM-ddTHH:mm:ss",
+            "display_format": "dd/MM/yyyy HH:mm", "allow_null": True})
+    defaut(photos, "prise_le", "now()")
+    photos.setFieldAlias(photos.fields().indexOf("prise_le"), "Prise le")
+    photos.setCustomProperty("QFieldSync/attachment_naming", json.dumps({
+        "fichier": "'DCIM/travaux_' || format_date(now(), 'yyyyMMdd_HHmmss_zzz') || '.{extension}'"}))
+
+    projet.addMapLayers(couches_travaux + [placettes, controles, ug, foret,
+                                           parcelles, suivis, codes, photos])
+
+    def relier(identifiant, nom, enfant, parent, champ_enfant):
+        r = QgsRelation()
+        r.setId(identifiant)
+        r.setName(nom)
+        r.setReferencingLayer(enfant.id())
+        r.setReferencedLayer(parent.id())
+        r.addFieldPair(champ_enfant, "uuid")
+        r.setStrength(Qgis.RelationshipStrength.Composition)
+        if not r.isValid():
+            sys.exit("Relation invalide : " + r.validationError())
+        projet.relationManager().addRelation(r)
+        return r
+
+    relations_photos = {
+        t.id(): relier("photos_" + t.id(), "Photos", photos, t, "constat_uuid")
+        for t in couches_travaux}
+    relations_photos[controles.id()] = relier(
+        "photos_du_controle", "Photos", photos, controles, "constat_uuid")
+    controles_de = relier("controles_de_la_placette", "Contrôles",
+                          controles, placettes, "placette_uuid")
+
+    config = photos.editFormConfig()
+    config.setLayout(QgsEditFormConfig.TabLayout)
+    racine = config.invisibleRootContainer()
+    racine.clear()
+    consigne = QgsAttributeEditorTextElement("Consigne", racine)
+    consigne.setText(
+        "Une vue d'ensemble, puis le détail : plants, protections, "
+        "concurrence. Éviter les personnes et les véhicules : la photo est "
+        "une pièce du sommier.")
+    racine.addChildElement(consigne)
+    for n in ("fichier", "prise_le"):
+        racine.addChildElement(QgsAttributeEditorField(
+            n, photos.fields().indexOf(n), racine))
+    photos.setEditFormConfig(config)
+
+    # Formulaire d'une intervention : quoi, combien, prevu ou non, qui,
+    # quand ; les photos.
+    for t in couches_travaux:
+        champ = t.fields().indexOf
+        config = t.editFormConfig()
+        config.setLayout(QgsEditFormConfig.TabLayout)
+        racine = config.invisibleRootContainer()
+        racine.clear()
+        for n in ("code_travaux", "nature_travaux", "annee", "quantite",
+                  "unite", "nb_plants", "montant_eur", "prevu"):
+            racine.addChildElement(QgsAttributeEditorField(n, champ(n), racine))
+        ecart = QgsAttributeEditorContainer("Écart au prévu", racine)
+        ecart.setType(Qgis.AttributeEditorContainerType.GroupBox)
+        ecart.setVisibilityExpression(QgsOptionalExpression(
+            QgsExpression("coalesce(\"prevu\", 'prevu') <> 'prevu'"), True))
+        ecart.addChildElement(QgsAttributeEditorField(
+            "motif_ecart", champ("motif_ecart"), ecart))
+        racine.addChildElement(ecart)
+        execution = QgsAttributeEditorContainer("Exécution", racine)
+        execution.setType(Qgis.AttributeEditorContainerType.GroupBox)
+        for n in ("modalite", "essence_objectif", "execution", "intervenant",
+                  "date_reception"):
+            execution.addChildElement(QgsAttributeEditorField(
+                n, champ(n), execution))
+        racine.addChildElement(execution)
+        for n in ("visite_le", "operateur", "precision_m", "source_gnss",
+                  "observations"):
+            racine.addChildElement(QgsAttributeEditorField(n, champ(n), racine))
+        racine.addChildElement(QgsAttributeEditorRelation(
+            relations_photos[t.id()], racine))
+        t.setEditFormConfig(config)
+
+    champ = controles.fields().indexOf
+    config = controles.editFormConfig()
+    config.setLayout(QgsEditFormConfig.TabLayout)
+    racine = config.invisibleRootContainer()
+    racine.clear()
+    for n in ("nb_total", "nb_vivants", "h_moy_cm", "nb_abroutis",
+              "concurrence", "besoin", "visite_le", "operateur",
+              "observations"):
+        racine.addChildElement(QgsAttributeEditorField(n, champ(n), racine))
+    racine.addChildElement(QgsAttributeEditorRelation(
+        relations_photos[controles.id()], racine))
+    controles.setEditFormConfig(config)
+
+    champ = placettes.fields().indexOf
+    config = placettes.editFormConfig()
+    config.setLayout(QgsEditFormConfig.TabLayout)
+    racine = config.invisibleRootContainer()
+    racine.clear()
+    for n in ("code_placette", "travaux_id", "rayon_m", "materialisation"):
+        racine.addChildElement(QgsAttributeEditorField(n, champ(n), racine))
+    racine.addChildElement(QgsAttributeEditorRelation(controles_de, racine))
+    placettes.setEditFormConfig(config)
+
+    ortho = QgsRasterLayer(
+        "contextualWMSLegend=0&crs=EPSG:3857&dpiMode=7&format=image/jpeg"
+        "&layers=ORTHOIMAGERY.ORTHOPHOTOS&styles=normal"
+        "&tileMatrixSet=PM_0_19&url=https://data.geopf.fr/wmts?"
+        "SERVICE%3DWMTS%26REQUEST%3DGetCapabilities",
+        "Orthophotographie IGN (réseau)", "wms")
+    projet.addMapLayer(ortho)
+    leurre = os.path.join(SORTIE, "ortho.tif")
+    ecrire_leurre(leurre)
+    locale = QgsRasterLayer(leurre, "Orthophotographie (hors ligne)", "gdal")
+    if not locale.isValid():
+        sys.exit("Ortho locale invalide.")
+    locale.setId("travaux_ortho")
+    projet.addMapLayer(locale)
+
+    racine_arbre = projet.layerTreeRoot()
+    for cachee in (photos, controles, suivis, codes):
+        noeud = racine_arbre.findLayer(cachee.id())
+        if noeud is not None:
+            noeud.setItemVisibilityChecked(False)
+    for couche_fond in (locale, ortho):
+        noeud = racine_arbre.findLayer(couche_fond.id())
+        clone = noeud.clone()
+        racine_arbre.insertChildNode(-1, clone)
+        racine_arbre.removeChildNode(noeud)
+
+    projet.setCustomVariables({
+        "operateur": "@@OPERATEUR@@",
+        "sommier_foret": "@@FORET@@",
+        "qfield_version_minimale": "4.3",
+    })
+    projet.viewSettings().setDefaultViewExtent(QgsReferencedRectangle(
+        QgsRectangle(111111, 2222222, 333333, 4444444), L93))
+    metadonnees = projet.metadata()
+    metadonnees.setTitle("@@TITRE@@")
+    metadonnees.setAbstract(
+        "Relevé des travaux sylvicoles et suivi des plantations sur "
+        "placettes permanentes. Projet engendré par sommieR ; à ouvrir avec "
+        "QField 4.3 ou plus récent. Une intervention par surface, ligne ou "
+        "point selon son code ; une placette par plantation suivie, et ses "
+        "contrôles.")
+    projet.setMetadata(metadonnees)
+
+    if not projet.write():
+        sys.exit("Ecriture du projet impossible.")
+    if os.path.exists(QGS_T + "~"):
+        os.remove(QGS_T + "~")
+    for reste in (leurre, leurre + ".aux.xml"):
+        if os.path.exists(reste):
+            os.remove(reste)
+    print("Ecrit :", QGS_T, "et", GPKG_T)
+
+
 if __name__ == "__main__":
-    modeles = sys.argv[1:] or ["limites", "detections"]
+    modeles = sys.argv[1:] or ["limites", "detections", "travaux"]
     QgsApplication.setPrefixPath("/usr", True)
     application = QgsApplication([], False)
     application.initQgis()
     try:
         for modele in modeles:
-            {"limites": principal, "detections": detections}[modele]()
+            {"limites": principal, "detections": detections,
+             "travaux": travaux}[modele]()
     finally:
         application.exitQgis()
         # QGIS ecrit les statistiques du leurre en se fermant.
