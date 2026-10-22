@@ -4,7 +4,14 @@
 \alias{sommier_registre}
 \title{Sommier : le registre, ecriture par ecriture}
 \usage{
-sommier_registre(con, foret_id, registres = 1:9, jusqu_au_visa = NULL)
+sommier_registre(
+  con,
+  foret_id,
+  registres = 1:9,
+  jusqu_au_visa = NULL,
+  cles_publiques = list(),
+  ancres = list()
+)
 }
 \arguments{
 \item{con}{Connexion DBI.}
@@ -15,6 +22,11 @@ sommier_registre(con, foret_id, registres = 1:9, jusqu_au_visa = NULL)
 
 \item{jusqu_au_visa}{Exercice dont le visa arrete l'edition ; \code{NULL} pour
 tout le sommier.}
+
+\item{cles_publiques, ancres}{Transmises a \code{\link[=sommier_verifier_visas]{sommier_verifier_visas()}} pour
+verifier le visa qui arrete l'edition : cles publiques des signataires
+(inutiles quand le visa porte son certificat), ancres de confiance des
+autorites d'horodatage. Sans effet sans \code{jusqu_au_visa}.}
 }
 \value{
 Un objet de classe \code{sommier_registre} : \code{foret} (nom, regime),
@@ -23,7 +35,10 @@ Un objet de classe \code{sommier_registre} : \code{foret} (nom, regime),
 \code{provenance}, \code{piece}, \code{rectifie}, \code{rectifiee_par}, \code{contenu},
 \code{payload}, \code{schema_version}, \code{hash}), \code{tenue} (fiche A10, par exercice),
 \code{ancrages}, \code{verification} (etat de la chaine extraite), \code{visa} (le visa
-qui arrete l'edition, s'il y en a un), \code{registres}.
+qui arrete l'edition, s'il y en a un : \code{exercice}, \code{autorite},
+\code{seq_tete}, \code{hash_tete}, \code{date_visa}, \code{horodate}, \code{concorde}, et son
+attestation - \code{signataire}, \code{signature_jws}, \code{certificat}, \code{jeton},
+\code{verifie}), \code{registres}.
 }
 \description{
 Extrait le sommier tel qu'il est chaine : une ligne par ecriture, registre
@@ -48,6 +63,14 @@ un exercice sans acte est dit non vise. Les ancrages suivent.
 sommier tel qu'il etait quand l'exercice a ete vise : les ecritures jusqu'a
 la tete signee, pas au-dela. La chaine est alors verifiee jusqu'a cette
 tete, et l'extraction dit si elle concorde avec l'empreinte visee.
+
+\strong{Le visa se lit avec ses pieces.} Une edition arretee a un visa porte
+aussi l'attestation de ce visa, verifiee par \code{\link[=sommier_verifier_visas]{sommier_verifier_visas()}} :
+qui l'a signe (les claims du signataire, et son certificat quand le visa
+en porte un), si la signature se verifie et sous quelle cle, et ce que
+vaut le jeton d'horodatage - la date que l'autorite a certifiee, et qui
+est cette autorite. La signature, le certificat et le jeton eux-memes sont
+rendus tels quels, pour etre recopies et verifies ailleurs.
 }
 \seealso{
 \code{\link[=sommier_registre_quarto]{sommier_registre_quarto()}}, \code{\link[=sommier_exporter_manifeste]{sommier_exporter_manifeste()}}

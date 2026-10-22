@@ -142,3 +142,102 @@ test_that("le sommier de la demo se rend, et ne touche pas la chaine", {
                                        format = "html"),
                "ne correspond pas")
 })
+
+# Lot 2 : le visa sur le document.
+
+test_that("arrete a un visa, le sommier porte le visa verifie et ses pieces", {
+  con <- base_registre()
+  foret <- foret_creer(con, "Foret visee et horodatee", "communal")
+  ecrire_r(con, foret, 5L,
+           registre5_coupe("martelage", 2026, "amelioration", 120))
+  materiel <- signataire_avec_certificat()
+  visa <- sommier_viser(con, foret, 2026, "commune", materiel$signataire,
+                        tsa_url = "https://tsa.example",
+                        transport = tsa_simulee())
+  ecrire_r(con, foret, 5L,
+           registre5_coupe("martelage", 2027, "reguliere", 80), "2027-03-01")
+
+  # Sans ancre : la signature se verifie par le certificat du visa, le jeton
+  # est intact mais non rattache.
+  s <- sommier_registre(con, foret, jusqu_au_visa = 2026)
+  v <- s$visa
+  expect_true(v$verifie$signature_valide)
+  expect_equal(v$verifie$cle, "certificat")
+  expect_equal(v$verifie$horodatage, "non_rattache")
+  expect_equal(v$signataire$sub, "maire-01")
+  expect_match(v$certificat$sujet, "Maire de test", fixed = TRUE)
+  expect_true(v$certificat$auto_signe)
+  expect_equal(v$certificat$empreinte,
+               empreinte_hex(as.raw(openssl::sha256(materiel$certificat))))
+  expect_equal(v$jeton$date, visa$date_attestee)
+  expect_equal(v$jeton$empreinte, visa$hash_tete)
+  expect_match(v$jeton$autorite, "Autorite d horodatage", fixed = TRUE)
+  expect_null(v$tst)
+
+  # Avec l'ancre, le meme jeton est valide.
+  rattache <- sommier_registre(con, foret, jusqu_au_visa = 2026,
+                               ancres = list(racine_tsa_de_test()))
+  expect_equal(rattache$visa$verifie$horodatage, "valide")
+  expect_true(is.na(rattache$visa$verifie$remarque))
+
+  skip_if(!nzchar(Sys.which("quarto")), "Quarto n'est pas installe.")
+  avant <- sommier_verifier(con, foret)$hash_tete
+  chemin <- withr::local_tempfile(fileext = ".html")
+  sommier_registre_quarto(con, foret, chemin, jusqu_au_visa = 2026,
+                          ancres = list(racine_tsa_de_test()))
+  html <- paste(readLines(chemin, warn = FALSE, encoding = "UTF-8"),
+                collapse = "\n")
+  expect_match(html, "Visa de l(&#39;|'|’)exercice 2026")
+  expect_match(html, "Maire de test", fixed = TRUE)
+  expect_match(html, visa$date_attestee, fixed = TRUE)
+  expect_match(html, "rattaché à une ancre de confiance",
+               fixed = TRUE)
+  expect_match(html, v$certificat$empreinte, fixed = TRUE)
+  expect_match(html, "BEGIN CERTIFICATE", fixed = TRUE)
+  expect_match(html, substr(v$signature_jws, 1L, 64L), fixed = TRUE)
+  expect_match(html, substr(v$jeton$base64, 1L, 64L), fixed = TRUE)
+  expect_equal(sommier_verifier(con, foret)$hash_tete, avant)
+})
+
+test_that("un visa sans certificat se dit non verifie, sauf cle fournie", {
+  con <- base_registre()
+  foret <- foret_creer(con, "Foret visee sans certificat", "communal")
+  ecrire_r(con, foret, 5L,
+           registre5_coupe("martelage", 2026, "amelioration", 120))
+  cle <- openssl::rsa_keygen(2048L)
+  sommier_viser(con, foret, 2026, "commune",
+                signataire_cle(cle, claims = list(sub = "maire-01",
+                                                  name = "Maire"),
+                               kid = "cle-2026"))
+
+  s <- sommier_registre(con, foret, jusqu_au_visa = 2026)
+  expect_true(is.na(s$visa$verifie$signature_valide))
+  expect_true(is.na(s$visa$verifie$cle))
+  expect_null(s$visa$certificat)
+  expect_null(s$visa$jeton)
+  expect_equal(s$visa$verifie$horodatage, "absent")
+  expect_equal(s$visa$signataire$kid, "cle-2026")
+
+  fournie <- sommier_registre(con, foret, jusqu_au_visa = 2026,
+                              cles_publiques = list(`cle-2026` = cle$pubkey))
+  expect_true(fournie$visa$verifie$signature_valide)
+  expect_equal(fournie$visa$verifie$cle, "fournie")
+
+  # Une edition qui ne s'arrete pas a un visa n'en porte pas.
+  expect_null(sommier_registre(con, foret)$visa)
+
+  skip_if(!nzchar(Sys.which("quarto")), "Quarto n'est pas installe.")
+  chemin <- withr::local_tempfile(fileext = ".html")
+  sommier_registre_quarto(con, foret, chemin, jusqu_au_visa = 2026)
+  html <- paste(readLines(chemin, warn = FALSE, encoding = "UTF-8"),
+                collapse = "\n")
+  expect_match(html, "non vérifiée", fixed = TRUE)
+  expect_match(html, "ne repose que sur l(&#39;|'|’)horloge du serveur")
+  expect_no_match(html, "BEGIN CERTIFICATE", fixed = TRUE)
+
+  tout <- withr::local_tempfile(fileext = ".html")
+  sommier_registre_quarto(con, foret, tout)
+  html <- paste(readLines(tout, warn = FALSE, encoding = "UTF-8"),
+                collapse = "\n")
+  expect_no_match(html, "pièces du visa", fixed = TRUE)
+})
