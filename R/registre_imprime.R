@@ -24,11 +24,23 @@
 #' la tete signee, pas au-dela. La chaine est alors verifiee jusqu'a cette
 #' tete, et l'extraction dit si elle concorde avec l'empreinte visee.
 #'
+#' **Le visa se lit avec ses pieces.** Une edition arretee a un visa porte
+#' aussi l'attestation de ce visa, verifiee par [sommier_verifier_visas()] :
+#' qui l'a signe (les claims du signataire, et son certificat quand le visa
+#' en porte un), si la signature se verifie et sous quelle cle, et ce que
+#' vaut le jeton d'horodatage - la date que l'autorite a certifiee, et qui
+#' est cette autorite. La signature, le certificat et le jeton eux-memes sont
+#' rendus tels quels, pour etre recopies et verifies ailleurs.
+#'
 #' @param con Connexion DBI.
 #' @param foret_id UUID de la foret.
 #' @param registres Registres a extraire (1 a 9).
 #' @param jusqu_au_visa Exercice dont le visa arrete l'edition ; `NULL` pour
 #'   tout le sommier.
+#' @param cles_publiques,ancres Transmises a [sommier_verifier_visas()] pour
+#'   verifier le visa qui arrete l'edition : cles publiques des signataires
+#'   (inutiles quand le visa porte son certificat), ancres de confiance des
+#'   autorites d'horodatage. Sans effet sans `jusqu_au_visa`.
 #'
 #' @return Un objet de classe `sommier_registre` : `foret` (nom, regime),
 #'   `ecritures` (`data.frame`, une ligne par ecriture : `seq`, `registre`,
@@ -36,13 +48,17 @@
 #'   `provenance`, `piece`, `rectifie`, `rectifiee_par`, `contenu`,
 #'   `payload`, `schema_version`, `hash`), `tenue` (fiche A10, par exercice),
 #'   `ancrages`, `verification` (etat de la chaine extraite), `visa` (le visa
-#'   qui arrete l'edition, s'il y en a un), `registres`.
+#'   qui arrete l'edition, s'il y en a un : `exercice`, `autorite`,
+#'   `seq_tete`, `hash_tete`, `date_visa`, `horodate`, `concorde`, et son
+#'   attestation - `signataire`, `signature_jws`, `certificat`, `jeton`,
+#'   `verifie`), `registres`.
 #'
 #' @seealso [sommier_registre_quarto()], [sommier_exporter_manifeste()]
 #'
 #' @export
 sommier_registre <- function(con, foret_id, registres = 1:9,
-                             jusqu_au_visa = NULL) {
+                             jusqu_au_visa = NULL, cles_publiques = list(),
+                             ancres = list()) {
   foret_id <- valider_uuid(foret_id, "foret_id")
   registres <- sort(unique(as.integer(vapply(
     registres, valider_entier, numeric(1), "registres", min = 1, max = 9
@@ -65,7 +81,10 @@ sommier_registre <- function(con, foret_id, registres = 1:9,
       "SELECT exercice, autorite, seq_tete::float8 AS seq_tete,
               encode(hash_tete, 'hex') AS hash_tete,
               to_char(date_visa AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS date_visa,
-              (tst_rfc3161 IS NOT NULL) AS horodate
+              (tst_rfc3161 IS NOT NULL) AS horodate,
+              signataire::text AS signataire, signature_jws,
+              encode(certificat, 'hex') AS certificat,
+              encode(tst_rfc3161, 'hex') AS tst
          FROM visa WHERE foret_id = $1 AND exercice = $2
         ORDER BY seq_tete DESC",
       params = parametres(list(foret_id, exercice))
@@ -74,7 +93,7 @@ sommier_registre <- function(con, foret_id, registres = 1:9,
       stop("L'exercice ", exercice, " n'a pas de visa : l'edition ne peut ",
            "pas s'y arreter.", call. = FALSE)
     }
-    visa <- visa[1L, , drop = FALSE]
+    visa <- as.list(visa[1L, , drop = FALSE])
     limite <- visa$seq_tete
   }
 
@@ -89,6 +108,7 @@ sommier_registre <- function(con, foret_id, registres = 1:9,
   if (!is.null(visa)) {
     visa$concorde <- identical(tolower(verification$hash_tete),
                                tolower(visa$hash_tete))
+    visa <- attestation_du_visa(con, foret_id, visa, cles_publiques, ancres)
   }
 
   ug <- DBI::dbGetQuery(
@@ -148,6 +168,13 @@ print.sommier_registre <- function(x, ...) {
 #' empreinte restent : on voit qu'une ecriture existe, pas qui elle nomme. Les
 #' photos des constats ne sont jamais reproduites, seulement comptees.
 #'
+#' Arrete a un visa (`jusqu_au_visa`), le document porte en tete ce visa tel
+#' que [sommier_verifier_visas()] le juge : le signataire et son certificat,
+#' la signature, le jeton d'horodatage et l'autorite qui l'a emis. Les pieces
+#' elles-memes (signature JWS, certificat PEM, jeton en base64) sont en
+#' annexe. Le nom du signataire n'est pas masque a `public = TRUE` : il vise
+#' en qualite, ce n'est pas un tiers.
+#'
 #' @inheritParams sommier_registre
 #' @param chemin Fichier de destination. Son extension doit s'accorder avec
 #'   `format`.
@@ -163,7 +190,8 @@ print.sommier_registre <- function(x, ...) {
 #' @export
 sommier_registre_quarto <- function(con, foret_id, chemin, format = "html",
                                     registres = 1:9, jusqu_au_visa = NULL,
-                                    public = FALSE,
+                                    public = FALSE, cles_publiques = list(),
+                                    ancres = list(),
                                     quarto = Sys.which("quarto")) {
   format <- valider_choix(format, "format", SOMMIER_FORMATS_QUARTO)
   chemin <- valider_texte(chemin, "chemin")
@@ -178,12 +206,16 @@ sommier_registre_quarto <- function(con, foret_id, chemin, format = "html",
          "format demande (", format, ").", call. = FALSE)
   }
   sommier <- sommier_registre(con, foret_id, registres = registres,
-                              jusqu_au_visa = jusqu_au_visa)
+                              jusqu_au_visa = jusqu_au_visa,
+                              cles_publiques = cles_publiques, ancres = ancres)
   if (isTRUE(public)) {
     sommier$ecritures <- masquer_tiers(sommier$ecritures)
   }
+  # Le rendu tourne dans un autre processus R : il ne lit que ce RDS, jamais
+  # le paquet installe, qui pourrait n'etre pas la version qui l'a extrait.
   donnees <- list(
     sommier = sommier,
+    registres = SOMMIER_REGISTRES,
     public = isTRUE(public),
     version_sommier = as.character(utils::packageVersion("sommieR")),
     edite_le = format(Sys.Date(), "%d/%m/%Y")
@@ -382,4 +414,112 @@ ancrages_du_sommier <- function(con, foret_id, limite) {
     ancrages <- ancrages[ancrages$seq_tete <= limite, , drop = FALSE]
   }
   ancrages
+}
+
+# L'attestation du visa qui arrete l'edition : ce que sommier_verifier_visas()
+# en juge, et les pieces sur lesquelles porte ce jugement, lues pour etre
+# imprimees. Le jeton brut quitte la liste au profit de sa lecture : le RDS
+# du rendu n'a pas a le porter deux fois.
+attestation_du_visa <- function(con, foret_id, visa, cles_publiques, ancres) {
+  verdicts <- sommier_verifier_visas(con, foret_id,
+                                     cles_publiques = cles_publiques,
+                                     ancres = ancres)
+  ligne <- verdicts[verdicts$exercice == visa$exercice &
+                      verdicts$autorite == visa$autorite &
+                      verdicts$seq_tete == visa$seq_tete, , drop = FALSE]
+  verifie <- if (nrow(ligne) == 0L) NULL else as.list(ligne[1L, ])
+
+  claims <- jsonlite::fromJSON(visa$signataire, simplifyVector = FALSE)
+  entete <- try(jsonlite::fromJSON(
+    rawToChar(base64url_decoder(strsplit(visa$signature_jws, "..",
+                                         fixed = TRUE)[[1L]][[1L]])),
+    simplifyVector = FALSE
+  ), silent = TRUE)
+  if (inherits(entete, "try-error")) {
+    entete <- list()
+  }
+
+  certificat <- certificat_du_visa(visa$certificat)
+  jeton <- jeton_du_visa(visa$tst, visa$hash_tete, ancres)
+  if (!is.null(verifie)) {
+    # La cle sous laquelle la signature a ete jugee : celle du certificat
+    # quand le visa en porte un lisible, sinon celle que l'appelant a fournie.
+    verifie$cle <- if (is.na(verifie$signature_valide)) NA_character_ else
+      if (!is.null(certificat) && is.null(certificat$erreur)) "certificat" else
+        "fournie"
+  }
+
+  visa$signataire <- list(
+    sub = as.character(claims$sub %||% NA_character_),
+    nom = as.character(claims$name %||% NA_character_),
+    claims = claims,
+    alg = as.character(entete$alg %||% NA_character_),
+    kid = as.character(entete$kid %||% NA_character_)
+  )
+  visa$certificat <- certificat
+  visa$jeton <- jeton
+  visa$tst <- NULL
+  visa$verifie <- verifie
+  visa
+}
+
+# Le certificat du signataire, dit en clair. Les noms sont ceux d'openssl,
+# pour etre lus ; la serie et les dates, celles de certificat_lire(), qui
+# fondent la verification.
+certificat_du_visa <- function(certificat_hex) {
+  if (est_vide(certificat_hex)) {
+    return(NULL)
+  }
+  der <- try(octets_depuis_hex(certificat_hex, "certificat"), silent = TRUE)
+  lu <- if (inherits(der, "try-error")) der else
+    try(certificat_lire(der), silent = TRUE)
+  cert <- if (inherits(lu, "try-error")) lu else
+    try(openssl::read_cert(der, der = TRUE), silent = TRUE)
+  if (inherits(cert, "try-error")) {
+    return(list(erreur = "certificat illisible"))
+  }
+  texte <- as.list(cert)
+  list(
+    sujet = texte$subject,
+    emetteur = texte$issuer,
+    auto_signe = isTRUE(texte$self_signed),
+    serie = lu$serie,
+    debut = format(lu$debut, "%Y-%m-%d", tz = "UTC"),
+    fin = format(lu$fin, "%Y-%m-%d", tz = "UTC"),
+    empreinte = empreinte_hex(as.raw(openssl::sha256(der))),
+    pem = openssl::write_pem(cert)
+  )
+}
+
+# Le jeton d'horodatage, lu : ce qu'il atteste, quand, et qui l'atteste. Le
+# verdict lui-meme vient de sommier_verifier_visas() ; on ne relit ici le
+# jeton que pour nommer l'autorite et en rendre la piece.
+jeton_du_visa <- function(tst_hex, hash_tete, ancres) {
+  if (est_vide(tst_hex)) {
+    return(NULL)
+  }
+  jeton <- try(octets_depuis_hex(tst_hex, "tst_rfc3161"), silent = TRUE)
+  if (inherits(jeton, "try-error")) {
+    return(list(erreur = "jeton illisible"))
+  }
+  verdict <- tsa_verifier_jeton(jeton, empreinte_depuis_hex(hash_tete), ancres)
+  lu <- verdict$jeton
+  autorite <- NA_character_
+  if (!is.null(verdict$certificat)) {
+    nom <- try(as.list(openssl::read_cert(verdict$certificat$der,
+                                          der = TRUE))$subject, silent = TRUE)
+    if (!inherits(nom, "try-error")) {
+      autorite <- nom
+    }
+  }
+  list(
+    date = if (is.null(lu)) NA_character_ else
+      format(lu$date, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+    serie = if (is.null(lu)) NA_character_ else lu$serie,
+    politique = if (is.null(lu)) NA_character_ else lu$politique,
+    algorithme = if (is.null(lu)) NA_character_ else lu$algorithme,
+    empreinte = if (is.null(lu)) NA_character_ else empreinte_hex(lu$empreinte),
+    autorite = autorite,
+    base64 = as.character(openssl::base64_encode(jeton))
+  )
 }
