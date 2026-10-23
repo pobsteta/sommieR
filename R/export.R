@@ -218,7 +218,7 @@ sommier_gestion_anterieure <- function(con, foret_id, debut = NULL, fin = NULL,
     sections$patrimoine <- lire_etat(
       "SELECT type_fiche, COALESCE(appellation, nom_francais) AS appellation,
               nom_latin, type_habitat, surface_ha,
-              etat_sanitaire, statut_protection
+              etat_sanitaire, statut_protection, cd_nom
          FROM v_remarquable_dernier_releve
         WHERE foret_id = $1
         ORDER BY type_fiche, appellation")

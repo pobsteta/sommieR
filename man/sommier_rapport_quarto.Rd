@@ -84,8 +84,10 @@ signalees sous la balance.}
 \item{especes_observees}{Especes observees dans la foret et a ses abords,
 telles que les rend \code{\link[=sommier_especes_observees]{sommier_especes_observees()}} (facultatif) : une
 sous-section du patrimoine les liste, nommees dans TAXREF, comme un
-contexte hors registre. Un document public ne les rattache a aucune
-unite de gestion.}
+contexte hors registre. Avec leurs statuts, elle met en tete les especes
+protegees observees dans une unite de gestion, celles sans fiche au
+registre 9 d'abord. Un document public ne rattache a aucune unite une
+espece sensible, ni, sans les statuts, aucune espece.}
 
 \item{quarto}{Chemin de l'executable Quarto.}
 }

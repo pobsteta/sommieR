@@ -825,7 +825,9 @@ SELECT
   (e.payload ->> 'etat_conservation')::TEXT AS etat_conservation,
   jsonb_exists(e.payload, 'reprise')          AS repris,
   (e.payload -> 'reprise' ->> 'source')       AS reprise_source,
-  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference
+  (e.payload -> 'reprise' ->> 'reference')    AS reprise_reference,
+  -- En fin de colonnes : CREATE OR REPLACE VIEW ajoute seulement en fin.
+  (e.payload ->> 'cd_nom')::INTEGER          AS cd_nom
 FROM v_entree_courante e
 WHERE e.registre = 9;
 

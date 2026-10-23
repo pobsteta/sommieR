@@ -127,3 +127,28 @@ là où `openssl` en ligne de commande manque.
 
 Les certificats du jeton figé expirent en 2036 ; le régénérer suit les
 commandes ci-dessus.
+
+---
+
+# Statuts des espèces (BDC Statuts, API TAXREF)
+
+`statuts-taxref-orleans.json` — réponses réelles de l'API TAXREF
+(`https://taxref.mnhn.fr/api`), obtenues le 17 octobre 2026 avec l'en-tête
+`Accept: application/hal+json;version=1`, réunies en un seul objet JSON :
+
+- `taxrefVersions/current` : la version courante de TAXREF (18.0) ;
+- pour chacun des taxons 3619 (Pic mar), 4272 (Pouillot siffleur),
+  88766 (Laîche pendante), 851674 (Couleuvre helvétique) et 2660 (Balbuzard
+  pêcheur), la réponse de
+  `status/search/lines?taxrefId=<CD_REF>&latitude=47.95&longitude=2.15&page=1&size=1000`,
+  soit les statuts de la BDC Statuts qui s'appliquent en forêt d'Orléans
+  (commune INSEE 45142, Loiret, Centre-Val de Loire).
+
+BDC Statuts, PatriNat (OFB, MNHN, CNRS, IRD). 44 Ko.
+
+**Pourquoi des réponses figées.** Les tests de `sommier_statuts_taxref()`
+tournent sans réseau : ils remplacent l'appel à l'API par ces réponses. Le
+balbuzard y est parce qu'il est sensible (`SENSREG`) en Centre-Val de Loire :
+c'est lui qui montre qu'un document public ne place pas une espèce sensible
+dans une unité. Mêmes règles que ci-dessus : fixture, jamais donnée du
+sommier.

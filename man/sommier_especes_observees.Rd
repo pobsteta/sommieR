@@ -12,6 +12,8 @@ sommier_especes_observees(
   depuis = 2000,
   incertitude_max_m = 100,
   limite = 20000,
+  statuts = NULL,
+  cache = NULL,
   occurrences = NULL
 )
 }
@@ -31,6 +33,13 @@ observation n'est pas placee dans une unite, en metres.}
 
 \item{limite}{Nombre maximal d'observations lues a la source.}
 
+\item{statuts}{Statuts des especes : \code{NULL} (le defaut) pour ne pas les
+consulter, \code{TRUE} pour les demander a la BDC Statuts par
+\code{\link[=sommier_statuts_taxref]{sommier_statuts_taxref()}}, au lieu de la foret, ou la table qu'elle a
+deja rendue.}
+
+\item{cache}{Repertoire de cache des statuts.}
+
 \item{occurrences}{Observations deja extraites (colonnes GBIF : \code{key},
 \code{species}, \code{kingdom}, \code{decimalLongitude}, \code{decimalLatitude},
 \code{coordinateUncertaintyInMeters}, \code{year}, \code{datasetKey}, \code{license}) ;
@@ -40,10 +49,18 @@ observation n'est pas placee dans une unite, en metres.}
 Un \code{data.frame} : \code{cd_ref}, \code{nom_valide}, \code{nom_vernaculaire},
 \code{groupe}, \code{n_observations}, \code{premiere_annee}, \code{derniere_annee}, \code{ug}
 (unites ou des observations sont placees, separees par des virgules),
-\code{n_jeux}. Attributs : \code{source}, \code{extrait_le}, \code{parametres}, \code{taxref}
-(version), \code{jeux} (cle, titre, licence et nombre d'observations de chaque
-jeu de donnees, a citer), \code{non_rapprochees} (noms et nombres
-d'observations), \code{tronque} (la source avait plus que \code{limite}).
+\code{n_jeux}. Avec les statuts, en plus : \code{protection} (nationale,
+regionale, departementale), \code{liste_rouge_nationale} et
+\code{liste_rouge_regionale} (la categorie la plus grave), \code{directives}
+(annexes des directives Habitats et Oiseaux), \code{protegee}, \code{sensible} ;
+\code{NA} pour une espece que la BDC Statuts n'a pas renseignee. Attributs :
+\code{source}, \code{extrait_le}, \code{parametres}, \code{taxref} (version), \code{jeux} (cle,
+titre, licence et nombre d'observations de chaque jeu de donnees, a
+citer), \code{non_rapprochees} (noms et nombres d'observations), \code{tronque}
+(la source avait plus que \code{limite}), \code{noms_taxref} (les \code{CD_NOM} de
+chaque espece rendue, synonymes compris) et, avec les statuts,
+\code{statuts} (version de la BDC Statuts), \code{statuts_lieu},
+\code{statuts_consultes_le}.
 }
 \description{
 Rend les especes que d'autres ont observees dans la foret et autour - des

@@ -114,12 +114,14 @@ SOMMIER_TYPES_MARTELES <- c("martelage", "produit_accidentel", "bois_delivre")
 #' devenue un constat complet : position, precision, operateur, photos.
 #' Le registre 1 est passe en `1.2.0` avec l'amenagement : la periode et la
 #' possibilite que l'arrete ou l'agrement fixe entrent dans la chaine.
+#' Le registre 9 est passe en `1.3.0` quand une espece a pu porter son
+#' `CD_NOM` de TAXREF ; les fiches anterieures, sans `cd_nom`, restent valides.
 #'
 #' @export
 SOMMIER_SCHEMA_VERSIONS <- c(
   "1" = "r1-1.2.0", "2" = "r2-1.4.0", "3" = "r3-1.1.0",
   "4" = "r4-1.2.0", "5" = "r5-1.3.0", "6" = "r6-1.2.0",
-  "7" = "r7-1.1.0", "8" = "r8-1.3.0", "9" = "r9-1.2.0"
+  "7" = "r7-1.1.0", "8" = "r8-1.3.0", "9" = "r9-1.3.0"
 )
 
 #' Payload du registre 5 - coupes et recoltes
