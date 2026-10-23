@@ -30,6 +30,7 @@ Suggests:
     curl,
     knitr,
     nemeton,
+    readxl,
     rgbif,
     rmarkdown,
     sf,

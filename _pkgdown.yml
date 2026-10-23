@@ -161,6 +161,8 @@ reference:
     - valider_reprise
     - sommier_provenance
     - SOMMIER_SOURCES_REPRISE
+    - sommier_reprendre_travaux
+    - SOMMIER_COLONNES_TABLEUR_TRAVAUX
 
   - title: "Jeu de démonstration"
     desc: >

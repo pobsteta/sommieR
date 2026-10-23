@@ -48,6 +48,38 @@ Patrimoine, lot 2 : les statuts (brief `patrimoine-1`).
 - Tests sans réseau : les réponses réelles de l'API TAXREF pour cinq espèces
   en forêt d'Orléans, dans `tests/testthat/fixtures`.
 
+# sommieR 0.33.0
+
+Travaux, lot 4 : la reprise (brief `travaux-1`).
+
+- **`sommier_reprendre_travaux()`** transcrit au registre 6 un sommier de
+  travaux tenu sous tableur, CSV ou XLSX : une ligne, une intervention, écrite
+  par `sommier_reprise()` et `sommier_reprendre()`. Chaque entrée cite sa
+  pièce, obligatoire comme pour toute reprise, porte le NDP de sa provenance
+  (3 pour un tableur, jamais 0) et se date du jour de l'import ; la date de
+  l'évènement est celle de la réalisation, à défaut de la réception, à défaut
+  le 1er janvier de l'année.
+- **Le format est celui du tableau métier**, décrit par
+  `SOMMIER_COLONNES_TABLEUR_TRAVAUX` : les champs du payload `travaux`, plus
+  le numéro d'unité, la date et la géométrie en WKT. Les en-têtes se lisent
+  sans casse ni accents (`Année`, `Montant (€)`, `Nature des travaux`), les
+  nombres avec la virgule décimale, les dates en JJ/MM/AAAA ou telles qu'Excel
+  les range ; `Non prévu` vaut `non_prevu`. Une colonne inconnue fait refuser
+  le fichier plutôt que de se perdre sans trace.
+- **Code et géométrie entrent quand ils existent.** Une intervention sans
+  code reste une intervention, rangée « non codée » au bilan. Une géométrie
+  est un point, une ligne ou un polygone de la forme que le code admet ; les
+  multi-géométries sont refusées, une partie par ligne. L'unité est celle du
+  numéro, à défaut celle qui contient la géométrie, à défaut la forêt.
+- **Tout ou rien, et rejouable.** Une ligne fautive (code inconnu, unité qui
+  n'est pas celle du code, écart au prévu sans motif, unité de gestion
+  inconnue, date illisible, doublon) fait refuser le tableur entier, fautes
+  listées ligne par ligne. L'identifiant de chaque entrée se tire de son
+  contenu : réimporter le même tableur n'écrit rien, un tableur complété
+  n'écrit que ses lignes nouvelles, et le compte rendu dit combien étaient
+  déjà là.
+- `readxl` rejoint les dépendances suggérées, pour les XLSX.
+
 # sommieR 0.32.0
 
 Sommier, lot 2 : le visa sur le document (brief `sommier-1`).
