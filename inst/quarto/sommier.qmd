@@ -32,7 +32,7 @@ knitr:
 donnees <- readRDS(params$donnees)
 s <- donnees$sommier
 e <- s$ecritures
-registres <- sommieR::SOMMIER_REGISTRES
+registres <- donnees$registres
 
 # Un payload se lit en ligne : chaque champ sous son libellé, dans l'ordre de
 # l'imprimé quand le type en a un, puis tout le reste. Rien n'est omis : un
@@ -170,6 +170,86 @@ cat("| | |\n|---|---|\n",
     donnees$version_sommier, ") |\n\n", sep = "")
 ```
 
+```{r visa, results='asis'}
+# Le visa qui arrête l'édition, tel que sommier_verifier_visas() le juge :
+# qui a visé quoi, et quand. Les pièces elles-mêmes sont en annexe.
+pieces_du_visa <- FALSE
+if (!is.null(s$visa)) {
+  vi <- s$visa
+  vf <- vi$verifie
+  sg <- vi$signataire
+  ce <- vi$certificat
+  je <- vi$jeton
+  qui <- if (!is.na(sg$nom) && nzchar(sg$nom)) {
+    paste0(nettoyer(sg$nom), " (`", sg$sub, "`)")
+  } else paste0("`", sg$sub, "`")
+  autorites <- c(onf = "ONF", commune = "la commune", crpf = "le CRPF",
+                 proprietaire = "le propriétaire")
+  cat("# Visa de l'exercice ", vi$exercice, "\n\n", sep = "")
+  cat("Ce sommier est celui que ", qui, " a visé pour ",
+      autorites[[vi$autorite]], ", exercice ", vi$exercice,
+      " : les écritures jusqu'au n° ", numero(vi$seq_tete),
+      ", et pas au-delà.\n\n", sep = "")
+
+  signature <- if (is.null(vf) || is.na(vf$signature_valide)) {
+    "**non vérifiée** : le visa ne porte pas de certificat, et aucune clé publique n'a été fournie"
+  } else if (isTRUE(vf$signature_valide)) {
+    paste0("valide (", sg$alg, "), sous la clé ",
+           if (identical(vf$cle, "certificat")) "du certificat que porte le visa"
+           else "fournie à l'édition",
+           if (!is.na(sg$kid)) paste0(", `kid` ", nettoyer(sg$kid)) else "")
+  } else "**invalide** : elle ne se vérifie pas sous la clé du signataire"
+
+  certificat <- if (is.null(ce)) {
+    "aucun : le visa ne porte pas le certificat de son signataire"
+  } else if (!is.null(ce$erreur)) {
+    paste0("**", ce$erreur, "**")
+  } else {
+    paste0(nettoyer(ce$sujet),
+           if (ce$auto_signe) " (auto-signé)" else
+             paste0(", émis par ", nettoyer(ce$emetteur)),
+           " ; série `", ce$serie, "`, valide du ", ce$debut, " au ", ce$fin,
+           " ; empreinte SHA-256 `", ce$empreinte, "`")
+  }
+
+  etat_horodatage <- if (is.null(vf)) "absent" else vf$horodatage
+  horodatage <- switch(
+    etat_horodatage,
+    absent = paste0("**absent** : la date du visa (", vi$date_visa,
+                    ") ne repose que sur l'horloge du serveur"),
+    valide = paste0("attesté le **", je$date, "**",
+                    if (!is.na(je$autorite)) paste0(" par ", nettoyer(je$autorite)),
+                    " ; jeton vérifié et rattaché à une ancre de confiance"),
+    non_rattache = paste0("attesté le **", je$date, "**",
+                          if (!is.na(je$autorite)) paste0(" par ", nettoyer(je$autorite)),
+                          " ; jeton intact, mais l'autorité n'est rattachée à ",
+                          "aucune ancre de confiance fournie à l'édition"),
+    paste0("**invalide**",
+           if (!is.null(je) && !is.na(je$date)) paste0(" (le jeton dit ", je$date, ")"))
+  )
+
+  tete <- paste0("n° ", numero(vi$seq_tete), " — `", vi$hash_tete, "`",
+                 if (!is.null(vf) && isTRUE(vf$concorde) && isTRUE(vi$concorde))
+                   " ; c'est la tête de la chaîne imprimée"
+                 else " ; **ne concorde pas avec la chaîne**")
+
+  cat("| | |\n|---|---|\n",
+      "| **Signataire** | ", qui, " |\n",
+      "| **Certificat** | ", certificat, " |\n",
+      "| **Signature** | ", signature, " |\n",
+      "| **Tête visée** | ", tete, " |\n",
+      "| **Horodatage** | ", horodatage, " |\n",
+      if (!is.null(vf) && !is.na(vf$remarque))
+        paste0("| **Remarques** | ", nettoyer(vf$remarque), " |\n"),
+      "\n: Le visa, vérifié à l'édition {tbl-colwidths=\"[18,82]\"}\n\n",
+      sep = "")
+  cat("La vérification est faite hors ligne : la révocation des certificats",
+      "n'est pas consultée. La signature, le certificat et le jeton sont",
+      "reproduits en annexe, pour être vérifiés ailleurs.\n\n")
+  pieces_du_visa <- TRUE
+}
+```
+
 # Tenue du sommier (A10)
 
 ```{r tenue, results='asis'}
@@ -249,5 +329,34 @@ if (nrow(e) == 0L) {
     Empreinte = paste0("`", e$hash[ordre], "`"), check.names = FALSE
   ), row.names = FALSE, caption = "Empreintes des écritures"))
   cat("\n\n")
+}
+```
+
+```{r pieces, results='asis'}
+# Les pièces du visa, telles quelles. Une ligne trop longue déborderait de la
+# page : la signature est coupée à 64 caractères, qu'on rejoint en recopiant.
+couper <- function(x, n = 64L) {
+  x <- gsub("\\s+", "", x)
+  debuts <- seq.int(1L, max(nchar(x), 1L), by = n)
+  substring(x, debuts, pmin(debuts + n - 1L, nchar(x)))
+}
+bloc <- function(lignes) {
+  cat("```\n", paste(lignes, collapse = "\n"), "\n```\n\n", sep = "")
+}
+if (pieces_du_visa) {
+  cat("# Annexe : pièces du visa {.unnumbered}\n\n")
+  cat("La signature détachée (JWS) porte sur l'empreinte de la tête visée ;",
+      "elle est coupée à 64 caractères, à rejoindre sans espace.\n\n")
+  bloc(couper(vi$signature_jws))
+  if (!is.null(ce) && is.null(ce$erreur)) {
+    cat("Le certificat du signataire, au format PEM.\n\n")
+    bloc(trimws(ce$pem))
+  }
+  if (!is.null(je) && !is.null(je$base64)) {
+    cat("Le jeton d'horodatage (RFC 3161), en base64. Il atteste ",
+        "l'empreinte `", je$empreinte, "` (", je$algorithme, ") ; série `",
+        je$serie, "`, politique ", je$politique, ".\n\n", sep = "")
+    bloc(couper(je$base64))
+  }
 }
 ```
