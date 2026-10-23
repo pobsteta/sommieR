@@ -12,6 +12,8 @@ sommier_registre_quarto(
   registres = 1:9,
   jusqu_au_visa = NULL,
   public = FALSE,
+  cles_publiques = list(),
+  ancres = list(),
   quarto = Sys.which("quarto")
 )
 }
@@ -32,6 +34,11 @@ tout le sommier.}
 
 \item{public}{\code{TRUE} pour un sommier a transmettre : les tiers des
 registres 3 et 7 sont masques.}
+
+\item{cles_publiques, ancres}{Transmises a \code{\link[=sommier_verifier_visas]{sommier_verifier_visas()}} pour
+verifier le visa qui arrete l'edition : cles publiques des signataires
+(inutiles quand le visa porte son certificat), ancres de confiance des
+autorites d'horodatage. Sans effet sans \code{jusqu_au_visa}.}
 
 \item{quarto}{Chemin de l'executable Quarto.}
 }
@@ -55,6 +62,13 @@ Un sommier a transmettre hors du gestionnaire se rend avec \code{public = TRUE}
 ecriture) sont remplaces par "(masque)". La ligne, son montant et son
 empreinte restent : on voit qu'une ecriture existe, pas qui elle nomme. Les
 photos des constats ne sont jamais reproduites, seulement comptees.
+
+Arrete a un visa (\code{jusqu_au_visa}), le document porte en tete ce visa tel
+que \code{\link[=sommier_verifier_visas]{sommier_verifier_visas()}} le juge : le signataire et son certificat,
+la signature, le jeton d'horodatage et l'autorite qui l'a emis. Les pieces
+elles-memes (signature JWS, certificat PEM, jeton en base64) sont en
+annexe. Le nom du signataire n'est pas masque a \code{public = TRUE} : il vise
+en qualite, ce n'est pas un tiers.
 }
 \seealso{
 \code{\link[=sommier_registre]{sommier_registre()}}, \code{\link[=sommier_rapport_quarto]{sommier_rapport_quarto()}}
