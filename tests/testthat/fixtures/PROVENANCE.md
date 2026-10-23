@@ -127,3 +127,52 @@ là où `openssl` en ligne de commande manque.
 
 Les certificats du jeton figé expirent en 2036 ; le régénérer suit les
 commandes ci-dessus.
+
+---
+
+# Tableur de travaux
+
+`travaux-tableur.csv` — un sommier de travaux **fictif**, écrit à la main le
+17 octobre 2026 au format de `SOMMIER_COLONNES_TABLEUR_TRAVAUX` : en-têtes
+accentués, séparateur `;`, virgule décimale, espaces de milliers, dates
+JJ/MM/AAAA, une ligne vide en fin. Six interventions sur deux unités
+(« 12 » et « 13 ») de 300 × 200 m en Lambert-93, dont les tests posent les
+contours : une plantation en polygone, une clôture en ligne, un regarni en
+point sans numéro d'unité (rattaché par sa géométrie), un nettoiement sans
+code, une piste hors unité. Les coordonnées sont en WGS84.
+
+`travaux-tableur.xlsx` — le même tableau, enregistré par openpyxl 3.1 :
+nombres en nombres, dates en dates (que `readxl` relit en numéro de série).
+Les deux fichiers doivent donner les mêmes entrées.
+
+    # python3 csv_xlsx.py travaux-tableur.csv travaux-tableur.xlsx
+    import csv, datetime, sys
+    import openpyxl
+
+    src, dst = sys.argv[1], sys.argv[2]
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Travaux"
+    with open(src, encoding="utf-8") as f:
+        rows = [r for r in csv.reader(f, delimiter=";") if any(r)]
+    num = {"Année", "Quantité", "Nb plants", "Montant (€)", "Taux reprise (%)", "UG"}
+    dates = {"Date", "Date réception"}
+    head = rows[0]
+    ws.append(head)
+    for r in rows[1:]:
+        out = []
+        for h, v in zip(head, r):
+            if v == "":
+                out.append(None)
+            elif h in dates:
+                d, m, y = v.split("/")
+                out.append(datetime.date(int(y), int(m), int(d)))
+            elif h in num:
+                x = float(v.replace(" ", "").replace(",", "."))
+                out.append(int(x) if x.is_integer() else x)
+            else:
+                out.append(v)
+        ws.append(out)
+    for c in list(ws["B"])[1:] + list(ws["S"])[1:]:
+        c.number_format = "DD/MM/YYYY"
+    wb.save(dst)

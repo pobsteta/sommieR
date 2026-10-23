@@ -365,6 +365,13 @@ compte_rendu_reprise <- function(entrees) {
 print.sommier_compte_rendu_reprise <- function(x, ...) {
   cat("<reprise - ", x$n, " entree(s) transcrite(s)>\n", sep = "")
   cat("  foret     : ", x$foret_id, "\n", sep = "")
+  if (!is.null(x$deja_presents)) {
+    cat("  deja la   : ", x$deja_presents, " entree(s), non reecrite(s)\n",
+        sep = "")
+  }
+  if (x$n == 0L) {
+    return(invisible(x))
+  }
   cat("  ecrit le  : ", x$ecrit_le, "\n", sep = "")
   cat("  evenement : ", x$date_min, " a ", x$date_max, "\n", sep = "")
   cat("  sequence  : ", format(x$seq_debut, scientific = FALSE), " a ",
