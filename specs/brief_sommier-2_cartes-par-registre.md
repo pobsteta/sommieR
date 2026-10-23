@@ -71,6 +71,16 @@ n'a pas été interrogée.*
    sensible est dit par une liste de référence** (sensibilité SINP des
    espèces, statuts), pas par le type d'écriture.
 
+   *Arbitrage de Pascal, 23 octobre 2026, après acquisition :* **la liste de
+   référence est le référentiel national de sensibilité de l'INPN**
+   (`SENSIBILITE.zip`, version 18 du 7 août 2025,
+   `assets.patrinat.fr/files/referentiel/SENSIBILITE.zip`), daté et
+   empreint. Il porte, par `CD_REF` et par département (`CD_DEPT`), le code
+   de sensibilité (1 à 3), sa durée depuis l'observation, ses conditions
+   (statut biologique, comportement, autre) et la liste régionale dont il
+   vient. L'API TAXREF n'est pas retenue comme source. La licence n'est pas
+   demandée à PatriNat.
+
 4. **Toutes les positions, chacune avec son numéro.** Une écriture rectifiée
    reste dessinée, marquée « rectifiée par le n° X », d'un trait distinct ;
    un objet relevé plusieurs fois montre chaque relevé. C'est la mention
@@ -132,9 +142,22 @@ n'a pas été interrogée.*
 
 ## Questions ouvertes
 
-- **La liste de référence des espèces sensibles** : la sensibilité SINP
-  est régionale ; d'où la tire-t-on (référentiel publié, API, lot
-  Patrimoine 2 et ses statuts) ? À confier à l'acquisition.
+- **La liste de référence des espèces sensibles** : tranchée (décision 3,
+  référentiel INPN v18). Restent :
+  - *l'écart entre les sources* : à Orléans (Loiret), le fichier n'a pas de
+    ligne pour le Sabot de Vénus (le Centre-Val de Loire a sa liste flore,
+    la liste socle nationale ne s'applique pas), alors que l'API TAXREF rend
+    un code national 1 ; à confirmer auprès du pôle SINP Centre-Val de
+    Loire ;
+  - *la traduction des codes en floutage* : le fichier donne des codes 1
+    à 3, le guide v2.0 (2022) raisonne en surfaces ; la correspondance est
+    à établir, pas à inventer ;
+  - *les habitats, vestiges et arbres remarquables* : aucune liste citable
+    trouvée ; leur sort à `public = TRUE` est un choix du gestionnaire, que
+    le document dira tel ;
+  - *la licence du référentiel* n'est pas connue et ne sera pas demandée :
+    à décider si le fichier est inclus dans le paquet ou téléchargé et mis
+    en cache à l'usage.
 - **PDF/A avec Quarto et LaTeX** : faisabilité, et le périphérique `pdf()`
   qui ne connaît que le Latin-1 (`gestion-anterieure.qmd:150-151`).
 - **Les objets hors UG** ou rattachés à la forêt (travaux A50H, sécheresse
