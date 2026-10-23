@@ -211,8 +211,11 @@ sommier_registre_quarto <- function(con, foret_id, chemin, format = "html",
   if (isTRUE(public)) {
     sommier$ecritures <- masquer_tiers(sommier$ecritures)
   }
+  # Le rendu tourne dans un autre processus R : il ne lit que ce RDS, jamais
+  # le paquet installe, qui pourrait n'etre pas la version qui l'a extrait.
   donnees <- list(
     sommier = sommier,
+    registres = SOMMIER_REGISTRES,
     public = isTRUE(public),
     version_sommier = as.character(utils::packageVersion("sommieR")),
     edite_le = format(Sys.Date(), "%d/%m/%Y")

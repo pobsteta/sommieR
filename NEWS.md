@@ -23,6 +23,12 @@ Sommier, lot 2 : le visa sur le document (brief `sommier-1`).
   `cles_publiques` et `ancres`, transmises à `sommier_verifier_visas()`.
   L'élément `visa` de l'extraction devient une liste qui porte, en plus,
   `signataire`, `signature_jws`, `certificat`, `jeton` et `verifie`.
+- **Le sommier imprimé se rend avec le code qui l'a extrait.** Le gabarit
+  lisait la table des registres dans le paquet installé (`sommieR::`), dans
+  le processus R que lance Quarto : il échouait là où le paquet n'est pas
+  installé, et prenait ailleurs une version qui pouvait être plus ancienne.
+  Il la lit désormais dans le RDS du rendu, comme le reste ; un test
+  interdit `sommieR::` dans les gabarits.
 
 # sommieR 0.31.1
 

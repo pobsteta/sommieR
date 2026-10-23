@@ -32,7 +32,7 @@ knitr:
 donnees <- readRDS(params$donnees)
 s <- donnees$sommier
 e <- s$ecritures
-registres <- sommieR::SOMMIER_REGISTRES
+registres <- donnees$registres
 
 # Un payload se lit en ligne : chaque champ sous son libellé, dans l'ordre de
 # l'imprimé quand le type en a un, puis tout le reste. Rien n'est omis : un

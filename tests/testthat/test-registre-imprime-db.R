@@ -241,3 +241,14 @@ test_that("un visa sans certificat se dit non verifie, sauf cle fournie", {
                 collapse = "\n")
   expect_no_match(html, "pièces du visa", fixed = TRUE)
 })
+
+test_that("les gabarits ne chargent pas le paquet installe", {
+  # Le rendu tourne dans un autre processus R : un appel a sommieR:: y lirait
+  # le paquet installe, pas celui qui a extrait les donnees.
+  for (gabarit in list.files(system.file("quarto", package = "sommieR"),
+                             pattern = "\\.qmd$", full.names = TRUE)) {
+    texte <- readLines(gabarit, warn = FALSE, encoding = "UTF-8")
+    expect_false(any(grepl("sommieR::|library\\(sommieR\\)", texte)),
+                 info = basename(gabarit))
+  }
+})
