@@ -60,7 +60,7 @@ document.
 | **État de la chaîne** | intacte |
 | **Entrées** | 76 |
 | **Séquence de tête** | 76 |
-| **Empreinte de tête** | `aa0d128e06b60955ce6ceda8f5109098a15a10806331fdaa9d9213ddfbee454a` |
+| **Empreinte de tête** | `fc9d843c5b7878a78f34a4e28abb848f839e81dc29ff2998d4529a957117626f` |
 
 ## 2 Provenance des écritures
 
@@ -288,14 +288,14 @@ Constats d’équilibre forêt-gibier {.caption-top .table}
 Dernier relevé connu de chaque sujet : le patrimoine est un état
 courant, il n’est pas borné par la période du rapport.
 
-| Fiche | Appellation | Nom latin | Habitat | Surface (ha) | État sanitaire | Protection |
-|:---|:---|:---|:---|---:|:---|:---|
-| arbre | Alisier de la lisiere sud | — | — | — | bon | — |
-| arbre | Chandelle du talus est | — | — | — | mort | — |
-| arbre | Chene de la Justice | — | — | — | moyen | — |
-| espece | Sabot de Venus | Cypripedium calceolus | — | — | — | Directive Habitats, annexe II |
-| habitat | — | — | Pelouse calcicole seche | 1,3 | — | — |
-| vestige | Charbonniere de la section A | — | — | — | — | — |
+| Fiche | Appellation | Nom latin | Habitat | Surface (ha) | État sanitaire | Protection | CD_NOM |
+|:---|:---|:---|:---|---:|:---|:---|:---|
+| arbre | Alisier de la lisiere sud | — | — | — | bon | — | — |
+| arbre | Chandelle du talus est | — | — | — | mort | — | — |
+| arbre | Chene de la Justice | — | — | — | moyen | — | — |
+| espece | Sabot de Venus | Cypripedium calceolus | — | — | — | Directive Habitats, annexe II | — |
+| habitat | — | — | Pelouse calcicole seche | 1,3 | — | — | — |
+| vestige | Charbonniere de la section A | — | — | — | — | — | — |
 
 Arbres, peuplements, vestiges, espèces et habitats {.caption-top .table}
 
@@ -359,5 +359,5 @@ imprimé (`sommier_registre_quarto()`).
 
 ------------------------------------------------------------------------
 
-*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.33.0 le
+*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.34.0 le
 23/10/2026.*

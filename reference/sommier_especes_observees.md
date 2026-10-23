@@ -15,6 +15,8 @@ sommier_especes_observees(
   depuis = 2000,
   incertitude_max_m = 100,
   limite = 20000,
+  statuts = NULL,
+  cache = NULL,
   occurrences = NULL
 )
 ```
@@ -52,6 +54,17 @@ sommier_especes_observees(
 
   Nombre maximal d'observations lues a la source.
 
+- statuts:
+
+  Statuts des especes : `NULL` (le defaut) pour ne pas les consulter,
+  `TRUE` pour les demander a la BDC Statuts par
+  [`sommier_statuts_taxref()`](https://pobsteta.github.io/sommieR/reference/sommier_statuts_taxref.md),
+  au lieu de la foret, ou la table qu'elle a deja rendue.
+
+- cache:
+
+  Repertoire de cache des statuts.
+
 - occurrences:
 
   Observations deja extraites (colonnes GBIF : `key`, `species`,
@@ -64,10 +77,17 @@ sommier_especes_observees(
 Un `data.frame` : `cd_ref`, `nom_valide`, `nom_vernaculaire`, `groupe`,
 `n_observations`, `premiere_annee`, `derniere_annee`, `ug` (unites ou
 des observations sont placees, separees par des virgules), `n_jeux`.
-Attributs : `source`, `extrait_le`, `parametres`, `taxref` (version),
-`jeux` (cle, titre, licence et nombre d'observations de chaque jeu de
-donnees, a citer), `non_rapprochees` (noms et nombres d'observations),
-`tronque` (la source avait plus que `limite`).
+Avec les statuts, en plus : `protection` (nationale, regionale,
+departementale), `liste_rouge_nationale` et `liste_rouge_regionale` (la
+categorie la plus grave), `directives` (annexes des directives Habitats
+et Oiseaux), `protegee`, `sensible` ; `NA` pour une espece que la BDC
+Statuts n'a pas renseignee. Attributs : `source`, `extrait_le`,
+`parametres`, `taxref` (version), `jeux` (cle, titre, licence et nombre
+d'observations de chaque jeu de donnees, a citer), `non_rapprochees`
+(noms et nombres d'observations), `tronque` (la source avait plus que
+`limite`), `noms_taxref` (les `CD_NOM` de chaque espece rendue,
+synonymes compris) et, avec les statuts, `statuts` (version de la BDC
+Statuts), `statuts_lieu`, `statuts_consultes_le`.
 
 ## Details
 

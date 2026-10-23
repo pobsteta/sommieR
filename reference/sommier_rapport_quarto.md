@@ -125,8 +125,11 @@ sommier_rapport_quarto(
   Especes observees dans la foret et a ses abords, telles que les rend
   [`sommier_especes_observees()`](https://pobsteta.github.io/sommieR/reference/sommier_especes_observees.md)
   (facultatif) : une sous-section du patrimoine les liste, nommees dans
-  TAXREF, comme un contexte hors registre. Un document public ne les
-  rattache a aucune unite de gestion.
+  TAXREF, comme un contexte hors registre. Avec leurs statuts, elle met
+  en tete les especes protegees observees dans une unite de gestion,
+  celles sans fiche au registre 9 d'abord. Un document public ne
+  rattache a aucune unite une espece sensible, ni, sans les statuts,
+  aucune espece.
 
 - quarto:
 

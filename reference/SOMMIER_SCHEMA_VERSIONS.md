@@ -33,4 +33,7 @@ renvoyer au constat de terrain dont il procede (`constat_id`). Le
 registre 8 est passe en `1.3.0` quand la suite d'une detection est
 devenue un constat complet : position, precision, operateur, photos. Le
 registre 1 est passe en `1.2.0` avec l'amenagement : la periode et la
-possibilite que l'arrete ou l'agrement fixe entrent dans la chaine.
+possibilite que l'arrete ou l'agrement fixe entrent dans la chaine. Le
+registre 9 est passe en `1.3.0` quand une espece a pu porter son
+`CD_NOM` de TAXREF ; les fiches anterieures, sans `cd_nom`, restent
+valides.

@@ -13,7 +13,9 @@ registre9_espece(
   localisation = NULL,
   bibliographie = NULL,
   observations = NULL,
-  geometrie = NULL
+  geometrie = NULL,
+  cd_nom = NULL,
+  taxref = NULL
 )
 ```
 
@@ -55,10 +57,29 @@ registre9_espece(
   Facultative — un gestionnaire sans releve continue de saisir sans, et
   son sommier reste conforme.
 
+- cd_nom:
+
+  `CD_NOM` de l'espece dans TAXREF (facultatif) : le registre nomme lui
+  aussi dans le referentiel national, et la fiche se rapproche des
+  especes observees sans passer par le nom.
+
+- taxref:
+
+  TAXREF, tel que le rend
+  [`sommier_taxref()`](https://pobsteta.github.io/sommieR/reference/sommier_taxref.md)
+  (facultatif) : s'il est fourni, `cd_nom` doit y figurer parmi les
+  especes, et `nom_latin` y etre son nom ou son nom valide. Il sert au
+  controle et n'est pas ecrit.
+
 ## Value
 
 Une liste nommee, prete a etre passee a
 [`sommier_entree()`](https://pobsteta.github.io/sommieR/reference/sommier_entree.md).
+
+## Details
+
+Le `cd_nom` est entre au registre 9 avec le schema `r9-1.3.0`. Une fiche
+anterieure, sans `cd_nom`, reste valide et se relit a l'identique.
 
 ## Examples
 

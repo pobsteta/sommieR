@@ -195,6 +195,8 @@ habitats — et ce qu’ils apportent à l’IBP.
   : Referentiel taxonomique TAXREF
 - [`sommier_especes_observees()`](https://pobsteta.github.io/sommieR/reference/sommier_especes_observees.md)
   : Especes observees dans la foret et a ses abords
+- [`sommier_statuts_taxref()`](https://pobsteta.github.io/sommieR/reference/sommier_statuts_taxref.md)
+  : Statuts des especes : la BDC Statuts de TAXREF
 - [`SOMMIER_TYPES_REMARQUABLE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_REMARQUABLE.md)
   : Types de fiche du patrimoine remarquable (serie A50 r/\*)
 - [`SOMMIER_ETATS_SANITAIRES`](https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_SANITAIRES.md)

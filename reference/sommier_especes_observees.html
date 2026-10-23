@@ -11,7 +11,7 @@ TAXREF : une ligne par CD_REF, deux synonymes etant une espece."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.33.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.34.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,6 +59,8 @@ TAXREF : une ligne par <code>CD_REF</code>, deux synonymes etant une espece.</p>
 <span>  depuis <span class="op">=</span> <span class="fl">2000</span>,</span>
 <span>  incertitude_max_m <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>  limite <span class="op">=</span> <span class="fl">20000</span>,</span>
+<span>  statuts <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cache <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  occurrences <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -96,6 +98,17 @@ observation n'est pas placee dans une unite, en metres.</p></dd>
 <dd><p>Nombre maximal d'observations lues a la source.</p></dd>
 
 
+<dt id="arg-statuts">statuts<a class="anchor" aria-label="anchor" href="#arg-statuts"></a></dt>
+<dd><p>Statuts des especes : <code>NULL</code> (le defaut) pour ne pas les
+consulter, <code>TRUE</code> pour les demander a la BDC Statuts par
+<code><a href="sommier_statuts_taxref.html">sommier_statuts_taxref()</a></code>, au lieu de la foret, ou la table qu'elle a
+deja rendue.</p></dd>
+
+
+<dt id="arg-cache">cache<a class="anchor" aria-label="anchor" href="#arg-cache"></a></dt>
+<dd><p>Repertoire de cache des statuts.</p></dd>
+
+
 <dt id="arg-occurrences">occurrences<a class="anchor" aria-label="anchor" href="#arg-occurrences"></a></dt>
 <dd><p>Observations deja extraites (colonnes GBIF : <code>key</code>,
 <code>species</code>, <code>kingdom</code>, <code>decimalLongitude</code>, <code>decimalLatitude</code>,
@@ -108,10 +121,18 @@ observation n'est pas placee dans une unite, en metres.</p></dd>
     <p>Un <code>data.frame</code> : <code>cd_ref</code>, <code>nom_valide</code>, <code>nom_vernaculaire</code>,
 <code>groupe</code>, <code>n_observations</code>, <code>premiere_annee</code>, <code>derniere_annee</code>, <code>ug</code>
 (unites ou des observations sont placees, separees par des virgules),
-<code>n_jeux</code>. Attributs : <code>source</code>, <code>extrait_le</code>, <code>parametres</code>, <code>taxref</code>
-(version), <code>jeux</code> (cle, titre, licence et nombre d'observations de chaque
-jeu de donnees, a citer), <code>non_rapprochees</code> (noms et nombres
-d'observations), <code>tronque</code> (la source avait plus que <code>limite</code>).</p>
+<code>n_jeux</code>. Avec les statuts, en plus : <code>protection</code> (nationale,
+regionale, departementale), <code>liste_rouge_nationale</code> et
+<code>liste_rouge_regionale</code> (la categorie la plus grave), <code>directives</code>
+(annexes des directives Habitats et Oiseaux), <code>protegee</code>, <code>sensible</code> ;
+<code>NA</code> pour une espece que la BDC Statuts n'a pas renseignee. Attributs :
+<code>source</code>, <code>extrait_le</code>, <code>parametres</code>, <code>taxref</code> (version), <code>jeux</code> (cle,
+titre, licence et nombre d'observations de chaque jeu de donnees, a
+citer), <code>non_rapprochees</code> (noms et nombres d'observations), <code>tronque</code>
+(la source avait plus que <code>limite</code>), <code>noms_taxref</code> (les <code>CD_NOM</code> de
+chaque espece rendue, synonymes compris) et, avec les statuts,
+<code>statuts</code> (version de la BDC Statuts), <code>statuts_lieu</code>,
+<code>statuts_consultes_le</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

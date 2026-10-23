@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.33.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.34.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -331,10 +331,10 @@ si le registre a bougé.</p>
 <code class="sourceCode R"><span><span class="va">verif</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_verifier.html">sommier_verifier</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span></span>
 <span><span class="va">verif</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : d078b0bc-4d9f-440a-83bf-3c1033cf31be</span></span>
+<span><span class="co">#&gt;   foret     : c3c23adb-bbc9-44a9-9040-1af2f3f6d26b</span></span>
 <span><span class="co">#&gt;   entrees   : 76</span></span>
 <span><span class="co">#&gt;   seq tete  : 76</span></span>
-<span><span class="co">#&gt;   hash tete : aa0d128e06b60955ce6ceda8f5109098a15a10806331fdaa9d9213ddfbee454a</span></span>
+<span><span class="co">#&gt;   hash tete : fc9d843c5b7878a78f34a4e28abb848f839e81dc29ff2998d4529a957117626f</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -1283,12 +1283,13 @@ d’alors.</p>
 <caption>Arbres, peuplements, vestiges, espèces, habitats</caption>
 <colgroup>
 <col width="7%">
-<col width="20%">
-<col width="15%">
+<col width="19%">
+<col width="14%">
 <col width="16%">
 <col width="7%">
 <col width="10%">
-<col width="21%">
+<col width="20%">
+<col width="4%">
 </colgroup>
 <thead><tr class="header">
 <th align="left">type_fiche</th>
@@ -1298,6 +1299,7 @@ d’alors.</p>
 <th align="right">surface_ha</th>
 <th align="left">etat_sanitaire</th>
 <th align="left">statut_protection</th>
+<th align="right">cd_nom</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -1308,6 +1310,7 @@ d’alors.</p>
 <td align="right">NA</td>
 <td align="left">bon</td>
 <td align="left">NA</td>
+<td align="right">NA</td>
 </tr>
 <tr class="even">
 <td align="left">arbre</td>
@@ -1317,6 +1320,7 @@ d’alors.</p>
 <td align="right">NA</td>
 <td align="left">mort</td>
 <td align="left">NA</td>
+<td align="right">NA</td>
 </tr>
 <tr class="odd">
 <td align="left">arbre</td>
@@ -1326,6 +1330,7 @@ d’alors.</p>
 <td align="right">NA</td>
 <td align="left">moyen</td>
 <td align="left">NA</td>
+<td align="right">NA</td>
 </tr>
 <tr class="even">
 <td align="left">espece</td>
@@ -1335,6 +1340,7 @@ d’alors.</p>
 <td align="right">NA</td>
 <td align="left">NA</td>
 <td align="left">Directive Habitats, annexe II</td>
+<td align="right">NA</td>
 </tr>
 <tr class="odd">
 <td align="left">habitat</td>
@@ -1344,6 +1350,7 @@ d’alors.</p>
 <td align="right">1.3</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
+<td align="right">NA</td>
 </tr>
 <tr class="even">
 <td align="left">vestige</td>
@@ -1353,6 +1360,7 @@ d’alors.</p>
 <td align="right">NA</td>
 <td align="left">NA</td>
 <td align="left">NA</td>
+<td align="right">NA</td>
 </tr>
 </tbody>
 </table>
@@ -1832,7 +1840,7 @@ GeoJSON n’exige rien de plus que PostGIS et s’ouvre sans rien installer
 <span><span class="va">export</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_exporter_sig.html">sommier_exporter_sig</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">couche</span>, format <span class="op">=</span> <span class="st">"geojson"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">export</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 3</span></span>
-<span><span class="co">#&gt;  $ chemin               : chr "/tmp/RtmpEtpFUE/file3f636ec44f53.geojson"</span></span>
+<span><span class="co">#&gt;  $ chemin               : chr "/tmp/RtmpAxNbYd/file3e1d22cb1803.geojson"</span></span>
 <span><span class="co">#&gt;  $ n_unites             : int 3</span></span>
 <span><span class="co">#&gt;  $ unites_sans_geometrie: chr(0)</span></span></code></pre></div>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
@@ -1892,10 +1900,10 @@ base et sans le paquet qui l’a produit.</p>
 <span><span class="fu"><a href="../reference/sommier_exporter_manifeste.html">sommier_exporter_manifeste</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/sommier_verifier_manifeste.html">sommier_verifier_manifeste</a></span><span class="op">(</span><span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : d078b0bc-4d9f-440a-83bf-3c1033cf31be</span></span>
+<span><span class="co">#&gt;   foret     : c3c23adb-bbc9-44a9-9040-1af2f3f6d26b</span></span>
 <span><span class="co">#&gt;   entrees   : 76</span></span>
 <span><span class="co">#&gt;   seq tete  : 76</span></span>
-<span><span class="co">#&gt;   hash tete : aa0d128e06b60955ce6ceda8f5109098a15a10806331fdaa9d9213ddfbee454a</span></span>
+<span><span class="co">#&gt;   hash tete : fc9d843c5b7878a78f34a4e28abb848f839e81dc29ff2998d4529a957117626f</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span>
 <span><span class="co">#&gt;   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau</span></span></code></pre></div>
 <p>Toute entrée modifiée, retirée ou insérée après coup invalide

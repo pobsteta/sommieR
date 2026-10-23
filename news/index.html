@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.33.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.34.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,27 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.34.0" id="sommier-0340">sommieR 0.34.0<a class="anchor" aria-label="anchor" href="#sommier-0340"></a></h2>
+<p>Patrimoine, lot 2 : les statuts (brief <code>patrimoine-1</code>).</p>
+<ul><li>
+<strong><code><a href="../reference/sommier_statuts_taxref.html">sommier_statuts_taxref()</a></code></strong> rend les statuts des espèces que la BDC Statuts de PatriNat donne au lieu de la forêt : protection nationale, régionale et départementale, listes rouges, annexes des directives Habitats et Oiseaux, sensibilité, rapportés par <code>CD_REF</code>. Le fichier de la BDC que l’INPN publiait ne répond plus depuis la cyberattaque de l’été 2025 ; l’API TAXREF (<code>taxref.mnhn.fr/api</code>, <code>status/search/lines</code>), elle, sert de nouveau les statuts, et c’est elle qui est lue. La version citée est celle de TAXREF que l’API dit courante : « BDC Statuts, TAXREF v18.0 ».</li>
+<li>
+<strong>Les statuts du lieu, pas ceux de la France entière.</strong> L’API est interrogée en un point de la forêt : elle rend les statuts nationaux, ceux de la région et ceux du département. Une liste rouge du Centre-Val de Loire vaut pour Orléans, pas celle de Bourgogne.</li>
+<li>
+<strong>Un taxon à la fois, puis le cache.</strong> Une requête qui porte plusieurs taxons, ou tout un type de statut, dédoublonne les lignes d’un taxon à l’autre : le Pic mar y perd sa protection nationale. Chaque espèce est donc demandée seule, et gardée en cache par lieu ; un second appel ne demande que les espèces nouvelles, et le rapport ne sollicite jamais le réseau. Une nouvelle version de TAXREF invalide le cache.</li>
+<li>
+<strong><code><a href="../reference/sommier_especes_observees.html">sommier_especes_observees()</a></code></strong> gagne <code>statuts</code> : <code>TRUE</code> les demande à la BDC Statuts, une table de <code><a href="../reference/sommier_statuts_taxref.html">sommier_statuts_taxref()</a></code> les fournit. Le tableau gagne, en fin de colonnes, <code>protection</code>, <code>liste_rouge_nationale</code> et <code>liste_rouge_regionale</code> (la catégorie la plus grave quand l’espèce est évaluée plusieurs fois), <code>directives</code>, <code>protegee</code> et <code>sensible</code>. Une espèce que la BDC n’a pas renseignée porte <code>NA</code> : on ne sait pas, et on ne dit pas non. L’attribut <code>noms_taxref</code> donne les <code>CD_NOM</code> de chaque espèce, synonymes compris.</li>
+<li>
+<strong>Le rapport met en tête les espèces protégées observées dans une unité de gestion</strong>, celles sans fiche au registre 9 d’abord : ce sont celles que le gestionnaire pourrait vouloir aller voir. Les tableaux par groupe gagnent une colonne « Statuts » (PN, PR, PD, LRN et LRR menacées, annexes DH et DO), et l’encadré cite la BDC, sa version, le lieu et la date de consultation. Sans statuts, le rapport dit qu’ils n’ont pas été consultés.</li>
+<li>
+<strong>Un document public ne place pas une espèce sensible dans une unité.</strong> Avec les statuts, seules les espèces que la BDC dit sensibles, et celles qu’elle n’a pas renseignées, perdent leur unité ; sans eux, aucune espèce n’est placée, comme avant.</li>
+<li>
+<strong><code><a href="../reference/registre9_espece.html">registre9_espece()</a></code></strong> gagne <code>cd_nom</code>, le <code>CD_NOM</code> de l’espèce dans TAXREF. Avec <code>taxref</code>, il est contrôlé : une espèce de TAXREF, dont le nom latin est le nom ou le nom valide. Le rapport rapproche alors la fiche des espèces observées par son <code>CD_NOM</code>, synonymes compris, et non plus par le nom seul. <code>v_remarquable</code> gagne <code>cd_nom</code> en fin de colonnes.</li>
+<li>
+<strong>Registre 9 en <code>r9-1.3.0</code>.</strong> Les fiches déjà chaînées, sans <code>cd_nom</code>, restent valides et se relisent à l’identique.</li>
+<li>Tests sans réseau : les réponses réelles de l’API TAXREF pour cinq espèces en forêt d’Orléans, dans <code>tests/testthat/fixtures</code>.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.33.0" id="sommier-0330">sommieR 0.33.0<a class="anchor" aria-label="anchor" href="#sommier-0330"></a></h2>
 <p>Travaux, lot 4 : la reprise (brief <code>travaux-1</code>).</p>

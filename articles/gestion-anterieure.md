@@ -174,10 +174,10 @@ registre a bougé.
 verif <- sommier_verifier(con, foret)
 verif
 #> Verification de chaine - sommier
-#>   foret     : d078b0bc-4d9f-440a-83bf-3c1033cf31be
+#>   foret     : c3c23adb-bbc9-44a9-9040-1af2f3f6d26b
 #>   entrees   : 76
 #>   seq tete  : 76
-#>   hash tete : aa0d128e06b60955ce6ceda8f5109098a15a10806331fdaa9d9213ddfbee454a
+#>   hash tete : fc9d843c5b7878a78f34a4e28abb848f839e81dc29ff2998d4529a957117626f
 #>   etat      : chaine intacte
 ```
 
@@ -482,14 +482,14 @@ Justice, revisité en 2024, figure avec son état sanitaire d’alors.
 tableau(ga$sections$patrimoine, "Arbres, peuplements, vestiges, espèces, habitats")
 ```
 
-| type_fiche | appellation | nom_latin | type_habitat | surface_ha | etat_sanitaire | statut_protection |
-|:---|:---|:---|:---|---:|:---|:---|
-| arbre | Alisier de la lisiere sud | NA | NA | NA | bon | NA |
-| arbre | Chandelle du talus est | NA | NA | NA | mort | NA |
-| arbre | Chene de la Justice | NA | NA | NA | moyen | NA |
-| espece | Sabot de Venus | Cypripedium calceolus | NA | NA | NA | Directive Habitats, annexe II |
-| habitat | NA | NA | Pelouse calcicole seche | 1.3 | NA | NA |
-| vestige | Charbonniere de la section A | NA | NA | NA | NA | NA |
+| type_fiche | appellation | nom_latin | type_habitat | surface_ha | etat_sanitaire | statut_protection | cd_nom |
+|:---|:---|:---|:---|---:|:---|:---|---:|
+| arbre | Alisier de la lisiere sud | NA | NA | NA | bon | NA | NA |
+| arbre | Chandelle du talus est | NA | NA | NA | mort | NA | NA |
+| arbre | Chene de la Justice | NA | NA | NA | moyen | NA | NA |
+| espece | Sabot de Venus | Cypripedium calceolus | NA | NA | NA | Directive Habitats, annexe II | NA |
+| habitat | NA | NA | Pelouse calcicole seche | 1.3 | NA | NA | NA |
+| vestige | Charbonniere de la section A | NA | NA | NA | NA | NA | NA |
 
 Arbres, peuplements, vestiges, espèces, habitats {.table}
 
@@ -833,7 +833,7 @@ couche <- tempfile(fileext = ".geojson")
 export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
 str(export)
 #> List of 3
-#>  $ chemin               : chr "/tmp/RtmpEtpFUE/file3f636ec44f53.geojson"
+#>  $ chemin               : chr "/tmp/RtmpAxNbYd/file3e1d22cb1803.geojson"
 #>  $ n_unites             : int 3
 #>  $ unites_sans_geometrie: chr(0)
 ```
@@ -906,10 +906,10 @@ chemin <- tempfile(fileext = ".json")
 sommier_exporter_manifeste(con, foret, chemin)
 sommier_verifier_manifeste(chemin)
 #> Verification de chaine - sommier
-#>   foret     : d078b0bc-4d9f-440a-83bf-3c1033cf31be
+#>   foret     : c3c23adb-bbc9-44a9-9040-1af2f3f6d26b
 #>   entrees   : 76
 #>   seq tete  : 76
-#>   hash tete : aa0d128e06b60955ce6ceda8f5109098a15a10806331fdaa9d9213ddfbee454a
+#>   hash tete : fc9d843c5b7878a78f34a4e28abb848f839e81dc29ff2998d4529a957117626f
 #>   etat      : chaine intacte
 #>   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau
 ```
