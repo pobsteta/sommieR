@@ -60,7 +60,7 @@ document.
 | **État de la chaîne** | intacte |
 | **Entrées** | 76 |
 | **Séquence de tête** | 76 |
-| **Empreinte de tête** | `9f3810e972d7eb27cde9fa4a9361b250a4e3581cb0a89cdfddbb8b3c65ebe981` |
+| **Empreinte de tête** | `aa0d128e06b60955ce6ceda8f5109098a15a10806331fdaa9d9213ddfbee454a` |
 
 ## 2 Provenance des écritures
 
@@ -359,5 +359,5 @@ imprimé (`sommier_registre_quarto()`).
 
 ------------------------------------------------------------------------
 
-*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.32.0 le
+*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 0.33.0 le
 23/10/2026.*

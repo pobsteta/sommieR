@@ -220,6 +220,10 @@ jour où elle est écrite.
   : Ce qui a ete constate, ce qui a ete transcrit
 - [`SOMMIER_SOURCES_REPRISE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_SOURCES_REPRISE.md)
   : Provenances usuelles d'une reprise, et le NDP qu'elles portent
+- [`sommier_reprendre_travaux()`](https://pobsteta.github.io/sommieR/reference/sommier_reprendre_travaux.md)
+  : Reprise d'un sommier de travaux tenu sous tableur
+- [`SOMMIER_COLONNES_TABLEUR_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_COLONNES_TABLEUR_TRAVAUX.md)
+  : Colonnes d'un sommier de travaux tenu sous tableur
 
 ## Jeu de démonstration
 

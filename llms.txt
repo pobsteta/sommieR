@@ -397,6 +397,18 @@ genèse reste la genèse. Les vues portent `repris`, `reprise_source` et
 par registre ce qui a été constaté et ce qui a été transcrit —
 [`sommier_provenance()`](https://pobsteta.github.io/sommieR/reference/sommier_provenance.md).
 
+Un sommier de travaux tenu sous tableur — une ligne par intervention,
+les colonnes de `SOMMIER_COLONNES_TABLEUR_TRAVAUX` — entre d’un bloc au
+registre 6, avec son code et sa géométrie quand il les porte :
+
+``` r
+
+sommier_reprendre_travaux(
+  con, foret, "suivi_travaux.csv", auteur = "agent-01",
+  source = reprise_source("tableur", "Suivi des travaux 2015-2025, CRPF")
+)
+```
+
 ## Deux points de conception à connaître
 
 ### L’empreinte couvre plus que le payload
@@ -702,6 +714,10 @@ jour où elle est écrite.
   : Ce qui a ete constate, ce qui a ete transcrit
 - [`SOMMIER_SOURCES_REPRISE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_SOURCES_REPRISE.md)
   : Provenances usuelles d'une reprise, et le NDP qu'elles portent
+- [`sommier_reprendre_travaux()`](https://pobsteta.github.io/sommieR/reference/sommier_reprendre_travaux.md)
+  : Reprise d'un sommier de travaux tenu sous tableur
+- [`SOMMIER_COLONNES_TABLEUR_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_COLONNES_TABLEUR_TRAVAUX.md)
+  : Colonnes d'un sommier de travaux tenu sous tableur
 
 ## Jeu de démonstration
 
