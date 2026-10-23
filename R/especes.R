@@ -92,6 +92,11 @@ sommier_taxref <- function(cache = NULL, source = SOMMIER_SOURCE_TAXREF,
 #' @param incertitude_max_m Incertitude de position au-dela de laquelle une
 #'   observation n'est pas placee dans une unite, en metres.
 #' @param limite Nombre maximal d'observations lues a la source.
+#' @param statuts Statuts des especes : `NULL` (le defaut) pour ne pas les
+#'   consulter, `TRUE` pour les demander a la BDC Statuts par
+#'   [sommier_statuts_taxref()], au lieu de la foret, ou la table qu'elle a
+#'   deja rendue.
+#' @param cache Repertoire de cache des statuts.
 #' @param occurrences Observations deja extraites (colonnes GBIF : `key`,
 #'   `species`, `kingdom`, `decimalLongitude`, `decimalLatitude`,
 #'   `coordinateUncertaintyInMeters`, `year`, `datasetKey`, `license`) ;
@@ -100,10 +105,18 @@ sommier_taxref <- function(cache = NULL, source = SOMMIER_SOURCE_TAXREF,
 #' @return Un `data.frame` : `cd_ref`, `nom_valide`, `nom_vernaculaire`,
 #'   `groupe`, `n_observations`, `premiere_annee`, `derniere_annee`, `ug`
 #'   (unites ou des observations sont placees, separees par des virgules),
-#'   `n_jeux`. Attributs : `source`, `extrait_le`, `parametres`, `taxref`
-#'   (version), `jeux` (cle, titre, licence et nombre d'observations de chaque
-#'   jeu de donnees, a citer), `non_rapprochees` (noms et nombres
-#'   d'observations), `tronque` (la source avait plus que `limite`).
+#'   `n_jeux`. Avec les statuts, en plus : `protection` (nationale,
+#'   regionale, departementale), `liste_rouge_nationale` et
+#'   `liste_rouge_regionale` (la categorie la plus grave), `directives`
+#'   (annexes des directives Habitats et Oiseaux), `protegee`, `sensible` ;
+#'   `NA` pour une espece que la BDC Statuts n'a pas renseignee. Attributs :
+#'   `source`, `extrait_le`, `parametres`, `taxref` (version), `jeux` (cle,
+#'   titre, licence et nombre d'observations de chaque jeu de donnees, a
+#'   citer), `non_rapprochees` (noms et nombres d'observations), `tronque`
+#'   (la source avait plus que `limite`), `noms_taxref` (les `CD_NOM` de
+#'   chaque espece rendue, synonymes compris) et, avec les statuts,
+#'   `statuts` (version de la BDC Statuts), `statuts_lieu`,
+#'   `statuts_consultes_le`.
 #'
 #' @seealso [sommier_taxref()], [sommier_rapport_quarto()] et son argument
 #'   `especes_observees`.
@@ -117,7 +130,8 @@ sommier_taxref <- function(cache = NULL, source = SOMMIER_SOURCE_TAXREF,
 sommier_especes_observees <- function(emprise, taxref, source = "gbif",
                                       tampon_m = 500, depuis = 2000,
                                       incertitude_max_m = 100,
-                                      limite = 20000, occurrences = NULL) {
+                                      limite = 20000, statuts = NULL,
+                                      cache = NULL, occurrences = NULL) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Le paquet `sf` est requis pour situer les observations.",
          call. = FALSE)
@@ -147,6 +161,17 @@ sommier_especes_observees <- function(emprise, taxref, source = "gbif",
                                       incertitude_max_m = incertitude_max_m)
   attr(especes, "taxref") <- attr(taxref, "version")
   attr(especes, "tronque") <- tronque
+  # Les noms de chaque espece rendue, synonymes compris : une fiche du
+  # registre 9 qui porte un CD_NOM s'y retrouve sans passer par le nom.
+  noms <- taxref$cd_ref %in% especes$cd_ref
+  attr(especes, "noms_taxref") <- data.frame(cd_nom = taxref$cd_nom[noms],
+                                             cd_ref = taxref$cd_ref[noms])
+  if (isTRUE(statuts)) {
+    statuts <- sommier_statuts_taxref(especes$cd_ref, emprise, cache = cache)
+  }
+  if (!is.null(statuts)) {
+    especes <- ajouter_statuts(especes, statuts)
+  }
   especes
 }
 

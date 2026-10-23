@@ -12,7 +12,9 @@ registre9_espece(
   localisation = NULL,
   bibliographie = NULL,
   observations = NULL,
-  geometrie = NULL
+  geometrie = NULL,
+  cd_nom = NULL,
+  taxref = NULL
 )
 }
 \arguments{
@@ -34,12 +36,25 @@ directive Habitats, liste rouge (facultatif).}
 \item{geometrie}{Position de l'objet, en WGS84 : voir \code{\link[=geom_point]{geom_point()}}.
 Facultative — un gestionnaire sans releve continue de saisir sans, et son
 sommier reste conforme.}
+
+\item{cd_nom}{\code{CD_NOM} de l'espece dans TAXREF (facultatif) : le registre
+nomme lui aussi dans le referentiel national, et la fiche se rapproche
+des especes observees sans passer par le nom.}
+
+\item{taxref}{TAXREF, tel que le rend \code{\link[=sommier_taxref]{sommier_taxref()}} (facultatif) :
+s'il est fourni, \code{cd_nom} doit y figurer parmi les especes, et
+\code{nom_latin} y etre son nom ou son nom valide. Il sert au controle et
+n'est pas ecrit.}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.
 }
 \description{
 Payload du registre 9 - espece protegee (imprimes A50 r/e et r/s)
+}
+\details{
+Le \code{cd_nom} est entre au registre 9 avec le schema \verb{r9-1.3.0}. Une fiche
+anterieure, sans \code{cd_nom}, reste valide et se relit a l'identique.
 }
 \examples{
 registre9_espece(

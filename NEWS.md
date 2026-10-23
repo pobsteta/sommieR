@@ -1,3 +1,53 @@
+# sommieR 0.34.0
+
+Patrimoine, lot 2 : les statuts (brief `patrimoine-1`).
+
+- **`sommier_statuts_taxref()`** rend les statuts des espèces que la BDC
+  Statuts de PatriNat donne au lieu de la forêt : protection nationale,
+  régionale et départementale, listes rouges, annexes des directives Habitats
+  et Oiseaux, sensibilité, rapportés par `CD_REF`. Le fichier de la BDC que
+  l'INPN publiait ne répond plus depuis la cyberattaque de l'été 2025 ; l'API
+  TAXREF (`taxref.mnhn.fr/api`, `status/search/lines`), elle, sert de nouveau
+  les statuts, et c'est elle qui est lue. La version citée est celle de TAXREF
+  que l'API dit courante : « BDC Statuts, TAXREF v18.0 ».
+- **Les statuts du lieu, pas ceux de la France entière.** L'API est
+  interrogée en un point de la forêt : elle rend les statuts nationaux, ceux
+  de la région et ceux du département. Une liste rouge du Centre-Val de Loire
+  vaut pour Orléans, pas celle de Bourgogne.
+- **Un taxon à la fois, puis le cache.** Une requête qui porte plusieurs
+  taxons, ou tout un type de statut, dédoublonne les lignes d'un taxon à
+  l'autre : le Pic mar y perd sa protection nationale. Chaque espèce est donc
+  demandée seule, et gardée en cache par lieu ; un second appel ne demande que
+  les espèces nouvelles, et le rapport ne sollicite jamais le réseau. Une
+  nouvelle version de TAXREF invalide le cache.
+- **`sommier_especes_observees()`** gagne `statuts` : `TRUE` les demande à la
+  BDC Statuts, une table de `sommier_statuts_taxref()` les fournit. Le
+  tableau gagne, en fin de colonnes, `protection`, `liste_rouge_nationale` et
+  `liste_rouge_regionale` (la catégorie la plus grave quand l'espèce est
+  évaluée plusieurs fois), `directives`, `protegee` et `sensible`. Une espèce
+  que la BDC n'a pas renseignée porte `NA` : on ne sait pas, et on ne dit pas
+  non. L'attribut `noms_taxref` donne les `CD_NOM` de chaque espèce,
+  synonymes compris.
+- **Le rapport met en tête les espèces protégées observées dans une unité de
+  gestion**, celles sans fiche au registre 9 d'abord : ce sont celles que le
+  gestionnaire pourrait vouloir aller voir. Les tableaux par groupe gagnent
+  une colonne « Statuts » (PN, PR, PD, LRN et LRR menacées, annexes DH et
+  DO), et l'encadré cite la BDC, sa version, le lieu et la date de
+  consultation. Sans statuts, le rapport dit qu'ils n'ont pas été consultés.
+- **Un document public ne place pas une espèce sensible dans une unité.**
+  Avec les statuts, seules les espèces que la BDC dit sensibles, et celles
+  qu'elle n'a pas renseignées, perdent leur unité ; sans eux, aucune espèce
+  n'est placée, comme avant.
+- **`registre9_espece()`** gagne `cd_nom`, le `CD_NOM` de l'espèce dans
+  TAXREF. Avec `taxref`, il est contrôlé : une espèce de TAXREF, dont le nom
+  latin est le nom ou le nom valide. Le rapport rapproche alors la fiche des
+  espèces observées par son `CD_NOM`, synonymes compris, et non plus par le
+  nom seul. `v_remarquable` gagne `cd_nom` en fin de colonnes.
+- **Registre 9 en `r9-1.3.0`.** Les fiches déjà chaînées, sans `cd_nom`,
+  restent valides et se relisent à l'identique.
+- Tests sans réseau : les réponses réelles de l'API TAXREF pour cinq espèces
+  en forêt d'Orléans, dans `tests/testthat/fixtures`.
+
 # sommieR 0.33.0
 
 Travaux, lot 4 : la reprise (brief `travaux-1`).

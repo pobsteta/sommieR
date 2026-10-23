@@ -53,7 +53,8 @@ libelles_colonnes <- c(
   taux_abroutissement_pct = "Abroutissement (%)", diagnostic = "Diagnostic",
   type_fiche = "Fiche", appellation = "Appellation", nom_latin = "Nom latin",
   type_habitat = "Habitat", etat_sanitaire = "État sanitaire",
-  statut_protection = "Protection", facteur_ibp = "Facteur IBP",
+  statut_protection = "Protection", cd_nom = "CD_NOM",
+  facteur_ibp = "Facteur IBP",
   element = "Élément", valeur = "Valeur", n_entrees = "Entrées"
 )
 
@@ -76,9 +77,9 @@ tableau <- function(nom, legende = NULL) {
     cat("*Aucun enregistrement sur la période.*\n\n")
     return(invisible(NULL))
   }
-  # Un millésime n'est pas une quantité : le séparateur de milliers en ferait
-  # « 2 016 ».
-  for (colonne in intersect(c("exercice", "annee"), names(df))) {
+  # Un millésime, un CD_NOM ne sont pas des quantités : le séparateur de
+  # milliers en ferait « 2 016 ».
+  for (colonne in intersect(c("exercice", "annee", "cd_nom"), names(df))) {
     df[[colonne]] <- as.character(df[[colonne]])
   }
   numeriques <- vapply(df, is.numeric, logical(1))
@@ -1831,6 +1832,8 @@ e <- rapport$especes_observees
 p <- attr(e, "parametres")
 orphelines <- attr(e, "non_rapprochees")
 jeux <- attr(e, "jeux")
+avec_statuts <- !is.null(attr(e, "statuts"))
+lieu_statuts <- attr(e, "statuts_lieu")
 cat("### Espèces observées dans la forêt et à ses abords {#sec-especes-observees}\n\n")
 cat("::: {.callout-note}\n## Hors registre\n\n",
     "Observations publiées par d'autres que le gestionnaire, extraites de ",
@@ -1847,7 +1850,58 @@ cat("::: {.callout-note}\n## Hors registre\n\n",
     if (isTRUE(attr(e, "tronque"))) paste0(
       " La source portait plus d'observations que la limite de lecture : ",
       "la liste est incomplète."),
+    if (avec_statuts) paste0(
+      " Les statuts sont ceux de la **", attr(e, "statuts"), "** (PatriNat, ",
+      "par l'API TAXREF), au lieu de la forêt",
+      if (!is.null(lieu_statuts) && !is.na(lieu_statuts))
+        paste0(" (", lieu_statuts, ")"),
+      ", consultés le ",
+      format(as.Date(attr(e, "statuts_consultes_le")), "%d/%m/%Y"), ".")
+    else paste0(
+      " Les statuts des espèces (protection, listes rouges, directives) ",
+      "n'ont pas été consultés : aucune n'est dite protégée ou menacée."),
     "\n:::\n\n", sep = "")
+
+# Une espèce que le registre porte déjà : par le CD_NOM de la fiche, rapporté
+# au nom valide, et à défaut par le nom latin réduit au binôme.
+fiches <- sections$patrimoine[sections$patrimoine$type_fiche == "espece", ,
+                              drop = FALSE]
+binome <- function(x) sub("^(\\S+\\s+\\S+).*$", "\\1", x)
+noms <- attr(e, "noms_taxref")
+cd_fiches <- if (!is.null(fiches$cd_nom) && !is.null(noms)) {
+  noms$cd_ref[match(fiches$cd_nom, noms$cd_nom)]
+} else {
+  integer(0)
+}
+a_fiche <- e$cd_ref %in% cd_fiches[!is.na(cd_fiches)] |
+  binome(e$nom_valide) %in% binome(fiches$nom_latin)
+
+vernaculaire <- function(x) {
+  # TAXREF range l'article à la fin : « Triton palmé (Le) ».
+  ifelse(is.na(x), "—", sub(" \\((Le|La|Les|L')\\)", "", x))
+}
+nom_italique <- function(x) paste0("*", sub("^(\\S+\\s+\\S+)", "\\1*", x))
+liste_rouge <- function(nationale, regionale) {
+  menace <- c("RE", "CR", "EN", "VU", "NT")
+  l <- cbind(ifelse(nationale %in% menace, paste("LRN", nationale), NA),
+             ifelse(regionale %in% menace, paste("LRR", regionale), NA))
+  apply(l, 1L, function(x) if (all(is.na(x))) NA_character_ else
+    paste(x[!is.na(x)], collapse = ", "))
+}
+statuts_abreges <- function(eg) {
+  protection <- c(nationale = "PN", "régionale" = "PR",
+                  "départementale" = "PD")
+  vapply(seq_len(nrow(eg)), function(i) {
+    p <- if (is.na(eg$protection[[i]])) NULL else
+      unname(protection[strsplit(eg$protection[[i]], ", ", fixed = TRUE)[[1L]]])
+    x <- c(p, liste_rouge(eg$liste_rouge_nationale[[i]],
+                          eg$liste_rouge_regionale[[i]]),
+           eg$directives[[i]])
+    x <- x[!is.na(x)]
+    if (length(x) == 0L) "—" else paste(x, collapse = " ; ")
+  }, character(1))
+}
+
 if (nrow(e) == 0L) {
   cat("*Aucune espèce observée dans l'emprise.*\n\n")
 } else {
@@ -1856,27 +1910,67 @@ if (nrow(e) == 0L) {
         " Une observation n'est rattachée à une unité de gestion que si sa ",
         "position est connue à ", nombre(p$incertitude_max_m, 0L),
         " m près."),
-      if (isTRUE(rapport$public)) paste0(
+      if (isTRUE(rapport$public) && is.null(e$ug)) paste0(
         " Document public : les observations ne sont rattachées à aucune ",
         "unité, la position d'une espèce sensible ne se publie pas."),
+      if (isTRUE(rapport$public) && !is.null(e$ug)) paste0(
+        " Document public : les observations des espèces sensibles, ou dont ",
+        "on ne connaît pas les statuts, ne sont rattachées à aucune unité ; ",
+        "leur position ne se publie pas."),
       "\n\n", sep = "")
+
+  # En tête, ce que le gestionnaire pourrait vouloir aller voir : les
+  # espèces protégées observées dans une unité, celles sans fiche au
+  # registre 9 d'abord.
+  if (avec_statuts && !is.null(e$ug)) {
+    voir <- which(e$protegee %in% TRUE & !is.na(e$ug))
+    cat("#### Espèces protégées observées dans une unité de gestion\n\n")
+    if (length(voir) == 0L) {
+      cat("*Aucune espèce protégée n'est observée dans une unité de gestion.*\n\n")
+    } else {
+      voir <- voir[order(a_fiche[voir], e$groupe[voir], e$nom_valide[voir])]
+      ev <- e[voir, , drop = FALSE]
+      sans_fiche <- sum(!a_fiche[voir])
+      cat(length(voir), " espèce(s) protégée(s) observée(s) dans une unité, ",
+          "dont ", sans_fiche, " sans fiche au registre 9",
+          if (sans_fiche > 0L) " : ce sont celles qu'il peut valoir la peine d'aller voir",
+          ".\n\n", sep = "")
+      print(knitr::kable(
+        data.frame(
+          `Nom vernaculaire` = vernaculaire(ev$nom_vernaculaire),
+          `Nom valide (TAXREF)` = nom_italique(ev$nom_valide),
+          Protection = ev$protection,
+          `Liste rouge` = ifelse(is.na(liste_rouge(ev$liste_rouge_nationale,
+                                                   ev$liste_rouge_regionale)),
+                                 "—", liste_rouge(ev$liste_rouge_nationale,
+                                                  ev$liste_rouge_regionale)),
+          Directives = ifelse(is.na(ev$directives), "—", ev$directives),
+          `Unités` = ev$ug,
+          `Registre 9` = ifelse(a_fiche[voir], "fiche", "aucune fiche"),
+          check.names = FALSE, stringsAsFactors = FALSE
+        ),
+        caption = "Espèces protégées observées dans une unité de gestion, hors registre"
+      ))
+      cat("\n\n")
+    }
+  }
+
   # Un tableau par groupe : la colonne du groupe, répétée sur 178 lignes,
   # mangeait la largeur d'une page A4.
   for (g in unique(e$groupe)) {
     eg <- e[e$groupe == g, , drop = FALSE]
     tableau_especes <- data.frame(
-      # TAXREF range l'article à la fin : « Triton palmé (Le) ».
-      `Nom vernaculaire` = ifelse(is.na(eg$nom_vernaculaire), "—",
-                                  sub(" \\((Le|La|Les|L')\\)", "",
-                                      eg$nom_vernaculaire)),
-      `Nom valide (TAXREF)` = paste0("*", sub("^(\\S+\\s+\\S+)", "\\1*",
-                                              eg$nom_valide)),
+      `Nom vernaculaire` = vernaculaire(eg$nom_vernaculaire),
+      `Nom valide (TAXREF)` = nom_italique(eg$nom_valide),
       `CD_REF` = as.character(eg$cd_ref),
       Obs. = as.character(eg$n_observations),
       `Dernière` = ifelse(is.na(eg$derniere_annee), "—",
                           as.character(eg$derniere_annee)),
       check.names = FALSE, stringsAsFactors = FALSE
     )
+    if (avec_statuts) {
+      tableau_especes$Statuts <- statuts_abreges(eg)
+    }
     if (!is.null(eg$ug)) {
       tableau_especes$`Unités` <- ifelse(is.na(eg$ug), "—", eg$ug)
     }
@@ -1888,13 +1982,14 @@ if (nrow(e) == 0L) {
     ))
     cat("\n\n")
   }
-  # Une espèce que le registre porte déjà : le nom latin de la fiche, réduit
-  # au binôme, contre le nom valide.
-  latins <- sections$patrimoine$nom_latin[
-    sections$patrimoine$type_fiche == "espece"]
-  binome <- function(x) sub("^(\\S+\\s+\\S+).*$", "\\1", x)
-  communes <- unique(binome(e$nom_valide)[binome(e$nom_valide) %in%
-                                            binome(latins)])
+  if (avec_statuts) {
+    cat("*Statuts* : PN, PR, PD, protection nationale, régionale, ",
+        "départementale ; LRN, LRR, listes rouges nationale et régionale ",
+        "(RE disparue, CR en danger critique, EN en danger, VU vulnérable, ",
+        "NT quasi menacée) ; DH, DO, annexes des directives Habitats et ",
+        "Oiseaux.\n\n", sep = "")
+  }
+  communes <- unique(binome(e$nom_valide[a_fiche]))
   if (length(communes) > 0L) {
     cat("Espèce(s) observée(s) qui ont aussi une fiche au registre 9 : ",
         paste0("*", communes, "*", collapse = ", "), ".\n\n", sep = "")

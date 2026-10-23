@@ -76,8 +76,10 @@ SOMMIER_FORMATS_QUARTO <- c("html", "pdf")
 #' @param especes_observees Especes observees dans la foret et a ses abords,
 #'   telles que les rend [sommier_especes_observees()] (facultatif) : une
 #'   sous-section du patrimoine les liste, nommees dans TAXREF, comme un
-#'   contexte hors registre. Un document public ne les rattache a aucune
-#'   unite de gestion.
+#'   contexte hors registre. Avec leurs statuts, elle met en tete les especes
+#'   protegees observees dans une unite de gestion, celles sans fiche au
+#'   registre 9 d'abord. Un document public ne rattache a aucune unite une
+#'   espece sensible, ni, sans les statuts, aucune espece.
 #' @param quarto Chemin de l'executable Quarto.
 #'
 #' @return Invisiblement, le chemin du document produit.
@@ -302,8 +304,10 @@ environnement_utf8 <- function() {
   c(paste0("LC_ALL=", retenue[[1L]]), paste0("LANG=", retenue[[1L]]))
 }
 
-# Un document public ne place aucune observation dans une unite : sans les
-# statuts, on ne sait pas quelle espece est sensible.
+# Un document public ne place pas dans une unite l'observation d'une espece
+# sensible. Sans les statuts, on ne sait pas laquelle l'est : aucune n'y est
+# placee. Avec, celles que la BDC Statuts dit sensibles, et celles qu'elle
+# n'a pas renseignees, perdent leur unite.
 valider_especes_observees <- function(especes, public) {
   if (is.null(especes)) {
     return(NULL)
@@ -315,7 +319,11 @@ valider_especes_observees <- function(especes, public) {
          call. = FALSE)
   }
   if (isTRUE(public)) {
-    especes$ug <- NULL
+    if (is.null(attr(especes, "statuts")) || is.null(especes$sensible)) {
+      especes$ug <- NULL
+    } else if (!is.null(especes$ug)) {
+      especes$ug[!especes$sensible %in% FALSE] <- NA_character_
+    }
   }
   especes
 }

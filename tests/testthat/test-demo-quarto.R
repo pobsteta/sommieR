@@ -156,6 +156,18 @@ test_that("le rapport Quarto se rend et porte l'empreinte de tete", {
   attr(especes, "jeux") <- data.frame(
     cle = "jeu-1", n_observations = 7L, titre = "Donnees STOC-EPS",
     licence = "http://creativecommons.org/licenses/by/4.0/legalcode")
+  # Et leurs statuts : le pic mar, protege, observe dans une unite et sans
+  # fiche au registre 9, est de ceux qu'on pourrait aller voir.
+  especes$ug[[2L]] <- "A 35"
+  especes$protection <- c("nationale", "nationale")
+  especes$liste_rouge_nationale <- c("LC", "EN")
+  especes$liste_rouge_regionale <- c("LC", NA)
+  especes$directives <- c("DO I", "DH II, IV")
+  especes$protegee <- c(TRUE, TRUE)
+  especes$sensible <- c(FALSE, FALSE)
+  attr(especes, "statuts") <- "BDC Statuts, TAXREF v18.0"
+  attr(especes, "statuts_lieu") <- "INSEEC21200"
+  attr(especes, "statuts_consultes_le") <- "2026-10-17"
 
   sommier_rapport_quarto(con, demo$foret_id, chemin, format = "html",
                          referentiel = "amenagement",
@@ -217,6 +229,16 @@ test_that("le rapport Quarto se rend et porte l'empreinte de tete", {
   expect_match(html, "aussi une fiche au registre 9", fixed = TRUE)
   expect_match(html, "Donnees STOC-EPS — 7 observation(s), CC BY 4.0",
                fixed = TRUE)
+  # Les statuts, cites, et en tete les especes protegees observees dans une
+  # unite : le pic mar, sans fiche, avant le sabot de Venus, qui en a une.
+  expect_match(html, "BDC Statuts, TAXREF v18.0", fixed = TRUE)
+  expect_match(html, "Espèces protégées observées dans une unité de gestion",
+               fixed = TRUE)
+  expect_match(html, "dont 1 sans fiche au registre 9", fixed = TRUE)
+  pic <- regexpr("aucune fiche</td>", html, fixed = TRUE)
+  sabot <- regexpr(">fiche</td>", html, fixed = TRUE)
+  expect_true(pic > 0L && sabot > pic)
+  expect_match(html, "PN ; LRN EN ; DH II, IV", fixed = TRUE)
 
   # Aucun caractere ne doit sortir echappe : sous une locale non UTF-8, R
   # rendrait les accents en <U+00E9> sans echouer, et le defaut passerait

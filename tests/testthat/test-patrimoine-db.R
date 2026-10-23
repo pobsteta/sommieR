@@ -77,6 +77,30 @@ test_that("le titulaire ne fuit pas par la vue des droits", {
   expect_false("titulaire" %in% names(vue))
 })
 
+test_that("une fiche d'espece porte son CD_NOM, une fiche anterieure non", {
+  con <- base_patrimoine()
+  foret <- foret_creer(con, "Foret test", "domanial")
+  # Une fiche ecrite sous r9-1.2.0, sans CD_NOM, reste dans la chaine.
+  ancienne <- sommier_entree(
+    foret_id = foret, registre = 9L, date_evenement = "2026-05-01",
+    auteur = "agent-01",
+    payload = registre9_espece("Sabot de Venus", "Cypripedium calceolus")
+  )
+  ancienne$schema_version <- "r9-1.2.0"
+  sommier_ajouter(con, ancienne)
+  ajouter(con, foret, 9L, registre9_espece("Pic mar", "Dendrocopos medius",
+                                           cd_nom = 3619))
+  especes <- DBI::dbGetQuery(
+    con, "SELECT nom_latin, cd_nom FROM v_remarquable_dernier_releve
+           WHERE foret_id = $1 ORDER BY nom_latin", params = list(foret))
+  expect_equal(especes$cd_nom, c(NA, 3619L))
+  versions <- DBI::dbGetQuery(
+    con, "SELECT schema_version FROM entree_sommier WHERE foret_id = $1
+           ORDER BY seq", params = list(foret))$schema_version
+  expect_equal(versions, c("r9-1.2.0", "r9-1.3.0"))
+  expect_true(sommier_verifier(con, foret)$valide)
+})
+
 test_that("un sujet remarquable revisite garde ses releves successifs", {
   # Append-only : la serie de mesures se reconstitue, rien n'est ecrase.
   con <- base_patrimoine()

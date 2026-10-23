@@ -46,6 +46,9 @@ archive_taxref <- function(version = "TAXREF v18.0", env = parent.frame()) {
           classe = "", ordre = "Squamata", vernaculaire = "Couleuvre helvetique"),
     ligne(4272, 4272, "Phylloscopus sibilatrix", "(Bechstein, 1793)",
           ordre = "Passeriformes", vernaculaire = "Pouillot siffleur (Le)"),
+    # Une espece sensible : sa position ne se publie pas.
+    ligne(2660, 2660, "Pandion haliaetus", "(Linnaeus, 1758)",
+          ordre = "Accipitriformes", vernaculaire = "Balbuzard pecheur (Le)"),
     # Un genre : hors des especes, il n'est pas garde.
     ligne(190000, 190000, "Dendrocopos", "Koch, 1816", rang = "genus")
   )
@@ -202,4 +205,146 @@ test_that("le groupe se lit dans la classification", {
     c("Oiseaux", "Reptiles", "Insectes", "Plantes", "Champignons et lichens",
       "Mollusques", "Autres")
   )
+})
+
+# ---------------------------------------------------------------------------
+# Les statuts, lus dans la BDC Statuts par l'API TAXREF - sans reseau : les
+# reponses de l'API au lieu de la foret d'Orleans, une par taxon, sont dans
+# fixtures/statuts-taxref-orleans.json (voir fixtures/PROVENANCE.md).
+
+# Remplace l'API par ses reponses enregistrees, et compte les appels.
+api_enregistree <- function(env = parent.frame()) {
+  reponses <- jsonlite::fromJSON(
+    testthat::test_path("fixtures", "statuts-taxref-orleans.json"),
+    simplifyVector = FALSE
+  )
+  appels <- new.env()
+  appels$taxons <- integer(0)
+  testthat::local_mocked_bindings(
+    api_taxref = function(source, chemin, requete = list()) {
+      if (identical(chemin, "taxrefVersions/current")) {
+        return(reponses[["taxrefVersions/current"]])
+      }
+      appels$taxons <- c(appels$taxons, as.integer(requete$taxrefId))
+      # L'API repond 404 d'un taxon qu'elle ne connait pas.
+      reponses[[as.character(requete$taxrefId)]]
+    },
+    .env = env
+  )
+  appels
+}
+
+test_that("les statuts se lisent taxon par taxon, au lieu de la foret, et se gardent", {
+  skip_if_not_installed("sf")
+  appels <- api_enregistree()
+  cache <- withr::local_tempdir()
+  s <- sommier_statuts_taxref(c(3619L, 4272L, 999999L), emprise_essai(),
+                              cache = cache)
+  expect_equal(attr(s, "version"), "BDC Statuts, TAXREF v18.0")
+  expect_equal(attr(s, "lieu"), "INSEEC45142")
+  expect_equal(sort(attr(s, "consultes")), c(3619L, 4272L, 999999L))
+  expect_equal(sort(unique(s$cd_ref)), c(3619L, 4272L))
+  # Le pic mar est protege, et a l'annexe I de la directive Oiseaux.
+  expect_true(all(c("PN", "DO") %in% s$type[s$cd_ref == 3619L]))
+  expect_equal(s$lieu[s$cd_ref == 4272L & s$type == "LRR"], "Centre")
+  expect_equal(sort(appels$taxons), c(3619L, 4272L, 999999L))
+
+  # Le second appel ne demande que le taxon nouveau.
+  appels$taxons <- integer(0)
+  s2 <- sommier_statuts_taxref(c(3619L, 2660L), emprise_essai(), cache = cache)
+  expect_equal(appels$taxons, 2660L)
+  expect_equal(sort(unique(s2$cd_ref)), c(2660L, 3619L))
+  # Et le cache sert sans reseau.
+  appels$taxons <- integer(0)
+  sommier_statuts_taxref(c(3619L, 2660L), emprise_essai(), cache = cache)
+  expect_length(appels$taxons, 0L)
+})
+
+test_that("les especes observees gagnent leurs statuts", {
+  skip_if_not_installed("sf")
+  api_enregistree()
+  taxref <- sommier_taxref(cache = withr::local_tempdir(),
+                           source = archive_taxref())
+  # Un balbuzard, precisement place dans l'unite A.
+  o <- occurrences_essai()
+  balbuzard <- o[1L, ]
+  balbuzard$species <- "Pandion haliaetus"
+  balbuzard$scientificName <- "Pandion haliaetus (Linnaeus, 1758)"
+  o <- rbind(o, balbuzard)
+  e <- sommier_especes_observees(emprise_essai(), taxref, tampon_m = 100,
+                                 statuts = TRUE,
+                                 cache = withr::local_tempdir(),
+                                 occurrences = o)
+  expect_equal(attr(e, "statuts"), "BDC Statuts, TAXREF v18.0")
+  ligne <- function(cd) e[e$cd_ref == cd, ]
+  expect_equal(ligne(3619L)$protection, "nationale")
+  expect_equal(ligne(3619L)$directives, "DO I")
+  expect_true(ligne(3619L)$protegee)
+  expect_false(ligne(3619L)$sensible)
+  # Trois evaluations nationales pour le balbuzard : la plus grave compte.
+  expect_equal(ligne(2660L)$liste_rouge_nationale, "VU")
+  expect_equal(ligne(2660L)$liste_rouge_regionale, "EN")
+  expect_true(ligne(2660L)$sensible)
+  expect_equal(ligne(4272L)$liste_rouge_regionale, "VU")
+  # La laiche n'est pas protegee, et le sait.
+  expect_false(ligne(88766L)$protegee)
+  expect_true(is.na(ligne(88766L)$protection))
+  # Les noms de chaque espece, synonyme compris.
+  noms <- attr(e, "noms_taxref")
+  expect_equal(noms$cd_ref[noms$cd_nom == 1046450L], 3619L)
+
+  # Document public : le balbuzard, sensible, perd son unite ; le pic mar
+  # garde les siennes.
+  public <- valider_especes_observees(e, public = TRUE)
+  expect_true(is.na(public$ug[public$cd_ref == 2660L]))
+  expect_equal(public$ug[public$cd_ref == 3619L], "A, B")
+  # Une espece dont on ne connait pas les statuts la perd aussi.
+  e$sensible[e$cd_ref == 3619L] <- NA
+  expect_true(is.na(valider_especes_observees(e, TRUE)$ug[e$cd_ref == 3619L]))
+})
+
+test_that("une table de statuts d'ailleurs est refusee", {
+  skip_if_not_installed("sf")
+  taxref <- sommier_taxref(cache = withr::local_tempdir(),
+                           source = archive_taxref())
+  expect_error(
+    sommier_especes_observees(emprise_essai(), taxref, tampon_m = 100,
+                              statuts = data.frame(cd_ref = 3619L),
+                              occurrences = occurrences_essai()),
+    "sommier_statuts_taxref"
+  )
+})
+
+test_that("une fiche d'espece porte son CD_NOM, controle contre TAXREF", {
+  taxref <- sommier_taxref(cache = withr::local_tempdir(),
+                           source = archive_taxref())
+  p <- registre9_espece("Pic mar", "Dendrocopos medius", cd_nom = 3619,
+                        taxref = taxref)
+  expect_equal(p$cd_nom, 3619)
+  expect_null(p$taxref)
+  # Le CD_NOM d'un synonyme, sous le nom valide : admis.
+  expect_silent(registre9_espece("Pic mar",
+                                 "Dendrocopos medius (Linnaeus, 1758)",
+                                 cd_nom = 1046450, taxref = taxref))
+  expect_error(registre9_espece("Pic mar", "Dendrocopos medius",
+                                cd_nom = 123456789, taxref = taxref),
+               "n'est pas une espece de TAXREF v18.0")
+  expect_error(registre9_espece("Pic mar", "Dendrocopos major",
+                                cd_nom = 3619, taxref = taxref),
+               "n'est pas le nom du `cd_nom`")
+  expect_error(registre9_espece("Pic mar", "Dendrocopos medius", cd_nom = 0),
+               "cd_nom")
+  # Sans TAXREF, le CD_NOM est seulement un entier.
+  expect_equal(registre9_espece("Pic mar", "Dendrocopos medius",
+                                cd_nom = 3619)$cd_nom, 3619)
+
+  # Le registre 9 change de version ; une fiche anterieure, sans CD_NOM,
+  # se relit a l'identique, et une fiche nouvelle aussi.
+  expect_equal(SOMMIER_SCHEMA_VERSIONS[["9"]], "r9-1.3.0")
+  ancienne <- list(type_fiche = "espece", nom_francais = "Sabot de Venus",
+                   nom_latin = "Cypripedium calceolus", effectif = 34)
+  expect_identical(registre9_depuis_payload(ancienne), ancienne)
+  relue <- jsonlite::fromJSON(jsonlite::toJSON(p, auto_unbox = TRUE),
+                              simplifyVector = FALSE)
+  expect_equal(registre9_depuis_payload(relue)$cd_nom, 3619)
 })

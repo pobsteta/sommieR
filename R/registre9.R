@@ -190,6 +190,17 @@ registre9_vestige <- function(appellation,
 #' @param geometrie Position de l'objet, en WGS84 : voir [geom_point()].
 #'   Facultative — un gestionnaire sans releve continue de saisir sans, et son
 #'   sommier reste conforme.
+#' @param cd_nom `CD_NOM` de l'espece dans TAXREF (facultatif) : le registre
+#'   nomme lui aussi dans le referentiel national, et la fiche se rapproche
+#'   des especes observees sans passer par le nom.
+#' @param taxref TAXREF, tel que le rend [sommier_taxref()] (facultatif) :
+#'   s'il est fourni, `cd_nom` doit y figurer parmi les especes, et
+#'   `nom_latin` y etre son nom ou son nom valide. Il sert au controle et
+#'   n'est pas ecrit.
+#'
+#' @details
+#' Le `cd_nom` est entre au registre 9 avec le schema `r9-1.3.0`. Une fiche
+#' anterieure, sans `cd_nom`, reste valide et se relit a l'identique.
 #'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
@@ -207,11 +218,21 @@ registre9_espece <- function(nom_francais,
                              localisation = NULL,
                              bibliographie = NULL,
                              observations = NULL,
-                             geometrie = NULL) {
+                             geometrie = NULL,
+                             cd_nom = NULL,
+                             taxref = NULL) {
+  nom_latin <- valider_texte(nom_latin, "nom_latin")
+  if (!est_vide(cd_nom)) {
+    cd_nom <- valider_entier(cd_nom, "cd_nom", min = 1)
+    if (!is.null(taxref)) {
+      controler_cd_nom(cd_nom, nom_latin, taxref)
+    }
+  }
   compacter(list(
     type_fiche        = "espece",
     nom_francais      = valider_texte(nom_francais, "nom_francais"),
-    nom_latin         = valider_texte(nom_latin, "nom_latin"),
+    nom_latin         = nom_latin,
+    cd_nom            = if (est_vide(cd_nom)) NULL else cd_nom,
     statut_protection = si_present(statut_protection, valider_texte,
                                    "statut_protection"),
     effectif          = si_present(effectif, valider_entier, "effectif", min = 0),
@@ -258,6 +279,29 @@ registre9_habitat <- function(type_habitat,
     geometrie        = geometrie_si_presente(geometrie, "Polygon"),
     observations      = si_present(observations, valider_texte, "observations")
   ))
+}
+
+# Le CD_NOM est-il une espece de TAXREF, et le nom latin le sien ? Le nom
+# latin se compare au binome, sans auteur : au nom du CD_NOM, ou a son nom
+# valide - on peut ecrire le nom valide en citant le CD_NOM d'un synonyme.
+controler_cd_nom <- function(cd_nom, nom_latin, taxref) {
+  if (!is.data.frame(taxref) || is.null(attr(taxref, "version"))) {
+    stop("`taxref` doit venir de sommier_taxref().", call. = FALSE)
+  }
+  ligne <- taxref[taxref$cd_nom == cd_nom, , drop = FALSE]
+  if (nrow(ligne) == 0L) {
+    stop("`cd_nom` ", cd_nom, " n'est pas une espece de ",
+         attr(taxref, "version"), ".", call. = FALSE)
+  }
+  valide <- taxref$nom[taxref$cd_nom == ligne$cd_ref[[1L]]]
+  binome <- function(x) sub("^(\\S+\\s+\\S+).*$", "\\1", trimws(x))
+  if (!binome(nom_latin) %in% binome(c(ligne$nom[[1L]], valide))) {
+    stop("`nom_latin` (", nom_latin, ") n'est pas le nom du `cd_nom` ",
+         cd_nom, " dans ", attr(taxref, "version"), " : ", ligne$nom[[1L]],
+         if (length(valide) > 0L && !identical(valide[[1L]], ligne$nom[[1L]]))
+           paste0(", nom valide ", valide[[1L]]), ".", call. = FALSE)
+  }
+  invisible(TRUE)
 }
 
 registre9_depuis_payload <- function(payload) {
