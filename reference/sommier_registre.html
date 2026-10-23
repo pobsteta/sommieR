@@ -13,7 +13,7 @@ ne soit dans la chaine."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.31.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.32.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,14 @@ ne soit dans la chaine.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sommier_registre</span><span class="op">(</span><span class="va">con</span>, <span class="va">foret_id</span>, registres <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">9</span>, jusqu_au_visa <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sommier_registre</span><span class="op">(</span></span>
+<span>  <span class="va">con</span>,</span>
+<span>  <span class="va">foret_id</span>,</span>
+<span>  registres <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">9</span>,</span>
+<span>  jusqu_au_visa <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cles_publiques <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  ancres <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -77,6 +84,13 @@ ne soit dans la chaine.</p>
 <dd><p>Exercice dont le visa arrete l'edition ; <code>NULL</code> pour
 tout le sommier.</p></dd>
 
+
+<dt id="arg-cles-publiques-ancres">cles_publiques, ancres<a class="anchor" aria-label="anchor" href="#arg-cles-publiques-ancres"></a></dt>
+<dd><p>Transmises a <code><a href="sommier_verifier_visas.html">sommier_verifier_visas()</a></code> pour
+verifier le visa qui arrete l'edition : cles publiques des signataires
+(inutiles quand le visa porte son certificat), ancres de confiance des
+autorites d'horodatage. Sans effet sans <code>jusqu_au_visa</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -86,7 +100,10 @@ tout le sommier.</p></dd>
 <code>provenance</code>, <code>piece</code>, <code>rectifie</code>, <code>rectifiee_par</code>, <code>contenu</code>,
 <code>payload</code>, <code>schema_version</code>, <code>hash</code>), <code>tenue</code> (fiche A10, par exercice),
 <code>ancrages</code>, <code>verification</code> (etat de la chaine extraite), <code>visa</code> (le visa
-qui arrete l'edition, s'il y en a un), <code>registres</code>.</p>
+qui arrete l'edition, s'il y en a un : <code>exercice</code>, <code>autorite</code>,
+<code>seq_tete</code>, <code>hash_tete</code>, <code>date_visa</code>, <code>horodate</code>, <code>concorde</code>, et son
+attestation - <code>signataire</code>, <code>signature_jws</code>, <code>certificat</code>, <code>jeton</code>,
+<code>verifie</code>), <code>registres</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -103,6 +120,13 @@ un exercice sans acte est dit non vise. Les ancrages suivent.</p>
 sommier tel qu'il etait quand l'exercice a ete vise : les ecritures jusqu'a
 la tete signee, pas au-dela. La chaine est alors verifiee jusqu'a cette
 tete, et l'extraction dit si elle concorde avec l'empreinte visee.</p>
+<p><strong>Le visa se lit avec ses pieces.</strong> Une edition arretee a un visa porte
+aussi l'attestation de ce visa, verifiee par <code><a href="sommier_verifier_visas.html">sommier_verifier_visas()</a></code> :
+qui l'a signe (les claims du signataire, et son certificat quand le visa
+en porte un), si la signature se verifie et sous quelle cle, et ce que
+vaut le jeton d'horodatage - la date que l'autorite a certifiee, et qui
+est cette autorite. La signature, le certificat et le jeton eux-memes sont
+rendus tels quels, pour etre recopies et verifies ailleurs.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

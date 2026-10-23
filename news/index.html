@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.31.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.32.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,22 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.32.0" id="sommier-0320">sommieR 0.32.0<a class="anchor" aria-label="anchor" href="#sommier-0320"></a></h2>
+<p>Sommier, lot 2 : le visa sur le document (brief <code>sommier-1</code>).</p>
+<ul><li>
+<strong>Le sommier arrêté à un visa porte ce visa en tête.</strong> Avec <code>jusqu_au_visa</code>, <strong><code><a href="../reference/sommier_registre_quarto.html">sommier_registre_quarto()</a></code></strong> ouvre le document sur le visa tel que <code><a href="../reference/sommier_verifier_visas.html">sommier_verifier_visas()</a></code> le juge : qui l’a signé, pour quelle autorité et quel exercice, jusqu’à quelle écriture ; si la signature se vérifie, et sous quelle clé, celle du certificat que porte le visa ou une clé fournie ; si la tête visée est bien celle de la chaîne imprimée ; et ce que vaut le jeton d’horodatage. Le lecteur sait qui a visé quoi, et quand.</li>
+<li>
+<strong>La date est celle de l’autorité d’horodatage</strong>, lue dans le jeton, avec le nom de l’autorité qui l’a certifiée. Un jeton intact mais que rien ne rattache à une ancre de confiance est dit tel ; un visa sans jeton est dit « absent », sa date ne reposant que sur l’horloge du serveur. Une signature sans certificat ni clé fournie est dite non vérifiée, jamais valide.</li>
+<li>
+<strong>Le certificat du signataire</strong> est décrit en clair : sujet, émetteur ou auto-signé, série, validité, empreinte SHA-256.</li>
+<li>
+<strong>Les pièces du visa sont en annexe</strong>, telles quelles : la signature JWS, le certificat en PEM et le jeton en base64, pour être vérifiés ailleurs. Le document dit que la révocation des certificats n’est pas consultée.</li>
+<li>
+<strong><code><a href="../reference/sommier_registre.html">sommier_registre()</a></code></strong> et <code><a href="../reference/sommier_registre_quarto.html">sommier_registre_quarto()</a></code> gagnent <code>cles_publiques</code> et <code>ancres</code>, transmises à <code><a href="../reference/sommier_verifier_visas.html">sommier_verifier_visas()</a></code>. L’élément <code>visa</code> de l’extraction devient une liste qui porte, en plus, <code>signataire</code>, <code>signature_jws</code>, <code>certificat</code>, <code>jeton</code> et <code>verifie</code>.</li>
+<li>
+<strong>Le sommier imprimé se rend avec le code qui l’a extrait.</strong> Le gabarit lisait la table des registres dans le paquet installé (<code>sommieR::</code>), dans le processus R que lance Quarto : il échouait là où le paquet n’est pas installé, et prenait ailleurs une version qui pouvait être plus ancienne. Il la lit désormais dans le RDS du rendu, comme le reste ; un test interdit <code>sommieR::</code> dans les gabarits.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.31.1" id="sommier-0311">sommieR 0.31.1<a class="anchor" aria-label="anchor" href="#sommier-0311"></a></h2>
 <ul><li>
@@ -248,7 +264,7 @@
 <div class="section level3">
 <h3 id="situer-la-possibilité-0-20-0">Situer la possibilité<a class="anchor" aria-label="anchor" href="#situer-la-possibilit%C3%A9-0-20-0"></a></h3>
 <p><code><a href="../reference/sommier_ser.html">sommier_ser()</a></code> rend la sylvoécorégion de l’IGN qui contient la forêt. La couche est téléchargée une fois, explicitement, puis gardée en cache. La forêt domaniale d’Orléans est dans la SER B70 « Sologne-Orléanais ».</p>
-<p>Le rapport accepte une <code>reference_ifn</code> : le prélèvement que l’IFN observe dans cette SER. Un tableau de repères à l’hectare réunit alors la possibilité, le prélevé moyen des exercices échus et ce prélèvement de référence. Pour Orléans, la référence est de 2,28 m³/ha/an sur 2005-2024 : c’est la somme des taux <code>maille</code> de toutes les essences, tirée de <code><a href="https://pobsteta.github.io/nemeton/reference/ifn_prelevement_essence_ser.html" class="external-link">nemeton::ifn_prelevement_essence_ser()</a></code>. sommieR n’appelle pas nemeton, qui n’est pas sur le CRAN ; la documentation montre comment obtenir le taux. Le rapport rappelle que ce chiffre est ce qui a été coupé, toutes propriétés confondues, et non ce qui devait l’être.</p>
+<p>Le rapport accepte une <code>reference_ifn</code> : le prélèvement que l’IFN observe dans cette SER. Un tableau de repères à l’hectare réunit alors la possibilité, le prélevé moyen des exercices échus et ce prélèvement de référence. Pour Orléans, la référence est de 2,28 m³/ha/an sur 2005-2024 : c’est la somme des taux <code>maille</code> de toutes les essences, tirée de <code>nemeton::ifn_prelevement_essence_ser()</code>. sommieR n’appelle pas nemeton, qui n’est pas sur le CRAN ; la documentation montre comment obtenir le taux. Le rapport rappelle que ce chiffre est ce qui a été coupé, toutes propriétés confondues, et non ce qui devait l’être.</p>
 </div>
 <div class="section level3">
 <h3 id="ce-que-la-forêt-porte-0-20-0">Ce que la forêt porte<a class="anchor" aria-label="anchor" href="#ce-que-la-for%C3%AAt-porte-0-20-0"></a></h3>

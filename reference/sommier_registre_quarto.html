@@ -11,7 +11,7 @@ registre dans l'ordre de la chaine, et en annexe les empreintes completes."></he
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.31.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.32.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,6 +59,8 @@ registre dans l'ordre de la chaine, et en annexe les empreintes completes.</p>
 <span>  registres <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">9</span>,</span>
 <span>  jusqu_au_visa <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  public <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  cles_publiques <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  ancres <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  quarto <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which</a></span><span class="op">(</span><span class="st">"quarto"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -98,6 +100,13 @@ tout le sommier.</p></dd>
 registres 3 et 7 sont masques.</p></dd>
 
 
+<dt id="arg-cles-publiques-ancres">cles_publiques, ancres<a class="anchor" aria-label="anchor" href="#arg-cles-publiques-ancres"></a></dt>
+<dd><p>Transmises a <code><a href="sommier_verifier_visas.html">sommier_verifier_visas()</a></code> pour
+verifier le visa qui arrete l'edition : cles publiques des signataires
+(inutiles quand le visa porte son certificat), ancres de confiance des
+autorites d'horodatage. Sans effet sans <code>jusqu_au_visa</code>.</p></dd>
+
+
 <dt id="arg-quarto">quarto<a class="anchor" aria-label="anchor" href="#arg-quarto"></a></dt>
 <dd><p>Chemin de l'executable Quarto.</p></dd>
 
@@ -118,6 +127,12 @@ transporte, et le document le dit.</p>
 ecriture) sont remplaces par "(masque)". La ligne, son montant et son
 empreinte restent : on voit qu'une ecriture existe, pas qui elle nomme. Les
 photos des constats ne sont jamais reproduites, seulement comptees.</p>
+<p>Arrete a un visa (<code>jusqu_au_visa</code>), le document porte en tete ce visa tel
+que <code><a href="sommier_verifier_visas.html">sommier_verifier_visas()</a></code> le juge : le signataire et son certificat,
+la signature, le jeton d'horodatage et l'autorite qui l'a emis. Les pieces
+elles-memes (signature JWS, certificat PEM, jeton en base64) sont en
+annexe. Le nom du signataire n'est pas masque a <code>public = TRUE</code> : il vise
+en qualite, ce n'est pas un tiers.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

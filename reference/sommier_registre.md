@@ -8,7 +8,14 @@ rien qui ne soit dans la chaine.
 ## Usage
 
 ``` r
-sommier_registre(con, foret_id, registres = 1:9, jusqu_au_visa = NULL)
+sommier_registre(
+  con,
+  foret_id,
+  registres = 1:9,
+  jusqu_au_visa = NULL,
+  cles_publiques = list(),
+  ancres = list()
+)
 ```
 
 ## Arguments
@@ -29,6 +36,14 @@ sommier_registre(con, foret_id, registres = 1:9, jusqu_au_visa = NULL)
 
   Exercice dont le visa arrete l'edition ; `NULL` pour tout le sommier.
 
+- cles_publiques, ancres:
+
+  Transmises a
+  [`sommier_verifier_visas()`](https://pobsteta.github.io/sommieR/reference/sommier_verifier_visas.md)
+  pour verifier le visa qui arrete l'edition : cles publiques des
+  signataires (inutiles quand le visa porte son certificat), ancres de
+  confiance des autorites d'horodatage. Sans effet sans `jusqu_au_visa`.
+
 ## Value
 
 Un objet de classe `sommier_registre` : `foret` (nom, regime),
@@ -37,7 +52,10 @@ Un objet de classe `sommier_registre` : `foret` (nom, regime),
 `provenance`, `piece`, `rectifie`, `rectifiee_par`, `contenu`,
 `payload`, `schema_version`, `hash`), `tenue` (fiche A10, par exercice),
 `ancrages`, `verification` (etat de la chaine extraite), `visa` (le visa
-qui arrete l'edition, s'il y en a un), `registres`.
+qui arrete l'edition, s'il y en a un : `exercice`, `autorite`,
+`seq_tete`, `hash_tete`, `date_visa`, `horodate`, `concorde`, et son
+attestation - `signataire`, `signature_jws`, `certificat`, `jeton`,
+`verifie`), `registres`.
 
 ## Details
 
@@ -60,6 +78,16 @@ sommier tel qu'il etait quand l'exercice a ete vise : les ecritures
 jusqu'a la tete signee, pas au-dela. La chaine est alors verifiee
 jusqu'a cette tete, et l'extraction dit si elle concorde avec
 l'empreinte visee.
+
+**Le visa se lit avec ses pieces.** Une edition arretee a un visa porte
+aussi l'attestation de ce visa, verifiee par
+[`sommier_verifier_visas()`](https://pobsteta.github.io/sommieR/reference/sommier_verifier_visas.md)
+: qui l'a signe (les claims du signataire, et son certificat quand le
+visa en porte un), si la signature se verifie et sous quelle cle, et ce
+que vaut le jeton d'horodatage - la date que l'autorite a certifiee, et
+qui est cette autorite. La signature, le certificat et le jeton
+eux-memes sont rendus tels quels, pour etre recopies et verifies
+ailleurs.
 
 ## See also
 

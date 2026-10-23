@@ -1,5 +1,45 @@
 # Changelog
 
+## sommieR 0.32.0
+
+Sommier, lot 2 : le visa sur le document (brief `sommier-1`).
+
+- **Le sommier arrêté à un visa porte ce visa en tête.** Avec
+  `jusqu_au_visa`,
+  **[`sommier_registre_quarto()`](https://pobsteta.github.io/sommieR/reference/sommier_registre_quarto.md)**
+  ouvre le document sur le visa tel que
+  [`sommier_verifier_visas()`](https://pobsteta.github.io/sommieR/reference/sommier_verifier_visas.md)
+  le juge : qui l’a signé, pour quelle autorité et quel exercice,
+  jusqu’à quelle écriture ; si la signature se vérifie, et sous quelle
+  clé, celle du certificat que porte le visa ou une clé fournie ; si la
+  tête visée est bien celle de la chaîne imprimée ; et ce que vaut le
+  jeton d’horodatage. Le lecteur sait qui a visé quoi, et quand.
+- **La date est celle de l’autorité d’horodatage**, lue dans le jeton,
+  avec le nom de l’autorité qui l’a certifiée. Un jeton intact mais que
+  rien ne rattache à une ancre de confiance est dit tel ; un visa sans
+  jeton est dit « absent », sa date ne reposant que sur l’horloge du
+  serveur. Une signature sans certificat ni clé fournie est dite non
+  vérifiée, jamais valide.
+- **Le certificat du signataire** est décrit en clair : sujet, émetteur
+  ou auto-signé, série, validité, empreinte SHA-256.
+- **Les pièces du visa sont en annexe**, telles quelles : la signature
+  JWS, le certificat en PEM et le jeton en base64, pour être vérifiés
+  ailleurs. Le document dit que la révocation des certificats n’est pas
+  consultée.
+- **[`sommier_registre()`](https://pobsteta.github.io/sommieR/reference/sommier_registre.md)**
+  et
+  [`sommier_registre_quarto()`](https://pobsteta.github.io/sommieR/reference/sommier_registre_quarto.md)
+  gagnent `cles_publiques` et `ancres`, transmises à
+  [`sommier_verifier_visas()`](https://pobsteta.github.io/sommieR/reference/sommier_verifier_visas.md).
+  L’élément `visa` de l’extraction devient une liste qui porte, en plus,
+  `signataire`, `signature_jws`, `certificat`, `jeton` et `verifie`.
+- **Le sommier imprimé se rend avec le code qui l’a extrait.** Le
+  gabarit lisait la table des registres dans le paquet installé
+  (`sommieR::`), dans le processus R que lance Quarto : il échouait là
+  où le paquet n’est pas installé, et prenait ailleurs une version qui
+  pouvait être plus ancienne. Il la lit désormais dans le RDS du rendu,
+  comme le reste ; un test interdit `sommieR::` dans les gabarits.
+
 ## sommieR 0.31.1
 
 - **Une tournée de travaux de l’ancien format s’importe.** Un projet
@@ -442,12 +482,10 @@ observe dans cette SER. Un tableau de repères à l’hectare réunit alors
 la possibilité, le prélevé moyen des exercices échus et ce prélèvement
 de référence. Pour Orléans, la référence est de 2,28 m³/ha/an sur
 2005-2024 : c’est la somme des taux `maille` de toutes les essences,
-tirée de
-[`nemeton::ifn_prelevement_essence_ser()`](https://pobsteta.github.io/nemeton/reference/ifn_prelevement_essence_ser.html).
-sommieR n’appelle pas nemeton, qui n’est pas sur le CRAN ; la
-documentation montre comment obtenir le taux. Le rapport rappelle que ce
-chiffre est ce qui a été coupé, toutes propriétés confondues, et non ce
-qui devait l’être.
+tirée de `nemeton::ifn_prelevement_essence_ser()`. sommieR n’appelle pas
+nemeton, qui n’est pas sur le CRAN ; la documentation montre comment
+obtenir le taux. Le rapport rappelle que ce chiffre est ce qui a été
+coupé, toutes propriétés confondues, et non ce qui devait l’être.
 
 ### Ce que la forêt porte
 

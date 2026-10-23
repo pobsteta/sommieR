@@ -16,6 +16,8 @@ sommier_registre_quarto(
   registres = 1:9,
   jusqu_au_visa = NULL,
   public = FALSE,
+  cles_publiques = list(),
+  ancres = list(),
   quarto = Sys.which("quarto")
 )
 ```
@@ -51,6 +53,14 @@ sommier_registre_quarto(
   `TRUE` pour un sommier a transmettre : les tiers des registres 3 et 7
   sont masques.
 
+- cles_publiques, ancres:
+
+  Transmises a
+  [`sommier_verifier_visas()`](https://pobsteta.github.io/sommieR/reference/sommier_verifier_visas.md)
+  pour verifier le visa qui arrete l'edition : cles publiques des
+  signataires (inutiles quand le visa porte son certificat), ancres de
+  confiance des autorites d'horodatage. Sans effet sans `jusqu_au_visa`.
+
 - quarto:
 
   Chemin de l'executable Quarto.
@@ -77,6 +87,15 @@ garants, tiers d'une ecriture) sont remplaces par "(masque)". La ligne,
 son montant et son empreinte restent : on voit qu'une ecriture existe,
 pas qui elle nomme. Les photos des constats ne sont jamais reproduites,
 seulement comptees.
+
+Arrete a un visa (`jusqu_au_visa`), le document porte en tete ce visa
+tel que
+[`sommier_verifier_visas()`](https://pobsteta.github.io/sommieR/reference/sommier_verifier_visas.md)
+le juge : le signataire et son certificat, la signature, le jeton
+d'horodatage et l'autorite qui l'a emis. Les pieces elles-memes
+(signature JWS, certificat PEM, jeton en base64) sont en annexe. Le nom
+du signataire n'est pas masque a `public = TRUE` : il vise en qualite,
+ce n'est pas un tiers.
 
 ## See also
 
