@@ -158,8 +158,19 @@ n'a pas été interrogée.*
   - *la licence du référentiel* n'est pas connue et ne sera pas demandée :
     à décider si le fichier est inclus dans le paquet ou téléchargé et mis
     en cache à l'usage.
-- **PDF/A avec Quarto et LaTeX** : faisabilité, et le périphérique `pdf()`
-  qui ne connaît que le Latin-1 (`gestion-anterieure.qmd:150-151`).
+- **PDF/A avec Quarto et LaTeX : faisable, essai du 23 octobre 2026.**
+  Quarto 1.8.27, TeX Live 2026, classe `scrartcl` en A4 paysage, validation
+  par veraPDF (image Docker `verapdf/cli`) :
+  - KOMA-Script refuse `\DocumentMetadata` (erreur fatale) ; il faut, avant
+    `\documentclass`, `\RequirePackage{pdfmanagement}` puis
+    `\SetKeys[document/metadata]{pdfstandard=a-2b, lang=fr-FR}`, par un
+    gabarit partiel `doc-class.tex` (`template-partials`). Paquets TinyTeX
+    requis : `pdfmanagement`, `latex-lab`, `colorprofiles`.
+  - **Croquis par `cairo_pdf` : PASS** PDF/A-2B. **Par `pdf()` : FAIL**
+    (clause 6.2.11.4.1, Helvetica non embarquée). `cairo_pdf` lève aussi
+    la limite Latin-1 de `pdf()` (`gestion-anterieure.qmd:150-151`).
+  - Reste à éprouver sur le vrai gabarit, avec ses tableaux longs et ses
+    croquis `sf`.
 - **Les objets hors UG** ou rattachés à la forêt (travaux A50H, sécheresse
   qui déborde A 35, affouage) : quel croquis ?
 - **`jusqu_au_visa`** : les croquis s'arrêtent à la tête visée ; les contours
