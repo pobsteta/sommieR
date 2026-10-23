@@ -30,6 +30,38 @@ Travaux, lot 4 : la reprise (brief `travaux-1`).
   déjà là.
 - `readxl` rejoint les dépendances suggérées, pour les XLSX.
 
+# sommieR 0.32.0
+
+Sommier, lot 2 : le visa sur le document (brief `sommier-1`).
+
+- **Le sommier arrêté à un visa porte ce visa en tête.** Avec
+  `jusqu_au_visa`, **`sommier_registre_quarto()`** ouvre le document sur le
+  visa tel que `sommier_verifier_visas()` le juge : qui l'a signé, pour quelle
+  autorité et quel exercice, jusqu'à quelle écriture ; si la signature se
+  vérifie, et sous quelle clé, celle du certificat que porte le visa ou une
+  clé fournie ; si la tête visée est bien celle de la chaîne imprimée ; et ce
+  que vaut le jeton d'horodatage. Le lecteur sait qui a visé quoi, et quand.
+- **La date est celle de l'autorité d'horodatage**, lue dans le jeton, avec
+  le nom de l'autorité qui l'a certifiée. Un jeton intact mais que rien ne
+  rattache à une ancre de confiance est dit tel ; un visa sans jeton est dit
+  « absent », sa date ne reposant que sur l'horloge du serveur. Une signature
+  sans certificat ni clé fournie est dite non vérifiée, jamais valide.
+- **Le certificat du signataire** est décrit en clair : sujet, émetteur ou
+  auto-signé, série, validité, empreinte SHA-256.
+- **Les pièces du visa sont en annexe**, telles quelles : la signature JWS,
+  le certificat en PEM et le jeton en base64, pour être vérifiés ailleurs.
+  Le document dit que la révocation des certificats n'est pas consultée.
+- **`sommier_registre()`** et `sommier_registre_quarto()` gagnent
+  `cles_publiques` et `ancres`, transmises à `sommier_verifier_visas()`.
+  L'élément `visa` de l'extraction devient une liste qui porte, en plus,
+  `signataire`, `signature_jws`, `certificat`, `jeton` et `verifie`.
+- **Le sommier imprimé se rend avec le code qui l'a extrait.** Le gabarit
+  lisait la table des registres dans le paquet installé (`sommieR::`), dans
+  le processus R que lance Quarto : il échouait là où le paquet n'est pas
+  installé, et prenait ailleurs une version qui pouvait être plus ancienne.
+  Il la lit désormais dans le RDS du rendu, comme le reste ; un test
+  interdit `sommieR::` dans les gabarits.
+
 # sommieR 0.31.1
 
 - **Une tournée de travaux de l'ancien format s'importe.** Un projet engendré
