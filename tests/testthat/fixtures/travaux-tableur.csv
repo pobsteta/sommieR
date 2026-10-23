@@ -1,0 +1,8 @@
+UG;Date;Année;Code;Nature des travaux;Modalité;Essence objectif;Localisation;Quantité;Unité;Nb plants;Provenance plants;Montant (€);Taux reprise (%);Exécution;Intervenant;Prévu;Motif écart;Date réception;Géométrie;Observations
+12;15/11/2018;2018;PL;Plantation de chêne sessile;potets travaillés;CHS;;1,75;ha;1 050;QPE-Centre;4 800,00;85;Entreprise;Pépinières du Val;Prévu;;01/12/2018;POLYGON((1.674926 47.39325, 1.677577 47.39328, 1.677555 47.39417, 1.674904 47.39415, 1.674926 47.39325));
+12;;2019;DG;Dégagement;mécanique en ligne;CHS;;1,75;ha;;;900;;Régie;;Prévu;;;;
+12;;2018;PG;Clôture;grillage 1,8 m;;;420;m;;;2 100;;Entreprise;Clôtures Martin;Non prévu;Pression du chevreuil constatée après plantation;;LINESTRING(1.674405 47.39288, 1.678116 47.39292);
+;;2020;RG;Regarnis;;CHS;;120;plants;120;;360;;Régie;;Reporté;Plants indisponibles en 2019;;POINT(1.676241 47.39371);Regarni au centre de la plantation
+13;;2015;;Nettoiement;;;;2;ha;;;1 200;;;;;;;;Inscrit avant la nomenclature
+;;2021;DS;Entretien de piste;;;Route forestière de la Combe;800;m;;;1 500;;Entreprise;;Prévu;;;;
+
