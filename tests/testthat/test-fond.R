@@ -44,7 +44,10 @@ test_that("sommier_fond_lire refuse ce qui ne vient pas du telechargement", {
 
 test_that("le millesime absent ne se remplace pas par une date inventee", {
   # Un fond date a tort vaut moins qu'un fond non date.
-  expect_true(is.na(millesime_publie("file:///introuvable/")))
+  absent <- millesime_publie("file:///introuvable/")
+  expect_true(is.na(absent))
+  # Un index injoignable est une panne, et se dit telle.
+  expect_true(isTRUE(attr(absent, "panne")))
 })
 
 test_that("le fond se telecharge, se met en cache et porte son millesime", {
@@ -59,6 +62,11 @@ test_that("le fond se telecharge, se met en cache et porte son millesime", {
   )
   expect_true(file.exists(fond$chemin))
   expect_equal(fond$code_insee, "21200")
+  # L'index qui porte le millesime peut tomber quand le fichier, lui, vient :
+  # c'est encore une panne, pas une regression.
+  if (isTRUE(attr(fond$millesime, "panne"))) {
+    skip("index d'Etalab injoignable : le millesime ne se lit pas")
+  }
   expect_match(fond$millesime, "^[0-9]{4}-[0-9]{2}-[0-9]{2}$")
 
   # Deuxieme appel : le cache sert, et le millesime survit au redemarrage.
@@ -263,7 +271,11 @@ test_that("le millesime se lit sur l'index publie", {
 test_that("un index sans millesime ne s'invente pas de date", {
   index <- withr::local_tempfile(fileext = ".html")
   writeLines("<html><body>Index of /quelque/part/</body></html>", index)
-  expect_true(is.na(millesime_publie(paste0("file://", index))))
+  muet <- millesime_publie(paste0("file://", index))
+  expect_true(is.na(muet))
+  # Lu, mais sans millesime : ce n'est pas une panne, le test doit echouer
+  # si la source change de forme.
+  expect_null(attr(muet, "panne"))
 })
 
 test_that("un fond en cache sans millesime enregistre le dit inconnu", {
