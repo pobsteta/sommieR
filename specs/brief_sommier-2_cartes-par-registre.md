@@ -147,16 +147,25 @@ n'a pas été interrogée.*
   - *l'écart entre les sources* : à Orléans (Loiret), le fichier n'a pas de
     ligne pour le Sabot de Vénus (le Centre-Val de Loire a sa liste flore,
     la liste socle nationale ne s'applique pas), alors que l'API TAXREF rend
-    un code national 1 ; à confirmer auprès du pôle SINP Centre-Val de
-    Loire ;
+    un code national 1. *Clos le 24 octobre 2026, Pascal :* « le sabot de
+    vénus dans le loiret est un exemple » - une donnée d'essai, pas une
+    observation ; le référentiel de l'INPN fait foi tel qu'il est, sans
+    question au pôle SINP ;
   - *la traduction des codes en floutage* : le fichier donne des codes 1
     à 3, le guide v2.0 (2022) raisonne en surfaces ; la correspondance est
     à établir, pas à inventer. *Établie le 24 octobre 2026 (acquisition) :*
     1 = commune, 2 = maille 10 × 10 km, 3 = département (référentiel des
     données sensibles de Bretagne v1.1, 2019, p. 7 ; guide v2.0, p. 8). Le
-    fichier v18 ne porte que ces trois codes. Reste non vérifié à la
-    source : la notice du Centre-Val de Loire, dont le niveau 1 pourrait
-    être plus fin que la commune (ZNIEFF, espaces protégés) ;
+    fichier v18 ne porte que ces trois codes. *Confirmé le 24 octobre 2026*
+    par la page « Diffusion des données sensibles » de l'IRPN (DREAL
+    Hauts-de-France, non datée, fournie par Pascal,
+    `irpn.drealnpdc.fr/le-sinp-kesako/quest-quune-donnee/diffusion-donnees-sensibles/`) :
+    les niveaux y sont des échelles maximales - 1 « département, maille,
+    espace, commune, ZNIEFF », 2 « départementale ou maille de 10 × 10 km »,
+    3 « départementale uniquement », 4 « aucune diffusion (cas
+    exceptionnel) ». Le sommier prend la plus fine permise ; la commune au
+    niveau 1 est conforme, la ZNIEFF ou l'espace n'en sont que des
+    variantes ;
   - *les habitats, vestiges et arbres remarquables* : aucune liste citable
     trouvée ; leur sort à `public = TRUE` est un choix du gestionnaire, que
     le document dira tel ;
