@@ -181,7 +181,11 @@ n'a pas été interrogée.*
   cadastral fourni par `sommier_fond_lire()`, source et millésime au
   cartouche ; sans lui, le cartouche dit « aucun ».
 - **Les objets hors UG** ou rattachés à la forêt (travaux A50H, sécheresse
-  qui déborde A 35, affouage) : quel croquis ?
+  qui déborde A 35, affouage) : quel croquis ? *Arbitrage de Pascal,
+  24 octobre 2026 :* **sur le plan de situation.** Fait au lot 3 (0.37.0) :
+  une écriture sans géométrie ni unité, hors registres 1 et 7, y est nommée
+  par son numéro, le contour de la forêt entière renforcé, et comptée parmi
+  les localisées. Un objet hors UG à géométrie propre garde sa fiche.
 - **`jusqu_au_visa`** : les croquis s'arrêtent à la tête visée ; les contours
   restent ceux de l'époque de chaque écriture (décision 6).
 - **Le contenu exact des imprimés A50** (A50D bis, A50J, r/a, r/c, r/s) n'est

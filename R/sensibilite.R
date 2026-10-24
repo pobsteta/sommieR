@@ -169,9 +169,12 @@ flouter_sensibles <- function(sommier, sensibilite, departement,
       o$floutage[[i]] <- switch(
         as.character(niveau),
         `1` = "\u00e0 la commune",
-        `2` = sprintf("\u00e0 la maille 10kmL93E%03dN%03d",
-                      as.integer(floor(o$x_l93[[i]] / 10000)),
-                      as.integer(floor(o$y_l93[[i]] / 10000))),
+        # Rattachee a la foret entiere, l'ecriture n'a pas de point ou
+        # prendre sa maille.
+        `2` = if (is.na(o$x_l93[[i]])) "\u00e0 la maille 10 \u00d7 10 km" else
+          sprintf("\u00e0 la maille 10kmL93E%03dN%03d",
+                  as.integer(floor(o$x_l93[[i]] / 10000)),
+                  as.integer(floor(o$y_l93[[i]] / 10000))),
         `3` = paste0("au d\u00e9partement",
                      if (!est_vide(departement)) paste0(" (", departement, ")")),
         "non diffus\u00e9e"

@@ -23,7 +23,10 @@
 #' de lecture, chaque ecriture localisee : par sa geometrie propre, ou a
 #' defaut par son unite, prise dans le contour en vigueur a la date de
 #' l'evenement (le plus proche, dit non en vigueur, quand aucun ne l'etait).
-#' Les contours ne sont pas des ecritures ; ils sont rendus avec leur source.
+#' Une ecriture sans geometrie ni unite se rattache a la foret entiere, sauf
+#' aux registres 1 et 7 : un visa ou une ligne de comptes n'est pas un objet
+#' sur le terrain. Les contours ne sont pas des ecritures ; ils sont rendus
+#' avec leur source.
 #'
 #' **Une edition peut s'arreter a un visa.** `jusqu_au_visa` imprime le
 #' sommier tel qu'il etait quand l'exercice a ete vise : les ecritures jusqu'a
@@ -60,8 +63,8 @@
 #'   `verifie`), `registres`, et `croquis` : `objets` (une ligne par
 #'   ecriture localisee, rectifiees comprises : `seq`, `registre`,
 #'   `type_entree`, `designation`, `date_evenement`, `provenance`, `ndp`,
-#'   `rectifie`, `rectifiee_par`, `ug`, `ug_uuid`, `localisation` - `propre`
-#'   ou `ug` -, `type_geometrie`, `wkt` en Lambert-93, `precision_m`,
+#'   `rectifie`, `rectifiee_par`, `ug`, `ug_uuid`, `localisation` - `propre`,
+#'   `ug` ou `foret` -, `type_geometrie`, `wkt` en Lambert-93, `precision_m`,
 #'   `x_l93`, `y_l93`, `floutage`, `contour_version`, `contour_en_vigueur`),
 #'   `contours` (toutes les versions de contour des unites, avec leur
 #'   source), `filiations`, `date_situation` et `non_localisees`.
@@ -193,8 +196,9 @@ print.sommier_registre <- function(x, ...) {
 #' fiche - par unite de gestion et version de son contour, puis par objet
 #' hors unite - precede d'un plan de situation. Chaque ecriture localisee y
 #' figure, rectifiees comprises, a sa position propre ou, a defaut, dans son
-#' unite, prise dans le contour qu'elle avait a la date de l'evenement. Le
-#' trait dit la provenance (constat, source indirecte, transcription) ;
+#' unite, prise dans le contour qu'elle avait a la date de l'evenement. Les
+#' ecritures rattachees a la foret entiere (ni geometrie ni unite, hors
+#' registres 1 et 7) sont nommees au plan de situation. Le trait dit la provenance (constat, source indirecte, transcription) ;
 #' chaque croquis porte son echelle, le nord, le systeme de coordonnees et
 #' la source de ses contours, et du parcellaire cadastral quand `fond` le
 #' fournit. Il faut le paquet `sf` la ou le document se rend.
@@ -608,7 +612,10 @@ jeton_du_visa <- function(tst_hex, hash_tete, ancres) {
 # a la date de l'evenement : chaque ecriture se lit dans la foret de son
 # epoque. Les contours, eux, ne sont pas dans la chaine ; ils sont rendus
 # toutes versions comprises, avec leur source, pour que le croquis dise de
-# quand date ce qu'il montre.
+# quand date ce qu'il montre. Une ecriture sans geometrie ni unite se
+# rattache a la foret entiere (affouage, secheresse qui deborde, travaux a
+# l'echelle de la foret) ; les registres 1 et 7, visas et comptes, ne
+# designent rien sur le terrain et restent non localises.
 croquis_du_sommier <- function(con, foret_id, ecritures, limite,
                                date_situation) {
   objets <- DBI::dbGetQuery(
@@ -642,7 +649,8 @@ croquis_du_sommier <- function(con, foret_id, ecritures, limite,
           LIMIT 1
        ) g ON e.ug_uuid IS NOT NULL
       WHERE e.foret_id = $1 AND e.seq <= $2
-        AND (e.geom IS NOT NULL OR g.version IS NOT NULL)
+        AND (e.geom IS NOT NULL OR g.version IS NOT NULL OR
+             (e.ug_uuid IS NULL AND e.registre NOT IN (1, 7)))
       ORDER BY e.seq",
     params = parametres(list(foret_id,
                              if (is.null(limite)) 9e15 else limite))
@@ -661,7 +669,8 @@ croquis_du_sommier <- function(con, foret_id, ecritures, limite,
     rectifiee_par = ecritures$rectifiee_par[lignes],
     ug = ecritures$ug[lignes],
     ug_uuid = objets$ug_uuid,
-    localisation = ifelse(is.na(objets$wkt), "ug", "propre"),
+    localisation = ifelse(!is.na(objets$wkt), "propre",
+                          ifelse(is.na(objets$ug_uuid), "foret", "ug")),
     type_geometrie = sub("^ST_", "", objets$type_geometrie),
     wkt = objets$wkt,
     precision_m = objets$precision_m,
