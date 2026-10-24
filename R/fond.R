@@ -204,14 +204,15 @@ repertoire_cache <- function(cache) {
 # Le millesime n'est pas dans le fichier : il est dans le chemin vers lequel
 # `latest` redirige. On le lit sur l'index du dossier, et son absence se dit
 # plutot que de se deviner - un fond date a tort vaut moins qu'un fond non
-# date.
+# date. Un index injoignable n'est pas un index sans millesime : l'attribut
+# `panne` les distingue, comme `telecharger()` distingue la panne du 404.
 millesime_publie <- function(dossier) {
   index <- try(
     suppressWarnings(readLines(dossier, warn = FALSE, n = 40L)),
     silent = TRUE
   )
   if (inherits(index, "try-error")) {
-    return(NA_character_)
+    return(structure(NA_character_, panne = TRUE))
   }
   trouve <- regmatches(
     paste(index, collapse = " "),

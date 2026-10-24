@@ -1,3 +1,12 @@
+# sommieR 0.37.2
+
+- **Un index d'Etalab injoignable est une panne.** Le millésime du fond
+  cadastral se lit sur l'index du dossier ; quand cet index ne répond pas,
+  le millésime reste inconnu, comme avant, mais porte l'attribut `panne`.
+  Le test qui va chercher la source réelle se saute alors au lieu
+  d'échouer : la CI a été prise deux fois en otage le 24 octobre 2026. Un
+  index lu mais sans millésime échoue toujours.
+
 # sommieR 0.37.1
 
 - **L'A50F est le relevé des coupes martelées**, non celui des coupes
