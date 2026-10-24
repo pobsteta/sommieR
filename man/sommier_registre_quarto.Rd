@@ -83,7 +83,9 @@ photos des constats ne sont jamais reproduites, seulement comptees.
 fiche - par unite de gestion et version de son contour, puis par objet
 hors unite - precede d'un plan de situation. Chaque ecriture localisee y
 figure, rectifiees comprises, a sa position propre ou, a defaut, dans son
-unite, prise dans le contour qu'elle avait a la date de l'evenement. Le
+unite, prise dans le contour qu'elle avait a la date de l'evenement. Les
+ecritures rattachees a la foret entiere (ni geometrie ni unite, hors
+registres 1 et 7) sont nommees au plan de situation. Le
 trait dit la provenance (constat, source indirecte, transcription) ;
 chaque croquis porte son echelle, le nord, le systeme de coordonnees et
 la source de ses contours, et du parcellaire cadastral quand \code{fond} le

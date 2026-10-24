@@ -94,3 +94,24 @@ test_that("le niveau vient du cd_nom, du binome, du departement et de la duree",
   expect_equal(nrow(sensibilite_des_ecritures(e[7, ], ref, NULL,
                                               Sys.Date())), 0L)
 })
+
+test_that("une espece rattachee a la foret se floute sans nommer de maille", {
+  e <- fiche_espece(1, "2021-05-28", "Sabot de Venus", "Cypripedium calceolus",
+                    cd_nom = 94041)
+  e$contenu <- ""
+  e$ug <- NA_character_
+  s <- list(ecritures = e, croquis = list(objets = data.frame(
+    seq = 1, localisation = "foret", floutage = NA_character_,
+    wkt = NA_character_, ug = NA_character_, ug_uuid = NA_character_,
+    contour_version = NA_integer_, contour_en_vigueur = NA,
+    precision_m = NA_real_, x_l93 = NA_real_, y_l93 = NA_real_,
+    stringsAsFactors = FALSE
+  )))
+  # Dans les Vosges, le code 2 : la maille, que la foret seule ne situe pas.
+  o <- flouter_sensibles(s, ref_sensibilite(), "88",
+                         as.Date("2026-10-24"))$croquis$objets
+  expect_equal(o$localisation, "floutee")
+  expect_match(o$floutage, "maille 10 × 10 km (sensibilité SINP 2)",
+               fixed = TRUE)
+  expect_no_match(o$floutage, "NA")
+})

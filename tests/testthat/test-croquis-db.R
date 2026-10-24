@@ -9,14 +9,16 @@ base_croquis <- function() {
 }
 
 # Ce que la base sait localiser, compte sans passer par l'extraction : une
-# geometrie propre, ou une unite qui a un contour.
+# geometrie propre, une unite qui a un contour, ou la foret entiere pour ce
+# qui n'a ni l'une ni l'autre, hors visas et comptes.
 compter_localisees <- function(con, foret, jusqu_a = 9e15) {
   DBI::dbGetQuery(
     con,
     "SELECT count(*)::int AS n FROM entree_sommier e
       WHERE e.foret_id = $1 AND e.seq <= $2
         AND (e.geom IS NOT NULL OR EXISTS (
-          SELECT 1 FROM ug_geometrie g WHERE g.ug_uuid = e.ug_uuid))",
+          SELECT 1 FROM ug_geometrie g WHERE g.ug_uuid = e.ug_uuid)
+          OR (e.ug_uuid IS NULL AND e.registre NOT IN (1, 7)))",
     params = list(foret, jusqu_a)
   )$n
 }
@@ -169,18 +171,47 @@ test_that("chaque ecriture se lit dans le contour de son epoque", {
   expect_true(all(cq$filiations$type_filiation == "scission"))
 })
 
-test_that("une foret sans ecriture localisee a des croquis vides", {
+test_that("une ecriture sans geometrie ni unite se rattache a la foret", {
   con <- base_croquis()
   foret <- foret_creer(con, "Foret sans carte", "communal")
-  sommier_ajouter(con, sommier_entree(
+  martelage <- sommier_ajouter(con, sommier_entree(
     foret_id = foret, registre = 5L, date_evenement = "2026-03-01",
     auteur = "agent-01",
     payload = registre5_coupe("martelage", 2026, "amelioration", 50)
+  ))[[1L]]
+  # Une ligne de comptes ne designe rien sur le terrain.
+  sommier_ajouter(con, sommier_entree(
+    foret_id = foret, registre = 7L, date_evenement = "2026-12-15",
+    auteur = "agent-01",
+    payload = registre7_ecriture("bois_sur_pied", 2026, montant_eur = 4150)
   ))
   cq <- sommier_registre(con, foret)$croquis
-  expect_equal(nrow(cq$objets), 0L)
+  expect_equal(nrow(cq$objets), 1L)
+  expect_equal(cq$objets$seq, as.numeric(martelage$seq))
+  expect_equal(cq$objets$localisation, "foret")
+  expect_true(is.na(cq$objets$wkt))
+  expect_true(is.na(cq$objets$contour_version))
+  expect_true(is.na(cq$objets$contour_en_vigueur))
   expect_equal(cq$non_localisees, 1L)
+  expect_equal(nrow(cq$objets), compter_localisees(con, foret))
   expect_equal(nrow(cq$contours), 0L)
+
+  # Les comptes seuls : rien a dessiner.
+  comptes <- sommier_registre(con, foret, registres = 7)$croquis
+  expect_equal(nrow(comptes$objets), 0L)
+  expect_equal(comptes$non_localisees, 1L)
+
+  # Sans contour ni position, le document se rend : la liste seule.
+  skip_if_not_installed("sf")
+  skip_if(!nzchar(Sys.which("quarto")), "Quarto n'est pas installe.")
+  sortie <- withr::local_tempfile(fileext = ".html")
+  sommier_registre_quarto(con, foret, sortie)
+  html <- paste(readLines(sortie, warn = FALSE, encoding = "UTF-8"),
+                collapse = "\n")
+  expect_match(html, "1 rattachée(s) à la forêt", fixed = TRUE)
+  # Pandoc rend l'apostrophe typographique.
+  expect_match(html, "plan de situation n.est pas dessiné")
+  expect_match(html, "la forêt entière", fixed = TRUE)
 })
 
 test_that("a public = TRUE, une espece sensible quitte le croquis", {

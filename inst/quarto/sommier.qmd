@@ -564,7 +564,8 @@ tableau_fiche <- function(o, legende_tableau) {
     Provenance = TRAITS$libelle[match(trait_de(o), TRAITS$trait)],
     Position = ifelse(o$localisation == "propre",
                       paste0("propre (", o$type_geometrie, ")"),
-                      "par son unité"),
+                      ifelse(o$localisation == "foret", "la forêt entière",
+                             "par son unité")),
     `Précision` = ifelse(is.na(o$precision_m), "—",
                          paste0("± ", format(o$precision_m, trim = TRUE), " m")),
     `État` = etat_de(o),
@@ -588,40 +589,68 @@ if (is.null(objets) || nrow(objets) == 0L) {
       "comme le parcellaire cadastral, ne sont pas des écritures : ils viennent de leur source, dite sous ",
       "chaque croquis, dans la version qu'ils avaient à la date de ",
       "l'écriture. Une écriture sans position propre est rapportée à son ",
-      "unité. Les écritures rectifiées restent dessinées, en gris.\n:::\n\n",
+      "unité ; sans unité, à la forêt entière, et nommée au plan de situation. ",
+      "Les écritures rectifiées restent dessinées, en gris.\n:::\n\n",
       sep = "")
   cat(nrow(objets), " écriture(s) localisée(s) : ",
       sum(objets$localisation == "propre"), " par leur position propre, ",
       sum(objets$localisation == "ug"), " par leur unité de gestion",
+      if (any(objets$localisation == "foret")) paste0(
+        ", ", sum(objets$localisation == "foret"), " rattachée(s) à la forêt"),
       if (any(objets$localisation == "floutee")) paste0(
         ", ", sum(objets$localisation == "floutee"), " floutée(s)"), ". ",
       cq$non_localisees, " écriture(s) imprimée(s) ne se localisent pas.\n\n",
       sep = "")
 
   # Le plan de situation : la forêt entière, à la date de l'édition (ou du
-  # visa qui l'arrête), et toutes les positions propres.
+  # visa qui l'arrête), toutes les positions propres, et les écritures
+  # rattachées à la forêt, qui n'ont pas d'autre croquis.
   cat("## Plan de situation\n\n")
   fond <- contours_a(cq$date_situation)
   propres <- objets[objets$localisation == "propre", , drop = FALSE]
+  a_la_foret <- objets[objets$localisation == "foret", , drop = FALSE]
   if (is.null(fond) || nrow(fond) == 0L) {
     fond <- NULL
   }
   geoms <- c(if (!is.null(fond)) geometrie(fond$wkt),
              if (nrow(propres) > 0L) geometrie(propres$wkt))
-  graphics::par(mar = c(0.5, 0.5, 0.5, 0.5))
-  etendue <- boite(geoms, marge = 0.06)
-  if (!is.null(fond)) {
-    dessiner_contours(fond, etendue = etendue)
+  if (length(geoms) == 0L) {
+    # Ni contour ni position : rien à dessiner, la liste seule.
+    cat("*Aucun contour d'unité ni position propre : le plan de situation",
+        "n'est pas dessiné.*\n\n")
   } else {
-    plot(geoms, xlim = etendue$x, ylim = etendue$y, col = NA, border = NA)
+    graphics::par(mar = c(0.5, 0.5, 0.5, 0.5))
+    etendue <- boite(geoms, marge = 0.06)
+    if (!is.null(fond)) {
+      dessiner_contours(fond, etendue = etendue)
+      if (nrow(a_la_foret) > 0L) {
+        # Le contour de la forêt entière, auquel ces écritures se rapportent.
+        plot(sf::st_union(geometrie(fond$wkt)), add = TRUE, col = NA,
+             border = "grey20", lwd = 2)
+      }
+    } else {
+      plot(geoms, xlim = etendue$x, ylim = etendue$y, col = NA, border = NA)
+    }
+    poser_parcellaire(etendue, etiqueter = FALSE)
+    dessiner_objets(objets, etiqueter = FALSE)
+    if (nrow(a_la_foret) > 0L) {
+      u <- graphics::par("usr")
+      graphics::text(u[1] + (u[2] - u[1]) * 0.01, u[4] - (u[4] - u[3]) * 0.02,
+                     paste(strwrap(paste0(
+                       "Rattachées à la forêt : n° ",
+                       paste(numero(a_la_foret$seq), collapse = ", ")),
+                       width = 45), collapse = "\n"),
+                     adj = c(0, 1), cex = 0.7, col = "grey20")
+    }
+    echelle_et_nord()
+    legende(objets)
+    cat("\n\n")
+    if (!is.null(fond)) {
+      cartouche(fond)
+    }
   }
-  poser_parcellaire(etendue, etiqueter = FALSE)
-  dessiner_objets(objets, etiqueter = FALSE)
-  echelle_et_nord()
-  legende(objets)
-  cat("\n\n")
-  if (!is.null(fond)) {
-    cartouche(fond)
+  if (nrow(a_la_foret) > 0L) {
+    tableau_fiche(a_la_foret, "Écritures rattachées à la forêt entière")
   }
 
   # Une fiche par unité et par version de contour, puis une par objet hors
@@ -680,7 +709,7 @@ if (is.null(objets) || nrow(objets) == 0L) {
     tableau_fiche(o, paste0("Écritures localisées dans l'UG ", cles$ug[[k]]))
   }
 
-  hors <- objets[objets$localisation != "floutee" &
+  hors <- objets[!objets$localisation %in% c("floutee", "foret") &
                    (is.na(objets$ug_uuid) | is.na(objets$contour_version)), ,
                  drop = FALSE]
   for (i in seq_len(nrow(hors))) {
