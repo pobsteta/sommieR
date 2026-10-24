@@ -20,6 +20,7 @@ sommier_registre_quarto(
   ancres = list(),
   sensibilite = NULL,
   departement = NULL,
+  fond = NULL,
   quarto = Sys.which("quarto")
 )
 ```
@@ -76,6 +77,15 @@ sommier_registre_quarto(
   que les listes qui s'y appliquent. Sans lui, la plus forte
   sensibilite, tous departements confondus.
 
+- fond:
+
+  Parcellaire cadastral a poser sous les croquis, tel que le rend
+  [`sommier_fond_lire()`](https://pobsteta.github.io/sommieR/reference/sommier_fond_lire.md)
+  ; `NULL` pour s'en passer. Il se fournit et ne se telecharge pas au
+  rendu, comme pour
+  [`sommier_rapport_quarto()`](https://pobsteta.github.io/sommieR/reference/sommier_rapport_quarto.md)
+  ; sa source et son millesime sont dits sous chaque croquis.
+
 - quarto:
 
   Chemin de l'executable Quarto.
@@ -110,8 +120,8 @@ figure, rectifiees comprises, a sa position propre ou, a defaut, dans
 son unite, prise dans le contour qu'elle avait a la date de l'evenement.
 Le trait dit la provenance (constat, source indirecte, transcription) ;
 chaque croquis porte son echelle, le nord, le systeme de coordonnees et
-la source de ses contours. Il faut le paquet `sf` la ou le document se
-rend.
+la source de ses contours, et du parcellaire cadastral quand `fond` le
+fournit. Il faut le paquet `sf` la ou le document se rend.
 
 A `public = TRUE`, **les especes sensibles sont floutees selon le SINP**
 : le croquis les tait, et leur fiche dit l'echelle de diffusion - la

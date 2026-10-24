@@ -11,7 +11,7 @@ registre dans l'ordre de la chaine, et en annexe les empreintes completes."></he
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.35.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.36.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,6 +63,7 @@ registre dans l'ordre de la chaine, et en annexe les empreintes completes.</p>
 <span>  ancres <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  sensibilite <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  departement <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  fond <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  quarto <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.which.html" class="external-link">Sys.which</a></span><span class="op">(</span><span class="st">"quarto"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -121,6 +122,13 @@ pour ne retenir que les listes qui s'y appliquent. Sans lui, la plus
 forte sensibilite, tous departements confondus.</p></dd>
 
 
+<dt id="arg-fond">fond<a class="anchor" aria-label="anchor" href="#arg-fond"></a></dt>
+<dd><p>Parcellaire cadastral a poser sous les croquis, tel que le
+rend <code><a href="sommier_fond_lire.html">sommier_fond_lire()</a></code> ; <code>NULL</code> pour s'en passer. Il se fournit et
+ne se telecharge pas au rendu, comme pour <code><a href="sommier_rapport_quarto.html">sommier_rapport_quarto()</a></code> ;
+sa source et son millesime sont dits sous chaque croquis.</p></dd>
+
+
 <dt id="arg-quarto">quarto<a class="anchor" aria-label="anchor" href="#arg-quarto"></a></dt>
 <dd><p>Chemin de l'executable Quarto.</p></dd>
 
@@ -148,8 +156,8 @@ figure, rectifiees comprises, a sa position propre ou, a defaut, dans son
 unite, prise dans le contour qu'elle avait a la date de l'evenement. Le
 trait dit la provenance (constat, source indirecte, transcription) ;
 chaque croquis porte son echelle, le nord, le systeme de coordonnees et
-la source de ses contours. Il faut le paquet <code>sf</code> la ou le document se
-rend.</p>
+la source de ses contours, et du parcellaire cadastral quand <code>fond</code> le
+fournit. Il faut le paquet <code>sf</code> la ou le document se rend.</p>
 <p>A <code>public = TRUE</code>, <strong>les especes sensibles sont floutees selon le SINP</strong> :
 le croquis les tait, et leur fiche dit l'echelle de diffusion - la
 commune, la maille 10 km ou le departement, selon le code de sensibilite

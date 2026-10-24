@@ -1,5 +1,20 @@
 # Changelog
 
+## sommieR 0.36.0
+
+Sommier, lot 3, complément : le parcellaire sous les croquis (brief
+`sommier-2`, décision 7).
+
+- **[`sommier_registre_quarto()`](https://pobsteta.github.io/sommieR/reference/sommier_registre_quarto.md)
+  gagne `fond`** : le parcellaire cadastral que rend
+  [`sommier_fond_lire()`](https://pobsteta.github.io/sommieR/reference/sommier_fond_lire.md),
+  posé en surimpression sous les croquis, chaque parcelle avec sa
+  section et son numéro (sauf au plan de situation, où ils
+  s’entasseraient). Comme pour le bilan, il se fournit et ne se
+  télécharge pas au rendu.
+- **Le cartouche dit le fond** : source et millésime, donnée tierce,
+  hors chaîne. Sans `fond`, il dit toujours « aucun ».
+
 ## sommieR 0.35.0
 
 Sommier, lot 3 : les croquis (brief `sommier-2`).
