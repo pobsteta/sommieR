@@ -13,7 +13,7 @@ ne soit dans la chaine."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.34.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.35.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,7 +103,14 @@ autorites d'horodatage. Sans effet sans <code>jusqu_au_visa</code>.</p></dd>
 qui arrete l'edition, s'il y en a un : <code>exercice</code>, <code>autorite</code>,
 <code>seq_tete</code>, <code>hash_tete</code>, <code>date_visa</code>, <code>horodate</code>, <code>concorde</code>, et son
 attestation - <code>signataire</code>, <code>signature_jws</code>, <code>certificat</code>, <code>jeton</code>,
-<code>verifie</code>), <code>registres</code>.</p>
+<code>verifie</code>), <code>registres</code>, et <code>croquis</code> : <code>objets</code> (une ligne par
+ecriture localisee, rectifiees comprises : <code>seq</code>, <code>registre</code>,
+<code>type_entree</code>, <code>designation</code>, <code>date_evenement</code>, <code>provenance</code>, <code>ndp</code>,
+<code>rectifie</code>, <code>rectifiee_par</code>, <code>ug</code>, <code>ug_uuid</code>, <code>localisation</code> - <code>propre</code>
+ou <code>ug</code> -, <code>type_geometrie</code>, <code>wkt</code> en Lambert-93, <code>precision_m</code>,
+<code>x_l93</code>, <code>y_l93</code>, <code>floutage</code>, <code>contour_version</code>, <code>contour_en_vigueur</code>),
+<code>contours</code> (toutes les versions de contour des unites, avec leur
+source), <code>filiations</code>, <code>date_situation</code> et <code>non_localisees</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -116,6 +123,11 @@ rectification porte le numero de sa cible (<code>rectifie</code>).</p>
 <p><strong>La fiche A10 ouvre le sommier.</strong> Pour chaque exercice depuis
 l'ouverture, les actes de visa du registre 1, signes et horodates ou non ;
 un exercice sans acte est dit non vise. Les ancrages suivent.</p>
+<p><strong>Les croquis sont hors chaine.</strong> L'extraction porte aussi, pour l'annexe
+de lecture, chaque ecriture localisee : par sa geometrie propre, ou a
+defaut par son unite, prise dans le contour en vigueur a la date de
+l'evenement (le plus proche, dit non en vigueur, quand aucun ne l'etait).
+Les contours ne sont pas des ecritures ; ils sont rendus avec leur source.</p>
 <p><strong>Une edition peut s'arreter a un visa.</strong> <code>jusqu_au_visa</code> imprime le
 sommier tel qu'il etait quand l'exercice a ete vise : les ecritures jusqu'a
 la tete signee, pas au-dela. La chaine est alors verifiee jusqu'a cette

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.34.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.35.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,26 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.35.0" id="sommier-0350">sommieR 0.35.0<a class="anchor" aria-label="anchor" href="#sommier-0350"></a></h2>
+<p>Sommier, lot 3 : les croquis (brief <code>sommier-2</code>).</p>
+<ul><li>
+<strong>Le sommier imprimé gagne une annexe de croquis</strong>, déclarée hors chaîne : les positions sont celles des écritures, les contours des unités viennent de leur source, dite sous chaque croquis. Un plan de situation l’ouvre ; suit un croquis par fiche, comme les imprimés A50 : un par unité de gestion et version de son contour, puis un par objet hors unité.</li>
+<li>
+<strong>Toutes les positions, rectifiées comprises.</strong> Les écritures sont lues dans <code>entree_sommier</code>, non dans <code>v_objet_localise</code> qui ne garde que les courantes. Une écriture rectifiée reste dessinée, en gris, « rectifiée par le n° X » ; un objet relevé plusieurs fois montre chaque relevé. Chaque objet porte son numéro d’écriture.</li>
+<li>
+<strong>La provenance se lit au trait</strong> : plein pour un constat de terrain (NDP 0), pointillé pour une source indirecte, tireté pour une transcription, avec sa légende.</li>
+<li>
+<strong>Chaque écriture dans la forêt de son époque.</strong> Une écriture sans position propre se rapporte à son unité, prise dans le contour en vigueur à la date de l’évènement, unités fermées ou scindées comprises. Faute de contour en vigueur, le plus proche, et le croquis dit qu’il est postérieur. Les filiations de l’unité sont rappelées.</li>
+<li>
+<strong>Le minimum de chaque croquis</strong> : barre d’échelle, flèche du nord du quadrillage, Lambert-93 (EPSG:2154), précision du relevé quand elle est connue, source et version des contours, date d’édition.</li>
+<li>
+<strong><code><a href="../reference/sommier_registre.html">sommier_registre()</a></code></strong> porte l’élément <code>croquis</code> : <code>objets</code> (une ligne par écriture localisée), <code>contours</code> (toutes les versions, avec leur source), <code>filiations</code>, <code>date_situation</code> (édition, ou date du visa qui l’arrête) et <code>non_localisees</code>. Arrêtée à un visa, l’extraction s’arrête à la tête visée.</li>
+<li>
+<strong>À <code>public = TRUE</code>, les espèces sensibles sont floutées selon le SINP.</strong> <strong><code><a href="../reference/sommier_sensibilite.html">sommier_sensibilite()</a></code></strong> lit le référentiel national de sensibilité de l’INPN (<code>SENSIBILITE.zip</code>, version 18 du 7 août 2025), daté et empreint ; le fichier n’est pas dans le paquet, sa licence n’étant pas connue. <code><a href="../reference/sommier_registre_quarto.html">sommier_registre_quarto()</a></code> gagne <code>sensibilite</code> et <code>departement</code>. Une localisation sensible quitte le croquis ; sa fiche dit l’échelle de diffusion : commune (code 1), maille 10 × 10 km nommée comme celle de l’INPN (code 2), département (code 3). L’unité et le libellé de localisation de l’écriture sont tus aussi. Une sensibilité dont la durée est échue tombe ; les conditions (statut biologique, comportement) ne sont pas lues, et dans le doute on floute. Sans référentiel, aucune espèce localisée n’est diffusée.</li>
+<li>
+<strong>Le PDF est un PDF/A-2B</strong> (ISO 19005-2), validé par veraPDF sur la démo de Couchey. KOMA-Script refusant <code>\DocumentMetadata</code>, le gabarit partiel <code>doc-class.tex</code> charge <code>pdfmanagement</code> avant la classe ; les croquis passent par <code>cairo_pdf</code>, qui embarque ses polices.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.34.0" id="sommier-0340">sommieR 0.34.0<a class="anchor" aria-label="anchor" href="#sommier-0340"></a></h2>
 <p>Patrimoine, lot 2 : les statuts (brief <code>patrimoine-1</code>).</p>

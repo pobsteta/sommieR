@@ -55,7 +55,14 @@ Un objet de classe `sommier_registre` : `foret` (nom, regime),
 qui arrete l'edition, s'il y en a un : `exercice`, `autorite`,
 `seq_tete`, `hash_tete`, `date_visa`, `horodate`, `concorde`, et son
 attestation - `signataire`, `signature_jws`, `certificat`, `jeton`,
-`verifie`), `registres`.
+`verifie`), `registres`, et `croquis` : `objets` (une ligne par ecriture
+localisee, rectifiees comprises : `seq`, `registre`, `type_entree`,
+`designation`, `date_evenement`, `provenance`, `ndp`, `rectifie`,
+`rectifiee_par`, `ug`, `ug_uuid`, `localisation` - `propre` ou `ug` -,
+`type_geometrie`, `wkt` en Lambert-93, `precision_m`, `x_l93`, `y_l93`,
+`floutage`, `contour_version`, `contour_en_vigueur`), `contours` (toutes
+les versions de contour des unites, avec leur source), `filiations`,
+`date_situation` et `non_localisees`.
 
 ## Details
 
@@ -72,6 +79,13 @@ rectification porte le numero de sa cible (`rectifie`).
 **La fiche A10 ouvre le sommier.** Pour chaque exercice depuis
 l'ouverture, les actes de visa du registre 1, signes et horodates ou non
 ; un exercice sans acte est dit non vise. Les ancrages suivent.
+
+**Les croquis sont hors chaine.** L'extraction porte aussi, pour
+l'annexe de lecture, chaque ecriture localisee : par sa geometrie
+propre, ou a defaut par son unite, prise dans le contour en vigueur a la
+date de l'evenement (le plus proche, dit non en vigueur, quand aucun ne
+l'etait). Les contours ne sont pas des ecritures ; ils sont rendus avec
+leur source.
 
 **Une edition peut s'arreter a un visa.** `jusqu_au_visa` imprime le
 sommier tel qu'il etait quand l'exercice a ete vise : les ecritures

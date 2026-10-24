@@ -18,6 +18,8 @@ sommier_registre_quarto(
   public = FALSE,
   cles_publiques = list(),
   ancres = list(),
+  sensibilite = NULL,
+  departement = NULL,
   quarto = Sys.which("quarto")
 )
 ```
@@ -51,7 +53,7 @@ sommier_registre_quarto(
 - public:
 
   `TRUE` pour un sommier a transmettre : les tiers des registres 3 et 7
-  sont masques.
+  sont masques, les localisations sensibles floutees.
 
 - cles_publiques, ancres:
 
@@ -60,6 +62,19 @@ sommier_registre_quarto(
   pour verifier le visa qui arrete l'edition : cles publiques des
   signataires (inutiles quand le visa porte son certificat), ancres de
   confiance des autorites d'horodatage. Sans effet sans `jusqu_au_visa`.
+
+- sensibilite:
+
+  Le referentiel de sensibilite de l'INPN, lu par
+  [`sommier_sensibilite()`](https://pobsteta.github.io/sommieR/reference/sommier_sensibilite.md).
+  Sans lui, a `public = TRUE`, aucune espece localisee n'est diffusee.
+  Sans effet sans `public`.
+
+- departement:
+
+  Code du departement de la foret (`"21"`, `"2A"`...), pour ne retenir
+  que les listes qui s'y appliquent. Sans lui, la plus forte
+  sensibilite, tous departements confondus.
 
 - quarto:
 
@@ -87,6 +102,26 @@ garants, tiers d'une ecriture) sont remplaces par "(masque)". La ligne,
 son montant et son empreinte restent : on voit qu'une ecriture existe,
 pas qui elle nomme. Les photos des constats ne sont jamais reproduites,
 seulement comptees.
+
+**Les croquis sont une annexe de lecture, hors chaine.** Un croquis par
+fiche - par unite de gestion et version de son contour, puis par objet
+hors unite - precede d'un plan de situation. Chaque ecriture localisee y
+figure, rectifiees comprises, a sa position propre ou, a defaut, dans
+son unite, prise dans le contour qu'elle avait a la date de l'evenement.
+Le trait dit la provenance (constat, source indirecte, transcription) ;
+chaque croquis porte son echelle, le nord, le systeme de coordonnees et
+la source de ses contours. Il faut le paquet `sf` la ou le document se
+rend.
+
+A `public = TRUE`, **les especes sensibles sont floutees selon le SINP**
+: le croquis les tait, et leur fiche dit l'echelle de diffusion - la
+commune, la maille 10 km ou le departement, selon le code de sensibilite
+du referentiel de l'INPN (`sensibilite`). L'unite de gestion et le
+libelle de localisation de ces ecritures sont tus aussi. Sans
+referentiel, aucune espece localisee n'est diffusee.
+
+Le PDF est un PDF/A-2B (ISO 19005-2) : polices et croquis embarques,
+rejouable sans reseau.
 
 Arrete a un visa (`jusqu_au_visa`), le document porte en tete ce visa
 tel que
