@@ -61,13 +61,16 @@ SOMMIER_REGISTRES_OUVERTS <- 1:9
 #' Types d'entree du registre 5 (coupes et recoltes)
 #'
 #' @description
-#' * `martelage` : volume martele en coupe reglee ou non reglee (imprime A50E).
+#' * `martelage` : volume martele en coupe reglee ou non reglee (imprime A50E
+#'   pour le total de l'exercice, A50F « releve des coupes martelees » pour
+#'   son detail par unite de gestion ou coupon).
 #' * `produit_accidentel` : chablis, bois sanitaires, volumes marteles hors
 #'   coupe prevue (imprime A50E, colonne "produits accidentels").
 #' * `bois_delivre` : delivrance, principalement l'affouage en foret communale
 #'   (imprime A50G, colonne "bois delivres") - bois martele, donc imputable.
-#' * `coupe_realisee` : releve de la coupe effectivement exploitee
-#'   (imprime A50F).
+#' * `coupe_realisee` : releve de la coupe effectivement exploitee. Aucun
+#'   imprime du classeur ne la porte : une ligne d'A50F se reprend en
+#'   `martelage`, non en `coupe_realisee`.
 #'
 #' @export
 SOMMIER_TYPES_COUPE <- c(
@@ -79,8 +82,8 @@ SOMMIER_TYPES_COUPE <- c(
 #' @description
 #' La balance A50E confronte a la possibilite les **volumes marteles**, soit
 #' les coupes et les produits accidentels. `coupe_realisee` en est exclu a
-#' dessein : la meme coupe est d'abord martelee (imprime A50E) puis exploitee
-#' (imprime A50F), l'imputer deux fois doublerait le prelevement constate.
+#' dessein : la meme coupe est d'abord martelee (imprimes A50E et A50F) puis
+#' exploitee, l'imputer deux fois doublerait le prelevement constate.
 #'
 #' @seealso [sommier_balance_possibilite()]
 #' @export

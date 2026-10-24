@@ -12,13 +12,16 @@ SOMMIER_TYPES_COUPE
 }
 \description{
 \itemize{
-\item \code{martelage} : volume martele en coupe reglee ou non reglee (imprime A50E).
+\item \code{martelage} : volume martele en coupe reglee ou non reglee (imprime A50E
+pour le total de l'exercice, A50F « releve des coupes martelees » pour
+son detail par unite de gestion ou coupon).
 \item \code{produit_accidentel} : chablis, bois sanitaires, volumes marteles hors
 coupe prevue (imprime A50E, colonne "produits accidentels").
 \item \code{bois_delivre} : delivrance, principalement l'affouage en foret communale
 (imprime A50G, colonne "bois delivres") - bois martele, donc imputable.
-\item \code{coupe_realisee} : releve de la coupe effectivement exploitee
-(imprime A50F).
+\item \code{coupe_realisee} : releve de la coupe effectivement exploitee. Aucun
+imprime du classeur ne la porte : une ligne d'A50F se reprend en
+\code{martelage}, non en \code{coupe_realisee}.
 }
 }
 \keyword{datasets}

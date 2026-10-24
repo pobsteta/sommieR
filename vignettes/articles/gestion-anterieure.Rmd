@@ -397,8 +397,8 @@ rien n'a été fait n'est pas une unité dont on ignore ce qui s'y est fait, et
 une carte qui les confondrait mentirait sur ce qu'elle montre.
 
 **Le volume martelé n'est pas le volume récolté.** Une coupe est d'abord
-martelée (A50E) puis exploitée (A50F) ; les compter toutes deux doublerait le
-prélèvement. La carte reprend donc la même convention que la balance de
+martelée (A50E, et A50F pour son détail par unité) puis exploitée ; les
+compter toutes deux doublerait le prélèvement. La carte reprend donc la même convention que la balance de
 possibilité, sans quoi les deux se contrediraient dans le même document.
 
 **Les écritures hors unité de gestion ne sont sur aucune carte.** L'entretien

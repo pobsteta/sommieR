@@ -13,8 +13,8 @@ SOMMIER_TYPES_MARTELES
 \description{
 La balance A50E confronte a la possibilite les \strong{volumes marteles}, soit
 les coupes et les produits accidentels. \code{coupe_realisee} en est exclu a
-dessein : la meme coupe est d'abord martelee (imprime A50E) puis exploitee
-(imprime A50F), l'imputer deux fois doublerait le prelevement constate.
+dessein : la meme coupe est d'abord martelee (imprimes A50E et A50F) puis
+exploitee, l'imputer deux fois doublerait le prelevement constate.
 }
 \seealso{
 \code{\link[=sommier_balance_possibilite]{sommier_balance_possibilite()}}

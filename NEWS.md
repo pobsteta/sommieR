@@ -1,3 +1,13 @@
+# sommieR 0.37.1
+
+- **L'A50F est le relevé des coupes martelées**, non celui des coupes
+  exploitées : confronté à l'imprimé original (« Relevé des coupes
+  martelées » : exercice, unité de gestion ou coupon, surface, volume,
+  observations), c'est le détail par unité des volumes de l'A50E. Une ligne
+  d'A50F se reprend donc en `martelage`. `coupe_realisee` ne renvoie plus à
+  aucun imprimé ; elle reste exclue de la balance, puisque la coupe a déjà
+  été comptée à son martelage. Documentation seule : aucune donnée ne change.
+
 # sommieR 0.37.0
 
 Sommier, lot 3, complément : les écritures rattachées à la forêt entière
