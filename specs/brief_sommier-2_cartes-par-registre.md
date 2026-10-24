@@ -177,6 +177,9 @@ n'a pas été interrogée.*
     la limite Latin-1 de `pdf()` (`gestion-anterieure.qmd:150-151`).
   - Reste à éprouver sur le vrai gabarit, avec ses tableaux longs et ses
     croquis `sf`.
+- **Le fond des croquis** : *fait au lot 3 (0.36.0)* - le parcellaire
+  cadastral fourni par `sommier_fond_lire()`, source et millésime au
+  cartouche ; sans lui, le cartouche dit « aucun ».
 - **Les objets hors UG** ou rattachés à la forêt (travaux A50H, sécheresse
   qui déborde A 35, affouage) : quel croquis ?
 - **`jusqu_au_visa`** : les croquis s'arrêtent à la tête visée ; les contours

@@ -490,6 +490,48 @@ dessiner_contours <- function(fond, unite = NULL, etendue) {
   }
 }
 
+# Le parcellaire cadastral, s'il a été fourni : un décor, jamais une
+# écriture. En surimpression, sans quoi l'aplat des unités le masquerait ;
+# chaque parcelle porte sa section et son numéro, comme sur un croquis A50.
+parcellaire <- donnees$fond
+parcellaire_pose <- dessinable && !is.null(parcellaire) &&
+  nrow(parcellaire) > 0L
+parcelles <- if (parcellaire_pose) geometrie(parcellaire$wkt)
+
+poser_parcellaire <- function(etendue, etiqueter = TRUE) {
+  if (!parcellaire_pose) return(invisible(NULL))
+  cadre <- sf::st_as_sfc(sf::st_bbox(c(xmin = etendue$x[1], ymin = etendue$y[1],
+                                       xmax = etendue$x[2], ymax = etendue$y[2]),
+                                     crs = sf::st_crs(L93)))
+  visibles <- which(lengths(sf::st_intersects(parcelles, cadre)) > 0L)
+  if (length(visibles) == 0L) return(invisible(NULL))
+  plot(parcelles[visibles], add = TRUE, col = NA, border = "#9E9E9E",
+       lwd = 0.5)
+  # Au plan de situation, l'échelle de la forêt entière : les numéros s'y
+  # entasseraient sur les petites parcelles.
+  if (!etiqueter) return(invisible(NULL))
+  etiquettes <- paste0(ifelse(is.na(parcellaire$section[visibles]), "",
+                              parcellaire$section[visibles]), " ",
+                       sub("^0+", "", parcellaire$numero[visibles]))
+  centres <- sf::st_coordinates(suppressWarnings(
+    sf::st_point_on_surface(parcelles[visibles])))
+  dedans <- centres[, 1] > etendue$x[1] & centres[, 1] < etendue$x[2] &
+    centres[, 2] > etendue$y[1] & centres[, 2] < etendue$y[2]
+  graphics::text(centres[dedans, 1], centres[dedans, 2],
+                 trimws(etiquettes[dedans]), col = "#757575", cex = 0.55)
+  invisible(NULL)
+}
+
+mention_parcellaire <- function() {
+  if (!parcellaire_pose) return("aucun")
+  millesime <- attr(parcellaire, "millesime")
+  paste0("parcellaire cadastral en surimpression, ",
+         if (is.null(millesime) || is.na(millesime)) "millésime inconnu"
+         else paste("millésime", millesime), ", ",
+         nettoyer(attr(parcellaire, "source") %||% "source non renseignée"),
+         " (donnée tierce, hors chaîne)")
+}
+
 # Ce que montre le croquis, et de quand : les versions de contour, leur
 # source, et les écritures plus anciennes que tout contour connu.
 cartouche <- function(fond, posterieurs = numeric(0), unite = NULL) {
@@ -504,7 +546,7 @@ cartouche <- function(fond, posterieurs = numeric(0), unite = NULL) {
         ", qu'aucun contour connu ne précède"),
       ". *Source* : ", if (length(sources) == 0L) "non renseignée" else
         nettoyer(paste(sources, collapse = " ; ")),
-      ". *Fond* : aucun. *Coordonnées* : Lambert-93 (EPSG:2154), nord du ",
+      ". *Fond* : ", mention_parcellaire(), ". *Coordonnées* : Lambert-93 (EPSG:2154), nord du ",
       "quadrillage. *Édité le* ", donnees$edite_le, ".\n\n", sep = "")
 }
 
@@ -542,8 +584,8 @@ if (is.null(objets) || nrow(objets) == 0L) {
 } else {
   cat("::: {.callout-note}\n## Une annexe de lecture, hors chaîne\n\n",
       "Les positions dessinées sont celles des écritures, telles que la chaîne ",
-      "les porte (projetées en Lambert-93). Les contours des unités de gestion ",
-      "ne sont pas des écritures : ils viennent de leur source, dite sous ",
+      "les porte (projetées en Lambert-93). Les contours des unités de gestion, ",
+      "comme le parcellaire cadastral, ne sont pas des écritures : ils viennent de leur source, dite sous ",
       "chaque croquis, dans la version qu'ils avaient à la date de ",
       "l'écriture. Une écriture sans position propre est rapportée à son ",
       "unité. Les écritures rectifiées restent dessinées, en gris.\n:::\n\n",
@@ -573,6 +615,7 @@ if (is.null(objets) || nrow(objets) == 0L) {
   } else {
     plot(geoms, xlim = etendue$x, ylim = etendue$y, col = NA, border = NA)
   }
+  poser_parcellaire(etendue, etiqueter = FALSE)
   dessiner_objets(objets, etiqueter = FALSE)
   echelle_et_nord()
   legende(objets)
@@ -606,6 +649,8 @@ if (is.null(objets) || nrow(objets) == 0L) {
       geometrie(propres_k$wkt)))
     graphics::par(mar = c(0.5, 0.5, 0.5, 0.5))
     dessiner_contours(fond, unite = cles$ug_uuid[[k]], etendue = etendue)
+    poser_parcellaire(etendue)
+    plot(unite_geom, add = TRUE, col = NA, border = "grey30", lwd = 1.4)
     par_ug <- o[o$localisation == "ug", , drop = FALSE]
     if (nrow(par_ug) > 0L) {
       # Hors du dessin, en haut à gauche : au centre de l'unité, la liste
@@ -654,12 +699,15 @@ if (is.null(objets) || nrow(objets) == 0L) {
     } else {
       plot(forme, xlim = etendue$x, ylim = etendue$y, col = NA, border = NA)
     }
+    poser_parcellaire(etendue)
     dessiner_objets(o)
     echelle_et_nord()
     legende(o)
     cat("\n\n")
     if (!is.null(fond) && nrow(fond) > 0L) {
       cartouche(fond, if (en_vigueur) numeric(0) else o$seq)
+    } else if (parcellaire_pose) {
+      cat("*Fond* : ", mention_parcellaire(), ".\n\n", sep = "")
     }
     tableau_fiche(o, paste0("Écriture n° ", numero(o$seq), ", hors unité"))
   }

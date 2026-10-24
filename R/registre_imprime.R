@@ -196,8 +196,8 @@ print.sommier_registre <- function(x, ...) {
 #' unite, prise dans le contour qu'elle avait a la date de l'evenement. Le
 #' trait dit la provenance (constat, source indirecte, transcription) ;
 #' chaque croquis porte son echelle, le nord, le systeme de coordonnees et
-#' la source de ses contours. Il faut le paquet `sf` la ou le document se
-#' rend.
+#' la source de ses contours, et du parcellaire cadastral quand `fond` le
+#' fournit. Il faut le paquet `sf` la ou le document se rend.
 #'
 #' A `public = TRUE`, **les especes sensibles sont floutees selon le SINP** :
 #' le croquis les tait, et leur fiche dit l'echelle de diffusion - la
@@ -228,6 +228,10 @@ print.sommier_registre <- function(x, ...) {
 #' @param departement Code du departement de la foret (`"21"`, `"2A"`...),
 #'   pour ne retenir que les listes qui s'y appliquent. Sans lui, la plus
 #'   forte sensibilite, tous departements confondus.
+#' @param fond Parcellaire cadastral a poser sous les croquis, tel que le
+#'   rend [sommier_fond_lire()] ; `NULL` pour s'en passer. Il se fournit et
+#'   ne se telecharge pas au rendu, comme pour [sommier_rapport_quarto()] ;
+#'   sa source et son millesime sont dits sous chaque croquis.
 #' @param quarto Chemin de l'executable Quarto.
 #'
 #' @return Invisiblement, le chemin du document produit.
@@ -239,7 +243,7 @@ sommier_registre_quarto <- function(con, foret_id, chemin, format = "html",
                                     registres = 1:9, jusqu_au_visa = NULL,
                                     public = FALSE, cles_publiques = list(),
                                     ancres = list(), sensibilite = NULL,
-                                    departement = NULL,
+                                    departement = NULL, fond = NULL,
                                     quarto = Sys.which("quarto")) {
   format <- valider_choix(format, "format", SOMMIER_FORMATS_QUARTO)
   chemin <- valider_texte(chemin, "chemin")
@@ -254,6 +258,9 @@ sommier_registre_quarto <- function(con, foret_id, chemin, format = "html",
   }
   if (!est_vide(departement)) {
     departement <- valider_texte(departement, "departement")
+  }
+  if (!is.null(fond) && (!is.data.frame(fond) || is.null(fond$wkt))) {
+    stop("`fond` doit venir de sommier_fond_lire().", call. = FALSE)
   }
   extension <- tolower(tools::file_ext(chemin))
   if (!identical(extension, format)) {
@@ -274,6 +281,7 @@ sommier_registre_quarto <- function(con, foret_id, chemin, format = "html",
     sommier = sommier,
     registres = SOMMIER_REGISTRES,
     public = isTRUE(public),
+    fond = fond,
     sensibilite = if (isTRUE(public)) list(
       version = if (is.null(sensibilite)) NULL else attr(sensibilite, "version"),
       empreinte = if (is.null(sensibilite)) NULL else
