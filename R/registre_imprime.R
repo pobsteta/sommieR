@@ -19,6 +19,12 @@
 #' l'ouverture, les actes de visa du registre 1, signes et horodates ou non ;
 #' un exercice sans acte est dit non vise. Les ancrages suivent.
 #'
+#' **Les croquis sont hors chaine.** L'extraction porte aussi, pour l'annexe
+#' de lecture, chaque ecriture localisee : par sa geometrie propre, ou a
+#' defaut par son unite, prise dans le contour en vigueur a la date de
+#' l'evenement (le plus proche, dit non en vigueur, quand aucun ne l'etait).
+#' Les contours ne sont pas des ecritures ; ils sont rendus avec leur source.
+#'
 #' **Une edition peut s'arreter a un visa.** `jusqu_au_visa` imprime le
 #' sommier tel qu'il etait quand l'exercice a ete vise : les ecritures jusqu'a
 #' la tete signee, pas au-dela. La chaine est alors verifiee jusqu'a cette
@@ -51,7 +57,14 @@
 #'   qui arrete l'edition, s'il y en a un : `exercice`, `autorite`,
 #'   `seq_tete`, `hash_tete`, `date_visa`, `horodate`, `concorde`, et son
 #'   attestation - `signataire`, `signature_jws`, `certificat`, `jeton`,
-#'   `verifie`), `registres`.
+#'   `verifie`), `registres`, et `croquis` : `objets` (une ligne par
+#'   ecriture localisee, rectifiees comprises : `seq`, `registre`,
+#'   `type_entree`, `designation`, `date_evenement`, `provenance`, `ndp`,
+#'   `rectifie`, `rectifiee_par`, `ug`, `ug_uuid`, `localisation` - `propre`
+#'   ou `ug` -, `type_geometrie`, `wkt` en Lambert-93, `precision_m`,
+#'   `x_l93`, `y_l93`, `floutage`, `contour_version`, `contour_en_vigueur`),
+#'   `contours` (toutes les versions de contour des unites, avec leur
+#'   source), `filiations`, `date_situation` et `non_localisees`.
 #'
 #' @seealso [sommier_registre_quarto()], [sommier_exporter_manifeste()]
 #'
@@ -125,6 +138,10 @@ sommier_registre <- function(con, foret_id, registres = 1:9,
                    regime = foret$regime[[1L]]),
       registres = registres,
       ecritures = ecritures,
+      croquis = croquis_du_sommier(
+        con, foret_id, ecritures, limite,
+        if (is.null(visa)) format(Sys.Date(), "%Y-%m-%d") else visa$date_visa
+      ),
       tenue = tenue_du_sommier(con, foret_id, toutes,
                                if (is.null(visa)) NULL else visa$exercice),
       ancrages = ancrages_du_sommier(con, foret_id, limite),
@@ -142,6 +159,10 @@ print.sommier_registre <- function(x, ...) {
       paste(x$registres, collapse = ", "), ")\n", sep = "")
   cat("  chaine    : ", if (isTRUE(x$verification$valide)) "intacte" else
     "ALTEREE", "\n", sep = "")
+  if (!is.null(x$croquis)) {
+    cat("  croquis   : ", nrow(x$croquis$objets), " ecriture(s) localisee(s)\n",
+        sep = "")
+  }
   if (!is.null(x$visa)) {
     cat("  arretee au visa de l'exercice ", x$visa$exercice, "\n", sep = "")
   }
@@ -168,6 +189,26 @@ print.sommier_registre <- function(x, ...) {
 #' empreinte restent : on voit qu'une ecriture existe, pas qui elle nomme. Les
 #' photos des constats ne sont jamais reproduites, seulement comptees.
 #'
+#' **Les croquis sont une annexe de lecture, hors chaine.** Un croquis par
+#' fiche - par unite de gestion et version de son contour, puis par objet
+#' hors unite - precede d'un plan de situation. Chaque ecriture localisee y
+#' figure, rectifiees comprises, a sa position propre ou, a defaut, dans son
+#' unite, prise dans le contour qu'elle avait a la date de l'evenement. Le
+#' trait dit la provenance (constat, source indirecte, transcription) ;
+#' chaque croquis porte son echelle, le nord, le systeme de coordonnees et
+#' la source de ses contours. Il faut le paquet `sf` la ou le document se
+#' rend.
+#'
+#' A `public = TRUE`, **les especes sensibles sont floutees selon le SINP** :
+#' le croquis les tait, et leur fiche dit l'echelle de diffusion - la
+#' commune, la maille 10 km ou le departement, selon le code de sensibilite
+#' du referentiel de l'INPN (`sensibilite`). L'unite de gestion et le libelle
+#' de localisation de ces ecritures sont tus aussi. Sans referentiel, aucune
+#' espece localisee n'est diffusee.
+#'
+#' Le PDF est un PDF/A-2B (ISO 19005-2) : polices et croquis embarques,
+#' rejouable sans reseau.
+#'
 #' Arrete a un visa (`jusqu_au_visa`), le document porte en tete ce visa tel
 #' que [sommier_verifier_visas()] le juge : le signataire et son certificat,
 #' la signature, le jeton d'horodatage et l'autorite qui l'a emis. Les pieces
@@ -180,7 +221,13 @@ print.sommier_registre <- function(x, ...) {
 #'   `format`.
 #' @param format `"html"` ou `"pdf"`.
 #' @param public `TRUE` pour un sommier a transmettre : les tiers des
-#'   registres 3 et 7 sont masques.
+#'   registres 3 et 7 sont masques, les localisations sensibles floutees.
+#' @param sensibilite Le referentiel de sensibilite de l'INPN, lu par
+#'   [sommier_sensibilite()]. Sans lui, a `public = TRUE`, aucune espece
+#'   localisee n'est diffusee. Sans effet sans `public`.
+#' @param departement Code du departement de la foret (`"21"`, `"2A"`...),
+#'   pour ne retenir que les listes qui s'y appliquent. Sans lui, la plus
+#'   forte sensibilite, tous departements confondus.
 #' @param quarto Chemin de l'executable Quarto.
 #'
 #' @return Invisiblement, le chemin du document produit.
@@ -191,7 +238,8 @@ print.sommier_registre <- function(x, ...) {
 sommier_registre_quarto <- function(con, foret_id, chemin, format = "html",
                                     registres = 1:9, jusqu_au_visa = NULL,
                                     public = FALSE, cles_publiques = list(),
-                                    ancres = list(),
+                                    ancres = list(), sensibilite = NULL,
+                                    departement = NULL,
                                     quarto = Sys.which("quarto")) {
   format <- valider_choix(format, "format", SOMMIER_FORMATS_QUARTO)
   chemin <- valider_texte(chemin, "chemin")
@@ -199,6 +247,13 @@ sommier_registre_quarto <- function(con, foret_id, chemin, format = "html",
     stop("Quarto est introuvable dans le PATH. L'installer depuis ",
          "https://quarto.org, ou passer son chemin par `quarto`.",
          call. = FALSE)
+  }
+  if (!is.null(sensibilite) &&
+      (!is.data.frame(sensibilite) || is.null(attr(sensibilite, "empreinte")))) {
+    stop("`sensibilite` doit venir de sommier_sensibilite().", call. = FALSE)
+  }
+  if (!est_vide(departement)) {
+    departement <- valider_texte(departement, "departement")
   }
   extension <- tolower(tools::file_ext(chemin))
   if (!identical(extension, format)) {
@@ -210,6 +265,8 @@ sommier_registre_quarto <- function(con, foret_id, chemin, format = "html",
                               cles_publiques = cles_publiques, ancres = ancres)
   if (isTRUE(public)) {
     sommier$ecritures <- masquer_tiers(sommier$ecritures)
+    sommier <- flouter_sensibles(sommier, sensibilite, departement,
+                                 Sys.Date())
   }
   # Le rendu tourne dans un autre processus R : il ne lit que ce RDS, jamais
   # le paquet installe, qui pourrait n'etre pas la version qui l'a extrait.
@@ -217,6 +274,12 @@ sommier_registre_quarto <- function(con, foret_id, chemin, format = "html",
     sommier = sommier,
     registres = SOMMIER_REGISTRES,
     public = isTRUE(public),
+    sensibilite = if (isTRUE(public)) list(
+      version = if (is.null(sensibilite)) NULL else attr(sensibilite, "version"),
+      empreinte = if (is.null(sensibilite)) NULL else
+        attr(sensibilite, "empreinte"),
+      departement = if (est_vide(departement)) NULL else departement
+    ),
     version_sommier = as.character(utils::packageVersion("sommieR")),
     edite_le = format(Sys.Date(), "%d/%m/%Y")
   )
@@ -230,6 +293,9 @@ sommier_registre_quarto <- function(con, foret_id, chemin, format = "html",
   on.exit(unlink(atelier, recursive = TRUE), add = TRUE)
   source_qmd <- file.path(atelier, "sommier.qmd")
   file.copy(modele, source_qmd)
+  # Le gabarit partiel qui pose le PDF/A, lu par Quarto a cote du .qmd.
+  file.copy(system.file("quarto", "doc-class.tex", package = "sommieR"),
+            atelier)
   poser_sous_titre(source_qmd, sommier$foret$nom)
   saveRDS(donnees, file.path(atelier, "donnees.rds"))
 
@@ -521,5 +587,113 @@ jeton_du_visa <- function(tst_hex, hash_tete, ancres) {
     empreinte = if (is.null(lu)) NA_character_ else empreinte_hex(lu$empreinte),
     autorite = autorite,
     base64 = as.character(openssl::base64_encode(jeton))
+  )
+}
+
+# ---------------------------------------------------------------------------
+# Les croquis : une annexe de lecture, hors chaine.
+
+# Les ecritures localisees, rectifiees comprises : lues dans entree_sommier et
+# non dans v_objet_localise, qui ne garde que les courantes. Une ecriture se
+# localise par sa geometrie propre (le payload chaine, projete en Lambert-93)
+# ou, a defaut, par son unite de gestion, prise dans le contour qu'elle avait
+# a la date de l'evenement : chaque ecriture se lit dans la foret de son
+# epoque. Les contours, eux, ne sont pas dans la chaine ; ils sont rendus
+# toutes versions comprises, avec leur source, pour que le croquis dise de
+# quand date ce qu'il montre.
+croquis_du_sommier <- function(con, foret_id, ecritures, limite,
+                               date_situation) {
+  objets <- DBI::dbGetQuery(
+    con,
+    "SELECT e.seq::float8 AS seq, e.ug_uuid::text AS ug_uuid,
+            coalesce(
+              e.payload ->> 'appellation', e.payload ->> 'nom',
+              e.payload ->> 'nom_francais', e.payload ->> 'nom_latin',
+              e.payload ->> 'type_habitat', e.payload ->> 'nature',
+              e.payload ->> 'nature_coupe', e.payload ->> 'nature_travaux',
+              e.payload ->> 'description', e.payload ->> 'type_entree',
+              e.payload ->> 'type_fiche'
+            ) AS designation,
+            ST_GeometryType(e.geom) AS type_geometrie,
+            ST_AsText(e.geom) AS wkt,
+            (e.payload ->> 'precision_m')::float8 AS precision_m,
+            ST_X(ST_PointOnSurface(coalesce(e.geom, g.geom))) AS x_l93,
+            ST_Y(ST_PointOnSurface(coalesce(e.geom, g.geom))) AS y_l93,
+            g.version AS contour_version,
+            coalesce(g.date_debut <= e.date_evenement AND
+                       (g.date_fin IS NULL OR g.date_fin >= e.date_evenement),
+                     FALSE) AS contour_en_vigueur
+       FROM entree_sommier e
+       LEFT JOIN LATERAL (
+         SELECT version, date_debut, date_fin, geom FROM ug_geometrie gg
+          WHERE gg.ug_uuid = e.ug_uuid
+          ORDER BY (gg.date_debut <= e.date_evenement AND
+                    (gg.date_fin IS NULL OR gg.date_fin >= e.date_evenement))
+                   DESC,
+                   abs(e.date_evenement - gg.date_debut), gg.version DESC
+          LIMIT 1
+       ) g ON e.ug_uuid IS NOT NULL
+      WHERE e.foret_id = $1 AND e.seq <= $2
+        AND (e.geom IS NOT NULL OR g.version IS NOT NULL)
+      ORDER BY e.seq",
+    params = parametres(list(foret_id,
+                             if (is.null(limite)) 9e15 else limite))
+  )
+  objets <- objets[objets$seq %in% ecritures$seq, , drop = FALSE]
+  lignes <- match(objets$seq, ecritures$seq)
+  objets <- data.frame(
+    seq = objets$seq,
+    registre = ecritures$registre[lignes],
+    type_entree = ecritures$type_entree[lignes],
+    designation = objets$designation,
+    date_evenement = ecritures$date_evenement[lignes],
+    provenance = ecritures$provenance[lignes],
+    ndp = ecritures$ndp[lignes],
+    rectifie = ecritures$rectifie[lignes],
+    rectifiee_par = ecritures$rectifiee_par[lignes],
+    ug = ecritures$ug[lignes],
+    ug_uuid = objets$ug_uuid,
+    localisation = ifelse(is.na(objets$wkt), "ug", "propre"),
+    type_geometrie = sub("^ST_", "", objets$type_geometrie),
+    wkt = objets$wkt,
+    precision_m = objets$precision_m,
+    x_l93 = objets$x_l93,
+    y_l93 = objets$y_l93,
+    floutage = rep(NA_character_, nrow(objets)),
+    contour_version = as.integer(objets$contour_version),
+    contour_en_vigueur = ifelse(is.na(objets$contour_version), NA,
+                                as.logical(objets$contour_en_vigueur)),
+    stringsAsFactors = FALSE
+  )
+  rownames(objets) <- NULL
+
+  contours <- DBI::dbGetQuery(
+    con,
+    "SELECT u.uuid::text AS ug_uuid, u.numero_affichage AS ug, g.version,
+            g.date_debut::text AS du, g.date_fin::text AS au, g.source,
+            ST_AsText(g.geom) AS wkt
+       FROM ug u JOIN ug_geometrie g ON g.ug_uuid = u.uuid
+      WHERE u.foret_id = $1
+      ORDER BY u.numero_affichage, g.version",
+    params = parametres(list(foret_id))
+  )
+  filiations <- DBI::dbGetQuery(
+    con,
+    "SELECT p.numero_affichage AS parent, e.numero_affichage AS enfant,
+            f.type_filiation, f.date_effet::text AS date_effet
+       FROM ug_filiation f
+       JOIN ug p ON p.uuid = f.parent_uuid
+       JOIN ug e ON e.uuid = f.enfant_uuid
+      WHERE p.foret_id = $1
+      ORDER BY f.date_effet, p.numero_affichage, e.numero_affichage",
+    params = parametres(list(foret_id))
+  )
+
+  list(
+    objets = objets,
+    contours = contours,
+    filiations = filiations,
+    date_situation = date_situation,
+    non_localisees = nrow(ecritures) - nrow(objets)
   )
 }

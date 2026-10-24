@@ -1,0 +1,22 @@
+% Le sommier imprime est archive : PDF/A-2B (ISO 19005-2), polices
+% embarquees. KOMA-Script refuse \DocumentMetadata ; pdfmanagement, charge
+% avant la classe, pose la meme norme.
+\RequirePackage{pdfmanagement}
+\SetKeys[document/metadata]{pdfstandard=a-2b, lang=fr-FR}
+\documentclass[
+$for(babel-otherlangs)$
+  $babel-otherlangs$,
+$endfor$
+$if(babel-lang)$
+  $babel-lang$,
+$endif$
+$if(fontsize)$
+  $fontsize$,
+$endif$
+$if(papersize)$
+  $papersize$paper,
+$endif$
+$for(classoption)$
+  $classoption$$sep$,
+$endfor$
+]{$documentclass$}

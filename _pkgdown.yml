@@ -146,6 +146,7 @@ reference:
     - sommier_taxref
     - sommier_especes_observees
     - sommier_statuts_taxref
+    - sommier_sensibilite
     - SOMMIER_TYPES_REMARQUABLE
     - SOMMIER_ETATS_SANITAIRES
     - SOMMIER_SEUIL_TGB_CM

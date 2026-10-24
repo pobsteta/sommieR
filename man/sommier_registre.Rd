@@ -38,7 +38,14 @@ Un objet de classe \code{sommier_registre} : \code{foret} (nom, regime),
 qui arrete l'edition, s'il y en a un : \code{exercice}, \code{autorite},
 \code{seq_tete}, \code{hash_tete}, \code{date_visa}, \code{horodate}, \code{concorde}, et son
 attestation - \code{signataire}, \code{signature_jws}, \code{certificat}, \code{jeton},
-\code{verifie}), \code{registres}.
+\code{verifie}), \code{registres}, et \code{croquis} : \code{objets} (une ligne par
+ecriture localisee, rectifiees comprises : \code{seq}, \code{registre},
+\code{type_entree}, \code{designation}, \code{date_evenement}, \code{provenance}, \code{ndp},
+\code{rectifie}, \code{rectifiee_par}, \code{ug}, \code{ug_uuid}, \code{localisation} - \code{propre}
+ou \code{ug} -, \code{type_geometrie}, \code{wkt} en Lambert-93, \code{precision_m},
+\code{x_l93}, \code{y_l93}, \code{floutage}, \code{contour_version}, \code{contour_en_vigueur}),
+\code{contours} (toutes les versions de contour des unites, avec leur
+source), \code{filiations}, \code{date_situation} et \code{non_localisees}.
 }
 \description{
 Extrait le sommier tel qu'il est chaine : une ligne par ecriture, registre
@@ -58,6 +65,12 @@ rectification porte le numero de sa cible (\code{rectifie}).
 \strong{La fiche A10 ouvre le sommier.} Pour chaque exercice depuis
 l'ouverture, les actes de visa du registre 1, signes et horodates ou non ;
 un exercice sans acte est dit non vise. Les ancrages suivent.
+
+\strong{Les croquis sont hors chaine.} L'extraction porte aussi, pour l'annexe
+de lecture, chaque ecriture localisee : par sa geometrie propre, ou a
+defaut par son unite, prise dans le contour en vigueur a la date de
+l'evenement (le plus proche, dit non en vigueur, quand aucun ne l'etait).
+Les contours ne sont pas des ecritures ; ils sont rendus avec leur source.
 
 \strong{Une edition peut s'arreter a un visa.} \code{jusqu_au_visa} imprime le
 sommier tel qu'il etait quand l'exercice a ete vise : les ecritures jusqu'a
