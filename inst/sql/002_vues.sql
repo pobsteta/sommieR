@@ -212,8 +212,8 @@ COMMENT ON VIEW v_possibilite_exercice IS
 -- possibilite, il ne doit pas disparaitre de la balance cumulee.
 --
 -- `coupe_realisee` est exclu du martele : la meme coupe est d'abord martelee
--- (A50E) puis exploitee (A50F), l'imputer deux fois doublerait le
--- prelevement constate.
+-- (A50E, et son detail par unite A50F) puis exploitee, l'imputer deux fois
+-- doublerait le prelevement constate.
 CREATE VIEW v_balance_possibilite AS
 WITH martele AS (
   SELECT
