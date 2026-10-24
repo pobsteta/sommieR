@@ -16,6 +16,7 @@ sommier_registre_quarto(
   ancres = list(),
   sensibilite = NULL,
   departement = NULL,
+  fond = NULL,
   quarto = Sys.which("quarto")
 )
 }
@@ -50,6 +51,11 @@ localisee n'est diffusee. Sans effet sans \code{public}.}
 pour ne retenir que les listes qui s'y appliquent. Sans lui, la plus
 forte sensibilite, tous departements confondus.}
 
+\item{fond}{Parcellaire cadastral a poser sous les croquis, tel que le
+rend \code{\link[=sommier_fond_lire]{sommier_fond_lire()}} ; \code{NULL} pour s'en passer. Il se fournit et
+ne se telecharge pas au rendu, comme pour \code{\link[=sommier_rapport_quarto]{sommier_rapport_quarto()}} ;
+sa source et son millesime sont dits sous chaque croquis.}
+
 \item{quarto}{Chemin de l'executable Quarto.}
 }
 \value{
@@ -80,8 +86,8 @@ figure, rectifiees comprises, a sa position propre ou, a defaut, dans son
 unite, prise dans le contour qu'elle avait a la date de l'evenement. Le
 trait dit la provenance (constat, source indirecte, transcription) ;
 chaque croquis porte son echelle, le nord, le systeme de coordonnees et
-la source de ses contours. Il faut le paquet \code{sf} la ou le document se
-rend.
+la source de ses contours, et du parcellaire cadastral quand \code{fond} le
+fournit. Il faut le paquet \code{sf} la ou le document se rend.
 
 A \code{public = TRUE}, \strong{les especes sensibles sont floutees selon le SINP} :
 le croquis les tait, et leur fiche dit l'echelle de diffusion - la

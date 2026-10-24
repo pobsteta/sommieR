@@ -265,6 +265,45 @@ test_that("le sommier se rend avec ses croquis, et la version publique les flout
                "sommier_sensibilite")
 })
 
+test_that("un parcellaire fourni se pose sous les croquis, source et millesime dits", {
+  skip_if(!nzchar(Sys.which("quarto")), "Quarto n'est pas installe.")
+  skip_if_not_installed("sf")
+  con <- base_croquis()
+  d <- couchey_enrichie(con)
+  # Deux parcelles ecrites a la main autour de l'UG 102, au format de
+  # sommier_fond_lire() : le test ne va pas chercher le cadastre.
+  boite <- DBI::dbGetQuery(
+    con,
+    "SELECT ST_XMin(geom) AS x0, ST_YMin(geom) AS y0, ST_XMax(geom) AS x1,
+            ST_YMax(geom) AS y1 FROM ug_geometrie WHERE ug_uuid = $1",
+    params = list(d$ug[["102"]])
+  )
+  xm <- (boite$x0 + boite$x1) / 2
+  carre <- function(x0, x1) sprintf(
+    "POLYGON((%f %f, %f %f, %f %f, %f %f, %f %f))", x0, boite$y0, x1,
+    boite$y0, x1, boite$y1, x0, boite$y1, x0, boite$y0)
+  fond <- data.frame(
+    reference = c("212000000A0901", "212000000A0902"),
+    section = "A", numero = c("0901", "0902"),
+    contenance_m2 = c(1000, 1000),
+    wkt = c(carre(boite$x0, xm), carre(xm, boite$x1)),
+    stringsAsFactors = FALSE
+  )
+  attr(fond, "source") <- "cadastre de test"
+  attr(fond, "millesime") <- "2099-01-01"
+
+  chemin <- withr::local_tempfile(fileext = ".html")
+  sommier_registre_quarto(con, d$foret_id, chemin, fond = fond)
+  html <- paste(readLines(chemin, warn = FALSE, encoding = "UTF-8"),
+                collapse = "\n")
+  expect_match(html, "parcellaire cadastral en surimpression", fixed = TRUE)
+  expect_match(html, "millésime 2099-01-01", fixed = TRUE)
+  expect_match(html, "cadastre de test", fixed = TRUE)
+  expect_error(sommier_registre_quarto(con, d$foret_id, chemin,
+                                       fond = list(a = 1)),
+               "sommier_fond_lire")
+})
+
 test_that("le PDF du sommier est un PDF/A, croquis compris", {
   skip_on_ci()
   skip_if(!nzchar(Sys.which("quarto")), "Quarto n'est pas installe.")
