@@ -58,11 +58,11 @@ attestation - `signataire`, `signature_jws`, `certificat`, `jeton`,
 `verifie`), `registres`, et `croquis` : `objets` (une ligne par ecriture
 localisee, rectifiees comprises : `seq`, `registre`, `type_entree`,
 `designation`, `date_evenement`, `provenance`, `ndp`, `rectifie`,
-`rectifiee_par`, `ug`, `ug_uuid`, `localisation` - `propre` ou `ug` -,
-`type_geometrie`, `wkt` en Lambert-93, `precision_m`, `x_l93`, `y_l93`,
-`floutage`, `contour_version`, `contour_en_vigueur`), `contours` (toutes
-les versions de contour des unites, avec leur source), `filiations`,
-`date_situation` et `non_localisees`.
+`rectifiee_par`, `ug`, `ug_uuid`, `localisation` - `propre`, `ug` ou
+`foret` -, `type_geometrie`, `wkt` en Lambert-93, `precision_m`,
+`x_l93`, `y_l93`, `floutage`, `contour_version`, `contour_en_vigueur`),
+`contours` (toutes les versions de contour des unites, avec leur
+source), `filiations`, `date_situation` et `non_localisees`.
 
 ## Details
 
@@ -84,8 +84,10 @@ l'ouverture, les actes de visa du registre 1, signes et horodates ou non
 l'annexe de lecture, chaque ecriture localisee : par sa geometrie
 propre, ou a defaut par son unite, prise dans le contour en vigueur a la
 date de l'evenement (le plus proche, dit non en vigueur, quand aucun ne
-l'etait). Les contours ne sont pas des ecritures ; ils sont rendus avec
-leur source.
+l'etait). Une ecriture sans geometrie ni unite se rattache a la foret
+entiere, sauf aux registres 1 et 7 : un visa ou une ligne de comptes
+n'est pas un objet sur le terrain. Les contours ne sont pas des
+ecritures ; ils sont rendus avec leur source.
 
 **Une edition peut s'arreter a un visa.** `jusqu_au_visa` imprime le
 sommier tel qu'il etait quand l'exercice a ete vise : les ecritures

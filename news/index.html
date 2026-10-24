@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.36.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.37.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,15 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.37.0" id="sommier-0370">sommieR 0.37.0<a class="anchor" aria-label="anchor" href="#sommier-0370"></a></h2>
+<p>Sommier, lot 3, complément : les écritures rattachées à la forêt entière (brief <code>sommier-2</code>, question « les objets hors UG »).</p>
+<ul><li>
+<strong>Une écriture sans géométrie ni unité se rattache à la forêt.</strong> L’affouage, l’entretien de la desserte, un tableau de chasse, un bail : <code><a href="../reference/sommier_registre.html">sommier_registre()</a></code> les porte dans <code>croquis$objets</code>, <code>localisation = "foret"</code>, et le comptage des croquis les inclut. Les registres 1 et 7, visas et comptes, ne désignent rien sur le terrain : ils restent non localisés.</li>
+<li>
+<strong>Le plan de situation les nomme.</strong> Leurs numéros s’y lisent, le contour de la forêt entière est renforcé, et un tableau les détaille, position « la forêt entière ». Sans contour ni position propre, le plan n’est pas dessiné, mais la liste reste.</li>
+<li>À <code>public = TRUE</code>, une espèce sensible rattachée à la forêt est floutée comme les autres ; au code 2, faute de point, sa fiche dit « à la maille 10 × 10 km » sans la nommer.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.36.0" id="sommier-0360">sommieR 0.36.0<a class="anchor" aria-label="anchor" href="#sommier-0360"></a></h2>
 <p>Sommier, lot 3, complément : le parcellaire sous les croquis (brief <code>sommier-2</code>, décision 7).</p>

@@ -13,7 +13,7 @@ ne soit dans la chaine."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.36.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.37.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -106,8 +106,8 @@ attestation - <code>signataire</code>, <code>signature_jws</code>, <code>certifi
 <code>verifie</code>), <code>registres</code>, et <code>croquis</code> : <code>objets</code> (une ligne par
 ecriture localisee, rectifiees comprises : <code>seq</code>, <code>registre</code>,
 <code>type_entree</code>, <code>designation</code>, <code>date_evenement</code>, <code>provenance</code>, <code>ndp</code>,
-<code>rectifie</code>, <code>rectifiee_par</code>, <code>ug</code>, <code>ug_uuid</code>, <code>localisation</code> - <code>propre</code>
-ou <code>ug</code> -, <code>type_geometrie</code>, <code>wkt</code> en Lambert-93, <code>precision_m</code>,
+<code>rectifie</code>, <code>rectifiee_par</code>, <code>ug</code>, <code>ug_uuid</code>, <code>localisation</code> - <code>propre</code>,
+<code>ug</code> ou <code>foret</code> -, <code>type_geometrie</code>, <code>wkt</code> en Lambert-93, <code>precision_m</code>,
 <code>x_l93</code>, <code>y_l93</code>, <code>floutage</code>, <code>contour_version</code>, <code>contour_en_vigueur</code>),
 <code>contours</code> (toutes les versions de contour des unites, avec leur
 source), <code>filiations</code>, <code>date_situation</code> et <code>non_localisees</code>.</p>
@@ -127,7 +127,10 @@ un exercice sans acte est dit non vise. Les ancrages suivent.</p>
 de lecture, chaque ecriture localisee : par sa geometrie propre, ou a
 defaut par son unite, prise dans le contour en vigueur a la date de
 l'evenement (le plus proche, dit non en vigueur, quand aucun ne l'etait).
-Les contours ne sont pas des ecritures ; ils sont rendus avec leur source.</p>
+Une ecriture sans geometrie ni unite se rattache a la foret entiere, sauf
+aux registres 1 et 7 : un visa ou une ligne de comptes n'est pas un objet
+sur le terrain. Les contours ne sont pas des ecritures ; ils sont rendus
+avec leur source.</p>
 <p><strong>Une edition peut s'arreter a un visa.</strong> <code>jusqu_au_visa</code> imprime le
 sommier tel qu'il etait quand l'exercice a ete vise : les ecritures jusqu'a
 la tete signee, pas au-dela. La chaine est alors verifiee jusqu'a cette

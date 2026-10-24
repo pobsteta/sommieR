@@ -1,5 +1,25 @@
 # Changelog
 
+## sommieR 0.37.0
+
+Sommier, lot 3, complément : les écritures rattachées à la forêt entière
+(brief `sommier-2`, question « les objets hors UG »).
+
+- **Une écriture sans géométrie ni unité se rattache à la forêt.**
+  L’affouage, l’entretien de la desserte, un tableau de chasse, un bail
+  :
+  [`sommier_registre()`](https://pobsteta.github.io/sommieR/reference/sommier_registre.md)
+  les porte dans `croquis$objets`, `localisation = "foret"`, et le
+  comptage des croquis les inclut. Les registres 1 et 7, visas et
+  comptes, ne désignent rien sur le terrain : ils restent non localisés.
+- **Le plan de situation les nomme.** Leurs numéros s’y lisent, le
+  contour de la forêt entière est renforcé, et un tableau les détaille,
+  position « la forêt entière ». Sans contour ni position propre, le
+  plan n’est pas dessiné, mais la liste reste.
+- À `public = TRUE`, une espèce sensible rattachée à la forêt est
+  floutée comme les autres ; au code 2, faute de point, sa fiche dit « à
+  la maille 10 × 10 km » sans la nommer.
+
 ## sommieR 0.36.0
 
 Sommier, lot 3, complément : le parcellaire sous les croquis (brief
