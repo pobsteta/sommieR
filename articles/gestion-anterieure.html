@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.37.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.37.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -331,10 +331,10 @@ si le registre a bougé.</p>
 <code class="sourceCode R"><span><span class="va">verif</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_verifier.html">sommier_verifier</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span><span class="op">)</span></span>
 <span><span class="va">verif</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : 6da690a2-51df-4adf-9b27-2eafc307dc17</span></span>
+<span><span class="co">#&gt;   foret     : 94f0bce8-09cf-4417-b3bc-c93d7f45989e</span></span>
 <span><span class="co">#&gt;   entrees   : 76</span></span>
 <span><span class="co">#&gt;   seq tete  : 76</span></span>
-<span><span class="co">#&gt;   hash tete : a0fa0428062ec1ea8222cac4ea383a5df1c57795e67eab339c476881e6ff2f3d</span></span>
+<span><span class="co">#&gt;   hash tete : 1c444497a725c39d3cf74d21fd23f28afa28771a596852208965946b27e635cc</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -1529,10 +1529,10 @@ parcelle 54 n’a fait l’objet d’aucuns travaux : elle figure à
 été fait n’est pas une unité dont on ignore ce qui s’y est fait, et une
 carte qui les confondrait mentirait sur ce qu’elle montre.</p>
 <p><strong>Le volume martelé n’est pas le volume récolté.</strong> Une
-coupe est d’abord martelée (A50E) puis exploitée (A50F) ; les compter
-toutes deux doublerait le prélèvement. La carte reprend donc la même
-convention que la balance de possibilité, sans quoi les deux se
-contrediraient dans le même document.</p>
+coupe est d’abord martelée (A50E, et A50F pour son détail par unité)
+puis exploitée ; les compter toutes deux doublerait le prélèvement. La
+carte reprend donc la même convention que la balance de possibilité,
+sans quoi les deux se contrediraient dans le même document.</p>
 <p><strong>Les écritures hors unité de gestion ne sont sur aucune
 carte.</strong> L’entretien de la desserte de 2023, imprimé A50H, n’est
 rattaché à aucune parcelle : il compte dans le tableau des travaux,
@@ -1840,7 +1840,7 @@ GeoJSON n’exige rien de plus que PostGIS et s’ouvre sans rien installer
 <span><span class="va">export</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sommier_exporter_sig.html">sommier_exporter_sig</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">couche</span>, format <span class="op">=</span> <span class="st">"geojson"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">export</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 3</span></span>
-<span><span class="co">#&gt;  $ chemin               : chr "/tmp/RtmpMgyqC1/file3e783c1b1f76.geojson"</span></span>
+<span><span class="co">#&gt;  $ chemin               : chr "/tmp/RtmpWOj43u/file3e437a7d8d3a.geojson"</span></span>
 <span><span class="co">#&gt;  $ n_unites             : int 3</span></span>
 <span><span class="co">#&gt;  $ unites_sans_geometrie: chr(0)</span></span></code></pre></div>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
@@ -1900,10 +1900,10 @@ base et sans le paquet qui l’a produit.</p>
 <span><span class="fu"><a href="../reference/sommier_exporter_manifeste.html">sommier_exporter_manifeste</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">foret</span>, <span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/sommier_verifier_manifeste.html">sommier_verifier_manifeste</a></span><span class="op">(</span><span class="va">chemin</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Verification de chaine - sommier</span></span>
-<span><span class="co">#&gt;   foret     : 6da690a2-51df-4adf-9b27-2eafc307dc17</span></span>
+<span><span class="co">#&gt;   foret     : 94f0bce8-09cf-4417-b3bc-c93d7f45989e</span></span>
 <span><span class="co">#&gt;   entrees   : 76</span></span>
 <span><span class="co">#&gt;   seq tete  : 76</span></span>
-<span><span class="co">#&gt;   hash tete : a0fa0428062ec1ea8222cac4ea383a5df1c57795e67eab339c476881e6ff2f3d</span></span>
+<span><span class="co">#&gt;   hash tete : 1c444497a725c39d3cf74d21fd23f28afa28771a596852208965946b27e635cc</span></span>
 <span><span class="co">#&gt;   etat      : chaine intacte</span></span>
 <span><span class="co">#&gt;   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau</span></span></code></pre></div>
 <p>Toute entrée modifiée, retirée ou insérée après coup invalide

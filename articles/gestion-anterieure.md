@@ -174,10 +174,10 @@ registre a bougé.
 verif <- sommier_verifier(con, foret)
 verif
 #> Verification de chaine - sommier
-#>   foret     : 6da690a2-51df-4adf-9b27-2eafc307dc17
+#>   foret     : 94f0bce8-09cf-4417-b3bc-c93d7f45989e
 #>   entrees   : 76
 #>   seq tete  : 76
-#>   hash tete : a0fa0428062ec1ea8222cac4ea383a5df1c57795e67eab339c476881e6ff2f3d
+#>   hash tete : 1c444497a725c39d3cf74d21fd23f28afa28771a596852208965946b27e635cc
 #>   etat      : chaine intacte
 ```
 
@@ -573,10 +573,10 @@ ignore ce qui s’y est fait, et une carte qui les confondrait mentirait
 sur ce qu’elle montre.
 
 **Le volume martelé n’est pas le volume récolté.** Une coupe est d’abord
-martelée (A50E) puis exploitée (A50F) ; les compter toutes deux
-doublerait le prélèvement. La carte reprend donc la même convention que
-la balance de possibilité, sans quoi les deux se contrediraient dans le
-même document.
+martelée (A50E, et A50F pour son détail par unité) puis exploitée ; les
+compter toutes deux doublerait le prélèvement. La carte reprend donc la
+même convention que la balance de possibilité, sans quoi les deux se
+contrediraient dans le même document.
 
 **Les écritures hors unité de gestion ne sont sur aucune carte.**
 L’entretien de la desserte de 2023, imprimé A50H, n’est rattaché à
@@ -833,7 +833,7 @@ couche <- tempfile(fileext = ".geojson")
 export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
 str(export)
 #> List of 3
-#>  $ chemin               : chr "/tmp/RtmpMgyqC1/file3e783c1b1f76.geojson"
+#>  $ chemin               : chr "/tmp/RtmpWOj43u/file3e437a7d8d3a.geojson"
 #>  $ n_unites             : int 3
 #>  $ unites_sans_geometrie: chr(0)
 ```
@@ -906,10 +906,10 @@ chemin <- tempfile(fileext = ".json")
 sommier_exporter_manifeste(con, foret, chemin)
 sommier_verifier_manifeste(chemin)
 #> Verification de chaine - sommier
-#>   foret     : 6da690a2-51df-4adf-9b27-2eafc307dc17
+#>   foret     : 94f0bce8-09cf-4417-b3bc-c93d7f45989e
 #>   entrees   : 76
 #>   seq tete  : 76
-#>   hash tete : a0fa0428062ec1ea8222cac4ea383a5df1c57795e67eab339c476881e6ff2f3d
+#>   hash tete : 1c444497a725c39d3cf74d21fd23f28afa28771a596852208965946b27e635cc
 #>   etat      : chaine intacte
 #>   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau
 ```

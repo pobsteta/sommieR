@@ -2,8 +2,8 @@
 
 La balance A50E confronte a la possibilite les **volumes marteles**,
 soit les coupes et les produits accidentels. `coupe_realisee` en est
-exclu a dessein : la meme coupe est d'abord martelee (imprime A50E) puis
-exploitee (imprime A50F), l'imputer deux fois doublerait le prelevement
+exclu a dessein : la meme coupe est d'abord martelee (imprimes A50E et
+A50F) puis exploitee, l'imputer deux fois doublerait le prelevement
 constate.
 
 ## Usage
