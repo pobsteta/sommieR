@@ -201,3 +201,24 @@ Les deux fichiers doivent donner les mêmes entrées.
     for c in list(ws["B"])[1:] + list(ws["S"])[1:]:
         c.number_format = "DD/MM/YYYY"
     wb.save(dst)
+
+---
+
+# Référentiel de sensibilité, en abrégé
+
+`RefSensibilite_99.csv` — quatre lignes **écrites pour les tests**, au format
+du fichier `RefSensibilite_<version>.csv` du référentiel national de
+sensibilité de l'INPN (`SENSIBILITE.zip`, version 18 du 7 août 2025) : mêmes
+colonnes, même ordre, même codage. La version 99 n'existe pas.
+
+**Pourquoi un fichier écrit plutôt qu'un extrait.** La licence du référentiel
+n'est pas connue, et le paquet ne le redistribue pas : on le télécharge
+soi-même depuis l'INPN. Les lignes ont été choisies pour exercer ce que
+`sommier_sensibilite()` et le floutage doivent savoir faire :
+
+- le Sabot de Vénus (`CD_NOM` 94041), code 1 en Côte-d'Or et code 2 pour
+  20 ans dans les Vosges. Le code de la Côte-d'Or est inventé ; celui des
+  Vosges reprend la forme des lignes du référentiel ;
+- un taxon fictif de code 3 dont la sensibilité tombe après 5 ans ;
+- un taxon fictif cité sous un `CD_NOM` qui n'est pas son `CD_REF`, pour
+  vérifier qu'une fiche saisie sous le nom valide le retrouve.

@@ -14,6 +14,9 @@ format:
     tbl-cap-location: top
   pdf:
     toc: true
+    # Sous pdfmanagement, hyperref refuse la couleur vide que le modele de
+    # Quarto donne a la table des matieres.
+    toccolor: black
     number-sections: true
     documentclass: scrartcl
     papersize: a4
@@ -21,6 +24,8 @@ format:
       - landscape
       - margin=1.5cm
     fontsize: 9pt
+    template-partials:
+      - doc-class.tex
 knitr:
   opts_chunk:
     echo: false
@@ -141,7 +146,7 @@ oui_non <- function(x) ifelse(is.na(x), "—", ifelse(x, "oui", "non"))
 numero <- function(x) ifelse(is.na(x), "—", format(x, scientific = FALSE, trim = TRUE))
 ```
 
-`r if (isTRUE(donnees$public)) "::: {.callout-important}\n## Version à transmettre\n\nLes noms de tiers des registres 3 et 7 (titulaires, garants, tiers d'une écriture) sont masqués. Chaque écriture reste, avec son montant et son empreinte.\n:::"`
+`r if (isTRUE(donnees$public)) "::: {.callout-important}\n## Version à transmettre\n\nLes noms de tiers des registres 3 et 7 (titulaires, garants, tiers d'une écriture) sont masqués. Chaque écriture reste, avec son montant et son empreinte. Les localisations des espèces sensibles sont floutées selon le SINP : les croquis les taisent.\n:::"`
 
 ::: {.callout-note}
 ## Ce document n'est pas la preuve
@@ -310,6 +315,386 @@ for (r in s$registres) {
   )
   tableau_pipe(tableau, c(5L, 9L, 10L, 10L, 10L, 4L, 6L, 18L, 52L, 14L),
                paste0("Registre ", r, " — ", info$nom), droite = c("N°", "NDP"))
+}
+```
+
+# Annexe : croquis {.unnumbered}
+
+```{r croquis-preparation}
+cq <- s$croquis
+objets <- if (is.null(cq)) NULL else cq$objets
+contours <- if (is.null(cq)) NULL else cq$contours
+dessinable <- !is.null(objets) && nrow(objets) > 0L &&
+  requireNamespace("sf", quietly = TRUE)
+# En PDF, les croquis passent par cairo_pdf : pdf() n'embarque pas ses
+# polices, et un PDF/A qui en cite une sans la porter n'est pas conforme.
+if (knitr::is_latex_output()) {
+  knitr::opts_chunk$set(dev = "cairo_pdf")
+}
+L93 <- 2154
+
+# Le trait dit d'où vient la position : un constat de terrain (NDP 0) en
+# plein, une source moins précise en pointillé, une transcription en tireté.
+trait_de <- function(o) {
+  ifelse(o$provenance == "transcription", "transcription",
+         ifelse(o$ndp == 0L, "constat", "ndp"))
+}
+TRAITS <- data.frame(
+  trait = c("constat", "ndp", "transcription"),
+  libelle = c("constat de terrain (NDP 0)", "source indirecte (NDP ≥ 1)",
+              "transcription d'une pièce"),
+  lty = c(1L, 3L, 2L), pch = c(19L, 2L, 1L), stringsAsFactors = FALSE
+)
+COULEUR_COURANTE <- "#1A237E"
+COULEUR_RECTIFIEE <- "#9E9E9E"
+
+# Les contours en vigueur à une date ; à défaut (une écriture antérieure au
+# premier contour connu), la première version de chaque unité, que le
+# cartouche dit postérieure.
+contours_a <- function(date) {
+  if (is.null(contours) || nrow(contours) == 0L) return(contours)
+  en <- contours$du <= date & (is.na(contours$au) | contours$au >= date)
+  if (any(en)) return(contours[en, , drop = FALSE])
+  contours[!duplicated(contours$ug_uuid), , drop = FALSE]
+}
+
+geometrie <- function(wkt) sf::st_as_sfc(wkt, crs = L93)
+
+boite <- function(geoms, marge = 0.12, minimum = 60) {
+  b <- sf::st_bbox(geoms)
+  dx <- max(b[["xmax"]] - b[["xmin"]], minimum)
+  dy <- max(b[["ymax"]] - b[["ymin"]], minimum)
+  cx <- (b[["xmax"]] + b[["xmin"]]) / 2
+  cy <- (b[["ymax"]] + b[["ymin"]]) / 2
+  list(x = cx + c(-1, 1) * dx * (0.5 + marge),
+       y = cy + c(-1, 1) * dy * (0.5 + marge))
+}
+
+# Barre d'échelle (1, 2 ou 5 fois une puissance de dix, environ le quart
+# de la largeur) et flèche du nord du quadrillage Lambert-93.
+echelle_et_nord <- function() {
+  u <- graphics::par("usr")
+  largeur <- u[2] - u[1]
+  hauteur <- u[4] - u[3]
+  cible <- largeur / 4
+  puissance <- 10^floor(log10(cible))
+  pas <- c(1, 2, 5) * puissance
+  longueur <- max(pas[pas <= cible])
+  x0 <- u[1] + largeur * 0.04
+  y0 <- u[3] + hauteur * 0.05
+  h <- hauteur * 0.012
+  graphics::rect(x0, y0, x0 + longueur / 2, y0 + h, col = "black",
+                 border = "black")
+  graphics::rect(x0 + longueur / 2, y0, x0 + longueur, y0 + h, col = "white",
+                 border = "black")
+  graphics::text(c(x0, x0 + longueur), y0 + h, c("0", paste0(
+    format(longueur, big.mark = " ", scientific = FALSE), " m")),
+    pos = 3, cex = 0.7)
+  xn <- u[2] - largeur * 0.04
+  yn <- u[4] - hauteur * 0.16
+  graphics::arrows(xn, yn, xn, yn + hauteur * 0.09, length = 0.08, lwd = 2)
+  graphics::text(xn, yn + hauteur * 0.09, "N", pos = 3, font = 2, cex = 0.9)
+}
+
+# Les écritures à leur position propre, au trait de leur provenance ; une
+# rectifiée reste, en gris. Les numéros d'un même lieu (un objet relevé
+# plusieurs fois) sont réunis sur une seule étiquette.
+dessiner_objets <- function(o, etiqueter = TRUE) {
+  o <- o[o$localisation == "propre", , drop = FALSE]
+  if (nrow(o) == 0L) return(invisible(NULL))
+  formes <- geometrie(o$wkt)
+  styles <- TRAITS[match(trait_de(o), TRAITS$trait), ]
+  couleur <- ifelse(is.na(o$rectifiee_par), COULEUR_COURANTE,
+                    COULEUR_RECTIFIEE)
+  dimension <- sf::st_dimension(formes)
+  for (i in seq_along(formes)) {
+    if (dimension[[i]] == 0L) {
+      plot(formes[i], add = TRUE, pch = styles$pch[[i]], col = couleur[[i]],
+           cex = 1.1)
+    } else if (dimension[[i]] == 1L) {
+      plot(formes[i], add = TRUE, lty = styles$lty[[i]], col = couleur[[i]],
+           lwd = 2)
+    } else {
+      plot(formes[i], add = TRUE, lty = styles$lty[[i]], col = NA,
+           border = couleur[[i]], lwd = 2)
+    }
+  }
+  if (etiqueter) {
+    # Un point s'étiquette à sa place ; une ligne ou une surface à son coin
+    # nord-ouest, pour ne pas couvrir les points qu'elle contient.
+    ancres <- t(vapply(seq_along(formes), function(i) {
+      if (dimension[[i]] == 0L) {
+        sf::st_coordinates(formes[i])[1L, 1:2]
+      } else {
+        b <- sf::st_bbox(formes[i])
+        c(b[["xmin"]], b[["ymax"]])
+      }
+    }, numeric(2)))
+    lieu <- paste(round(ancres[, 1]), round(ancres[, 2]))
+    for (l in unique(lieu)) {
+      k <- which(lieu == l)
+      graphics::text(ancres[k[1], 1], ancres[k[1], 2],
+                     paste0("n° ", paste(numero(o$seq[k]), collapse = ", ")),
+                     pos = 4, cex = 0.7, col = couleur[k[1]])
+    }
+  }
+}
+
+legende <- function(o) {
+  # Seuls les traits dessinés : une écriture rapportée à son unité n'a pas
+  # de trait.
+  propres <- o[o$localisation == "propre", , drop = FALSE]
+  presents <- TRAITS[TRAITS$trait %in% trait_de(propres), , drop = FALSE]
+  libelles <- presents$libelle
+  lty <- presents$lty
+  pch <- presents$pch
+  col <- rep(COULEUR_COURANTE, nrow(presents))
+  if (any(!is.na(propres$rectifiee_par))) {
+    libelles <- c(libelles, "écriture rectifiée")
+    lty <- c(lty, 1L)
+    pch <- c(pch, NA)
+    col <- c(col, COULEUR_RECTIFIEE)
+  }
+  if (any(o$localisation == "ug")) {
+    libelles <- c(libelles, "localisée par son unité")
+    lty <- c(lty, NA)
+    pch <- c(pch, 22L)
+    col <- c(col, "grey30")
+  }
+  graphics::legend("bottomright", legend = libelles, lty = lty, pch = pch,
+                   col = col, pt.bg = "#E8F5E9", pt.cex = 1.4, lwd = 2,
+                   cex = 0.7, bg = "white",
+                   box.col = "grey70", inset = 0.01)
+}
+
+# Un fond : les contours d'une date, l'unité de la fiche en vert, les autres
+# en gris, chacune nommée.
+dessiner_contours <- function(fond, unite = NULL, etendue) {
+  formes <- geometrie(fond$wkt)
+  plot(formes, xlim = etendue$x, ylim = etendue$y, col = "#FAFAFA",
+       border = "grey70", lwd = 0.8)
+  if (!is.null(unite)) {
+    k <- which(fond$ug_uuid == unite)
+    if (length(k) > 0L) {
+      plot(formes[k], add = TRUE, col = "#E8F5E9", border = "grey30", lwd = 1.4)
+    }
+  }
+  # L'unité de la fiche est nommée par le titre ; les autres sur le dessin.
+  autres <- if (is.null(unite)) seq_along(formes) else
+    which(fond$ug_uuid != unite)
+  if (length(autres) > 0L) {
+    centres <- sf::st_coordinates(suppressWarnings(
+      sf::st_point_on_surface(formes[autres])))
+    graphics::text(centres[, 1], centres[, 2], paste("UG", fond$ug[autres]),
+                   col = "grey45", cex = 0.8, font = 3)
+  }
+}
+
+# Ce que montre le croquis, et de quand : les versions de contour, leur
+# source, et les écritures plus anciennes que tout contour connu.
+cartouche <- function(fond, posterieurs = numeric(0), unite = NULL) {
+  lignes <- if (is.null(unite)) fond else fond[fond$ug_uuid == unite, ]
+  sources <- unique(lignes$source[!is.na(lignes$source)])
+  versions <- paste0("UG ", lignes$ug, ", version ", lignes$version, " du ",
+                     lignes$du, ifelse(is.na(lignes$au), "",
+                                       paste0(" au ", lignes$au)))
+  cat("*Contours* : ", paste(versions, collapse = " ; "),
+      if (length(posterieurs) > 0L) paste0(
+        " — **postérieurs** au n° ", paste(numero(posterieurs), collapse = ", "),
+        ", qu'aucun contour connu ne précède"),
+      ". *Source* : ", if (length(sources) == 0L) "non renseignée" else
+        nettoyer(paste(sources, collapse = " ; ")),
+      ". *Fond* : aucun. *Coordonnées* : Lambert-93 (EPSG:2154), nord du ",
+      "quadrillage. *Édité le* ", donnees$edite_le, ".\n\n", sep = "")
+}
+
+etat_de <- function(o) {
+  ifelse(is.na(o$rectifiee_par), "courante",
+         paste0("rectifiée par le n° ", numero(o$rectifiee_par)))
+}
+
+tableau_fiche <- function(o, legende_tableau) {
+  tableau <- data.frame(
+    `N°` = numero(o$seq),
+    Registre = as.character(o$registre),
+    Objet = nettoyer(ifelse(is.na(o$designation), "—", o$designation)),
+    `Événement` = o$date_evenement,
+    Provenance = TRAITS$libelle[match(trait_de(o), TRAITS$trait)],
+    Position = ifelse(o$localisation == "propre",
+                      paste0("propre (", o$type_geometrie, ")"),
+                      "par son unité"),
+    `Précision` = ifelse(is.na(o$precision_m), "—",
+                         paste0("± ", format(o$precision_m, trim = TRUE), " m")),
+    `État` = etat_de(o),
+    check.names = FALSE, stringsAsFactors = FALSE
+  )
+  tableau_pipe(tableau, c(5L, 5L, 26L, 10L, 18L, 14L, 8L, 14L),
+               legende_tableau, droite = c("N°"))
+}
+```
+
+```{r croquis, results='asis', fig.width=9, fig.height=5.6, out.width="100%"}
+if (is.null(objets) || nrow(objets) == 0L) {
+  cat("*Aucune écriture localisée : il n'y a rien à dessiner.*\n\n")
+} else if (!dessinable) {
+  cat("*Les croquis ne sont pas dessinés : le paquet `sf` n'est pas",
+      "installé là où le document a été rendu.*\n\n")
+} else {
+  cat("::: {.callout-note}\n## Une annexe de lecture, hors chaîne\n\n",
+      "Les positions dessinées sont celles des écritures, telles que la chaîne ",
+      "les porte (projetées en Lambert-93). Les contours des unités de gestion ",
+      "ne sont pas des écritures : ils viennent de leur source, dite sous ",
+      "chaque croquis, dans la version qu'ils avaient à la date de ",
+      "l'écriture. Une écriture sans position propre est rapportée à son ",
+      "unité. Les écritures rectifiées restent dessinées, en gris.\n:::\n\n",
+      sep = "")
+  cat(nrow(objets), " écriture(s) localisée(s) : ",
+      sum(objets$localisation == "propre"), " par leur position propre, ",
+      sum(objets$localisation == "ug"), " par leur unité de gestion",
+      if (any(objets$localisation == "floutee")) paste0(
+        ", ", sum(objets$localisation == "floutee"), " floutée(s)"), ". ",
+      cq$non_localisees, " écriture(s) imprimée(s) ne se localisent pas.\n\n",
+      sep = "")
+
+  # Le plan de situation : la forêt entière, à la date de l'édition (ou du
+  # visa qui l'arrête), et toutes les positions propres.
+  cat("## Plan de situation\n\n")
+  fond <- contours_a(cq$date_situation)
+  propres <- objets[objets$localisation == "propre", , drop = FALSE]
+  if (is.null(fond) || nrow(fond) == 0L) {
+    fond <- NULL
+  }
+  geoms <- c(if (!is.null(fond)) geometrie(fond$wkt),
+             if (nrow(propres) > 0L) geometrie(propres$wkt))
+  graphics::par(mar = c(0.5, 0.5, 0.5, 0.5))
+  etendue <- boite(geoms, marge = 0.06)
+  if (!is.null(fond)) {
+    dessiner_contours(fond, etendue = etendue)
+  } else {
+    plot(geoms, xlim = etendue$x, ylim = etendue$y, col = NA, border = NA)
+  }
+  dessiner_objets(objets, etiqueter = FALSE)
+  echelle_et_nord()
+  legende(objets)
+  cat("\n\n")
+  if (!is.null(fond)) {
+    cartouche(fond)
+  }
+
+  # Une fiche par unité et par version de contour, puis une par objet hors
+  # unité : comme les imprimés, un croquis par fiche.
+  avec_ug <- objets[!is.na(objets$ug_uuid) & !is.na(objets$contour_version), ,
+                    drop = FALSE]
+  cles <- unique(avec_ug[, c("ug_uuid", "ug", "contour_version")])
+  cles <- cles[order(cles$ug, cles$contour_version), , drop = FALSE]
+  for (k in seq_len(nrow(cles))) {
+    o <- avec_ug[avec_ug$ug_uuid == cles$ug_uuid[[k]] &
+                   avec_ug$contour_version == cles$contour_version[[k]], ,
+                 drop = FALSE]
+    version <- contours[contours$ug_uuid == cles$ug_uuid[[k]] &
+                          contours$version == cles$contour_version[[k]], ]
+    date <- version$du[[1L]]
+    fond <- contours_a(date)
+    if (!any(fond$ug_uuid == cles$ug_uuid[[k]])) {
+      fond <- rbind(fond, version)
+    }
+    cat("## UG ", cles$ug[[k]], if (sum(cles$ug == cles$ug[[k]]) > 1L)
+      paste0(", contour du ", date), "\n\n", sep = "")
+    unite_geom <- geometrie(version$wkt)
+    propres_k <- o[o$localisation == "propre", , drop = FALSE]
+    etendue <- boite(c(unite_geom, if (nrow(propres_k) > 0L)
+      geometrie(propres_k$wkt)))
+    graphics::par(mar = c(0.5, 0.5, 0.5, 0.5))
+    dessiner_contours(fond, unite = cles$ug_uuid[[k]], etendue = etendue)
+    par_ug <- o[o$localisation == "ug", , drop = FALSE]
+    if (nrow(par_ug) > 0L) {
+      # Hors du dessin, en haut à gauche : au centre de l'unité, la liste
+      # couvrait les positions propres.
+      u <- graphics::par("usr")
+      graphics::text(u[1] + (u[2] - u[1]) * 0.01, u[4] - (u[4] - u[3]) * 0.02,
+                     paste(strwrap(paste0(
+                       "Localisées par l'UG ", cles$ug[[k]], " : n° ",
+                       paste(numero(par_ug$seq), collapse = ", ")),
+                       width = 45), collapse = "\n"),
+                     adj = c(0, 1), cex = 0.7, col = "grey20")
+    }
+    dessiner_objets(o)
+    echelle_et_nord()
+    legende(o)
+    cat("\n\n")
+    filles <- cq$filiations[cq$filiations$parent == cles$ug[[k]] |
+                              cq$filiations$enfant == cles$ug[[k]], ,
+                            drop = FALSE]
+    cartouche(fond, o$seq[o$contour_en_vigueur %in% FALSE],
+              unite = cles$ug_uuid[[k]])
+    if (nrow(filles) > 0L) {
+      cat("*Filiation* : ", paste0(
+        "UG ", filles$parent, " → UG ", filles$enfant, " (", filles$type_filiation,
+        ", le ", filles$date_effet, ")", collapse = " ; "), ".\n\n", sep = "")
+    }
+    tableau_fiche(o, paste0("Écritures localisées dans l'UG ", cles$ug[[k]]))
+  }
+
+  hors <- objets[objets$localisation != "floutee" &
+                   (is.na(objets$ug_uuid) | is.na(objets$contour_version)), ,
+                 drop = FALSE]
+  for (i in seq_len(nrow(hors))) {
+    o <- hors[i, , drop = FALSE]
+    cat("## N° ", numero(o$seq), " — ", nettoyer(ifelse(
+      is.na(o$designation), "objet", o$designation)), "\n\n", sep = "")
+    fond <- contours_a(o$date_evenement)
+    en_vigueur <- !is.null(fond) && nrow(fond) > 0L &&
+      any(fond$du <= o$date_evenement &
+            (is.na(fond$au) | fond$au >= o$date_evenement))
+    forme <- geometrie(o$wkt)
+    etendue <- boite(forme, marge = 0.3, minimum = 150)
+    graphics::par(mar = c(0.5, 0.5, 0.5, 0.5))
+    if (!is.null(fond) && nrow(fond) > 0L) {
+      dessiner_contours(fond, etendue = etendue)
+    } else {
+      plot(forme, xlim = etendue$x, ylim = etendue$y, col = NA, border = NA)
+    }
+    dessiner_objets(o)
+    echelle_et_nord()
+    legende(o)
+    cat("\n\n")
+    if (!is.null(fond) && nrow(fond) > 0L) {
+      cartouche(fond, if (en_vigueur) numeric(0) else o$seq)
+    }
+    tableau_fiche(o, paste0("Écriture n° ", numero(o$seq), ", hors unité"))
+  }
+
+  # Les localisations floutées : comptées et dites, jamais dessinées.
+  floutees <- objets[objets$localisation == "floutee", , drop = FALSE]
+  if (nrow(floutees) > 0L) {
+    se <- donnees$sensibilite
+    cat("## Localisations floutées
+
+",
+        nrow(floutees), " écriture(s) localisée(s) ne sont pas dessinées : ",
+        "leur position est diffusée à l'échelle que le SINP fixe pour ",
+        "l'espèce (code 1 : commune ; 2 : maille 10 × 10 km ; 3 : ",
+        "département). ", if (is.null(se$version)) paste0(
+          "Aucun référentiel de sensibilité n'a été fourni : aucune ",
+          "espèce localisée n'est diffusée.") else paste0(
+          "Référentiel de sensibilité de l'INPN, version ", se$version,
+          ", empreinte SHA-256 `", se$empreinte, "`",
+          if (!is.null(se$departement)) paste0(", département ",
+                                               se$departement)
+          else ", tous départements confondus", "."), "\n\n", sep = "")
+    tableau <- data.frame(
+      `N°` = numero(floutees$seq),
+      Registre = as.character(floutees$registre),
+      Objet = nettoyer(ifelse(is.na(floutees$designation), "—",
+                              floutees$designation)),
+      `Événement` = floutees$date_evenement,
+      Diffusion = nettoyer(floutees$floutage),
+      `État` = etat_de(floutees),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+    tableau_pipe(tableau, c(5L, 5L, 26L, 10L, 40L, 14L),
+                 "Localisations floutées", droite = c("N°"))
+  }
 }
 ```
 

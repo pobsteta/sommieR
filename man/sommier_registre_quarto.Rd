@@ -14,6 +14,8 @@ sommier_registre_quarto(
   public = FALSE,
   cles_publiques = list(),
   ancres = list(),
+  sensibilite = NULL,
+  departement = NULL,
   quarto = Sys.which("quarto")
 )
 }
@@ -33,12 +35,20 @@ sommier_registre_quarto(
 tout le sommier.}
 
 \item{public}{\code{TRUE} pour un sommier a transmettre : les tiers des
-registres 3 et 7 sont masques.}
+registres 3 et 7 sont masques, les localisations sensibles floutees.}
 
 \item{cles_publiques, ancres}{Transmises a \code{\link[=sommier_verifier_visas]{sommier_verifier_visas()}} pour
 verifier le visa qui arrete l'edition : cles publiques des signataires
 (inutiles quand le visa porte son certificat), ancres de confiance des
 autorites d'horodatage. Sans effet sans \code{jusqu_au_visa}.}
+
+\item{sensibilite}{Le referentiel de sensibilite de l'INPN, lu par
+\code{\link[=sommier_sensibilite]{sommier_sensibilite()}}. Sans lui, a \code{public = TRUE}, aucune espece
+localisee n'est diffusee. Sans effet sans \code{public}.}
+
+\item{departement}{Code du departement de la foret (\code{"21"}, \code{"2A"}...),
+pour ne retenir que les listes qui s'y appliquent. Sans lui, la plus
+forte sensibilite, tous departements confondus.}
 
 \item{quarto}{Chemin de l'executable Quarto.}
 }
@@ -62,6 +72,26 @@ Un sommier a transmettre hors du gestionnaire se rend avec \code{public = TRUE}
 ecriture) sont remplaces par "(masque)". La ligne, son montant et son
 empreinte restent : on voit qu'une ecriture existe, pas qui elle nomme. Les
 photos des constats ne sont jamais reproduites, seulement comptees.
+
+\strong{Les croquis sont une annexe de lecture, hors chaine.} Un croquis par
+fiche - par unite de gestion et version de son contour, puis par objet
+hors unite - precede d'un plan de situation. Chaque ecriture localisee y
+figure, rectifiees comprises, a sa position propre ou, a defaut, dans son
+unite, prise dans le contour qu'elle avait a la date de l'evenement. Le
+trait dit la provenance (constat, source indirecte, transcription) ;
+chaque croquis porte son echelle, le nord, le systeme de coordonnees et
+la source de ses contours. Il faut le paquet \code{sf} la ou le document se
+rend.
+
+A \code{public = TRUE}, \strong{les especes sensibles sont floutees selon le SINP} :
+le croquis les tait, et leur fiche dit l'echelle de diffusion - la
+commune, la maille 10 km ou le departement, selon le code de sensibilite
+du referentiel de l'INPN (\code{sensibilite}). L'unite de gestion et le libelle
+de localisation de ces ecritures sont tus aussi. Sans referentiel, aucune
+espece localisee n'est diffusee.
+
+Le PDF est un PDF/A-2B (ISO 19005-2) : polices et croquis embarques,
+rejouable sans reseau.
 
 Arrete a un visa (\code{jusqu_au_visa}), le document porte en tete ce visa tel
 que \code{\link[=sommier_verifier_visas]{sommier_verifier_visas()}} le juge : le signataire et son certificat,

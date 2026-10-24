@@ -1,3 +1,50 @@
+# sommieR 0.35.0
+
+Sommier, lot 3 : les croquis (brief `sommier-2`).
+
+- **Le sommier imprimé gagne une annexe de croquis**, déclarée hors chaîne :
+  les positions sont celles des écritures, les contours des unités viennent
+  de leur source, dite sous chaque croquis. Un plan de situation l'ouvre ;
+  suit un croquis par fiche, comme les imprimés A50 : un par unité de
+  gestion et version de son contour, puis un par objet hors unité.
+- **Toutes les positions, rectifiées comprises.** Les écritures sont lues
+  dans `entree_sommier`, non dans `v_objet_localise` qui ne garde que les
+  courantes. Une écriture rectifiée reste dessinée, en gris, « rectifiée par
+  le n° X » ; un objet relevé plusieurs fois montre chaque relevé. Chaque
+  objet porte son numéro d'écriture.
+- **La provenance se lit au trait** : plein pour un constat de terrain
+  (NDP 0), pointillé pour une source indirecte, tireté pour une
+  transcription, avec sa légende.
+- **Chaque écriture dans la forêt de son époque.** Une écriture sans
+  position propre se rapporte à son unité, prise dans le contour en vigueur
+  à la date de l'évènement, unités fermées ou scindées comprises. Faute de
+  contour en vigueur, le plus proche, et le croquis dit qu'il est postérieur.
+  Les filiations de l'unité sont rappelées.
+- **Le minimum de chaque croquis** : barre d'échelle, flèche du nord du
+  quadrillage, Lambert-93 (EPSG:2154), précision du relevé quand elle est
+  connue, source et version des contours, date d'édition.
+- **`sommier_registre()`** porte l'élément `croquis` : `objets` (une ligne
+  par écriture localisée), `contours` (toutes les versions, avec leur
+  source), `filiations`, `date_situation` (édition, ou date du visa qui
+  l'arrête) et `non_localisees`. Arrêtée à un visa, l'extraction s'arrête à
+  la tête visée.
+- **À `public = TRUE`, les espèces sensibles sont floutées selon le SINP.**
+  **`sommier_sensibilite()`** lit le référentiel national de sensibilité de
+  l'INPN (`SENSIBILITE.zip`, version 18 du 7 août 2025), daté et empreint ;
+  le fichier n'est pas dans le paquet, sa licence n'étant pas connue.
+  `sommier_registre_quarto()` gagne `sensibilite` et `departement`. Une
+  localisation sensible quitte le croquis ; sa fiche dit l'échelle de
+  diffusion : commune (code 1), maille 10 × 10 km nommée comme celle de
+  l'INPN (code 2), département (code 3). L'unité et le libellé de
+  localisation de l'écriture sont tus aussi. Une sensibilité dont la durée
+  est échue tombe ; les conditions (statut biologique, comportement) ne sont
+  pas lues, et dans le doute on floute. Sans référentiel, aucune espèce
+  localisée n'est diffusée.
+- **Le PDF est un PDF/A-2B** (ISO 19005-2), validé par veraPDF sur la démo de
+  Couchey. KOMA-Script refusant `\DocumentMetadata`, le gabarit partiel
+  `doc-class.tex` charge `pdfmanagement` avant la classe ; les croquis
+  passent par `cairo_pdf`, qui embarque ses polices.
+
 # sommieR 0.34.0
 
 Patrimoine, lot 2 : les statuts (brief `patrimoine-1`).

@@ -151,13 +151,19 @@ n'a pas été interrogée.*
     Loire ;
   - *la traduction des codes en floutage* : le fichier donne des codes 1
     à 3, le guide v2.0 (2022) raisonne en surfaces ; la correspondance est
-    à établir, pas à inventer ;
+    à établir, pas à inventer. *Établie le 24 octobre 2026 (acquisition) :*
+    1 = commune, 2 = maille 10 × 10 km, 3 = département (référentiel des
+    données sensibles de Bretagne v1.1, 2019, p. 7 ; guide v2.0, p. 8). Le
+    fichier v18 ne porte que ces trois codes. Reste non vérifié à la
+    source : la notice du Centre-Val de Loire, dont le niveau 1 pourrait
+    être plus fin que la commune (ZNIEFF, espaces protégés) ;
   - *les habitats, vestiges et arbres remarquables* : aucune liste citable
     trouvée ; leur sort à `public = TRUE` est un choix du gestionnaire, que
     le document dira tel ;
-  - *la licence du référentiel* n'est pas connue et ne sera pas demandée :
-    à décider si le fichier est inclus dans le paquet ou téléchargé et mis
-    en cache à l'usage.
+  - *la licence du référentiel* n'est pas connue et ne sera pas demandée.
+    *Tranché au lot 3 :* le fichier n'est ni inclus ni téléchargé par le
+    paquet ; on le télécharge soi-même et on le passe à
+    `sommier_sensibilite()`, qui le date et l'empreint.
 - **PDF/A avec Quarto et LaTeX : faisable, essai du 23 octobre 2026.**
   Quarto 1.8.27, TeX Live 2026, classe `scrartcl` en A4 paysage, validation
   par veraPDF (image Docker `verapdf/cli`) :
