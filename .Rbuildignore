@@ -15,3 +15,5 @@
 ^\.quarto$
 ^vignettes$
 ^data-raw$
+^pilotage$
+^\.claude$
