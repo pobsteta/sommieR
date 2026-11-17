@@ -1,7 +1,7 @@
 # Lecture d'un certificat X.509
 
 Rend ce dont la validation d'un jeton d'horodatage a besoin, et que
-[`openssl::read_cert()`](https://jeroen.r-universe.dev/openssl/reference/read_key.html)
+[`openssl::read_cert()`](https://rdrr.io/pkg/openssl/man/read_key.html)
 n'expose pas : les bornes de validite comme dates, les extensions, et
 les octets exacts sur lesquels porte la signature.
 

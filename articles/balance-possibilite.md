@@ -240,18 +240,11 @@ Une possibilité est un acte d’autorité ; elle ne se juge pas. Elle se
 
 reference <- sommier_reference_ifn(sommier_couche_ug(con, couchey))
 reference[c("ser", "nom", "taux_m3_ha_an", "millesime")]
-#> $ser
-#> [1] "C20"
-#> 
-#> $nom
-#> [1] "Plateaux calcaires du Nord-Est"
-#> 
-#> $taux_m3_ha_an
-#> [1] 2.55
-#> 
-#> $millesime
-#> [1] "2005-2024"
 ```
+
+*nemeton n’était pas installé à la construction de ce site : la
+référence IFN n’est pas calculée ici. Pour la forêt domaniale d’Orléans,
+elle vaut 2,28 m³/ha/an (SER B70 Sologne-Orléanais, IFN 2005-2024).*
 
 Les trois se passent au rapport, avec le reste :
 

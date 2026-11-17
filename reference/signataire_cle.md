@@ -14,7 +14,7 @@ signataire_cle(cle, claims, kid = NULL, certificat = NULL)
 - cle:
 
   Cle privee lue par
-  [`openssl::read_key()`](https://jeroen.r-universe.dev/openssl/reference/read_key.html),
+  [`openssl::read_key()`](https://rdrr.io/pkg/openssl/man/read_key.html),
   RSA ou ECDSA P-256.
 
 - claims:

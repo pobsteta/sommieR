@@ -3,7 +3,7 @@
 L'inverse
 d'[`ecdsa_der_vers_brut()`](https://pobsteta.github.io/sommieR/reference/ecdsa_der_vers_brut.md)
 :
-[`openssl::signature_verify()`](https://jeroen.r-universe.dev/openssl/reference/signatures.html)
+[`openssl::signature_verify()`](https://rdrr.io/pkg/openssl/man/signatures.html)
 attend du DER, une signature JOSE n'en est pas.
 
 ## Usage

@@ -27,7 +27,7 @@ Un vecteur `raw` de `2 * taille` octets.
 ## Details
 
 Le rembourrage n'est pas une precaution de style.
-[`openssl::ecdsa_parse()`](https://jeroen.r-universe.dev/openssl/reference/signatures.html)
+[`openssl::ecdsa_parse()`](https://rdrr.io/pkg/openssl/man/signatures.html)
 rend deux `bignum`, et un `bignum` ne porte pas ses zeros de tete : une
 composante dont le premier octet est nul s'y presente sur 31 octets. Sur
 4 000 signatures P-256 mesurees, 29 - soit 0,72 % - ont au moins une

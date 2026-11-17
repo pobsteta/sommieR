@@ -61,7 +61,7 @@
 
 
 <dt id="arg-cle-publique">cle_publique<a class="anchor" aria-label="anchor" href="#arg-cle-publique"></a></dt>
-<dd><p>Cle publique, lue par <code><a href="https://jeroen.r-universe.dev/openssl/reference/read_key.html" class="external-link">openssl::read_pubkey()</a></code>.</p></dd>
+<dd><p>Cle publique, lue par <code><a href="https://rdrr.io/pkg/openssl/man/read_key.html" class="external-link">openssl::read_pubkey()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -71,7 +71,7 @@
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Une signature <code>ES256</code> est reconvertie en DER avant d'etre soumise a
-<code><a href="https://jeroen.r-universe.dev/openssl/reference/signatures.html" class="external-link">openssl::signature_verify()</a></code>, qui n'accepte que ce format. Sa longueur est
+<code><a href="https://rdrr.io/pkg/openssl/man/signatures.html" class="external-link">openssl::signature_verify()</a></code>, qui n'accepte que ce format. Sa longueur est
 d'abord verifiee : <code>ES256</code> impose exactement 64 octets, et une signature
 plus courte revele une implementation qui a concatene deux <code>bignum</code> sans les
 rembourrer. La refuser franchement vaut mieux que de la reconvertir en un
@@ -80,9 +80,9 @@ DER syntaxiquement correct mais portant un <code>r</code> faux.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">cle</span> <span class="op">&lt;-</span> <span class="fu">openssl</span><span class="fu">::</span><span class="fu"><a href="https://jeroen.r-universe.dev/openssl/reference/keygen.html" class="external-link">rsa_keygen</a></span><span class="op">(</span><span class="fl">2048</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">cle</span> <span class="op">&lt;-</span> <span class="fu">openssl</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/openssl/man/keygen.html" class="external-link">rsa_keygen</a></span><span class="op">(</span><span class="fl">2048</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="signataire_cle.html">signataire_cle</a></span><span class="op">(</span><span class="va">cle</span>, claims <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sub <span class="op">=</span> <span class="st">"agent-01"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">charge</span> <span class="op">&lt;-</span> <span class="fu">openssl</span><span class="fu">::</span><span class="fu"><a href="https://jeroen.r-universe.dev/openssl/reference/rand_bytes.html" class="external-link">rand_bytes</a></span><span class="op">(</span><span class="fl">32</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">charge</span> <span class="op">&lt;-</span> <span class="fu">openssl</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/openssl/man/rand_bytes.html" class="external-link">rand_bytes</a></span><span class="op">(</span><span class="fl">32</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">jws</span> <span class="op">&lt;-</span> <span class="fu"><a href="jws_signer_detache.html">jws_signer_detache</a></span><span class="op">(</span><span class="va">charge</span>, <span class="va">s</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">jws_verifier_detache</span><span class="op">(</span><span class="va">jws</span>, <span class="va">charge</span>, <span class="va">cle</span><span class="op">$</span><span class="va">pubkey</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>

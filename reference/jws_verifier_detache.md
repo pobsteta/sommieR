@@ -21,7 +21,7 @@ jws_verifier_detache(jws, charge, cle_publique)
 - cle_publique:
 
   Cle publique, lue par
-  [`openssl::read_pubkey()`](https://jeroen.r-universe.dev/openssl/reference/read_key.html).
+  [`openssl::read_pubkey()`](https://rdrr.io/pkg/openssl/man/read_key.html).
 
 ## Value
 
@@ -30,7 +30,7 @@ jws_verifier_detache(jws, charge, cle_publique)
 ## Details
 
 Une signature `ES256` est reconvertie en DER avant d'etre soumise a
-[`openssl::signature_verify()`](https://jeroen.r-universe.dev/openssl/reference/signatures.html),
+[`openssl::signature_verify()`](https://rdrr.io/pkg/openssl/man/signatures.html),
 qui n'accepte que ce format. Sa longueur est d'abord verifiee : `ES256`
 impose exactement 64 octets, et une signature plus courte revele une
 implementation qui a concatene deux `bignum` sans les rembourrer. La

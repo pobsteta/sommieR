@@ -56,7 +56,7 @@ une cle ECDSA sur P-256.</p>
 
 
 <dl><dt id="arg-cle">cle<a class="anchor" aria-label="anchor" href="#arg-cle"></a></dt>
-<dd><p>Cle privee lue par <code><a href="https://jeroen.r-universe.dev/openssl/reference/read_key.html" class="external-link">openssl::read_key()</a></code>, RSA ou ECDSA P-256.</p></dd>
+<dd><p>Cle privee lue par <code><a href="https://rdrr.io/pkg/openssl/man/read_key.html" class="external-link">openssl::read_key()</a></code>, RSA ou ECDSA P-256.</p></dd>
 
 
 <dt id="arg-claims">claims<a class="anchor" aria-label="anchor" href="#arg-claims"></a></dt>
@@ -88,14 +88,14 @@ c'est-a-dire trop tard.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">cle</span> <span class="op">&lt;-</span> <span class="fu">openssl</span><span class="fu">::</span><span class="fu"><a href="https://jeroen.r-universe.dev/openssl/reference/keygen.html" class="external-link">rsa_keygen</a></span><span class="op">(</span><span class="fl">2048</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">cle</span> <span class="op">&lt;-</span> <span class="fu">openssl</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/openssl/man/keygen.html" class="external-link">rsa_keygen</a></span><span class="op">(</span><span class="fl">2048</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">signataire_cle</span><span class="op">(</span><span class="va">cle</span>, claims <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sub <span class="op">=</span> <span class="st">"agent-01"</span>, name <span class="op">=</span> <span class="st">"Maire"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;signataire de sommier&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   sub : agent-01</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   alg : RS256</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Une cle ECDSA donne un signataire ES256, sans rien declarer.</span></span></span>
-<span class="r-in"><span><span class="fu">signataire_cle</span><span class="op">(</span><span class="fu">openssl</span><span class="fu">::</span><span class="fu"><a href="https://jeroen.r-universe.dev/openssl/reference/keygen.html" class="external-link">ec_keygen</a></span><span class="op">(</span><span class="st">"P-256"</span><span class="op">)</span>, claims <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sub <span class="op">=</span> <span class="st">"agent-02"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">signataire_cle</span><span class="op">(</span><span class="fu">openssl</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/openssl/man/keygen.html" class="external-link">ec_keygen</a></span><span class="op">(</span><span class="st">"P-256"</span><span class="op">)</span>, claims <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sub <span class="op">=</span> <span class="st">"agent-02"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;signataire de sommier&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   sub : agent-02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   alg : ES256</span>

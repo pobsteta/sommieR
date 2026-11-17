@@ -672,12 +672,10 @@ observe dans cette SER. Un tableau de repères à l’hectare réunit alors
 la possibilité, le prélevé moyen des exercices échus et ce prélèvement
 de référence. Pour Orléans, la référence est de 2,28 m³/ha/an sur
 2005-2024 : c’est la somme des taux `maille` de toutes les essences,
-tirée de
-[`nemeton::ifn_prelevement_essence_ser()`](https://pobsteta.github.io/nemeton/reference/ifn_prelevement_essence_ser.html).
-sommieR n’appelle pas nemeton, qui n’est pas sur le CRAN ; la
-documentation montre comment obtenir le taux. Le rapport rappelle que ce
-chiffre est ce qui a été coupé, toutes propriétés confondues, et non ce
-qui devait l’être.
+tirée de `nemeton::ifn_prelevement_essence_ser()`. sommieR n’appelle pas
+nemeton, qui n’est pas sur le CRAN ; la documentation montre comment
+obtenir le taux. Le rapport rappelle que ce chiffre est ce qui a été
+coupé, toutes propriétés confondues, et non ce qui devait l’être.
 
 ### Ce que la forêt porte
 
@@ -1648,7 +1646,7 @@ serait tout autant.
   jeton de 2019 reste bon après l’expiration du certificat qui l’a
   produit — c’est même tout l’intérêt de l’horodatage. C’est pourquoi la
   chaîne est parcourue à la main plutôt que confiée à
-  [`openssl::cert_verify()`](https://jeroen.r-universe.dev/openssl/reference/certificates.html),
+  [`openssl::cert_verify()`](https://rdrr.io/pkg/openssl/man/certificates.html),
   qui juge à l’heure courante et condamnerait tout jeton ancien.
 - **Aucune ancre n’est embarquée.** Un magasin de racines livré avec le
   paquet ferait dépendre du rythme de publication de sommieR la question
