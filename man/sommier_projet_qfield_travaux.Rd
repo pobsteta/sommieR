@@ -54,6 +54,12 @@ dernier controle : besoin signale, sans besoin, jamais controlee. On les
 controle en ajoutant un controle a la placette ; on en installe une
 nouvelle en placant un point, rattache a des travaux de la liste des
 travaux suivis (ceux d'une unite de gestion).
+
+\strong{La symbologie est celle de Marculus} (brief du 2026-10-16) : parcelles
+coloriees par proprietaire (remplissage a 20 \%, contour plein, numero de la
+parcelle au centre ; gris-vert sans proprietaire), houppiers en contour
+seul masques par defaut, desserte ocre. Les couleurs sont dans une seule
+liste interne (\code{SYMBOLOGIE_MARCULUS}, \code{R/symbologie_travaux.R}).
 }
 \seealso{
 \code{\link[=sommier_importer_qfield_travaux]{sommier_importer_qfield_travaux()}}

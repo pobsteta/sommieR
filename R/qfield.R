@@ -342,17 +342,29 @@ copier_modele <- function(dossier, fichiers) {
   file.copy(file.path(modele, fichiers), dossier)
 }
 
+# Les parcelles du fond. `numero` (etiquette) et `proprietaire` (couleur)
+# sont ajoutes : le fond cadastral ne dit pas le proprietaire, la colonne
+# reste donc vide sauf si `fond` en porte une. Rend les proprietaires, dans
+# l'ordre d'apparition, pour la symbologie.
 ecrire_parcelles <- function(fond, gpkg) {
   if (is.null(fond) || nrow(fond) == 0L) {
-    return(invisible())
+    return(character())
+  }
+  proprietaire <- if ("proprietaire" %in% names(fond)) {
+    as.character(fond$proprietaire)
+  } else {
+    rep(NA_character_, nrow(fond))
   }
   ecrire_couche(sf::st_sf(
     reference = fond$reference,
     designation = paste(sub("^0+", "", fond$section),
                         sub("^0+", "", fond$numero)),
+    numero = sub("^0+", "", fond$numero),
+    proprietaire = proprietaire,
     geometry = sf::st_cast(sf::st_as_sfc(fond$wkt, crs = 2154),
                            "MULTIPOLYGON")
   ), gpkg, "parcelles")
+  proprietaire
 }
 
 # Sans ortho fournie, la couche hors ligne est retiree plutot que laissee

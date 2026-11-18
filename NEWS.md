@@ -1,3 +1,17 @@
+# sommieR 0.37.2
+
+- **Le projet QField des travaux prend la symbologie de Marculus** (brief
+  `2026-10-16-symbologie-travaux-comme-marculus`) : les parcelles sont
+  coloriees par `proprietaire` (palette de Marculus, remplissage a 20 %,
+  contour plein, numero de la parcelle au centre, gris-vert sans
+  proprietaire), les houppiers en contour seul masques par defaut, la
+  desserte en ocre. Les couleurs vivent en un seul endroit
+  (`SYMBOLOGIE_MARCULUS`, `R/symbologie_travaux.R`). La couche `parcelles`
+  de `travaux.gpkg` gagne deux colonnes, `numero` et `proprietaire` (vide
+  tant que le fond cadastral ne la fournit pas) ; rien n'est retire. Le
+  modele n'a pas encore de couches houppiers ni desserte : leur style
+  s'applique des qu'elles y figurent.
+
 # sommieR 0.37.1
 
 - **L'A50F est le relevé des coupes martelées**, non celui des coupes
