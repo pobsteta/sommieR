@@ -134,6 +134,10 @@ styler_couche_projet <- function(qgs, id, renderer, etiquette = NULL,
     xml2::xml_replace(ancien, nouveau)
   }
   xml2::xml_remove(xml2::xml_find_all(couche, "labeling"))
+  # Le modele porte labelsEnabled="0" : sans cet attribut, l'etiquette posee
+  # ne s'afficherait jamais.
+  xml2::xml_set_attr(couche, "labelsEnabled",
+                     if (is.null(etiquette)) "0" else "1")
   if (!is.null(etiquette)) {
     xml2::xml_add_sibling(xml2::xml_find_first(couche, "renderer-v2"),
                           xml2::xml_find_first(xml2::read_xml(etiquette), "/*"),

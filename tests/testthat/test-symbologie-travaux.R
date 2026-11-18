@@ -43,6 +43,9 @@ test_that("les parcelles sont coloriees par proprietaire, comme Marculus", {
   etiq <- xml2::xml_find_first(couche_projet(xml, "travaux_parcelles"),
                                "labeling/settings/text-style")
   expect_equal(xml2::xml_attr(etiq, "fieldName"), "numero")
+  # Le modele les desactivait : la couche doit les activer.
+  expect_equal(xml2::xml_attr(couche_projet(xml, "travaux_parcelles"),
+                              "labelsEnabled"), "1")
   noeud <- xml2::xml_find_first(
     xml, "//layer-tree-layer[@id='travaux_parcelles']")
   expect_equal(xml2::xml_attr(noeud, "checked"), "Qt::Checked")
