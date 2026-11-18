@@ -174,10 +174,10 @@ registre a bougé.
 verif <- sommier_verifier(con, foret)
 verif
 #> Verification de chaine - sommier
-#>   foret     : 54257137-eb3d-4d3a-bbc8-a659c269da47
+#>   foret     : 7d76b008-d18a-4fa3-a3ee-a54d4fef7b69
 #>   entrees   : 76
 #>   seq tete  : 76
-#>   hash tete : d60cb1ebc90a284ef31a08d306c722accf3f81fe9e2777ff9971800d828c8191
+#>   hash tete : b0a22c1067d57c898ac166d2a7d3f3e80acf14fc5f12aeaedf70f25b437fd3a7
 #>   etat      : chaine intacte
 ```
 
@@ -833,7 +833,7 @@ couche <- tempfile(fileext = ".geojson")
 export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
 str(export)
 #> List of 3
-#>  $ chemin               : chr "/tmp/Rtmpo2GCFQ/file3d5c243a9379.geojson"
+#>  $ chemin               : chr "/tmp/Rtmp0mO49M/file3c9a628e9a2d.geojson"
 #>  $ n_unites             : int 3
 #>  $ unites_sans_geometrie: chr(0)
 ```
@@ -906,10 +906,10 @@ chemin <- tempfile(fileext = ".json")
 sommier_exporter_manifeste(con, foret, chemin)
 sommier_verifier_manifeste(chemin)
 #> Verification de chaine - sommier
-#>   foret     : 54257137-eb3d-4d3a-bbc8-a659c269da47
+#>   foret     : 7d76b008-d18a-4fa3-a3ee-a54d4fef7b69
 #>   entrees   : 76
 #>   seq tete  : 76
-#>   hash tete : d60cb1ebc90a284ef31a08d306c722accf3f81fe9e2777ff9971800d828c8191
+#>   hash tete : b0a22c1067d57c898ac166d2a7d3f3e80acf14fc5f12aeaedf70f25b437fd3a7
 #>   etat      : chaine intacte
 #>   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau
 ```

@@ -94,5 +94,6 @@ Repris des sources du dépôt, qui font foi (un lien, pas une copie) :
   successeur).
 - **Jamais de push direct sur `main`.** Tout passe par une PR.
 - Le dépôt est un paquet R : `R CMD check` passe avant toute PR (la CI
-  échoue sur un avertissement). Ne pas relancer `devtools::document()` :
-  la version locale de roxygen diffère de celle du dépôt.
+  échoue sur un avertissement). Ne pas relancer
+  [`devtools::document()`](https://devtools.r-lib.org/reference/document.html)
+  : la version locale de roxygen diffère de celle du dépôt.
