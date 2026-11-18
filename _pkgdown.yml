@@ -108,6 +108,8 @@ reference:
     - SOMMIER_EXECUTIONS_TRAVAUX
     - SOMMIER_PREVUS_TRAVAUX
     - SOMMIER_CONCURRENCES
+    - SOMMIER_DEFINITIONS_CONCURRENCE
+    - sommier_niveau_concurrence
   - title: "Registre 7 — comptabilité"
     desc: >
       Imprimé A50G, budget prévisionnel et bilan financier.
