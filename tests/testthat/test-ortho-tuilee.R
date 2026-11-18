@@ -2,17 +2,20 @@
 # avec attribution et date_mise_a_jour (briefs 2026-10-27 et 2026-10-29).
 
 faire_ortho_test <- function(dossier) {
-  skip_if_not_installed("terra")
   skip_if_not_installed("sf")
   skip_if_not_installed("RSQLite")
   skip_if(!"MBTiles" %in% sf::st_drivers("raster")$name,
           "Le GDAL local n'ecrit pas de MBTiles.")
-  r <- terra::rast(xmin = 600000, xmax = 600300, ymin = 6700000,
-                   ymax = 6700300, resolution = 1, crs = "EPSG:2154",
-                   nlyrs = 3)
-  terra::values(r) <- sample(0:255, terra::ncell(r) * 3, replace = TRUE)
+  # Une image PPM 300 x 300 (octets au hasard), calee en Lambert-93 a 1 m.
+  ppm <- file.path(dossier, "source.ppm")
+  con <- file(ppm, "wb")
+  writeBin(charToRaw("P6\n300 300\n255\n"), con)
+  writeBin(as.raw(sample(0:255, 300L * 300L * 3L, replace = TRUE)), con)
+  close(con)
   chemin <- file.path(dossier, "source.tif")
-  terra::writeRaster(r, chemin, datatype = "INT1U")
+  sf::gdal_utils("translate", ppm, chemin, quiet = TRUE,
+                 options = c("-a_srs", "EPSG:2154", "-a_ullr", "600000",
+                             "6700300", "600300", "6700000"))
   Sys.setFileTime(chemin, as.POSIXct("2026-10-27 12:00:00", tz = "UTC"))
   chemin
 }
