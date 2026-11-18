@@ -72,3 +72,68 @@ ecrire_actions_realisees <- function(x, fichier) {
                    fileEncoding = "UTF-8")
   invisible(fichier)
 }
+
+#' Lire le programme de travaux de nemetonshiny
+#'
+#' @description
+#' Lit la couche `actions` de `<projet>-programme-travaux.gpkg`, tel que
+#' l'ecrit `export_action_plan_gpkg()` de nemetonshiny : une ligne par action
+#' du plan d'action, l'identifiant de l'action dans la colonne `id`. C'est le
+#' point de depart du chemin de l'`action_id` : voir
+#' [sommier_actions_realisees()].
+#'
+#' @param fichier Chemin du GeoPackage du programme.
+#'
+#' @return Un `data.frame` sans geometrie : `action_id` (la colonne `id` du
+#'   programme), `ug_id`, puis celles des colonnes `type`, `annee_civile`,
+#'   `surface_ha` et `statut` que le fichier porte.
+#'
+#' @seealso [sommier_projet_qfield_travaux()]
+#'
+#' @export
+sommier_lire_programme_travaux <- function(fichier) {
+  if (!requireNamespace("sf", quietly = TRUE)) {
+    stop("Le paquet `sf` est requis pour lire le programme.", call. = FALSE)
+  }
+  fichier <- valider_texte(fichier, "fichier")
+  if (!file.exists(fichier)) {
+    stop("Programme de travaux introuvable : ", fichier, call. = FALSE)
+  }
+  if (!"actions" %in% sf::st_layers(fichier)$name) {
+    stop("Pas de couche `actions` dans ", fichier, " : ce n'est pas le ",
+         "programme exporte par nemetonshiny.", call. = FALSE)
+  }
+  x <- as.data.frame(suppressWarnings(sf::read_sf(fichier, layer = "actions")))
+  if (!"id" %in% names(x)) {
+    stop("La couche `actions` n'a pas de colonne `id`.", call. = FALSE)
+  }
+  x$id <- as.character(x$id)
+  if (anyNA(x$id) || any(!nzchar(trimws(x$id)))) {
+    stop("La couche `actions` porte des actions sans `id`.", call. = FALSE)
+  }
+  if (anyDuplicated(x$id)) {
+    stop("La couche `actions` porte deux fois l'identifiant ",
+         x$id[anyDuplicated(x$id)], ".", call. = FALSE)
+  }
+  x$action_id <- x$id
+  if (!"ug_id" %in% names(x)) x$ug_id <- NA_character_
+  x$ug_id <- as.character(x$ug_id)
+  garde <- intersect(c("action_id", "ug_id", "type", "annee_civile",
+                       "surface_ha", "statut"), names(x))
+  x <- x[, garde, drop = FALSE]
+  rownames(x) <- NULL
+  x
+}
+
+# Ce que l'operateur lit dans la liste des actions : l'identifiant, l'unite,
+# le type, l'annee civile et la surface.
+libelle_action_programme <- function(x) {
+  champ <- function(nom) {
+    if (nom %in% names(x)) ifelse(is.na(x[[nom]]), "", as.character(x[[nom]]))
+    else rep("", nrow(x))
+  }
+  surface <- champ("surface_ha")
+  trimws(paste0(x$action_id, " - UG ", champ("ug_id"), " ", champ("type"),
+                " ", champ("annee_civile"), " ",
+                ifelse(nzchar(surface), paste0(surface, " ha"), "")))
+}

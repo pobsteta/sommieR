@@ -32,6 +32,15 @@
 #'   [sommier_fond_lire()] (facultatif).
 #' @param ortho GeoTIFF d'orthophotographie a joindre au projet, tel que
 #'   l'ecrit [sommier_ortho_ign()] (facultatif).
+#' @param programme Chemin du `<projet>-programme-travaux.gpkg` de
+#'   nemetonshiny (facultatif), lu par [sommier_lire_programme_travaux()] : ses
+#'   actions sont versees dans la table `programme` du projet, et l'import
+#'   refuse un `action_id` saisi qui n'y figure pas.
+#'
+#' @details
+#' **Le champ `action_id`** des trois couches de travaux est celui de l'action
+#' du programme que le travaux realise : l'operateur y inscrit l'identifiant
+#' lu dans la table `programme`. Il passe tel quel au registre 6.
 #'
 #' @return Invisiblement, le chemin du projet `.qgs`.
 #'
@@ -39,7 +48,8 @@
 #'
 #' @export
 sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
-                                          fond = NULL, ortho = NULL) {
+                                          fond = NULL, ortho = NULL,
+                                          programme = NULL) {
   for (paquet in c("sf", "xml2")) {
     if (!requireNamespace(paquet, quietly = TRUE)) {
       stop("Le paquet `", paquet, "` est requis pour ecrire le projet ",
@@ -50,11 +60,20 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
   foret_id <- valider_uuid(foret_id, "foret_id")
   dossier <- valider_texte(dossier, "dossier")
   operateur <- valider_texte(operateur, "operateur")
+  # Lu avant toute ecriture : un programme illisible ne laisse pas de projet.
+  actions <- if (!is.null(programme)) sommier_lire_programme_travaux(programme)
   terrain <- preparer_terrain(con, foret_id, dossier)
 
   copier_modele(dossier, c("travaux.qgs", "travaux_attachments.zip",
                            "travaux.gpkg"))
   gpkg <- file.path(dossier, "travaux.gpkg")
+  if (!is.null(actions)) {
+    ecrire_table(data.frame(
+      action_id = actions$action_id,
+      libelle = libelle_action_programme(actions),
+      ug = actions$ug_id, stringsAsFactors = FALSE
+    ), gpkg, "programme")
+  }
 
   codes <- SOMMIER_CODES_TRAVAUX[, c("code", "libelle", "unites", "formes")]
   codes$libelle <- paste0(codes$code, " - ", codes$libelle)
@@ -170,8 +189,14 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
     if (nrow(t) == 0L) return(NULL)
     t$couche <- nom
     sf::st_geometry(t) <- "geometry"
+    # Une couche sans la colonne (projet d'avant 0.38.0) : pas d'action, pas
+    # une faute ; et rbind exige les memes colonnes partout.
+    if (!"action_id" %in% names(t)) t$action_id <- NA_character_
     t
   }))
+  programme <- if ("programme" %in% sf::st_layers(gpkg)$name) {
+    as.data.frame(lire("programme"))$action_id
+  }
   placettes <- lire("placettes")
   controles <- rattacher_controles(lire("controles"), placettes)
   photos <- as.data.frame(lire("photos"))
@@ -206,7 +231,8 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
     params = list(foret_id))$id
   fautes <- controler_tournee_travaux(
     travaux, placettes, controles, photos, dossier,
-    travaux_connus = connus$id, placettes_connues = placettes_connues)
+    travaux_connus = connus$id, placettes_connues = placettes_connues,
+    programme = programme)
   if (length(fautes) > 0L) {
     stop("Import refuse, rien n'est ecrit :\n",
          paste0("- ", fautes, collapse = "\n"), call. = FALSE)
@@ -340,7 +366,7 @@ placettes_du_projet <- function(con, foret_id) {
 
 controler_tournee_travaux <- function(travaux, placettes, controles, photos,
                                       dossier, travaux_connus,
-                                      placettes_connues) {
+                                      placettes_connues, programme = NULL) {
   fautes <- character(0)
   if (!is.null(travaux) && nrow(travaux) > 0L) {
     t <- as.data.frame(travaux)
@@ -365,6 +391,11 @@ controler_tournee_travaux <- function(travaux, placettes, controles, photos,
       }
       if (is.na(x$visite_le) && is.na(x$date_reception)) {
         fautes <- c(fautes, paste0(nom, " : ni date de releve ni de reception"))
+      }
+      if (!is.null(programme) && !is.null(texte_ou_null(x$action_id)) &&
+          !x$action_id %in% programme) {
+        fautes <- c(fautes, paste0(nom, " : action_id ", x$action_id,
+                                   " absent du programme du projet"))
       }
       essai <- tryCatch({
         payload_travaux(x, NULL, NULL); NULL

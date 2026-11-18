@@ -167,7 +167,8 @@ sommier_reprendre_travaux <- function(con, foret_id, fichier, auteur,
     fautes <<- c(fautes, paste0("ligne ", lignes[[i]], " : ", msg))
   }
 
-  geometries <- geometries_tableur(t$geometrie, crs, faute)
+  geometries <- geometries_tableur(t$geometrie %||% rep(NA_character_, nrow(t)),
+                                  crs, faute)
   ug <- ug_lire(con, foret_id = foret_id)
   ug_geom <- if (any(!vapply(geometries$l93, is.null, logical(1)))) {
     DBI::dbGetQuery(

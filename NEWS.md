@@ -14,6 +14,13 @@ Le réalisé des travaux revient au plan d'action de nemetonshiny (brief
   reprise tableur (`SOMMIER_COLONNES_TABLEUR_TRAVAUX`) et de l'import de la
   tournée QField lorsque le GeoPackage la porte. Ajout seul : aucun contrat
   existant ne change.
+- **Le programme de nemetonshiny arrive jusqu'au registre 6.**
+  `sommier_lire_programme_travaux()` lit la couche `actions` de
+  `<projet>-programme-travaux.gpkg` (`id` devient `action_id`) ;
+  `sommier_projet_qfield_travaux(programme = )` verse les actions dans la table
+  `programme` du projet de tournée, dont les couches de travaux portent un
+  champ `action_id` ; l'import refuse un `action_id` hors du programme et le
+  porte au registre 6. Exemple : `tests/testthat/fixtures/programme-travaux-exemple.gpkg`.
 
 # sommieR 0.37.1
 

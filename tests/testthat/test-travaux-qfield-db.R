@@ -290,3 +290,67 @@ test_that("une tournee de l'ancien format, sans position aux controles, s'import
                                                auteur = "test"),
                "aucune placette choisie")
 })
+
+test_that("l'action_id du programme passe de la tournee au registre 6", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  programme <- testthat::test_path("fixtures", "programme-travaux-exemple.gpkg")
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.",
+                                programme = programme)
+  gpkg <- file.path(dossier, "travaux.gpkg")
+  p <- sf::read_sf(gpkg, "programme")
+  expect_equal(p$action_id, c("act-0001", "act-0007", "act-0009"))
+  expect_match(p$libelle[[1L]], "^act-0001 - UG 12 plantation 2026")
+  # Le champ est dans les trois couches de travaux du modele.
+  for (couche in c("travaux_surf", "travaux_lin", "travaux_pt")) {
+    expect_true("action_id" %in% names(sf::read_sf(gpkg, couche)))
+  }
+  xml <- paste(readLines(file.path(dossier, "travaux.qgs"),
+                         encoding = "UTF-8"), collapse = "\n")
+  expect_equal(lengths(regmatches(xml, gregexpr('name="action_id"', xml))), 3L)
+
+  # Une seule couche porte l'action (l'autre la laisse vide) : l'import
+  # tient, l'action arrive au registre 6, et le realise la rend au plan.
+  u <- uuid_v4()
+  x <- intervention(u, "PL", carre(600050, 6700050, 100), 1.75, "ha", "prevu")
+  x$action_id <- "act-0001"
+  saisir(dossier, "travaux_surf", x)
+  saisir(dossier, "travaux_lin", intervention(
+    uuid_v4(), "PG", sf::st_linestring(rbind(c(600020, 6700020),
+                                             c(600120, 6700020))),
+    100, "m", "prevu"))
+  bilan <- sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                           withr::local_tempdir(),
+                                           auteur = "test")
+  expect_equal(bilan$travaux, 2L)
+  pl <- Filter(function(e) e$id == u, bilan$entrees)[[1L]]
+  expect_equal(pl$payload$action_id, "act-0001")
+  r <- sommier_actions_realisees(con, f$foret)
+  expect_equal(r$travaux_id, u)
+  expect_equal(r$action_id, "act-0001")
+})
+
+test_that("un action_id hors du programme du projet fait refuser la tournee", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(
+    con, f$foret, dossier, "P. O.",
+    programme = testthat::test_path("fixtures", "programme-travaux-exemple.gpkg"))
+  x <- intervention(uuid_v4(), "PL", carre(600050, 6700050, 100), 1, "ha",
+                    "prevu")
+  x$action_id <- "act-9999"
+  saisir(dossier, "travaux_surf", x)
+  expect_error(sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                               withr::local_tempdir(),
+                                               auteur = "test"),
+               "act-9999 absent du programme")
+  expect_error(sommier_projet_qfield_travaux(
+    con, f$foret, file.path(withr::local_tempdir(), "autre"), "P. O.",
+    programme = "absent.gpkg"), "introuvable")
+})
