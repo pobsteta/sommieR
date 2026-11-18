@@ -52,7 +52,7 @@ jobs:
       # Mission 013 : même cause que r.yml (pak installait 150 paquets -dev par apt
       # au débit du miroir). Binaires RSPM + bibliothèques d'exécution seulement.
       PKG_SYSREQS: false
-      SYSLIBS: libgdal[0-9]+(t64)? libgeos-c1(t64)?(v5)? libproj[0-9]+ libudunits2-0 libfreetype6 libfontconfig1 libharfbuzz0b libfribidi0 libpng16-16(t64)? libtiff[0-9]+(t64)? libjpeg-turbo8 libwebp[0-9]+
+      SYSLIBS: libgdal[0-9]+(t64)? libgeos-c1(t64)?(v5)? libproj[0-9]+ libudunits2-0(t64)? libfreetype6 libfontconfig1 libharfbuzz0b libfribidi0 libpng16-16(t64)? libtiff[0-9]+(t64)? libjpeg-turbo8 libwebp[0-9]+
       SOMMIER_ARTICLE_DB: sommier_article
       SOMMIER_ARTICLE_HOST: localhost
       SOMMIER_ARTICLE_PORT: 5432

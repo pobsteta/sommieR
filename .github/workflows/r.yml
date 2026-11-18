@@ -61,6 +61,7 @@ jobs:
       # aucun exemple n'appelle sf : il n'a besoin d'aucune bibliothèque
       # d'exécution en plus, donc d'aucun téléchargement apt supplémentaire.
       PKG_SYSREQS: false
+      SYSLIBS: libgdal[0-9]+(t64)? libgeos-c1(t64)?(v5)? libproj[0-9]+ libudunits2-0(t64)?
       R_KEEP_PKG_SOURCE: yes
       NOT_CRAN: true
 
@@ -119,14 +120,14 @@ jobs:
         continue-on-error: true
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $(bash .github/scripts/syslibs.sh $SYSLIBS)
 
       - name: Install system dependencies (seconde tentative)
         if: steps.apt.outcome == 'failure'
         timeout-minutes: 8
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $(bash .github/scripts/syslibs.sh $SYSLIBS)
 
       # Même parade que pour l'installation de R : l'étape pend elle aussi par
       # intermittence, et sans borne le job attendait ses trente minutes. Le
@@ -192,7 +193,7 @@ jobs:
       # sont déjà au cache. On coupe cela et on pose à la main, dans l'étape
       # apt bornée, les seules bibliothèques d'exécution que sf charge.
       PKG_SYSREQS: false
-      SYSLIBS: libgdal[0-9]+(t64)? libgeos-c1(t64)?(v5)? libproj[0-9]+ libudunits2-0
+      SYSLIBS: libgdal[0-9]+(t64)? libgeos-c1(t64)?(v5)? libproj[0-9]+ libudunits2-0(t64)?
       NOT_CRAN: true
       SOMMIER_TEST_DB: sommier_test
       SOMMIER_TEST_HOST: localhost
@@ -369,7 +370,7 @@ jobs:
       # sont déjà au cache. On coupe cela et on pose à la main, dans l'étape
       # apt bornée, les seules bibliothèques d'exécution que sf charge.
       PKG_SYSREQS: false
-      SYSLIBS: libgdal[0-9]+(t64)? libgeos-c1(t64)?(v5)? libproj[0-9]+ libudunits2-0
+      SYSLIBS: libgdal[0-9]+(t64)? libgeos-c1(t64)?(v5)? libproj[0-9]+ libudunits2-0(t64)?
       NOT_CRAN: true
       SOMMIER_TEST_DB: sommier_test
       SOMMIER_TEST_HOST: localhost
