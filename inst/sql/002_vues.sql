@@ -325,7 +325,9 @@ SELECT
   (e.payload ->> 'prevu')::TEXT               AS prevu,
   (e.payload ->> 'motif_ecart')::TEXT         AS motif_ecart,
   (e.payload ->> 'date_reception')::DATE      AS date_reception,
-  (e.geom IS NOT NULL)                        AS localise
+  (e.geom IS NOT NULL)                        AS localise,
+  -- v0.38.0 : l'action du plan d'action de nemetonshiny que les travaux realisent.
+  (e.payload ->> 'action_id')::TEXT           AS action_id
 FROM v_entree_courante e
 WHERE e.registre = 6
   -- Les placettes et leurs controles sont au registre 6, mais ce ne sont pas

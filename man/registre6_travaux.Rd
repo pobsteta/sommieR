@@ -28,7 +28,8 @@ registre6_travaux(
   geometrie = NULL,
   precision_m = NULL,
   source_gnss = NULL,
-  photos = NULL
+  photos = NULL,
+  action_id = NULL
 )
 }
 \arguments{
@@ -79,6 +80,10 @@ pour les travaux de reboisement (facultatif).}
 \item{precision_m, source_gnss}{Precision et source de la position relevee.}
 
 \item{photos}{Photos, par leur empreinte (voir \code{\link[=sommier_deposer_photo]{sommier_deposer_photo()}}).}
+
+\item{action_id}{Identifiant de l'action du plan d'action de nemetonshiny
+que ces travaux realisent (facultatif) : c'est lui que
+\code{\link[=sommier_actions_realisees]{sommier_actions_realisees()}} rend au plan.}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.

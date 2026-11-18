@@ -461,7 +461,8 @@ payload_travaux <- function(t, geometrie, photos) {
     geometrie = geometrie,
     precision_m = nombre_ou_null(t$precision_m),
     source_gnss = texte_ou_null(t$source_gnss),
-    photos = photos
+    photos = photos,
+    action_id = texte_ou_null(t$action_id)
   )
 }
 
