@@ -32,8 +32,8 @@
 #'   [sommier_fond_lire()] (facultatif).
 #' @param ortho GeoTIFF d'orthophotographie a joindre au projet, tel que
 #'   l'ecrit [sommier_ortho_ign()] (facultatif). Il est converti en un seul
-#'   fichier `ortho.mbtiles`, tuile en EPSG:3857 (zooms 12 a 18, jusqu'a ou
-#'   l'emprise le permet), avec `attribution` et `date_mise_a_jour`
+#'   fichier `ortho.mbtiles`, tuile en EPSG:3857 (zooms 12 a 18, tuiles
+#'   PNG, fond hors emprise transparent), avec `attribution` et `date_mise_a_jour`
 #'   (AAAA-MM-JJ, la date du GeoTIFF) dans sa table `metadata`. Il remplace
 #'   `ortho.tif` : QField et Surculus le lisent sans reseau. Necessite `sf` et
 #'   `RSQLite`.

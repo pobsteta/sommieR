@@ -13,7 +13,10 @@ SOMMIER_ATTRIBUTION_ORTHO <- paste0(
 # table `metadata` recoit `attribution` (cle de la specification MBTiles 1.3)
 # et `date_mise_a_jour`, AAAA-MM-JJ (convention sommieR/Surculus, hors norme).
 # La date est celle du GeoTIFF - le jour ou l'ortho a ete telechargee - sauf si
-# l'appelant la donne : le service ne dit pas la date de prise de vue.
+# l'appelant la donne : le service ne dit pas la date de prise de vue. (La date
+# de modification est celle du telechargement tant que le GeoTIFF n'est ni
+# copie ni retouche ; `sommier_ortho_ign()` n'a pas de canal pour la
+# transmettre autrement.)
 ecrire_ortho_tuilee <- function(ortho, chemin,
                                 zooms = SOMMIER_ZOOMS_ORTHO,
                                 attribution = SOMMIER_ATTRIBUTION_ORTHO,
@@ -31,22 +34,35 @@ ecrire_ortho_tuilee <- function(ortho, chemin,
     stop("`date_mise_a_jour` doit etre une date AAAA-MM-JJ.", call. = FALSE)
   }
   # Le pilote MBTiles de GDAL ignore MINZOOM/MAXZOOM a la copie : il prend le
-  # zoom le plus proche de la resolution de la source. On cale donc la source
-  # sur la grille du zoom le plus fin (resolution de la carte du monde en
-  # 3857 divisee par 2^zoom), puis les pyramides descendent les zooms
-  # inferieurs - jusqu'a ce que l'emprise ne tienne plus qu'en une tuile,
-  # d'ou un zoom minimal parfois superieur a 12 pour une petite emprise.
-  pas <- 156543.03392804097 / 2^zooms[[2L]]
+  # zoom le plus proche de la resolution de la source, et gdaladdo s'arrete
+  # quand l'image tient dans une tuile. On cale donc la source sur la grille
+  # du zoom le plus fin (resolution de la carte du monde en 3857 divisee par
+  # 2^zoom) ET son emprise sur les tuiles du zoom le plus grossier qui la
+  # couvrent (fond transparent) : les pyramides descendent alors jusqu'a ce
+  # zoom. Les tuiles entierement vides ne sont pas ecrites. Tuiles en PNG :
+  # MBTiles n'a pas de mode JPEG/PNG automatique, et en JPEG le fond hors
+  # emprise serait noir et opaque.
+  monde <- 2 * 20037508.342789244
+  pas <- monde / 256 / 2^zooms[[2L]]
+  cote <- monde / 2^zooms[[1L]]
   fin <- tempfile(fileext = ".tif")
   on.exit(unlink(fin), add = TRUE)
   niveaux <- 2L^seq_len(zooms[[2L]] - zooms[[1L]])
   fait <- try({
+    boite <- emprise_3857(ortho)
+    te <- c(floor((boite[[1L]] + monde / 2) / cote),
+            floor((boite[[2L]] + monde / 2) / cote),
+            ceiling((boite[[3L]] + monde / 2) / cote),
+            ceiling((boite[[4L]] + monde / 2) / cote)) * cote - monde / 2
     sf::gdal_utils("warp", ortho, fin, quiet = TRUE,
                    options = c("-t_srs", "EPSG:3857", "-tr", pas, pas,
+                               "-te", trimws(format(te, nsmall = 3L, scientific = FALSE)),
                                "-r", "bilinear", "-of", "GTiff",
-                               "-dstalpha"))
+                               "-dstalpha", "-co", "TILED=YES",
+                               "-co", "COMPRESS=DEFLATE",
+                               "-co", "SPARSE_OK=TRUE", "-co", "BIGTIFF=YES"))
     sf::gdal_utils("translate", fin, chemin, quiet = TRUE,
-                   options = c("-of", "MBTILES", "-co", "TILE_FORMAT=JPEG",
+                   options = c("-of", "MBTILES", "-co", "TILE_FORMAT=PNG",
                                "-co", "NAME=ortho", "-co", "TYPE=baselayer"))
     sf::gdal_addo(chemin, method = "average", overviews = niveaux)
   }, silent = TRUE)
@@ -67,4 +83,16 @@ ecrire_ortho_tuilee <- function(ortho, chemin,
                  list(c("attribution", "date_mise_a_jour"),
                       c(attribution, date_mise_a_jour)))
   invisible(chemin)
+}
+
+# Emprise d'une image en EPSG:3857 (xmin, ymin, xmax, ymax), par un warp vers
+# un VRT : GDAL fait la reprojection de l'emprise, quel que soit le SCR.
+emprise_3857 <- function(ortho) {
+  vrt <- tempfile(fileext = ".vrt")
+  on.exit(unlink(vrt))
+  sf::gdal_utils("warp", ortho, vrt, quiet = TRUE,
+                 options = c("-t_srs", "EPSG:3857", "-of", "VRT"))
+  info <- jsonlite::fromJSON(sf::gdal_utils("info", vrt, quiet = TRUE,
+                                            options = "-json"))
+  c(info$cornerCoordinates$lowerLeft, info$cornerCoordinates$upperRight)
 }

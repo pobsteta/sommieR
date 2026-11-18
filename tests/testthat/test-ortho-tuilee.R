@@ -38,19 +38,16 @@ test_that("l'ortho est tuilee en 3857, zooms 12 a 18, avec ses metadonnees", {
   expect_match(meta[["attribution"]], "IGN")
   expect_match(meta[["attribution"]], "Licence Ouverte")
   expect_equal(meta[["date_mise_a_jour"]], "2026-10-27")
-  # Zoom maximal 18 ; le minimal descend vers 12 selon la taille de l'emprise
-  # (une emprise de 300 m ne donne que quelques zooms).
+  # Zooms 12 a 18, meme pour une emprise de 300 m.
   expect_equal(meta[["maxzoom"]], "18")
-  expect_gte(as.integer(meta[["minzoom"]]), 12L)
-  expect_lt(as.integer(meta[["minzoom"]]), 18L)
+  expect_equal(meta[["minzoom"]], "12")
   base <- DBI::dbConnect(RSQLite::SQLite(), sortie)
   on.exit(DBI::dbDisconnect(base))
   z <- DBI::dbGetQuery(base,
     "SELECT MIN(zoom_level) AS a, MAX(zoom_level) AS b FROM tiles")
   expect_equal(z$b, 18)
-  expect_equal(z$a, as.integer(meta[["minzoom"]]))
-  expect_gte(z$a, 12)
-  # Les tuiles couvrent la zone de la source (Couchey, vers 1,67 E 47,39 N) :
+  expect_equal(z$a, 12)
+  # Les tuiles couvrent la zone de la source (vers 1,67 E 47,39 N) :
   # la colonne du zoom 18 est celle de la longitude, la ligne est TMS (comptee
   # depuis le sud : 2^18 - 1 - y_xyz).
   t18 <- DBI::dbGetQuery(base,
@@ -62,6 +59,17 @@ test_that("l'ortho est tuilee en 3857, zooms 12 a 18, avec ses metadonnees", {
   expect_true(any(abs(t18$x - x) <= 3 & abs(t18$y - (2^18 - 1 - y_xyz)) <= 3))
   info <- sf::gdal_utils("info", sortie, quiet = TRUE)
   expect_match(info, "3857")
+  # Hors emprise, une tuile du zoom 12 est transparente (alpha 0), pas noire
+  # et opaque : la tuile en PNG a un canal alpha dont le minimum est 0.
+  blob <- DBI::dbGetQuery(base,
+    "SELECT tile_data FROM tiles WHERE zoom_level = 12 LIMIT 1")$tile_data[[1L]]
+  png <- file.path(d, "z12.png")
+  writeBin(blob, png)
+  stat <- jsonlite::fromJSON(sf::gdal_utils("info", png, quiet = TRUE,
+                                            options = c("-json", "-stats")))
+  expect_equal(nrow(stat$bands), 4L)
+  expect_equal(stat$bands$minimum[[4L]], 0)
+  expect_equal(stat$bands$maximum[[4L]], 255)
 })
 
 test_that("la date de mise a jour se donne, et se controle", {

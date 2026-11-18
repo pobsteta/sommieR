@@ -28,8 +28,8 @@ rapatriee ne doit jamais etre ecrasee.}
 
 \item{ortho}{GeoTIFF d'orthophotographie a joindre au projet, tel que
 l'ecrit \code{\link[=sommier_ortho_ign]{sommier_ortho_ign()}} (facultatif). Il est converti en un seul
-fichier \code{ortho.mbtiles}, tuile en EPSG:3857 (zooms 12 a 18, jusqu'a ou
-l'emprise le permet), avec \code{attribution} et \code{date_mise_a_jour}
+fichier \code{ortho.mbtiles}, tuile en EPSG:3857 (zooms 12 a 18, tuiles
+PNG, fond hors emprise transparent), avec \code{attribution} et \code{date_mise_a_jour}
 (AAAA-MM-JJ, la date du GeoTIFF) dans sa table \code{metadata}. Il remplace
 \code{ortho.tif} : QField et Surculus le lisent sans reseau. Necessite \code{sf} et
 \code{RSQLite}.}

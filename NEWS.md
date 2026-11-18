@@ -3,8 +3,9 @@
 - **L'ortho de la tournée des travaux devient un fichier tuilé EPSG:3857**
   (briefs `2026-10-27-ortho-tuilee-3857` et `2026-10-29-ortho-metadonnees`) :
   `sommier_projet_qfield_travaux(ortho =)` ne copie plus `ortho.tif` mais
-  écrit `ortho.mbtiles` (MBTiles, donc TMS ; zooms jusqu'à 18, descendant
-  vers 12 selon l'emprise) ; le projet `travaux.qgs` le lit à la place de
+  écrit `ortho.mbtiles` (MBTiles, donc TMS ; tuiles PNG, fond hors emprise
+  transparent ; zooms 12 à 18, l'emprise étant calée sur la grille du zoom 12 ;
+  brief déposé dans `specs/brief_ortho-1_tuilee-3857.md`) ; le projet `travaux.qgs` le lit à la place de
   `ortho.tif`. Sa table `metadata` porte `attribution` (« © IGN, BD ORTHO®,
   Géoplateforme, Licence Ouverte 2.0 ») et `date_mise_a_jour` (AAAA-MM-JJ,
   convention sommieR/Surculus hors norme MBTiles 1.3 : la date du GeoTIFF).
