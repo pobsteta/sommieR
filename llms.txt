@@ -735,6 +735,12 @@ Couchey de nemetonshiny.
   : Parcelles du jeu de demonstration
 - [`NOM_FORET_DEMO`](https://pobsteta.github.io/sommieR/reference/NOM_FORET_DEMO.md)
   : Nom de la foret du jeu de demonstration
+- [`NOM_FORET_DEMO_MARSANNAY`](https://pobsteta.github.io/sommieR/reference/NOM_FORET_DEMO_MARSANNAY.md)
+  : Nom de la foret du jeu de demonstration de Marsannay
+- [`SOMMIER_PARCELLES_MARSANNAY`](https://pobsteta.github.io/sommieR/reference/SOMMIER_PARCELLES_MARSANNAY.md)
+  : Parcelles du jeu de demonstration de Marsannay
+- [`sommier_demo_marsannay()`](https://pobsteta.github.io/sommieR/reference/sommier_demo_marsannay.md)
+  : Jeu de demonstration : foret communale de Marsannay-la-Cote
 
 ## Exports réglementaires et cartographiques
 
