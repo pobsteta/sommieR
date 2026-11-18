@@ -49,7 +49,9 @@ l’un des deux est faux.
 
 `/imperatrice:brief` (porte n° 1 : Pascal valide brief et spec) →
 `/imperatrice:mission` (porte n° 2 : Pascal valide l’équipe) →
-`/imperatrice:boucle` (porte n° 3 : Pascal valide chaque PR vers `main`)
+`/imperatrice:boucle` (porte n° 3 : déléguée par Pascal le 2026-11-16,
+l’orchestrateur fusionne quand les six contrôles sont verts, dans la
+portée de `pilotage/equipe.md` § Délégation ; le reste revient à Pascal)
 → `/imperatrice:bilan`.
 
 ## Règles métier du projet
