@@ -31,7 +31,12 @@
 #' @param fond Parcellaire cadastral pour se reperer, tel que le rend
 #'   [sommier_fond_lire()] (facultatif).
 #' @param ortho GeoTIFF d'orthophotographie a joindre au projet, tel que
-#'   l'ecrit [sommier_ortho_ign()] (facultatif).
+#'   l'ecrit [sommier_ortho_ign()] (facultatif). Il est converti en un seul
+#'   fichier `ortho.mbtiles`, tuile en EPSG:3857 (zooms 12 a 18, jusqu'a ou
+#'   l'emprise le permet), avec `attribution` et `date_mise_a_jour`
+#'   (AAAA-MM-JJ, la date du GeoTIFF) dans sa table `metadata`. Il remplace
+#'   `ortho.tif` : QField et Surculus le lisent sans reseau. Necessite `sf` et
+#'   `RSQLite`.
 #'
 #' **La symbologie est celle de Marculus** (brief du 2026-10-16) : parcelles
 #' coloriees par proprietaire (remplissage a 20 %, contour plein, numero de la
@@ -108,7 +113,7 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
   proprietaires <- ecrire_parcelles(fond, gpkg)
 
   qgs <- file.path(dossier, "travaux.qgs")
-  joindre_ortho(qgs, dossier, ortho, "travaux_ortho")
+  joindre_ortho(qgs, dossier, ortho, "travaux_ortho", tuilee = TRUE)
   poser_cadre_projet(qgs, paste0("Travaux - ", terrain$foret$nom[[1L]]),
                      operateur, foret_id, sf::st_buffer(union, 100))
   poser_symbologie_travaux(qgs, proprietaires)
