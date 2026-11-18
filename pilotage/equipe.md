@@ -15,13 +15,18 @@
 ## Délégation
 
 > Ce que Pascal demande à l'orchestrateur de trancher à sa place (skill `methode`,
-> « La délégation »). Vide : aucune délégation, Pascal tranche tout.
+> « La délégation »). Reprise le 2026-11-18, à la demande de Pascal, de la délégation
+> qu'il a donnée le 2026-11-16 à l'orchestrateur de la plateforme pour tous les projets
+> pilotés (`nemetonplateforme/pilotage/equipe.md` § Délégation, qui fait foi).
 
-- **Portée :** _aucune_
-- **Jusqu'à :** _…_
-- **Réservé à Pascal :** _…_ (toujours, même si rien n'est écrit : sa réponse d'abord ;
-  rendre la main ; ce qui touche l'extérieur et ne se défait pas)
-- **Inscrite au journal le :** _…_
+- **Portée :** porte n° 3 : fusionner les PR vers `main` (en squash, convention du dépôt)
+  et publier les releases, quand les six contrôles de `nemetonplateforme/docs/spec.md` § 5
+  sont verts (dont la CI et le vert de `.claude/test-command` prouvé sur le SHA exact).
+- **Jusqu'à :** révocation.
+- **Réservé à Pascal :** toute PR ou release qui déclare une rupture ou change un contrat
+  écrit ; tout cas où un des six contrôles manque ; et toujours : sa réponse d'abord ;
+  rendre la main ; ce qui touche l'extérieur et ne se défait pas.
+- **Inscrite au journal le :** 2026-11-18.
 
 ## Le vivier (catalogue, pas une équipe)
 
