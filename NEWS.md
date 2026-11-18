@@ -1,3 +1,31 @@
+# sommieR 0.40.0
+
+Niveaux de concurrence d'une plantation (brief `surculus` du 2026-11-04,
+issue #69).
+
+- **`SOMMIER_DEFINITIONS_CONCURRENCE`** définit `faible`, `moyenne` et `forte`
+  par la part des plants vivants concurrencés (< 20 %, 20 à < 50 %, ≥ 50 %) et
+  la position de la végétation par rapport au plant. **`sommier_niveau_concurrence()`**
+  est la règle de passage du critère binaire par plant à la placette. Aucune
+  source publiée ne définit trois niveaux : c'est une convention de sommieR,
+  dite telle quelle, à confirmer sur le terrain.
+- **Un seul critère décide** : la part de plants vivants au contact de la
+  végétation. La position de la végétation par rapport au plant n'est qu'une
+  aide descriptive.
+- Un seul niveau pour l'herbacée et la ligneuse, calculé sur le comptage
+  commun (un plant touché par l'une ou l'autre compte une fois) ; la nature
+  (herbacée, ligneuse, mixte) se note à part, en `observations`.
+- **`registre6_controle()`** accepte deux champs facultatifs,
+  `nb_plants_vivants` et `nb_plants_concurrences` : le comptage dont la
+  concurrence est tirée, pour qu'on puisse la vérifier. Ajout seul, aucun SQL à
+  migrer (la vue `v_controle_plantation` ne les lit pas) ; un contrôle sans
+  ces champs se relit à l'identique.
+- Inchangé : `SOMMIER_CONCURRENCES`, la validation de `registre6_controle()` et
+  `etat_suivi` (un besoin absent reste traité comme « aucun » ; le brief
+  recommande à Surculus de ne plus en envoyer, et la décision de changer l'état
+  de suivi est laissée à Pascal).
+
+
 # sommieR 0.39.0
 
 - **Une seconde démonstration : la forêt communale de Marsannay-la-Côte**
