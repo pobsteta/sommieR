@@ -54,6 +54,13 @@ jobs:
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      # Mission 013 : pak installait par apt les paquets -dev de TOUS les
+      # Suggests (sf, terra, arrow, ragg… : 152 paquets, 117 Mo, onze
+      # minutes au débit de 171 ko/s du miroir) alors que les binaires RSPM
+      # sont déjà au cache. Ce job n'exécute aucun test (`--no-tests`) et
+      # aucun exemple n'appelle sf : il n'a besoin d'aucune bibliothèque
+      # d'exécution en plus, donc d'aucun téléchargement apt supplémentaire.
+      PKG_SYSREQS: false
       R_KEEP_PKG_SOURCE: yes
       NOT_CRAN: true
 
@@ -179,6 +186,13 @@ jobs:
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      # Mission 013 : pak installait par apt les paquets -dev de TOUS les
+      # Suggests (sf, terra, arrow, ragg… : 152 paquets, 117 Mo, onze
+      # minutes au débit de 171 ko/s du miroir) alors que les binaires RSPM
+      # sont déjà au cache. On coupe cela et on pose à la main, dans l'étape
+      # apt bornée, les seules bibliothèques d'exécution que sf charge.
+      PKG_SYSREQS: false
+      SYSLIBS: libgdal34t64 libgeos-c1t64 libproj25 libudunits2-0
       NOT_CRAN: true
       SOMMIER_TEST_DB: sommier_test
       SOMMIER_TEST_HOST: localhost
@@ -234,14 +248,14 @@ jobs:
         continue-on-error: true
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $SYSLIBS postgresql-client
 
       - name: Install system dependencies (seconde tentative)
         if: steps.apt.outcome == 'failure'
         timeout-minutes: 8
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $SYSLIBS postgresql-client
 
       # Même parade que pour l'installation de R : l'étape pend elle aussi par
       # intermittence, et sans borne le job attendait ses trente minutes. Le
@@ -272,6 +286,16 @@ jobs:
             any::devtools
             any::RPostgres
           needs: check
+
+      # Sans les -dev, un paquet facultatif qui ne se charge pas ferait
+      # sauter ses tests en silence (skip_if_not_installed) : on exige donc
+      # que ceux que la suite exerce se chargent.
+      - name: Vérifier que les paquets facultatifs se chargent
+        run: |
+          for (p in c("sf", "arrow", "curl", "xml2", "readxl", "nemeton", "RPostgres")) {
+            if (!requireNamespace(p, quietly = TRUE)) stop("Ne se charge pas : ", p)
+          }
+        shell: Rscript {0}
 
       # Le vert ne doit pas pouvoir venir d'un saut : si la base n'est pas
       # joignable, les tests de la couche d'accès se sauteraient sans bruit.
@@ -339,6 +363,13 @@ jobs:
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      # Mission 013 : pak installait par apt les paquets -dev de TOUS les
+      # Suggests (sf, terra, arrow, ragg… : 152 paquets, 117 Mo, onze
+      # minutes au débit de 171 ko/s du miroir) alors que les binaires RSPM
+      # sont déjà au cache. On coupe cela et on pose à la main, dans l'étape
+      # apt bornée, les seules bibliothèques d'exécution que sf charge.
+      PKG_SYSREQS: false
+      SYSLIBS: libgdal34t64 libgeos-c1t64 libproj25 libudunits2-0
       NOT_CRAN: true
       SOMMIER_TEST_DB: sommier_test
       SOMMIER_TEST_HOST: localhost
@@ -394,14 +425,14 @@ jobs:
         continue-on-error: true
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $SYSLIBS postgresql-client
 
       - name: Install system dependencies (seconde tentative)
         if: steps.apt.outcome == 'failure'
         timeout-minutes: 8
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $SYSLIBS postgresql-client
 
       # Même parade que pour l'installation de R : l'étape pend elle aussi par
       # intermittence, et sans borne le job attendait ses trente minutes. Le
@@ -430,6 +461,16 @@ jobs:
             any::covr
             any::RPostgres
           needs: coverage
+
+      # Sans les -dev, un paquet facultatif qui ne se charge pas ferait
+      # sauter ses tests en silence (skip_if_not_installed) : on exige donc
+      # que ceux que la suite exerce se chargent.
+      - name: Vérifier que les paquets facultatifs se chargent
+        run: |
+          for (p in c("sf", "arrow", "curl", "xml2", "readxl", "nemeton", "RPostgres")) {
+            if (!requireNamespace(p, quietly = TRUE)) stop("Ne se charge pas : ", p)
+          }
+        shell: Rscript {0}
 
       - name: Préparer PostGIS
         run: |
