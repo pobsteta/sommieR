@@ -76,3 +76,46 @@ test_that("seuls les travaux recus et portant une action sortent", {
                       "communal")
   expect_equal(nrow(sommier_actions_realisees(con, vide)), 0L)
 })
+
+test_that("le programme de nemetonshiny se lit : l'id devient action_id", {
+  skip_if_not_installed("sf")
+  x <- sommier_lire_programme_travaux(
+    test_path("fixtures", "programme-travaux-exemple.gpkg"))
+  expect_s3_class(x, "data.frame")
+  expect_false(inherits(x, "sf"))
+  expect_identical(x$action_id, c("act-0001", "act-0007", "act-0009"))
+  expect_identical(x$ug_id, c("12", "12", "13"))
+  expect_true(all(c("type", "annee_civile", "surface_ha", "statut") %in%
+                    names(x)))
+  expect_match(libelle_action_programme(x)[[1L]],
+               "^act-0001 - UG 12 plantation 2026 1.75 ha$")
+  expect_error(sommier_lire_programme_travaux("absent.gpkg"), "introuvable")
+  # Un GeoPackage sans couche `actions` n'est pas un programme.
+  autre <- withr::local_tempfile(fileext = ".gpkg")
+  sf::st_write(sf::st_sf(a = 1, geometry = sf::st_sfc(sf::st_point(c(0, 0)),
+                                                       crs = 2154)),
+               autre, layer = "autre", quiet = TRUE)
+  expect_error(sommier_lire_programme_travaux(autre), "couche `actions`")
+})
+
+test_that("la reprise tableur porte l'action_id au registre 6", {
+  skip_if_not_installed("sf")
+  con <- sauter_sans_base()
+  withr::defer(DBI::dbDisconnect(con))
+  sommier_init_schema(con)
+  foret <- foret_creer(con, paste0("Foret tableur-", substr(uuid_v4(), 1L, 8L)),
+                       "communal")
+  tableur <- withr::local_tempfile(fileext = ".csv")
+  writeLines(enc2utf8(c(
+    "Année;Code;Nature;Quantité;Unité;Date réception;Action_id",
+    "2026;PL;Plantation;1,75;ha;02/03/2026;act-0001",
+    "2026;DG;Dégagement;1;ha;03/03/2026;"
+  )), tableur, useBytes = TRUE)
+  source <- reprise_source("tableur", "Programme 2026", detenteur = "ONF")
+  sommier_reprendre_travaux(con, foret, tableur, auteur = "agent-01",
+                            source = source)
+  x <- sommier_actions_realisees(con, foret)
+  expect_identical(x$action_id, "act-0001")
+  expect_identical(x$code_travaux, "PL")
+  expect_equal(x$quantite, 1.75)
+})

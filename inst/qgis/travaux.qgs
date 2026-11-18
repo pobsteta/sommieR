@@ -4220,6 +4220,11 @@
             <labelFont style="" underline="0" strikethrough="0" description="Noto Sans,12,-1,5,50,0,0,0,0,0" bold="0" italic="0"/>
           </labelStyle>
         </attributeEditorField>
+        <attributeEditorField verticalStretch="0" name="action_id" horizontalStretch="0" showLabel="1" index="21">
+          <labelStyle overrideLabelColor="0" overrideLabelFont="0" labelColor="">
+            <labelFont style="" underline="0" strikethrough="0" description="Noto Sans,12,-1,5,50,0,0,0,0,0" bold="0" italic="0"/>
+          </labelStyle>
+        </attributeEditorField>
         <attributeEditorField verticalStretch="0" name="observations" horizontalStretch="0" showLabel="1" index="20">
           <labelStyle overrideLabelColor="0" overrideLabelFont="0" labelColor="">
             <labelFont style="" underline="0" strikethrough="0" description="Noto Sans,12,-1,5,50,0,0,0,0,0" bold="0" italic="0"/>
@@ -5033,6 +5038,11 @@
             <labelFont style="" underline="0" strikethrough="0" description="Noto Sans,12,-1,5,50,0,0,0,0,0" bold="0" italic="0"/>
           </labelStyle>
         </attributeEditorField>
+        <attributeEditorField verticalStretch="0" name="action_id" horizontalStretch="0" showLabel="1" index="21">
+          <labelStyle overrideLabelColor="0" overrideLabelFont="0" labelColor="">
+            <labelFont style="" underline="0" strikethrough="0" description="Noto Sans,12,-1,5,50,0,0,0,0,0" bold="0" italic="0"/>
+          </labelStyle>
+        </attributeEditorField>
         <attributeEditorField verticalStretch="0" name="observations" horizontalStretch="0" showLabel="1" index="20">
           <labelStyle overrideLabelColor="0" overrideLabelFont="0" labelColor="">
             <labelFont style="" underline="0" strikethrough="0" description="Noto Sans,12,-1,5,50,0,0,0,0,0" bold="0" italic="0"/>
@@ -5834,6 +5844,11 @@
           </labelStyle>
         </attributeEditorField>
         <attributeEditorField verticalStretch="0" name="source_gnss" horizontalStretch="0" showLabel="1" index="19">
+          <labelStyle overrideLabelColor="0" overrideLabelFont="0" labelColor="">
+            <labelFont style="" underline="0" strikethrough="0" description="Noto Sans,12,-1,5,50,0,0,0,0,0" bold="0" italic="0"/>
+          </labelStyle>
+        </attributeEditorField>
+        <attributeEditorField verticalStretch="0" name="action_id" horizontalStretch="0" showLabel="1" index="21">
           <labelStyle overrideLabelColor="0" overrideLabelFont="0" labelColor="">
             <labelFont style="" underline="0" strikethrough="0" description="Noto Sans,12,-1,5,50,0,0,0,0,0" bold="0" italic="0"/>
           </labelStyle>
