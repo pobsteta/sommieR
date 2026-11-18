@@ -5,9 +5,9 @@
 # ainsi. Zooms 12 a 18, ceux que Groma precharge.
 SOMMIER_ZOOMS_ORTHO <- c(12L, 18L)
 
-# © et ® : le code reste en ASCII.
+# u00a9 et u00ae : le code reste en ASCII.
 SOMMIER_ATTRIBUTION_ORTHO <- paste0(
-  "© IGN, BD ORTHO®, Géoplateforme, Licence Ouverte 2.0")
+  "\u00a9 IGN, BD ORTHO\u00ae, G\u00e9oplateforme, Licence Ouverte 2.0")
 
 # Convertit une ortho (GeoTIFF, Lambert-93 ou autre) en `ortho.mbtiles`. La
 # table `metadata` recoit `attribution` (cle de la specification MBTiles 1.3)
