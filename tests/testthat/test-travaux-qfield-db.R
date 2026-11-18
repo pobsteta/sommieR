@@ -290,3 +290,36 @@ test_that("une tournee de l'ancien format, sans position aux controles, s'import
                                                auteur = "test"),
                "aucune placette choisie")
 })
+
+test_that("le projet des travaux porte la symbologie de Marculus", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  carre_wkt <- function(x0) {
+    sprintf("POLYGON((%1$d 6700000, %2$d 6700000, %2$d 6700100, %1$d 6700100, %1$d 6700000))",
+            x0, x0 + 100L)
+  }
+  fond <- data.frame(reference = c("A", "B", "C"),
+                     section = c("000AB", "000AB", "000AB"),
+                     numero = c("0012", "0013", "0014"),
+                     wkt = vapply(c(600000L, 600150L, 600300L), carre_wkt, ""),
+                     proprietaire = c("Commune", NA, "Commune"),
+                     stringsAsFactors = FALSE)
+  qgs <- sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.",
+                                       fond = fond)
+  parcelles <- sf::read_sf(file.path(dossier, "travaux.gpkg"), "parcelles")
+  expect_equal(parcelles$numero, c("12", "13", "14"))
+  expect_equal(parcelles$proprietaire, c("Commune", NA, "Commune"))
+  xml <- xml2::read_xml(qgs)
+  rend <- xml2::xml_find_first(
+    xml, "//maplayer[id='travaux_parcelles']/renderer-v2")
+  expect_equal(xml2::xml_attr(rend, "type"), "categorizedSymbol")
+  expect_equal(xml2::xml_attr(xml2::xml_find_all(rend, ".//category"), "value"),
+               c("Commune", ""))
+  # Le projet reste lisible par QGIS.
+  ouvert <- ouvrir_dans_qgis(qgs)
+  expect_true(ouvert$lu)
+  expect_true(ouvert$couches$travaux_parcelles$valide)
+})

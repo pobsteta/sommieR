@@ -33,6 +33,12 @@
 #' @param ortho GeoTIFF d'orthophotographie a joindre au projet, tel que
 #'   l'ecrit [sommier_ortho_ign()] (facultatif).
 #'
+#' **La symbologie est celle de Marculus** (brief du 2026-10-16) : parcelles
+#' coloriees par proprietaire (remplissage a 20 %, contour plein, numero de la
+#' parcelle au centre ; gris-vert sans proprietaire), houppiers en contour
+#' seul masques par defaut, desserte ocre. Les couleurs sont dans une seule
+#' liste interne (`SYMBOLOGIE_MARCULUS`, `R/symbologie_travaux.R`).
+#'
 #' @return Invisiblement, le chemin du projet `.qgs`.
 #'
 #' @seealso [sommier_importer_qfield_travaux()]
@@ -99,12 +105,13 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
   ecrire_couche(sf::st_sf(numero = ug$numero_affichage,
                           geometry = sf::st_cast(contours, "MULTIPOLYGON")),
                 gpkg, "ug")
-  ecrire_parcelles(fond, gpkg)
+  proprietaires <- ecrire_parcelles(fond, gpkg)
 
   qgs <- file.path(dossier, "travaux.qgs")
   joindre_ortho(qgs, dossier, ortho, "travaux_ortho")
   poser_cadre_projet(qgs, paste0("Travaux - ", terrain$foret$nom[[1L]]),
                      operateur, foret_id, sf::st_buffer(union, 100))
+  poser_symbologie_travaux(qgs, proprietaires)
   invisible(qgs)
 }
 

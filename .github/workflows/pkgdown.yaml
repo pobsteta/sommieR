@@ -18,7 +18,7 @@ name: pkgdown
 
 jobs:
   pkgdown:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Comme les jobs de `r.yml`. Sans borne, une étape qui pend retient le job
     # des heures : le site ne se déploie jamais et rien ne le signale, la
     # panne la plus coûteuse à diagnostiquer étant celle qui n'échoue pas.
