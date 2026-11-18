@@ -73,6 +73,13 @@ On les controle en ajoutant un controle a la placette ; on en installe
 une nouvelle en placant un point, rattache a des travaux de la liste des
 travaux suivis (ceux d'une unite de gestion).
 
+**La symbologie est celle de Marculus** (brief du 2026-10-16) :
+parcelles coloriees par proprietaire (remplissage a 20 %, contour plein,
+numero de la parcelle au centre ; gris-vert sans proprietaire),
+houppiers en contour seul masques par defaut, desserte ocre. Les
+couleurs sont dans une seule liste interne (`SYMBOLOGIE_MARCULUS`,
+`R/symbologie_travaux.R`).
+
 ## See also
 
 [`sommier_importer_qfield_travaux()`](https://pobsteta.github.io/sommieR/reference/sommier_importer_qfield_travaux.md)
