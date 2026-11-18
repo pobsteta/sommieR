@@ -28,7 +28,7 @@ Invisiblement, le \code{data.frame} des six colonnes.
 \description{
 Ecrit, pour une foret et une periode, le CSV du realise : une ligne par
 travaux recu au registre 6 qui porte une \code{action_id} du plan d'action de
-nemetonshiny. C'est le fichier que le bouton « realise » du module Plan
+nemetonshiny. C'est le fichier que le bouton "realise" du module Plan
 d'action lit (\code{TOURNEE_REALISE_COLONNES} de nemetonshiny) ; sommieR en est
 la seule source : nemetonshiny ne lit jamais les saisies du telephone.
 }
@@ -44,18 +44,24 @@ remplace l'entree qu'elle corrige) dont la \code{date_reception} est renseignee.
 Un travaux sans reception, ou sans \code{action_id}, n'y figure pas. La
 periode borne la \code{date_reception}.
 
-\strong{Le chemin de l'\code{action_id}.} L'action naît dans la couche \code{actions} de
-\verb{<projet>-programme-travaux.gpkg} (nemetonshiny). Elle arrive au registre 6
-en portant la meme \code{action_id} dans le champ \code{action_id} des travaux :
-\itemize{
-\item par la reprise tableur, \code{\link[=sommier_reprendre_travaux]{sommier_reprendre_travaux()}} : colonne
-\code{action_id} (voir \link{SOMMIER_COLONNES_TABLEUR_TRAVAUX}) ;
-\item par l'ecriture directe, \code{registre6_travaux(action_id = )} ;
-\item par la tournee QField, \code{\link[=sommier_importer_qfield_travaux]{sommier_importer_qfield_travaux()}} reprend la
-colonne \code{action_id} des couches de travaux si le GeoPackage rapporte la
-porte. Le modele de projet QField distribue ne la porte pas encore : la
-lecture du programme dans la tournee reste a faire.
+\strong{Le chemin de l'\code{action_id}.} L'action nait dans la couche \code{actions} de
+\verb{<projet>-programme-travaux.gpkg} (nemetonshiny), dont la colonne \code{id} est
+l'\code{action_id} :
+\enumerate{
+\item \code{\link[=sommier_lire_programme_travaux]{sommier_lire_programme_travaux()}} lit cette couche ;
+\item \code{sommier_projet_qfield_travaux(programme = )} verse les actions dans la
+table \code{programme} du projet de tournee et offre leur liste au champ
+\code{action_id} des trois couches de travaux ;
+\item l'operateur choisit l'action en saisissant le travaux ;
+\code{\link[=sommier_importer_qfield_travaux]{sommier_importer_qfield_travaux()}} refuse un \code{action_id} absent du
+programme et inscrit les travaux au registre 6 avec leur \code{action_id} ;
+\item \code{sommier_actions_realisees()} rend les travaux recus au plan.
 }
+
+L'\code{action_id} entre aussi au registre 6 par la reprise tableur
+(\code{\link[=sommier_reprendre_travaux]{sommier_reprendre_travaux()}}, colonne \code{action_id}, voir
+\link{SOMMIER_COLONNES_TABLEUR_TRAVAUX}) et par l'ecriture directe,
+\code{registre6_travaux(action_id = )}.
 }
 \seealso{
 \code{\link[=registre6_travaux]{registre6_travaux()}}, \code{\link[=sommier_bilan_travaux]{sommier_bilan_travaux()}}

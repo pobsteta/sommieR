@@ -302,21 +302,24 @@ test_that("l'action_id du programme passe de la tournee au registre 6", {
                                 programme = programme)
   gpkg <- file.path(dossier, "travaux.gpkg")
   p <- sf::read_sf(gpkg, "programme")
-  expect_equal(p$action_id, c("act-0001", "act-0007", "act-0009"))
-  expect_match(p$libelle[[1L]], "^act-0001 - UG 12 plantation 2026")
+  expect_equal(p$action_id, c("act_20261105093012_k3x9a1", "act_20261105093044_p7q2zd", "act_20261106101502_m4w8tb"))
+  expect_match(p$libelle[[1L]], "^act_20261105093012_k3x9a1 - UG 12 plantation 2026")
   # Le champ est dans les trois couches de travaux du modele.
   for (couche in c("travaux_surf", "travaux_lin", "travaux_pt")) {
     expect_true("action_id" %in% names(sf::read_sf(gpkg, couche)))
   }
   xml <- paste(readLines(file.path(dossier, "travaux.qgs"),
                          encoding = "UTF-8"), collapse = "\n")
-  expect_equal(lengths(regmatches(xml, gregexpr('name="action_id"', xml))), 3L)
+  expect_equal(lengths(regmatches(xml, gregexpr('name="action_id"', xml))), 6L)
+  # La liste des actions : un ValueMap, identifiant stocke, libelle affiche.
+  expect_equal(lengths(regmatches(xml, gregexpr('editWidget type="ValueMap"><config><Option type="Map"><Option name="map"', xml))), 3L)
+  expect_match(xml, 'value="act_20261105093012_k3x9a1" type="QString"', fixed = TRUE)
 
   # Une seule couche porte l'action (l'autre la laisse vide) : l'import
   # tient, l'action arrive au registre 6, et le realise la rend au plan.
   u <- uuid_v4()
   x <- intervention(u, "PL", carre(600050, 6700050, 100), 1.75, "ha", "prevu")
-  x$action_id <- "act-0001"
+  x$action_id <- "act_20261105093012_k3x9a1"
   saisir(dossier, "travaux_surf", x)
   saisir(dossier, "travaux_lin", intervention(
     uuid_v4(), "PG", sf::st_linestring(rbind(c(600020, 6700020),
@@ -327,10 +330,10 @@ test_that("l'action_id du programme passe de la tournee au registre 6", {
                                            auteur = "test")
   expect_equal(bilan$travaux, 2L)
   pl <- Filter(function(e) e$id == u, bilan$entrees)[[1L]]
-  expect_equal(pl$payload$action_id, "act-0001")
+  expect_equal(pl$payload$action_id, "act_20261105093012_k3x9a1")
   r <- sommier_actions_realisees(con, f$foret)
   expect_equal(r$travaux_id, u)
-  expect_equal(r$action_id, "act-0001")
+  expect_equal(r$action_id, "act_20261105093012_k3x9a1")
 })
 
 test_that("un action_id hors du programme du projet fait refuser la tournee", {
@@ -344,13 +347,46 @@ test_that("un action_id hors du programme du projet fait refuser la tournee", {
     programme = testthat::test_path("fixtures", "programme-travaux-exemple.gpkg"))
   x <- intervention(uuid_v4(), "PL", carre(600050, 6700050, 100), 1, "ha",
                     "prevu")
-  x$action_id <- "act-9999"
+  x$action_id <- "act_20261231000000_zzzzzz"
   saisir(dossier, "travaux_surf", x)
   expect_error(sommier_importer_qfield_travaux(con, f$foret, dossier,
                                                withr::local_tempdir(),
                                                auteur = "test"),
-               "act-9999 absent du programme")
+               "act_20261231000000_zzzzzz absent du programme")
   expect_error(sommier_projet_qfield_travaux(
     con, f$foret, file.path(withr::local_tempdir(), "autre"), "P. O.",
     programme = "absent.gpkg"), "introuvable")
+})
+
+test_that("une couche sans action_id et une qui en porte : seule l'action sort", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.")
+  gpkg <- file.path(dossier, "travaux.gpkg")
+  # Une tournee d'avant 0.38.0 : la couche des lignes est recreee sans la
+  # colonne action_id, comme le faisait l'ancien modele.
+  u_lin <- uuid_v4()
+  ligne <- intervention(u_lin, "PG", sf::st_linestring(rbind(
+    c(600020, 6700020), c(600120, 6700020))), 100, "m", "prevu")
+  sf::st_write(ligne, gpkg, layer = "travaux_lin", delete_layer = TRUE,
+               quiet = TRUE)
+  expect_false("action_id" %in% names(sf::read_sf(gpkg, "travaux_lin")))
+  # La couche des surfaces, elle, porte une action.
+  u_surf <- uuid_v4()
+  surf <- intervention(u_surf, "PL", carre(600050, 6700050, 100), 1.75, "ha",
+                       "prevu")
+  surf$action_id <- "act_20261105093012_k3x9a1"
+  saisir(dossier, "travaux_surf", surf)
+  bilan <- sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                           withr::local_tempdir(),
+                                           auteur = "test")
+  expect_equal(bilan$travaux, 2L)
+  pg <- Filter(function(e) e$id == u_lin, bilan$entrees)[[1L]]
+  expect_null(pg$payload$action_id)
+  r <- sommier_actions_realisees(con, f$foret)
+  expect_equal(r$travaux_id, u_surf)
+  expect_equal(r$action_id, "act_20261105093012_k3x9a1")
 })
