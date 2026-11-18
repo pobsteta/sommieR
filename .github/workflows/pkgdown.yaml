@@ -49,6 +49,10 @@ jobs:
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      # Mission 013 : meme cause que r.yml (pak installait 150 paquets -dev par apt
+      # au debit du miroir). Binaires RSPM + bibliotheques d execution seulement.
+      PKG_SYSREQS: false
+      SYSLIBS: libgdal34t64 libgeos-c1t64 libproj25 libudunits2-0 libfreetype6 libfontconfig1 libharfbuzz0b libfribidi0 libpng16-16t64 libtiff6 libjpeg-turbo8 libwebp7
       SOMMIER_ARTICLE_DB: sommier_article
       SOMMIER_ARTICLE_HOST: localhost
       SOMMIER_ARTICLE_PORT: 5432
@@ -112,14 +116,14 @@ jobs:
         continue-on-error: true
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $SYSLIBS postgresql-client
 
       - name: Install system dependencies (seconde tentative)
         if: steps.apt.outcome == 'failure'
         timeout-minutes: 8
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev postgresql-client
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $SYSLIBS postgresql-client
 
       # Même parade que pour l'installation de R : l'étape pend elle aussi par
       # intermittence — c'est elle qui a retenu la publication du site le
