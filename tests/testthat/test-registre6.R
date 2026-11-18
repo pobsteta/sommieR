@@ -92,3 +92,27 @@ test_that("un type inconnu est refuse a la relecture", {
   expect_error(valider_payload(6L, list(type_entree = "chantier", annee = 1)),
                "type_entree")
 })
+
+test_that("les trois niveaux de concurrence sont definis et ordonnes", {
+  d <- SOMMIER_DEFINITIONS_CONCURRENCE
+  expect_identical(d$niveau, SOMMIER_CONCURRENCES)
+  expect_equal(d$part_plants_min_pct[-1], d$part_plants_max_pct[-3])
+  expect_equal(d$part_plants_min_pct[1], 0)
+  expect_true(is.infinite(d$part_plants_max_pct[3]))
+})
+
+test_that("la regle de passage du plant a la placette suit les seuils", {
+  expect_identical(sommier_niveau_concurrence(0, 10), "faible")
+  expect_identical(sommier_niveau_concurrence(1, 10), "faible")
+  expect_identical(sommier_niveau_concurrence(2, 10), "moyenne")
+  expect_identical(sommier_niveau_concurrence(4, 10), "moyenne")
+  expect_identical(sommier_niveau_concurrence(5, 10), "forte")
+  expect_identical(sommier_niveau_concurrence(10, 10), "forte")
+  # sans plant vivant : jamais un niveau devine
+  expect_identical(sommier_niveau_concurrence(0, 0), NA_character_)
+  expect_error(sommier_niveau_concurrence(11, 10), "Plus de plants")
+  # le niveau rendu est accepte par le controle
+  c1 <- registre6_controle("11111111-1111-4111-8111-111111111111", 10, 10,
+                           concurrence = sommier_niveau_concurrence(5, 10))
+  expect_identical(c1$concurrence, "forte")
+})

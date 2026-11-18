@@ -28,7 +28,8 @@ registre6_controle(
 
 \item{nb_abroutis}{Plants vivants abroutis.}
 
-\item{concurrence}{L'un de \link{SOMMIER_CONCURRENCES}.}
+\item{concurrence}{L'un de \link{SOMMIER_CONCURRENCES}, defini dans
+\link{SOMMIER_DEFINITIONS_CONCURRENCE}.}
 
 \item{besoin}{Le travail qui s'impose ensuite : un code de
 \link{SOMMIER_CODES_TRAVAUX}, ou \code{"aucun"}.}

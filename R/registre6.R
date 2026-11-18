@@ -60,8 +60,80 @@ SOMMIER_EXECUTIONS_TRAVAUX <- c("regie", "entreprise", "autre")
 SOMMIER_PREVUS_TRAVAUX <- c("prevu", "reporte", "non_prevu")
 
 #' Niveaux de concurrence d'une plantation
+#'
+#' @description
+#' Les trois niveaux admis, dans l'ordre croissant. Leur definition de terrain
+#' (critere, seuils, nature, valeur manquante) est dans
+#' [SOMMIER_DEFINITIONS_CONCURRENCE] ; la regle de passage du plant a la
+#' placette, dans [sommier_niveau_concurrence()].
+#'
 #' @export
 SOMMIER_CONCURRENCES <- c("faible", "moyenne", "forte")
+
+#' Definition de terrain des niveaux de concurrence
+#'
+#' @description
+#' Ce qui distingue `faible`, `moyenne` et `forte` au controle d'une
+#' plantation (brief `surculus` 2026-11-04, issue #69). Colonnes : `niveau`
+#' (un de [SOMMIER_CONCURRENCES]), `libelle` (ecran), `part_plants_min_pct` et
+#' `part_plants_max_pct` (part des plants vivants au contact de la vegetation
+#' concurrente, bornes `[min, max[`), `critere_hauteur` (position de la
+#' vegetation par rapport au plant), `travail` (suite usuelle).
+#'
+#' Aucune des cinq sources publiees lues par l'acquereur de Surculus (guide
+#' "Reussir la plantation forestiere" 2014 p. 52 ; DSF bilan 2024 p. 13 et
+#' 16 ; RENFOR/INRAE ; CNPF CONQueTh ; MRNF Quebec 2024 p. 12) ne definit trois
+#' niveaux : leurs criteres sont binaires et portent sur le plant ("aucune
+#' touffe de vegetation concurrente au pied des plants", guide 2014 p. 52).
+#' Les seuils ci-dessous sont donc une **convention de sommieR**, derivee de ce
+#' critere par plant, a confirmer sur le terrain ; elle n'est pas une norme.
+#'
+#' @format Un `data.frame` de trois lignes.
+#' @seealso [sommier_niveau_concurrence()], [SOMMIER_CONCURRENCES]
+#' @export
+SOMMIER_DEFINITIONS_CONCURRENCE <- data.frame(
+  niveau = c("faible", "moyenne", "forte"),
+  libelle = c("Faible", "Moyenne", "Forte"),
+  part_plants_min_pct = c(0, 20, 50),
+  part_plants_max_pct = c(20, 50, Inf),
+  critere_hauteur = c(
+    "vegetation au pied seulement, plant dominant",
+    "vegetation atteignant le plant sans le depasser",
+    "vegetation depassant le plant ou l'etouffant"),
+  travail = c("aucun", "degagement a prevoir", "degagement a faire"),
+  stringsAsFactors = FALSE
+)
+
+#' Niveau de concurrence d'une placette, depuis les plants
+#'
+#' @description
+#' Regle de passage du critere binaire par plant (concurrence ou non, guide 2014
+#' p. 52) au niveau de placette : on compte la part des plants vivants concurrences
+#' par la vegetation, puis on la lit dans
+#' [SOMMIER_DEFINITIONS_CONCURRENCE]. Un seul niveau couvre l'herbacee et la
+#' ligneuse (fougere aigle, ronce) : on note le plus eleve des deux, et la
+#' nature se dit en `observations`.
+#'
+#' Sans plant vivant compte, le resultat est `NA` : jamais un niveau devine.
+#'
+#' @param nb_concurrences Plants vivants au contact de la vegetation concurrente.
+#' @param nb_vivants Plants vivants comptes.
+#'
+#' @return Un element de [SOMMIER_CONCURRENCES], ou `NA_character_`.
+#' @seealso [registre6_controle()]
+#' @export
+sommier_niveau_concurrence <- function(nb_concurrences, nb_vivants) {
+  nb_concurrences <- valider_entier(nb_concurrences, "nb_concurrences", min = 0)
+  nb_vivants <- valider_entier(nb_vivants, "nb_vivants", min = 0)
+  if (nb_concurrences > nb_vivants) {
+    stop("Plus de plants concurrences (", nb_concurrences, ") que de vivants (",
+         nb_vivants, ").", call. = FALSE)
+  }
+  if (nb_vivants == 0L) return(NA_character_)
+  part <- 100 * nb_concurrences / nb_vivants
+  d <- SOMMIER_DEFINITIONS_CONCURRENCE
+  d$niveau[part >= d$part_plants_min_pct & part < d$part_plants_max_pct]
+}
 
 #' Types d'entree du registre 6
 #'
@@ -133,7 +205,8 @@ registre6_placette <- function(code_placette, travaux_id, geometrie,
 #' @param nb_total,nb_vivants Plants comptes, et vivants parmi eux.
 #' @param h_moy_cm Hauteur moyenne des tiges objectif, en cm.
 #' @param nb_abroutis Plants vivants abroutis.
-#' @param concurrence L'un de [SOMMIER_CONCURRENCES].
+#' @param concurrence L'un de [SOMMIER_CONCURRENCES], defini dans
+#'   [SOMMIER_DEFINITIONS_CONCURRENCE].
 #' @param besoin Le travail qui s'impose ensuite : un code de
 #'   [SOMMIER_CODES_TRAVAUX], ou `"aucun"`.
 #' @param operateur Agent qui a controle.

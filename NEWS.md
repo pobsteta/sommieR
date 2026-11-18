@@ -1,3 +1,20 @@
+# sommieR 0.38.0
+
+Niveaux de concurrence d'une plantation (brief `surculus` du 2026-11-04,
+issue #69).
+
+- **`SOMMIER_DEFINITIONS_CONCURRENCE`** définit `faible`, `moyenne` et `forte`
+  par la part des plants vivants concurrencés (< 20 %, 20 à < 50 %, ≥ 50 %) et
+  la position de la végétation par rapport au plant. **`sommier_niveau_concurrence()`**
+  est la règle de passage du critère binaire par plant à la placette. Aucune
+  source publiée ne définit trois niveaux : c'est une convention de sommieR,
+  dite telle quelle, à confirmer sur le terrain.
+- Un seul niveau pour l'herbacée et la ligneuse : le plus élevé des deux.
+- Inchangé : `SOMMIER_CONCURRENCES`, la validation de `registre6_controle()` et
+  `etat_suivi` (un besoin absent reste traité comme « aucun » ; le brief
+  recommande à Surculus de ne plus en envoyer, et la décision de changer l'état
+  de suivi est laissée à Pascal).
+
 # sommieR 0.37.1
 
 - **L'A50F est le relevé des coupes martelées**, non celui des coupes
