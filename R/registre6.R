@@ -78,7 +78,12 @@ SOMMIER_CONCURRENCES <- c("faible", "moyenne", "forte")
 #' (un de [SOMMIER_CONCURRENCES]), `libelle` (ecran), `part_plants_min_pct` et
 #' `part_plants_max_pct` (part des plants vivants au contact de la vegetation
 #' concurrente, bornes `[min, max[`), `critere_hauteur` (position de la
-#' vegetation par rapport au plant), `travail` (suite usuelle).
+#' vegetation par rapport au plant) et `travail` (suite usuelle).
+#'
+#' **Un seul critere decide : la part de plants vivants au contact de la
+#' vegetation.** `critere_hauteur` et `travail` sont une aide descriptive pour
+#' le controleur : ils ne decident jamais du niveau (60 % des plants au contact
+#' avec une vegetation au pied seulement : `forte`).
 #'
 #' Aucune des cinq sources publiees lues par l'acquereur de Surculus (guide
 #' "Reussir la plantation forestiere" 2014 p. 52 ; DSF bilan 2024 p. 13 et
@@ -111,8 +116,10 @@ SOMMIER_DEFINITIONS_CONCURRENCE <- data.frame(
 #' p. 52) au niveau de placette : on compte la part des plants vivants concurrences
 #' par la vegetation, puis on la lit dans
 #' [SOMMIER_DEFINITIONS_CONCURRENCE]. Un seul niveau couvre l'herbacee et la
-#' ligneuse (fougere aigle, ronce) : on note le plus eleve des deux, et la
-#' nature se dit en `observations`.
+#' ligneuse (fougere aigle, ronce) : il se calcule sur le comptage commun (un
+#' plant touche par l'une ou l'autre compte une fois). La nature (herbacee,
+#' ligneuse, mixte) se note a part, en `observations` : elle decrit, elle ne
+#' decide pas.
 #'
 #' Sans plant vivant compte, le resultat est `NA` : jamais un niveau devine.
 #'
@@ -214,6 +221,12 @@ registre6_placette <- function(code_placette, travaux_id, geometrie,
 #' @param releve_uuid Identifiant du releve de terrain.
 #' @param photos Photos, par leur empreinte.
 #' @param observations Observations libres.
+#' @param nb_plants_vivants,nb_plants_concurrences Facultatifs : le comptage
+#'   dont `concurrence` est tiree, pour qu'on puisse la verifier. Plants
+#'   vivants sur lesquels le contact avec la vegetation a ete note (au plus
+#'   `nb_vivants`), et parmi eux ceux au contact de la vegetation concurrente.
+#'   Ajout seul : `NULL` est accepte, et un controle sans ces champs se relit a
+#'   l'identique. Lis avec [sommier_niveau_concurrence()].
 #'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
@@ -225,7 +238,9 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
                                concurrence = NULL, besoin = NULL,
                                operateur = NULL, visite_le = NULL,
                                releve_uuid = NULL, photos = NULL,
-                               observations = NULL) {
+                               observations = NULL,
+                               nb_plants_vivants = NULL,
+                               nb_plants_concurrences = NULL) {
   nb_total <- valider_entier(nb_total, "nb_total", min = 0)
   nb_vivants <- valider_entier(nb_vivants, "nb_vivants", min = 0)
   if (nb_vivants > nb_total) {
@@ -237,6 +252,24 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
   if (!is.null(nb_abroutis) && nb_abroutis > nb_vivants) {
     stop("Plus de plants abroutis (", nb_abroutis, ") que de vivants (",
          nb_vivants, ") : un abroutissement se compte sur les vivants.",
+         call. = FALSE)
+  }
+  nb_plants_vivants <- si_present(nb_plants_vivants, valider_entier,
+                                  "nb_plants_vivants", min = 0)
+  nb_plants_concurrences <- si_present(nb_plants_concurrences, valider_entier,
+                                       "nb_plants_concurrences", min = 0)
+  if (!is.null(nb_plants_concurrences) && is.null(nb_plants_vivants)) {
+    stop("nb_plants_concurrences exige nb_plants_vivants : une part ",
+         "se lit sur un denominateur.", call. = FALSE)
+  }
+  if (!is.null(nb_plants_vivants) && nb_plants_vivants > nb_vivants) {
+    stop("Plus de plants notes (", nb_plants_vivants, ") que de vivants (",
+         nb_vivants, ").", call. = FALSE)
+  }
+  if (!is.null(nb_plants_concurrences) &&
+      nb_plants_concurrences > nb_plants_vivants) {
+    stop("Plus de plants au contact (", nb_plants_concurrences,
+         ") que de plants vivants notes (", nb_plants_vivants, ").",
          call. = FALSE)
   }
   compacter(list(
@@ -254,7 +287,9 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
     visite_le   = si_present(visite_le, format_instant, "visite_le"),
     releve_uuid = si_present(releve_uuid, valider_uuid, "releve_uuid"),
     photos      = valider_photos(photos),
-    observations = si_present(observations, valider_texte, "observations")
+    observations = si_present(observations, valider_texte, "observations"),
+    nb_plants_vivants = nb_plants_vivants,
+    nb_plants_concurrences = nb_plants_concurrences
   ))
 }
 

@@ -116,3 +116,31 @@ test_that("la regle de passage du plant a la placette suit les seuils", {
                            concurrence = sommier_niveau_concurrence(5, 10))
   expect_identical(c1$concurrence, "forte")
 })
+
+test_that("un seul critere decide : 60 % au contact, vegetation au pied -> forte", {
+  # la position de la vegetation est descriptive : elle ne change pas le niveau
+  expect_identical(sommier_niveau_concurrence(6, 10), "forte")
+  expect_match(SOMMIER_DEFINITIONS_CONCURRENCE$critere_hauteur[1], "pied")
+})
+
+test_that("le comptage de la concurrence est conserve, facultatif, ajout seul", {
+  id <- "11111111-1111-4111-8111-111111111111"
+  sans <- registre6_controle(id, 10, 9, concurrence = "faible")
+  expect_null(sans$nb_plants_vivants)
+  expect_identical(jcs(registre6_depuis_payload(sans)), jcs(sans))
+  c1 <- registre6_controle(id, 10, 9, concurrence = "forte",
+                           nb_plants_vivants = 8, nb_plants_concurrences = 5)
+  expect_equal(c1$nb_plants_vivants, 8)
+  expect_equal(c1$nb_plants_concurrences, 5)
+  expect_identical(jcs(registre6_depuis_payload(c1)), jcs(c1))
+  expect_identical(
+    sommier_niveau_concurrence(c1$nb_plants_concurrences,
+                               c1$nb_plants_vivants), "forte")
+  expect_error(registre6_controle(id, 10, 9, nb_plants_vivants = 10),
+               "Plus de plants notes")
+  expect_error(registre6_controle(id, 10, 9, nb_plants_vivants = 8,
+                                  nb_plants_concurrences = 9),
+               "Plus de plants au contact")
+  expect_error(registre6_controle(id, 10, 9, nb_plants_concurrences = 2),
+               "exige nb_plants_vivants")
+})

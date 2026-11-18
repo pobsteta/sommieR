@@ -16,7 +16,9 @@ registre6_controle(
   visite_le = NULL,
   releve_uuid = NULL,
   photos = NULL,
-  observations = NULL
+  observations = NULL,
+  nb_plants_vivants = NULL,
+  nb_plants_concurrences = NULL
 )
 }
 \arguments{
@@ -43,6 +45,13 @@ registre6_controle(
 \item{photos}{Photos, par leur empreinte.}
 
 \item{observations}{Observations libres.}
+
+\item{nb_plants_vivants, nb_plants_concurrences}{Facultatifs : le comptage
+dont \code{concurrence} est tiree, pour qu'on puisse la verifier. Plants
+vivants sur lesquels le contact avec la vegetation a ete note (au plus
+\code{nb_vivants}), et parmi eux ceux au contact de la vegetation concurrente.
+Ajout seul : \code{NULL} est accepte, et un controle sans ces champs se relit a
+l'identique. Lis avec \code{\link[=sommier_niveau_concurrence]{sommier_niveau_concurrence()}}.}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.
