@@ -49,8 +49,8 @@ jobs:
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      # Mission 013 : meme cause que r.yml (pak installait 150 paquets -dev par apt
-      # au debit du miroir). Binaires RSPM + bibliotheques d execution seulement.
+      # Mission 013 : même cause que r.yml (pak installait 150 paquets -dev par apt
+      # au débit du miroir). Binaires RSPM + bibliothèques d'exécution seulement.
       PKG_SYSREQS: false
       SYSLIBS: libgdal34t64 libgeos-c1t64 libproj25 libudunits2-0 libfreetype6 libfontconfig1 libharfbuzz0b libfribidi0 libpng16-16t64 libtiff6 libjpeg-turbo8 libwebp7
       SOMMIER_ARTICLE_DB: sommier_article
