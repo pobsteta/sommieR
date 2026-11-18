@@ -192,7 +192,7 @@ jobs:
       # sont déjà au cache. On coupe cela et on pose à la main, dans l'étape
       # apt bornée, les seules bibliothèques d'exécution que sf charge.
       PKG_SYSREQS: false
-      SYSLIBS: libgdal34t64 libgeos-c1t64 libproj25 libudunits2-0
+      SYSLIBS: libgdal[0-9]+(t64)? libgeos-c1(t64)?(v5)? libproj[0-9]+ libudunits2-0
       NOT_CRAN: true
       SOMMIER_TEST_DB: sommier_test
       SOMMIER_TEST_HOST: localhost
@@ -248,14 +248,14 @@ jobs:
         continue-on-error: true
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $SYSLIBS postgresql-client
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $(bash .github/scripts/syslibs.sh $SYSLIBS) postgresql-client
 
       - name: Install system dependencies (seconde tentative)
         if: steps.apt.outcome == 'failure'
         timeout-minutes: 8
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $SYSLIBS postgresql-client
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $(bash .github/scripts/syslibs.sh $SYSLIBS) postgresql-client
 
       # Même parade que pour l'installation de R : l'étape pend elle aussi par
       # intermittence, et sans borne le job attendait ses trente minutes. Le
@@ -369,7 +369,7 @@ jobs:
       # sont déjà au cache. On coupe cela et on pose à la main, dans l'étape
       # apt bornée, les seules bibliothèques d'exécution que sf charge.
       PKG_SYSREQS: false
-      SYSLIBS: libgdal34t64 libgeos-c1t64 libproj25 libudunits2-0
+      SYSLIBS: libgdal[0-9]+(t64)? libgeos-c1(t64)?(v5)? libproj[0-9]+ libudunits2-0
       NOT_CRAN: true
       SOMMIER_TEST_DB: sommier_test
       SOMMIER_TEST_HOST: localhost
@@ -425,14 +425,14 @@ jobs:
         continue-on-error: true
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $SYSLIBS postgresql-client
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $(bash .github/scripts/syslibs.sh $SYSLIBS) postgresql-client
 
       - name: Install system dependencies (seconde tentative)
         if: steps.apt.outcome == 'failure'
         timeout-minutes: 8
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $SYSLIBS postgresql-client
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev $(bash .github/scripts/syslibs.sh $SYSLIBS) postgresql-client
 
       # Même parade que pour l'installation de R : l'étape pend elle aussi par
       # intermittence, et sans borne le job attendait ses trente minutes. Le
