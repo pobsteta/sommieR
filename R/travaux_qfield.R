@@ -128,6 +128,9 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
 
   qgs <- file.path(dossier, "travaux.qgs")
   joindre_ortho(qgs, dossier, ortho, "travaux_ortho")
+  if (!is.null(actions)) {
+    poser_liste_actions(qgs, actions$action_id, libelle_action_programme(actions))
+  }
   poser_cadre_projet(qgs, paste0("Travaux - ", terrain$foret$nom[[1L]]),
                      operateur, foret_id, sf::st_buffer(union, 100))
   poser_symbologie_travaux(qgs, proprietaires)
@@ -495,6 +498,34 @@ payload_travaux <- function(t, geometrie, photos) {
     photos = photos,
     action_id = texte_ou_null(t$action_id)
   )
+}
+
+# La liste des actions du programme au champ `action_id` des trois couches de
+# travaux : un ValueMap (libelle affiche, identifiant stocke), pour ne pas
+# recopier un identifiant de 23 caracteres.
+poser_liste_actions <- function(qgs, ids, libelles) {
+  xml <- paste(readLines(qgs, warn = FALSE, encoding = "UTF-8"),
+               collapse = "\n")
+  entrees <- paste0(
+    '<Option type="Map"><Option name="', echapper_xml(libelles),
+    '" value="', echapper_xml(ids), '" type="QString"/></Option>',
+    collapse = "")
+  champ <- paste0(
+    '<field name="action_id" configurationFlags="NoFlag">',
+    '<editWidget type="ValueMap"><config><Option type="Map">',
+    '<Option name="map" type="List">', entrees, '</Option>',
+    '</Option></config></editWidget></field>\n      ')
+  for (couche in names(COUCHES_TRAVAUX)) {
+    debut <- regexpr(paste0("<id>travaux_", couche, "</id>"), xml, fixed = TRUE)
+    if (debut < 0L) stop("Couche ", couche, " absente du modele.", call. = FALSE)
+    fin <- regexpr("</fieldConfiguration>",
+                   substr(xml, debut, nchar(xml)), fixed = TRUE)
+    pos <- debut + fin - 1L
+    xml <- paste0(substr(xml, 1L, pos - 1L), champ,
+                  substr(xml, pos, nchar(xml)))
+  }
+  writeLines(enc2utf8(strsplit(xml, "\n", fixed = TRUE)[[1L]]), qgs,
+             useBytes = TRUE)
 }
 
 # L'unite qui contient le point interieur de chaque geometrie ; NULL hors de

@@ -20,15 +20,21 @@
 #' periode borne la `date_reception`.
 #'
 #' **Le chemin de l'`action_id`.** L'action nait dans la couche `actions` de
-#' `<projet>-programme-travaux.gpkg` (nemetonshiny). Elle arrive au registre 6
-#' en portant la meme `action_id` dans le champ `action_id` des travaux :
-#' * par la reprise tableur, [sommier_reprendre_travaux()] : colonne
-#'   `action_id` (voir [SOMMIER_COLONNES_TABLEUR_TRAVAUX]) ;
-#' * par l'ecriture directe, `registre6_travaux(action_id = )` ;
-#' * par la tournee QField, [sommier_importer_qfield_travaux()] reprend la
-#'   colonne `action_id` des couches de travaux si le GeoPackage rapporte la
-#'   porte. Le modele de projet QField distribue ne la porte pas encore : la
-#'   lecture du programme dans la tournee reste a faire.
+#' `<projet>-programme-travaux.gpkg` (nemetonshiny), dont la colonne `id` est
+#' l'`action_id` :
+#' 1. [sommier_lire_programme_travaux()] lit cette couche ;
+#' 2. `sommier_projet_qfield_travaux(programme = )` verse les actions dans la
+#'    table `programme` du projet de tournee et offre leur liste au champ
+#'    `action_id` des trois couches de travaux ;
+#' 3. l'operateur choisit l'action en saisissant le travaux ;
+#'    [sommier_importer_qfield_travaux()] refuse un `action_id` absent du
+#'    programme et inscrit les travaux au registre 6 avec leur `action_id` ;
+#' 4. `sommier_actions_realisees()` rend les travaux recus au plan.
+#'
+#' L'`action_id` entre aussi au registre 6 par la reprise tableur
+#' ([sommier_reprendre_travaux()], colonne `action_id`, voir
+#' [SOMMIER_COLONNES_TABLEUR_TRAVAUX]) et par l'ecriture directe,
+#' `registre6_travaux(action_id = )`.
 #'
 #' @param con Connexion DBI.
 #' @param foret_id UUID de la foret.

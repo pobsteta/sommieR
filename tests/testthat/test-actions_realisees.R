@@ -10,7 +10,7 @@ test_that("le CSV d'exemple tient le contrat et se relit", {
                        colClasses = c(quantite = "numeric"))
   expect_identical(names(x), colonnes_contrat)
   expect_identical(COLONNES_ACTIONS_REALISEES, colonnes_contrat)
-  expect_equal(sum(x$quantite[x$action_id == "act-0001" & x$unite == "ha"]),
+  expect_equal(sum(x$quantite[x$action_id == "act_20261105093012_k3x9a1" & x$unite == "ha"]),
                1.75)
   # Ecrit par la fonction du paquet, il redonne l'exemple ligne pour ligne.
   sortie <- withr::local_tempfile(fileext = ".csv")
@@ -20,10 +20,10 @@ test_that("le CSV d'exemple tient le contrat et se relit", {
 })
 
 test_that("action_id est un champ facultatif du payload de travaux", {
-  p <- registre6_travaux(2026, "plantation", action_id = "act-0001")
-  expect_identical(p$action_id, "act-0001")
+  p <- registre6_travaux(2026, "plantation", action_id = "act_20261105093012_k3x9a1")
+  expect_identical(p$action_id, "act_20261105093012_k3x9a1")
   expect_null(registre6_travaux(2026, "plantation")$action_id)
-  expect_identical(valider_payload(6L, p)$action_id, "act-0001")
+  expect_identical(valider_payload(6L, p)$action_id, "act_20261105093012_k3x9a1")
   expect_error(registre6_travaux(2026, "plantation", action_id = 12),
                "action_id")
 })
@@ -42,24 +42,24 @@ test_that("seuls les travaux recus et portant une action sortent", {
   }
   recu <- ecrire("2026-03-12", code_travaux = "PL", quantite = 1.75,
                  unite = "ha", date_reception = "2026-03-12",
-                 action_id = "act-0001")
+                 action_id = "act_20261105093012_k3x9a1")
   recu2 <- ecrire("2026-04-02", code_travaux = "RG", quantite = 120,
                   unite = "plants", date_reception = "2026-04-02",
-                  action_id = "act-0001")
+                  action_id = "act_20261105093012_k3x9a1")
   # Non recu : pas de date de reception.
   ecrire("2026-05-01", code_travaux = "DG", quantite = 1, unite = "ha",
-         action_id = "act-0002")
+         action_id = "act_20261105093100_b5c6d7")
   # Sans action du plan.
   ecrire("2026-05-02", code_travaux = "DG", quantite = 1, unite = "ha",
          date_reception = "2026-05-02")
   # Hors de la periode de 2026, et sans quantite.
   hors <- ecrire("2027-01-10", code_travaux = "PG",
-                 date_reception = "2027-01-10", action_id = "act-0009")
+                 date_reception = "2027-01-10", action_id = "act_20261106101502_m4w8tb")
 
   x <- sommier_actions_realisees(con, foret)
   expect_identical(names(x), colonnes_contrat)
   expect_identical(x$travaux_id, c(recu, recu2, hors))
-  expect_identical(x$action_id, c("act-0001", "act-0001", "act-0009"))
+  expect_identical(x$action_id, c("act_20261105093012_k3x9a1", "act_20261105093012_k3x9a1", "act_20261106101502_m4w8tb"))
   expect_true(is.na(x$quantite[[3L]]))
 
   x <- sommier_actions_realisees(con, foret, debut = "2026-01-01",
@@ -83,12 +83,12 @@ test_that("le programme de nemetonshiny se lit : l'id devient action_id", {
     test_path("fixtures", "programme-travaux-exemple.gpkg"))
   expect_s3_class(x, "data.frame")
   expect_false(inherits(x, "sf"))
-  expect_identical(x$action_id, c("act-0001", "act-0007", "act-0009"))
+  expect_identical(x$action_id, c("act_20261105093012_k3x9a1", "act_20261105093044_p7q2zd", "act_20261106101502_m4w8tb"))
   expect_identical(x$ug_id, c("12", "12", "13"))
   expect_true(all(c("type", "annee_civile", "surface_ha", "statut") %in%
                     names(x)))
   expect_match(libelle_action_programme(x)[[1L]],
-               "^act-0001 - UG 12 plantation 2026 1.75 ha$")
+               "^act_20261105093012_k3x9a1 - UG 12 plantation 2026 1.75 ha$")
   expect_error(sommier_lire_programme_travaux("absent.gpkg"), "introuvable")
   # Un GeoPackage sans couche `actions` n'est pas un programme.
   autre <- withr::local_tempfile(fileext = ".gpkg")
@@ -108,14 +108,14 @@ test_that("la reprise tableur porte l'action_id au registre 6", {
   tableur <- withr::local_tempfile(fileext = ".csv")
   writeLines(enc2utf8(c(
     "Année;Code;Nature;Quantité;Unité;Date réception;Action_id",
-    "2026;PL;Plantation;1,75;ha;02/03/2026;act-0001",
+    "2026;PL;Plantation;1,75;ha;02/03/2026;act_20261105093012_k3x9a1",
     "2026;DG;Dégagement;1;ha;03/03/2026;"
   )), tableur, useBytes = TRUE)
   source <- reprise_source("tableur", "Programme 2026", detenteur = "ONF")
   sommier_reprendre_travaux(con, foret, tableur, auteur = "agent-01",
                             source = source)
   x <- sommier_actions_realisees(con, foret)
-  expect_identical(x$action_id, "act-0001")
+  expect_identical(x$action_id, "act_20261105093012_k3x9a1")
   expect_identical(x$code_travaux, "PL")
   expect_equal(x$quantite, 1.75)
 })
