@@ -1,3 +1,18 @@
+# sommieR 0.39.0
+
+- **Une seconde démonstration : la forêt communale de Marsannay-la-Côte**
+  (brief `demo-1_marsannay`, `specs/brief_demo-1_marsannay.md`) :
+  `sommier_demo_marsannay(con)` pose sur trois parcelles cadastrales réelles
+  de la forêt ONF `F21866Z` (A 33, A 34, A 39 ; propriétaire « Commune »,
+  contours DGFiP/etalab dans `SOMMIER_PARCELLES_MARSANNAY`) des écritures
+  inventées : une plantation, un dégagement, trois placettes contrôlées deux
+  fois (six contrôles) et un entretien de desserte, soit la taille de la
+  démonstration de Couchey pour la tournée des travaux. Le nom de la forêt
+  porte la mention « (jeu de demonstration) » (`NOM_FORET_DEMO_MARSANNAY`) ;
+  seuls des `code_travaux` de `SOMMIER_CODES_TRAVAUX` sont employés ;
+  `sommier_projet_qfield_travaux()` en tire une tournée de même schéma que
+  celle de Couchey, sans autre changement.
+
 # sommieR 0.38.0
 
 - **Le projet QField des travaux prend la symbologie de Marculus** (brief
