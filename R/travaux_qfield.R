@@ -39,8 +39,8 @@
 #'
 #' @details
 #' **Le champ `action_id`** des trois couches de travaux est celui de l'action
-#' du programme que le travaux realise : l'operateur y inscrit l'identifiant
-#' lu dans la table `programme`. Il passe tel quel au registre 6.
+#' du programme que le travaux realise : l'operateur la choisit dans la liste
+#' tiree du programme (table `programme`). Elle passe telle quelle au registre 6.
 #'
 #' **La symbologie est celle de Marculus** (brief du 2026-10-16) : parcelles
 #' coloriees par proprietaire (remplissage a 20 %, contour plein, numero de la
