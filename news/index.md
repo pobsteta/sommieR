@@ -1,5 +1,22 @@
 # Changelog
 
+## sommieR 0.43.0
+
+- **L’ortho de la tournée des travaux devient un fichier tuilé
+  EPSG:3857** (briefs `2026-10-27-ortho-tuilee-3857` et
+  `2026-10-29-ortho-metadonnees`) :
+  `sommier_projet_qfield_travaux(ortho =)` ne copie plus `ortho.tif`
+  mais écrit `ortho.mbtiles` (MBTiles, donc TMS ; tuiles PNG, fond hors
+  emprise transparent ; zooms 12 à 18, l’emprise étant calée sur la
+  grille du zoom 12 ; brief déposé dans
+  `specs/brief_ortho-1_tuilee-3857.md`) ; le projet `travaux.qgs` le lit
+  à la place de `ortho.tif`. Sa table `metadata` porte `attribution` («
+  © IGN, BD ORTHO®, Géoplateforme, Licence Ouverte 2.0 ») et
+  `date_mise_a_jour` (AAAA-MM-JJ, convention sommieR/Surculus hors norme
+  MBTiles 1.3 : la date du GeoTIFF). Les projets des limites et des
+  détections gardent `ortho.tif`. **Rupture** : la tournée des travaux
+  ne contient plus `ortho.tif`. `RSQLite` passe en Suggests.
+
 ## sommieR 0.42.0
 
 Photos de placette et de plant (brief `surculus` du 2026-10-28,

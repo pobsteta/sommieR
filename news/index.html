@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.42.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.43.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,11 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.43.0" id="sommier-0430">sommieR 0.43.0<a class="anchor" aria-label="anchor" href="#sommier-0430"></a></h2>
+<ul><li>
+<strong>L’ortho de la tournée des travaux devient un fichier tuilé EPSG:3857</strong> (briefs <code>2026-10-27-ortho-tuilee-3857</code> et <code>2026-10-29-ortho-metadonnees</code>) : <code>sommier_projet_qfield_travaux(ortho =)</code> ne copie plus <code>ortho.tif</code> mais écrit <code>ortho.mbtiles</code> (MBTiles, donc TMS ; tuiles PNG, fond hors emprise transparent ; zooms 12 à 18, l’emprise étant calée sur la grille du zoom 12 ; brief déposé dans <code>specs/brief_ortho-1_tuilee-3857.md</code>) ; le projet <code>travaux.qgs</code> le lit à la place de <code>ortho.tif</code>. Sa table <code>metadata</code> porte <code>attribution</code> (« © IGN, BD ORTHO®, Géoplateforme, Licence Ouverte 2.0 ») et <code>date_mise_a_jour</code> (AAAA-MM-JJ, convention sommieR/Surculus hors norme MBTiles 1.3 : la date du GeoTIFF). Les projets des limites et des détections gardent <code>ortho.tif</code>. <strong>Rupture</strong> : la tournée des travaux ne contient plus <code>ortho.tif</code>. <code>RSQLite</code> passe en Suggests.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.42.0" id="sommier-0420">sommieR 0.42.0<a class="anchor" aria-label="anchor" href="#sommier-0420"></a></h2>
 <p>Photos de placette et de plant (brief <code>surculus</code> du 2026-10-28, <code>2026-10-28-photos-placette-et-plant.md</code>).</p>
