@@ -20,7 +20,9 @@ registre6_controle(
   visite_le = NULL,
   releve_uuid = NULL,
   photos = NULL,
-  observations = NULL
+  observations = NULL,
+  nb_plants_vivants = NULL,
+  nb_plants_concurrences = NULL
 )
 ```
 
@@ -45,7 +47,9 @@ registre6_controle(
 - concurrence:
 
   L'un de
-  [SOMMIER_CONCURRENCES](https://pobsteta.github.io/sommieR/reference/SOMMIER_CONCURRENCES.md).
+  [SOMMIER_CONCURRENCES](https://pobsteta.github.io/sommieR/reference/SOMMIER_CONCURRENCES.md),
+  defini dans
+  [SOMMIER_DEFINITIONS_CONCURRENCE](https://pobsteta.github.io/sommieR/reference/SOMMIER_DEFINITIONS_CONCURRENCE.md).
 
 - besoin:
 
@@ -72,6 +76,15 @@ registre6_controle(
 - observations:
 
   Observations libres.
+
+- nb_plants_vivants, nb_plants_concurrences:
+
+  Facultatifs : le comptage dont `concurrence` est tiree, pour qu'on
+  puisse la verifier. Plants vivants sur lesquels le contact avec la
+  vegetation a ete note (au plus `nb_vivants`), et parmi eux ceux au
+  contact de la vegetation concurrente. Ajout seul : `NULL` est accepte,
+  et un controle sans ces champs se relit a l'identique. Lis avec
+  [`sommier_niveau_concurrence()`](https://pobsteta.github.io/sommieR/reference/sommier_niveau_concurrence.md).
 
 ## Value
 

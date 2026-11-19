@@ -625,6 +625,10 @@ le suivi des plantations sur placettes permanentes.
   : Travaux prevus, reportes ou non prevus
 - [`SOMMIER_CONCURRENCES`](https://pobsteta.github.io/sommieR/reference/SOMMIER_CONCURRENCES.md)
   : Niveaux de concurrence d'une plantation
+- [`SOMMIER_DEFINITIONS_CONCURRENCE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_DEFINITIONS_CONCURRENCE.md)
+  : Definition de terrain des niveaux de concurrence
+- [`sommier_niveau_concurrence()`](https://pobsteta.github.io/sommieR/reference/sommier_niveau_concurrence.md)
+  : Niveau de concurrence d'une placette, depuis les plants
 
 ## Registre 7 — comptabilité
 
