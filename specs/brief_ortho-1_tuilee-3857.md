@@ -60,7 +60,7 @@ juste, par exemple `travaux`).*
 
 Dans `metadata` de `ortho.mbtiles` : `attribution` (source, licence comprise si elle doit s'afficher ; clé de la spécification MBTiles 1.3) et `date_mise_a_jour` (AAAA-MM-JJ ; convention sommieR/Surculus, hors norme MBTiles). Exemple : « © IGN, BD ORTHO®, Géoplateforme, Licence Ouverte 2.0 » et « 2026-10-27 ». Surculus affiche « Ortho chantier · <attribution> · mise à jour le <date> » ; sans date il n'ajoute rien, sans attribution il écrit « source non indiquée par le fichier », et il n'ajoute jamais la licence de lui-même. Si sommieR change le nom de la clé de date, répondre dans `~/dev/briefs/vers-surculus/`.
 
-## Ce que sommieR a réalisé (0.40.0, mission 025)
+## Ce que sommieR a réalisé (0.43.0, mission 025)
 
 - `ortho.mbtiles` (MBTiles, TMS, tuiles PNG), EPSG:3857, zooms 12 à 18 : l'emprise est calée sur les tuiles du zoom 12 pour que la pyramide descende jusque-là ; fond transparent ; tuiles vides non écrites. Il remplace `ortho.tif` dans la tournée des travaux seulement (QField lit le MBTiles par GDAL).
 - Métadonnées `attribution` (« © IGN, BD ORTHO®, Géoplateforme, Licence Ouverte 2.0 ») et `date_mise_a_jour` (AAAA-MM-JJ ; le nom de la clé ne change pas). La date est celle du GeoTIFF, écrit au téléchargement.

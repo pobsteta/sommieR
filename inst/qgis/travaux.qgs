@@ -1762,7 +1762,7 @@
         <provider>
           <resampling zoomedOutResamplingMethod="nearestNeighbour" maxOversampling="2" zoomedInResamplingMethod="nearestNeighbour" enabled="false"/>
         </provider>
-        <rasterrenderer greenBand="2" alphaBand="-1" opacity="1" blueBand="3" type="multibandcolor" redBand="1" nodataColor="">
+        <rasterrenderer greenBand="2" alphaBand="4" opacity="1" blueBand="3" type="multibandcolor" redBand="1" nodataColor="">
           <rasterTransparency/>
           <minMaxOrigin>
             <limits>MinMax</limits>
