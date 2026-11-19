@@ -144,3 +144,30 @@ test_that("le comptage de la concurrence est conserve, facultatif, ajout seul", 
   expect_error(registre6_controle(id, 10, 9, nb_plants_concurrences = 2),
                "exige nb_plants_vivants")
 })
+
+test_that("la concurrence absente est deduite des comptages, la contradiction est acceptee et signalee", {
+  id <- "11111111-1111-4111-8111-111111111111"
+  # Absente : deduite (5 sur 8 = 62,5 % : forte).
+  d <- registre6_controle(id, 10, 9, nb_plants_vivants = 8,
+                          nb_plants_concurrences = 5)
+  expect_equal(d$concurrence, "forte")
+  expect_null(d$concurrence_calculee)
+  # Saisie coherente : rien a signaler.
+  expect_no_warning(c <- registre6_controle(
+    id, 10, 9, concurrence = "forte", nb_plants_vivants = 8,
+    nb_plants_concurrences = 5))
+  expect_null(c$concurrence_calculee)
+  # Saisie contredite : acceptee telle quelle, ecart signale et inscrit.
+  expect_warning(
+    x <- registre6_controle(id, 10, 9, concurrence = "faible",
+                            nb_plants_vivants = 8, nb_plants_concurrences = 5),
+    "saisie conservee")
+  expect_equal(x$concurrence, "faible")
+  expect_equal(x$concurrence_calculee, "forte")
+  # La relecture du payload ecrit se rejoue, sans nouvel avertissement.
+  expect_no_warning(r <- registre6_depuis_payload(x))
+  expect_identical(jcs(r), jcs(x))
+  # Un seul comptage (ou aucun) : rien n'est deduit, comme avant.
+  expect_null(registre6_controle(id, 10, 9)$concurrence)
+  expect_null(registre6_controle(id, 10, 9, nb_plants_vivants = 8)$concurrence)
+})

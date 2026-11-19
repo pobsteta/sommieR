@@ -369,11 +369,16 @@ ecrire_parcelles <- function(fond, gpkg) {
 
 # Sans ortho fournie, la couche hors ligne est retiree plutot que laissee
 # pointer vers un fichier absent.
-joindre_ortho <- function(qgs, dossier, ortho, identifiant, tuilee = FALSE) {
+joindre_ortho <- function(qgs, dossier, ortho, identifiant, tuilee = FALSE,
+                          date_ortho = NULL) {
+  if (inherits(date_ortho, c("Date", "POSIXt"))) {
+    date_ortho <- format(date_ortho, "%Y-%m-%d")
+  }
   if (est_vide(ortho)) {
     retirer_couche_projet(qgs, identifiant)
   } else if (tuilee) {
-    ecrire_ortho_tuilee(ortho, file.path(dossier, "ortho.mbtiles"))
+    ecrire_ortho_tuilee(ortho, file.path(dossier, "ortho.mbtiles"),
+                        date_mise_a_jour = date_ortho)
   } else if (!file.copy(ortho, file.path(dossier, "ortho.tif"))) {
     stop("Impossible de copier l'ortho dans le projet.", call. = FALSE)
   }

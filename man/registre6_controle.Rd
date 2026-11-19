@@ -18,7 +18,8 @@ registre6_controle(
   photos = NULL,
   observations = NULL,
   nb_plants_vivants = NULL,
-  nb_plants_concurrences = NULL
+  nb_plants_concurrences = NULL,
+  concurrence_calculee = NULL
 )
 }
 \arguments{
@@ -51,7 +52,15 @@ dont \code{concurrence} est tiree, pour qu'on puisse la verifier. Plants
 vivants sur lesquels le contact avec la vegetation a ete note (au plus
 \code{nb_vivants}), et parmi eux ceux au contact de la vegetation concurrente.
 Ajout seul : \code{NULL} est accepte, et un controle sans ces champs se relit a
-l'identique. Lis avec \code{\link[=sommier_niveau_concurrence]{sommier_niveau_concurrence()}}.}
+l'identique. Lis avec \code{\link[=sommier_niveau_concurrence]{sommier_niveau_concurrence()}}. Quand les deux sont
+fournis : si \code{concurrence} est absent, il est \strong{deduit} par
+\code{\link[=sommier_niveau_concurrence]{sommier_niveau_concurrence()}} ; s'il est saisi et contredit les
+comptages, il est \strong{conserve tel que saisi}, un avertissement le dit et
+le niveau calcule est inscrit au payload sous \code{concurrence_calculee}.}
+
+\item{concurrence_calculee}{Ne se saisit pas : c'est la trace que la
+fonction inscrit quand le niveau saisi contredit les comptages. Accepte
+pour que la relecture d'un payload ecrit se rejoue (il est recalcule).}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.

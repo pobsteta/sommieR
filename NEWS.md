@@ -1,3 +1,30 @@
+# sommieR 0.44.0
+
+L'import d'une tournée de terrain n'est plus refusé pour un écart de forme quand
+la donnée reste lisible : l'écart est accepté et signalé (mission 027). Aucune
+rupture : l'import accepte plus qu'avant, il ne refuse rien de ce qu'il acceptait.
+
+- **`photos_terrain`, colonnes en trop** : une colonne inconnue est ignorée et
+  nommée dans le bilan (`avertissements`, et un `warning()`), comme le veut la
+  spec de Surculus (un lecteur ignore les champs en plus). Une colonne
+  obligatoire manquante (`photo_uuid`, `sujet`, `sha256`) reste une faute
+  lisible. Un `sha256` vide (empreinte non vérifiée) et deux lignes pour la même
+  photo (la première est gardée) sont des avertissements, plus des fautes.
+- **Position du fix** : la géométrie POINT de `photos_terrain` est lue et
+  inscrite au payload de la photo, sous `terrain` (`fix_x`, `fix_y`, `fix_scr`,
+  le code EPSG de la couche), à côté de `exif_position`, sans conversion de repère.
+- **Concurrence** : `registre6_controle()`, quand `nb_plants_vivants` et
+  `nb_plants_concurrences` sont fournis, déduit `concurrence` s'il est absent
+  (`sommier_niveau_concurrence()`, seuils 20 % et 50 % inchangés) ; s'il est
+  saisi et contredit les comptages, il est **conservé tel que saisi**, un
+  avertissement le dit et le niveau calculé est inscrit sous
+  `concurrence_calculee`. Répond au commentaire P2 de la PR #78. **Correction
+  de la note de 0.40.0** « la validation de `registre6_controle()` inchangée » :
+  elle ne l'est plus à partir de cette version (NEWS ne se réécrit pas en arrière).
+- **Date de l'ortho** : `sommier_projet_qfield_travaux(date_ortho =)`, facultatif,
+  fixe `date_mise_a_jour` de `ortho.mbtiles` (quand l'image a été obtenue, pas
+  prise) ; sans elle, la date du fichier GeoTIFF comme avant.
+
 # sommieR 0.43.0
 
 - **L'ortho de la tournée des travaux devient un fichier tuilé EPSG:3857**
