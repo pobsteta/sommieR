@@ -36,21 +36,25 @@
 #'   tournee emporte les photos du **dernier controle de chaque placette**,
 #'   pour que l'agent les voie au passage suivant : les fichiers sous
 #'   `DCIM/<uuid>.<extension>`, une ligne de la couche `photos` par photo
-#'   (rattachee au controle precedent, qui n'est pas dans la tournee) et, si
-#'   le controle l'a inscrite, une ligne de `photos_terrain`. Une photo absente
-#'   du depot ou alteree (empreinte differente) n'est pas versee, et un
-#'   avertissement le dit. Ces lignes restent telles quelles au retour : elles
-#'   ne rattachent aucune photo a un controle de la tournee, donc l'import ne
-#'   les redepose jamais.
+#'   (rattachee au controle precedent, qui n'est pas dans la tournee). Une
+#'   photo absente du depot ou alteree (empreinte differente) n'est pas
+#'   versee, et un avertissement le dit. Ces lignes restent telles quelles au
+#'   retour : elles ne rattachent aucune photo a un controle de la tournee,
+#'   donc l'import ne les redepose jamais. **Elles ne sont visibles que pour
+#'   Surculus**, qui lit la couche `photos` ; la relation `photos_du_controle`
+#'   de QField, elle, ne montre que les photos des controles de la tournee.
+#'   La couche `photos_terrain` n'est **pas** ecrite a l'aller : c'est
+#'   Surculus qui la cree.
 #'
-#' **La couche `photos_terrain`** (table sans geometrie du `travaux.gpkg`)
-#' decrit la prise de vue, une ligne par photo de `photos` : `photo_uuid`,
-#' `sujet` (`placette` ou `plant`), `placette_uuid`, `plant`,
-#' `azimut_magnetique`, `declinaison`, `modele`, `precision_m`, `source_gnss`,
-#' `referentiel_gnss`, `age_fix_s`, `simule`, `empreinte` (SHA-256 du fichier
-#' tel que l'appareil l'a ecrit), `fix_lat`, `fix_lon`. Elle est vide a
-#' l'aller de la tournee ; [sommier_importer_qfield_travaux()] la lit si elle
-#' est presente.
+#' **La couche `photos_terrain`** est celle de Surculus (`docs/spec.md` § 5,
+#' amendee le 2026-10-28) : POINT, une ligne par photo, `photo_uuid`
+#' (= `photos.uuid`), `sujet` (`placette` ou `plant`), `placette_uuid`,
+#' `plant_uuid`, `azimut_visee_mag_deg`, `declinaison_deg`,
+#' `modele_geomagnetique`, `precision_m`, `source_gnss`, `referentiel_source`
+#' (`RGF93` ou `WGS84`), `age_fix_ms`, `simulee`, `sha256`.
+#' [sommier_importer_qfield_travaux()] la lit au retour, si elle est
+#' presente, et refuse la tournee d'une couche aux colonnes manquantes
+#' (`photo_uuid`, `sujet`, `sha256`) ou inattendues.
 #'
 #' **La symbologie est celle de Marculus** (brief du 2026-10-16) : parcelles
 #' coloriees par proprietaire (remplissage a 20 %, contour plein, numero de la
@@ -206,8 +210,7 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
   photos <- as.data.frame(lire("photos"))
   # Couche ajoutee (brief du 2026-10-28) : un projet engendre avant elle n'en
   # porte pas, et la tournee s'importe comme avant.
-  photos_terrain <- tryCatch(as.data.frame(lire("photos_terrain")),
-                             error = function(e) NULL)
+  photos_terrain <- lire_photos_terrain(gpkg)
   bilan <- list(travaux = 0L, placettes = 0L, controles = 0L,
                 deja_presents = 0L, photos = 0L, entrees = list())
 
@@ -521,28 +524,57 @@ geometries_wgs84 <- function(x) {
 }
 
 # ---------------------------------------------------------------------------
-# photos_terrain : ce que la tournee dit de la prise de vue.
+# photos_terrain : ce que la tournee dit de la prise de vue. La couche est
+# celle de Surculus (docs/spec.md § 5, amendee le 2026-10-28) : POINT, une
+# ligne par photo ; sommieR la lit au retour et ne l'ecrit jamais a l'aller.
 
-COLONNES_PHOTOS_TERRAIN <- c(
-  photo_uuid = "character", sujet = "character", placette_uuid = "character",
-  plant = "character", azimut_magnetique = "numeric", declinaison = "numeric",
-  modele = "character", precision_m = "numeric", source_gnss = "character",
-  referentiel_gnss = "character", age_fix_s = "numeric", simule = "integer",
-  empreinte = "character", fix_lat = "numeric", fix_lon = "numeric")
+# Les colonnes que sommieR exige : sans elles, la ligne ne dit pas de quelle
+# photo elle parle ni si le fichier est celui que l'appareil a ecrit.
+COLONNES_PHOTOS_TERRAIN_EXIGEES <- c("photo_uuid", "sujet", "sha256")
 
-# Une table vide, aux types de la couche.
-photos_terrain_vide <- function() {
-  as.data.frame(lapply(COLONNES_PHOTOS_TERRAIN, function(t) vector(t, 0L)),
-                stringsAsFactors = FALSE)
+# Les colonnes du fichier qui ne sont pas des champs (cle, geometrie).
+COLONNES_GPKG <- c("fid", "geom", "geometry")
+
+# La couche, lue telle que Surculus l'ecrit. NULL si elle est absente (un
+# projet d'avant le brief) ; sinon une table sans geometrie.
+lire_photos_terrain <- function(gpkg) {
+  couches <- sf::st_layers(gpkg)$name
+  if (!"photos_terrain" %in% couches) {
+    return(NULL)
+  }
+  pt <- suppressWarnings(sf::read_sf(gpkg, layer = "photos_terrain"))
+  if (inherits(pt, "sf")) {
+    pt <- sf::st_drop_geometry(pt)
+  }
+  as.data.frame(pt)
 }
 
-# Les fautes qui refusent la tournee : une ligne qui ne decrit aucune photo,
-# un sujet inconnu, une empreinte qui n'est pas celle du fichier rapporte.
+# Les fautes qui refusent la tournee, en clair : une couche aux colonnes
+# manquantes ou inattendues, une ligne qui ne decrit aucune photo, un sujet
+# inconnu, une empreinte qui n'est pas celle du fichier rapporte.
 controler_photos_terrain <- function(pt, photos, dossier) {
-  if (is.null(pt) || nrow(pt) == 0L) {
+  if (is.null(pt)) {
     return(character(0))
   }
+  manquantes <- setdiff(COLONNES_PHOTOS_TERRAIN_EXIGEES, names(pt))
+  inattendues <- setdiff(names(pt), c(CHAMPS_PHOTO_TERRAIN, "photo_uuid",
+                                      COLONNES_GPKG))
   fautes <- character(0)
+  if (length(manquantes) > 0L) {
+    fautes <- c(fautes, paste0(
+      "photos_terrain : colonne(s) manquante(s) : ",
+      paste(manquantes, collapse = ", ")))
+  }
+  if (length(inattendues) > 0L) {
+    fautes <- c(fautes, paste0(
+      "photos_terrain : colonne(s) inattendue(s) : ",
+      paste(inattendues, collapse = ", "),
+      " (colonnes attendues : photo_uuid, ",
+      paste(CHAMPS_PHOTO_TERRAIN, collapse = ", "), ")"))
+  }
+  if (length(manquantes) > 0L || nrow(pt) == 0L) {
+    return(fautes)
+  }
   for (i in seq_len(nrow(pt))) {
     x <- pt[i, ]
     nom <- paste0("photos_terrain ", i)
@@ -552,15 +584,16 @@ controler_photos_terrain <- function(pt, photos, dossier) {
                                  "ne porte cet identifiant"))
       next
     }
-    if (!is.na(x$sujet) && !x$sujet %in% c("placette", "plant")) {
-      fautes <- c(fautes, paste0(nom, " : sujet inconnu (", x$sujet,
+    if (is.na(x$sujet) || !x$sujet %in% c("placette", "plant")) {
+      fautes <- c(fautes, paste0(nom, " : sujet inconnu (",
+                                 if (is.na(x$sujet)) "vide" else x$sujet,
                                  "), attendu placette ou plant"))
     }
     f <- file.path(dossier, photos$fichier[[cible[[1L]]]])
-    if (!is.na(x$empreinte) && file.exists(f) &&
-        !identical(empreinte_fichier(f), tolower(x$empreinte))) {
-      fautes <- c(fautes, paste0(nom, " : l'empreinte declaree n'est pas ",
-                                 "celle du fichier (", basename(f), ")"))
+    if (!is.na(x$sha256) && file.exists(f) &&
+        !identical(empreinte_fichier(f), tolower(x$sha256))) {
+      fautes <- c(fautes, paste0(nom, " : le sha256 declare n'est pas ",
+                                 "celui du fichier (", basename(f), ")"))
     }
   }
   fautes
@@ -580,72 +613,62 @@ deposer_photos_travaux <- function(uuid, photos, photos_terrain, dossier,
       t <- photos_terrain[tolower(photos_terrain$photo_uuid) ==
                             tolower(siennes$uuid[[i]]), , drop = FALSE]
       if (nrow(t) > 0L) {
-        t <- as.list(t[1L, setdiff(names(t), "photo_uuid"), drop = FALSE])
-        p$terrain <- t[intersect(names(t), CHAMPS_PHOTO_TERRAIN)]
+        t <- as.list(t[1L, intersect(names(t), CHAMPS_PHOTO_TERRAIN),
+                       drop = FALSE])
+        p$terrain <- t
       }
     }
     p
   })
 }
 
-# Verse a l'aller les photos du dernier controle de chaque placette.
+# Verse a l'aller les photos du dernier controle de chaque placette, par le
+# canal existant : la couche `photos`, dont le schema ne change pas. La couche
+# `photos_terrain` n'est pas ecrite : c'est Surculus qui la cree, en POINT.
 verser_photos_aller <- function(con, foret_id, dossier, gpkg, depot) {
+  if (is.null(depot)) {
+    return(invisible(0L))
+  }
   photos <- data.frame(uuid = character(0), constat_uuid = character(0),
                        fichier = character(0),
                        prise_le = as.POSIXct(character(0), tz = "UTC"),
                        stringsAsFactors = FALSE)
-  terrain <- photos_terrain_vide()
-  if (!is.null(depot)) {
-    depot <- valider_texte(depot, "depot")
-    derniers <- DBI::dbGetQuery(
-      con,
-      "SELECT DISTINCT ON (c.payload ->> 'placette_id')
-              c.id::text AS id, (c.payload -> 'photos')::text AS photos
-         FROM entree_sommier c
-         JOIN v_placette p ON p.id = (c.payload ->> 'placette_id')::uuid
-        WHERE c.foret_id = $1 AND c.registre = 6
-          AND c.payload ->> 'type_entree' = 'controle' AND p.geom IS NOT NULL
-        ORDER BY c.payload ->> 'placette_id', c.date_evenement DESC, c.seq DESC",
-      params = list(foret_id))
-    for (k in seq_len(nrow(derniers))) {
-      if (is.na(derniers$photos[[k]])) next
-      for (p in jsonlite::fromJSON(derniers$photos[[k]],
-                                   simplifyVector = FALSE)) {
-        source <- tryCatch(chemin_photo(depot, p$sha256, p$type),
-                           error = function(e) NA_character_)
-        if (is.na(source) || !file.exists(source) ||
-            !identical(empreinte_fichier(source), p$sha256)) {
-          warning("Photo du controle ", derniers$id[[k]], " non versee a ",
-                  "l'aller : absente du depot ou alteree (", p$sha256, ").",
-                  call. = FALSE)
-          next
-        }
-        uuid <- if (is.null(p$uuid)) uuid_v4() else p$uuid
-        fichier <- paste0("DCIM/", uuid, ".", tools::file_ext(source))
-        file.copy(source, file.path(dossier, fichier), copy.date = TRUE)
-        photos[nrow(photos) + 1L, ] <- list(
-          uuid, derniers$id[[k]], fichier,
-          if (is.null(p$exif_date_utc)) as.POSIXct(NA, tz = "UTC") else
-            as.POSIXct(p$exif_date_utc, format = "%Y-%m-%dT%H:%M:%SZ",
-                       tz = "UTC"))
-        if (!is.null(p$terrain)) {
-          ligne <- photos_terrain_vide()[1L, ]
-          ligne$photo_uuid <- uuid
-          for (champ in intersect(names(p$terrain), names(ligne))) {
-            valeur <- p$terrain[[champ]]
-            ligne[[champ]] <- switch(COLONNES_PHOTOS_TERRAIN[[champ]],
-                                     numeric = as.numeric(valeur),
-                                     integer = as.integer(valeur),
-                                     as.character(valeur))
-          }
-          terrain <- rbind(terrain, ligne)
-        }
+  depot <- valider_texte(depot, "depot")
+  derniers <- DBI::dbGetQuery(
+    con,
+    "SELECT DISTINCT ON (c.payload ->> 'placette_id')
+            c.id::text AS id, (c.payload -> 'photos')::text AS photos
+       FROM entree_sommier c
+       JOIN v_placette p ON p.id = (c.payload ->> 'placette_id')::uuid
+      WHERE c.foret_id = $1 AND c.registre = 6
+        AND c.payload ->> 'type_entree' = 'controle' AND p.geom IS NOT NULL
+      ORDER BY c.payload ->> 'placette_id', c.date_evenement DESC, c.seq DESC",
+    params = list(foret_id))
+  for (k in seq_len(nrow(derniers))) {
+    if (is.na(derniers$photos[[k]])) next
+    for (p in jsonlite::fromJSON(derniers$photos[[k]],
+                                 simplifyVector = FALSE)) {
+      source <- tryCatch(chemin_photo(depot, p$sha256, p$type),
+                         error = function(e) NA_character_)
+      if (is.na(source) || !file.exists(source) ||
+          !identical(empreinte_fichier(source), p$sha256)) {
+        warning("Photo du controle ", derniers$id[[k]], " non versee a ",
+                "l'aller : absente du depot ou alteree (", p$sha256, ").",
+                call. = FALSE)
+        next
       }
+      uuid <- if (is.null(p$uuid)) uuid_v4() else p$uuid
+      fichier <- paste0("DCIM/", uuid, ".", tools::file_ext(source))
+      file.copy(source, file.path(dossier, fichier), copy.date = TRUE)
+      photos[nrow(photos) + 1L, ] <- list(
+        uuid, derniers$id[[k]], fichier,
+        if (is.null(p$exif_date_utc)) as.POSIXct(NA, tz = "UTC") else
+          as.POSIXct(p$exif_date_utc, format = "%Y-%m-%dT%H:%M:%SZ",
+                     tz = "UTC"))
     }
   }
   if (nrow(photos) > 0L) {
     ecrire_table(photos, gpkg, "photos")
   }
-  ecrire_table(terrain, gpkg, "photos_terrain")
   invisible(nrow(photos))
 }

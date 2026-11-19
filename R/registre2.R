@@ -345,10 +345,13 @@ valider_photos <- function(photos) {
 
 # Ce que la tournee dit de la prise de vue (couche `photos_terrain`) : des
 # declarations de l'appareil, recopiees comme telles, jamais des faits.
-CHAMPS_PHOTO_TERRAIN <- c("sujet", "placette", "plant", "azimut_magnetique",
-                          "declinaison", "modele", "precision_m",
-                          "source_gnss", "referentiel_gnss", "age_fix_s",
-                          "simule", "empreinte", "fix_lat", "fix_lon")
+# Une seule liste : celle de la couche de Surculus, moins `photo_uuid`, que le
+# payload porte comme `uuid` de la photo.
+CHAMPS_PHOTO_TERRAIN <- c("sujet", "placette_uuid", "plant_uuid",
+                          "azimut_visee_mag_deg", "declinaison_deg",
+                          "modele_geomagnetique", "precision_m", "source_gnss",
+                          "referentiel_source", "age_fix_ms", "simulee",
+                          "sha256")
 
 valider_photo_terrain <- function(x, nom) {
   if (est_vide(x)) {

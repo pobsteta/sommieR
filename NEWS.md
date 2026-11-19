@@ -10,24 +10,33 @@ Photos de placette et de plant (brief `surculus` du 2026-10-28,
   `exif_datum`, son repère reste inconnu ; `ETRS89` (RTK Centipède) et `WGS-84`
   sont recopiés tels quels. `exif_date` est inchangé. Le fichier n'est jamais
   modifié. Ajout seul : les photos déjà inscrites se relisent à l'identique.
-- **Couche `photos_terrain`** du projet des travaux : table sans géométrie du
-  `travaux.gpkg`, vide à l'aller, qui décrit la prise de vue de chaque photo
-  (sujet placette ou plant, azimut magnétique, déclinaison, modèle, précision,
-  source et référentiel du GNSS, âge du fix, position simulée, empreinte
-  SHA-256, position du fix). `sommier_importer_qfield_travaux()` la lit si elle
-  est présente (un projet plus ancien s'importe comme avant), la recopie dans
-  le payload de la photo (`terrain`, avec l'`uuid` de la photo) et refuse la
-  tournée si une ligne ne décrit aucune photo, si le sujet est inconnu ou si
-  l'empreinte déclarée n'est pas celle du fichier.
+- **Couche `photos_terrain`, celle de Surculus** (`docs/spec.md` § 5, amendée le
+  2026-10-28) : POINT, `photo_uuid`, `sujet`, `placette_uuid`, `plant_uuid`,
+  `azimut_visee_mag_deg`, `declinaison_deg`, `modele_geomagnetique`,
+  `precision_m`, `source_gnss`, `referentiel_source` (`RGF93`, `WGS84`),
+  `age_fix_ms`, `simulee`, `sha256`. **sommieR la lit au retour et ne l'écrit
+  jamais à l'aller** : Surculus la crée. `sommier_importer_qfield_travaux()` la
+  lit si elle est présente (un projet plus ancien s'importe comme avant), la
+  recopie dans le payload de la photo (`terrain`, avec l'`uuid` de la photo) et
+  refuse la tournée, en clair, si ses colonnes `photo_uuid`, `sujet` ou
+  `sha256` manquent, si une colonne est inattendue, si une ligne ne décrit
+  aucune photo, si le sujet est inconnu ou si le `sha256` déclaré n'est pas
+  celui du fichier.
 - **Photos à l'aller** : `sommier_projet_qfield_travaux(depot = )` verse les
   photos du dernier contrôle de chaque placette (fichiers `DCIM/<uuid>.jpg`,
-  lignes de `photos` et de `photos_terrain`). Une photo absente du dépôt ou
-  altérée n'est pas versée (avertissement). Rapportées telles quelles, elles ne
-  sont jamais redéposées.
+  lignes de la couche `photos`, dont le schéma ne change pas). Une photo absente
+  du dépôt ou altérée n'est pas versée (avertissement). Rapportées telles
+  quelles, elles ne sont jamais redéposées. Elles ne sont visibles que pour
+  Surculus, pas dans la relation `photos_du_controle` de QField.
 - **Confirmé par test** : plusieurs photos par contrôle, JPEG à EXIF GPS sous
   `DCIM/`, passent l'import ; la tournée de démonstration (une photo de
   placette, une de plant) est importée sans faute.
-- Pas de rupture de contrat public : tous les ajouts sont facultatifs.
+- **Ruptures** : aucune pour le code existant (nouvel argument `depot`,
+  nouveaux champs de photo, couche lue si présente). Ce qui change pour QField
+  et Surculus : une tournée dont la couche `photos_terrain` porte d'autres
+  colonnes que celles de Surculus, ou qui n'a pas `photo_uuid`, `sujet` ou
+  `sha256`, est désormais **refusée** à l'import ; et le projet QField ne
+  porte pas de couche `photos_terrain` à l'aller (Surculus la crée).
 
 
 # sommieR 0.40.0

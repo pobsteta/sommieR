@@ -34,12 +34,15 @@ l'ecrit \code{\link[=sommier_ortho_ign]{sommier_ortho_ign()}} (facultatif).}
 tournee emporte les photos du \strong{dernier controle de chaque placette},
 pour que l'agent les voie au passage suivant : les fichiers sous
 \verb{DCIM/<uuid>.<extension>}, une ligne de la couche \code{photos} par photo
-(rattachee au controle precedent, qui n'est pas dans la tournee) et, si
-le controle l'a inscrite, une ligne de \code{photos_terrain}. Une photo absente
-du depot ou alteree (empreinte differente) n'est pas versee, et un
-avertissement le dit. Ces lignes restent telles quelles au retour : elles
-ne rattachent aucune photo a un controle de la tournee, donc l'import ne
-les redepose jamais.}
+(rattachee au controle precedent, qui n'est pas dans la tournee). Une
+photo absente du depot ou alteree (empreinte differente) n'est pas
+versee, et un avertissement le dit. Ces lignes restent telles quelles au
+retour : elles ne rattachent aucune photo a un controle de la tournee,
+donc l'import ne les redepose jamais. \strong{Elles ne sont visibles que pour
+Surculus}, qui lit la couche \code{photos} ; la relation \code{photos_du_controle}
+de QField, elle, ne montre que les photos des controles de la tournee.
+La couche \code{photos_terrain} n'est \strong{pas} ecrite a l'aller : c'est
+Surculus qui la cree.}
 }
 \value{
 Invisiblement, le chemin du projet \code{.qgs}.
@@ -67,14 +70,15 @@ controle en ajoutant un controle a la placette ; on en installe une
 nouvelle en placant un point, rattache a des travaux de la liste des
 travaux suivis (ceux d'une unite de gestion).
 
-\strong{La couche \code{photos_terrain}} (table sans geometrie du \code{travaux.gpkg})
-decrit la prise de vue, une ligne par photo de \code{photos} : \code{photo_uuid},
-\code{sujet} (\code{placette} ou \code{plant}), \code{placette_uuid}, \code{plant},
-\code{azimut_magnetique}, \code{declinaison}, \code{modele}, \code{precision_m}, \code{source_gnss},
-\code{referentiel_gnss}, \code{age_fix_s}, \code{simule}, \code{empreinte} (SHA-256 du fichier
-tel que l'appareil l'a ecrit), \code{fix_lat}, \code{fix_lon}. Elle est vide a
-l'aller de la tournee ; \code{\link[=sommier_importer_qfield_travaux]{sommier_importer_qfield_travaux()}} la lit si elle
-est presente.
+\strong{La couche \code{photos_terrain}} est celle de Surculus (\verb{docs/spec.md} § 5,
+amendee le 2026-10-28) : POINT, une ligne par photo, \code{photo_uuid}
+(= \code{photos.uuid}), \code{sujet} (\code{placette} ou \code{plant}), \code{placette_uuid},
+\code{plant_uuid}, \code{azimut_visee_mag_deg}, \code{declinaison_deg},
+\code{modele_geomagnetique}, \code{precision_m}, \code{source_gnss}, \code{referentiel_source}
+(\code{RGF93} ou \code{WGS84}), \code{age_fix_ms}, \code{simulee}, \code{sha256}.
+\code{\link[=sommier_importer_qfield_travaux]{sommier_importer_qfield_travaux()}} la lit au retour, si elle est
+presente, et refuse la tournee d'une couche aux colonnes manquantes
+(\code{photo_uuid}, \code{sujet}, \code{sha256}) ou inattendues.
 
 \strong{La symbologie est celle de Marculus} (brief du 2026-10-16) : parcelles
 coloriees par proprietaire (remplissage a 20 \%, contour plein, numero de la

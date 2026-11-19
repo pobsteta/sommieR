@@ -53,12 +53,12 @@ test_that("le payload d'un controle accepte ces champs et refuse un champ inconn
   p <- list(sha256 = strrep("a", 64), octets = 10L, type = "image/jpeg",
             exif_datum = "ETRS89", exif_erreur_m = 0.02,
             uuid = "11111111-2222-4333-8444-555555555555",
-            terrain = list(sujet = "plant", azimut_magnetique = 187.5,
-                           simule = 0L, plant = NA))
+            terrain = list(sujet = "plant", azimut_visee_mag_deg = 187.5,
+                           simulee = FALSE, plant_uuid = NA))
   v <- valider_photos(list(p))[[1L]]
   expect_equal(v$exif_datum, "ETRS89")
   expect_equal(v$terrain$sujet, "plant")
-  expect_null(v$terrain$plant)
+  expect_null(v$terrain$plant_uuid)
   p$terrain$bidon <- 1
   expect_error(valider_photos(list(p)), "champ\\(s\\) inconnu")
 })
