@@ -328,9 +328,43 @@ valider_photos <- function(photos) {
       exif_date     = si_present(p$exif_date, valider_texte,
                                  paste0(nom, "$exif_date")),
       exif_position = si_present(p$exif_position, valider_texte,
-                                 paste0(nom, "$exif_position"))
+                                 paste0(nom, "$exif_position")),
+      exif_decalage = si_present(p$exif_decalage, valider_texte,
+                                 paste0(nom, "$exif_decalage")),
+      exif_date_utc = si_present(p$exif_date_utc, valider_texte,
+                                 paste0(nom, "$exif_date_utc")),
+      exif_datum    = si_present(p$exif_datum, valider_texte,
+                                 paste0(nom, "$exif_datum")),
+      exif_erreur_m = si_present(p$exif_erreur_m, valider_nombre,
+                                 paste0(nom, "$exif_erreur_m")),
+      uuid          = si_present(p$uuid, valider_uuid, paste0(nom, "$uuid")),
+      terrain       = valider_photo_terrain(p$terrain, paste0(nom, "$terrain"))
     ))
   })
+}
+
+# Ce que la tournee dit de la prise de vue (couche `photos_terrain`) : des
+# declarations de l'appareil, recopiees comme telles, jamais des faits.
+CHAMPS_PHOTO_TERRAIN <- c("sujet", "placette", "plant", "azimut_magnetique",
+                          "declinaison", "modele", "precision_m",
+                          "source_gnss", "referentiel_gnss", "age_fix_s",
+                          "simule", "empreinte", "fix_lat", "fix_lon")
+
+valider_photo_terrain <- function(x, nom) {
+  if (est_vide(x)) {
+    return(NULL)
+  }
+  if (!is.list(x) || is.null(names(x))) {
+    stop("`", nom, "` doit etre une liste nommee.", call. = FALSE)
+  }
+  inconnus <- setdiff(names(x), CHAMPS_PHOTO_TERRAIN)
+  if (length(inconnus) > 0L) {
+    stop("`", nom, "` : champ(s) inconnu(s) : ",
+         paste(inconnus, collapse = ", "), ".", call. = FALSE)
+  }
+  compacter(lapply(x, function(v) {
+    if (length(v) != 1L || is.na(v)) NULL else v
+  }))
 }
 
 # Un champ qui peut porter plusieurs valeurs : rendu en tableau JSON meme a un

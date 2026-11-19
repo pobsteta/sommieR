@@ -323,3 +323,112 @@ test_that("le projet des travaux porte la symbologie de Marculus", {
   expect_true(ouvert$lu)
   expect_true(ouvert$couches$travaux_parcelles$valide)
 })
+
+# Brief surculus du 2026-10-28 : photos de placette et de plant.
+test_that("une tournee avec une photo de placette et une de plant s'importe, puis revient a l'aller", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  depot <- file.path(withr::local_tempdir(), "photos")
+  sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.")
+  gpkg <- file.path(dossier, "travaux.gpkg")
+  # La couche existe, vide, a l'aller.
+  expect_true("photos_terrain" %in% sf::st_layers(gpkg)$name)
+  expect_equal(nrow(sf::read_sf(gpkg, "photos_terrain")), 0L)
+
+  k <- uuid_v4()
+  saisir(dossier, "controles", controle(k, f$placette, 18, "2026-11-18"))
+  ph <- c(placette = uuid_v4(), plant = uuid_v4())
+  photo_exif(file.path(dossier, "DCIM", paste0(ph[["placette"]], ".jpg")),
+             decalage = "+01:00",
+             gps = list(lat = 47.977, lon = 2.030667, datum = "ETRS89",
+                        erreur_m = 0.03))
+  photo_exif(file.path(dossier, "DCIM", paste0(ph[["plant"]], ".jpg")),
+             decalage = "+01:00",
+             gps = list(lat = 47.977, lon = 2.030667, datum = "WGS-84",
+                        erreur_m = 2))
+  saisir(dossier, "photos", data.frame(
+    uuid = unname(ph), constat_uuid = k,
+    fichier = paste0("DCIM/", ph, ".jpg"),
+    prise_le = as.POSIXct("2026-11-18 09:31:05", tz = "UTC")))
+  empreinte <- empreinte_fichier(file.path(dossier, "DCIM",
+                                           paste0(ph[["plant"]], ".jpg")))
+  pt <- photos_terrain_vide()
+  pt[1:2, "photo_uuid"] <- unname(ph)
+  pt$sujet <- c("placette", "plant")
+  pt$plant <- c(NA, "P-07")
+  pt$azimut_magnetique <- c(180, 0)
+  pt$referentiel_gnss <- c("ETRS89", "WGS-84")
+  pt$simule <- 0L
+  pt$empreinte <- c(NA, empreinte)
+  sf::st_write(pt, gpkg, layer = "photos_terrain", delete_layer = TRUE,
+               quiet = TRUE)
+
+  bilan <- sommier_importer_qfield_travaux(con, f$foret, dossier, depot,
+                                           auteur = "test")
+  expect_equal(bilan$controles, 1L)
+  expect_equal(bilan$photos, 2L)
+  payload <- bilan$entrees[[1L]]$payload
+  expect_length(payload$photos, 2L)
+  expect_equal(vapply(payload$photos, function(p) p$exif_datum, ""),
+               c("ETRS89", "WGS-84"))
+  expect_equal(payload$photos[[2L]]$terrain$sujet, "plant")
+  expect_equal(payload$photos[[2L]]$terrain$plant, "P-07")
+  expect_equal(payload$photos[[1L]]$uuid, ph[["placette"]])
+  expect_true(all(sommier_verifier_photos(con, f$foret, depot)$statut ==
+                    "conforme"))
+  expect_true(sommier_verifier(con, f$foret)$valide)
+
+  # A l'aller suivant, les deux photos du dernier controle de la placette
+  # reviennent, avec leur description.
+  suivant <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(con, f$foret, suivant, "P. O.", depot = depot)
+  retour <- sf::read_sf(file.path(suivant, "travaux.gpkg"), "photos")
+  expect_equal(nrow(retour), 2L)
+  expect_equal(retour$constat_uuid, rep(k, 2L))
+  expect_true(all(file.exists(file.path(suivant, retour$fichier))))
+  rt <- sf::read_sf(file.path(suivant, "travaux.gpkg"), "photos_terrain")
+  expect_equal(sort(rt$sujet), c("placette", "plant"))
+  expect_equal(rt$referentiel_gnss[rt$sujet == "plant"], "WGS-84")
+  # Rapportee telle quelle, cette tournee n'ecrit rien de plus.
+  encore <- sommier_importer_qfield_travaux(con, f$foret, suivant, depot,
+                                            auteur = "test")
+  expect_equal(c(encore$controles, encore$photos), c(0L, 0L))
+})
+
+test_that("une description de photo qui ne colle pas refuse la tournee", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  depot <- file.path(withr::local_tempdir(), "photos")
+  sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.")
+  gpkg <- file.path(dossier, "travaux.gpkg")
+  k <- uuid_v4()
+  saisir(dossier, "controles", controle(k, f$placette, 18, "2026-11-18"))
+  u <- uuid_v4()
+  photo_exif(file.path(dossier, "DCIM", paste0(u, ".jpg")))
+  saisir(dossier, "photos", data.frame(
+    uuid = u, constat_uuid = k, fichier = paste0("DCIM/", u, ".jpg"),
+    prise_le = as.POSIXct("2026-11-18 09:31:05", tz = "UTC")))
+  pt <- photos_terrain_vide()
+  pt[1:2, "photo_uuid"] <- c(u, uuid_v4())
+  pt$sujet <- c("arbre", "plant")
+  pt$empreinte <- c(strrep("0", 64), NA)
+  sf::st_write(pt, gpkg, layer = "photos_terrain", delete_layer = TRUE,
+               quiet = TRUE)
+  err <- tryCatch(
+    sommier_importer_qfield_travaux(con, f$foret, dossier, depot,
+                                    auteur = "test"),
+    error = function(e) conditionMessage(e))
+  expect_match(err, "rien n'est ecrit")
+  expect_match(err, "sujet inconnu")
+  expect_match(err, "empreinte declaree")
+  expect_match(err, "aucune photo")
+  expect_equal(DBI::dbGetQuery(
+    con, "SELECT count(*)::int AS n FROM entree_sommier WHERE id = $1",
+    params = list(k))$n, 0L)
+})

@@ -10,7 +10,8 @@ sommier_projet_qfield_travaux(
   dossier,
   operateur,
   fond = NULL,
-  ortho = NULL
+  ortho = NULL,
+  depot = NULL
 )
 }
 \arguments{
@@ -28,6 +29,17 @@ rapatriee ne doit jamais etre ecrasee.}
 
 \item{ortho}{GeoTIFF d'orthophotographie a joindre au projet, tel que
 l'ecrit \code{\link[=sommier_ortho_ign]{sommier_ortho_ign()}} (facultatif).}
+
+\item{depot}{Repertoire du depot de photos (facultatif). S'il est donne, la
+tournee emporte les photos du \strong{dernier controle de chaque placette},
+pour que l'agent les voie au passage suivant : les fichiers sous
+\verb{DCIM/<uuid>.<extension>}, une ligne de la couche \code{photos} par photo
+(rattachee au controle precedent, qui n'est pas dans la tournee) et, si
+le controle l'a inscrite, une ligne de \code{photos_terrain}. Une photo absente
+du depot ou alteree (empreinte differente) n'est pas versee, et un
+avertissement le dit. Ces lignes restent telles quelles au retour : elles
+ne rattachent aucune photo a un controle de la tournee, donc l'import ne
+les redepose jamais.}
 }
 \value{
 Invisiblement, le chemin du projet \code{.qgs}.
@@ -54,6 +66,15 @@ dernier controle : besoin signale, sans besoin, jamais controlee. On les
 controle en ajoutant un controle a la placette ; on en installe une
 nouvelle en placant un point, rattache a des travaux de la liste des
 travaux suivis (ceux d'une unite de gestion).
+
+\strong{La couche \code{photos_terrain}} (table sans geometrie du \code{travaux.gpkg})
+decrit la prise de vue, une ligne par photo de \code{photos} : \code{photo_uuid},
+\code{sujet} (\code{placette} ou \code{plant}), \code{placette_uuid}, \code{plant},
+\code{azimut_magnetique}, \code{declinaison}, \code{modele}, \code{precision_m}, \code{source_gnss},
+\code{referentiel_gnss}, \code{age_fix_s}, \code{simule}, \code{empreinte} (SHA-256 du fichier
+tel que l'appareil l'a ecrit), \code{fix_lat}, \code{fix_lon}. Elle est vide a
+l'aller de la tournee ; \code{\link[=sommier_importer_qfield_travaux]{sommier_importer_qfield_travaux()}} la lit si elle
+est presente.
 
 \strong{La symbologie est celle de Marculus} (brief du 2026-10-16) : parcelles
 coloriees par proprietaire (remplissage a 20 \%, contour plein, numero de la

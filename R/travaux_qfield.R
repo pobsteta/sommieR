@@ -32,6 +32,25 @@
 #'   [sommier_fond_lire()] (facultatif).
 #' @param ortho GeoTIFF d'orthophotographie a joindre au projet, tel que
 #'   l'ecrit [sommier_ortho_ign()] (facultatif).
+#' @param depot Repertoire du depot de photos (facultatif). S'il est donne, la
+#'   tournee emporte les photos du **dernier controle de chaque placette**,
+#'   pour que l'agent les voie au passage suivant : les fichiers sous
+#'   `DCIM/<uuid>.<extension>`, une ligne de la couche `photos` par photo
+#'   (rattachee au controle precedent, qui n'est pas dans la tournee) et, si
+#'   le controle l'a inscrite, une ligne de `photos_terrain`. Une photo absente
+#'   du depot ou alteree (empreinte differente) n'est pas versee, et un
+#'   avertissement le dit. Ces lignes restent telles quelles au retour : elles
+#'   ne rattachent aucune photo a un controle de la tournee, donc l'import ne
+#'   les redepose jamais.
+#'
+#' **La couche `photos_terrain`** (table sans geometrie du `travaux.gpkg`)
+#' decrit la prise de vue, une ligne par photo de `photos` : `photo_uuid`,
+#' `sujet` (`placette` ou `plant`), `placette_uuid`, `plant`,
+#' `azimut_magnetique`, `declinaison`, `modele`, `precision_m`, `source_gnss`,
+#' `referentiel_gnss`, `age_fix_s`, `simule`, `empreinte` (SHA-256 du fichier
+#' tel que l'appareil l'a ecrit), `fix_lat`, `fix_lon`. Elle est vide a
+#' l'aller de la tournee ; [sommier_importer_qfield_travaux()] la lit si elle
+#' est presente.
 #'
 #' **La symbologie est celle de Marculus** (brief du 2026-10-16) : parcelles
 #' coloriees par proprietaire (remplissage a 20 %, contour plein, numero de la
@@ -45,7 +64,8 @@
 #'
 #' @export
 sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
-                                          fond = NULL, ortho = NULL) {
+                                          fond = NULL, ortho = NULL,
+                                          depot = NULL) {
   for (paquet in c("sf", "xml2")) {
     if (!requireNamespace(paquet, quietly = TRUE)) {
       stop("Le paquet `", paquet, "` est requis pour ecrire le projet ",
@@ -95,6 +115,8 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
       geometry = sf::st_as_sfc(placettes$wkt, crs = 2154)
     ), gpkg, "placettes")
   }
+
+  verser_photos_aller(con, foret_id, dossier, gpkg, depot)
 
   ug <- terrain$ug
   contours <- sf::st_as_sfc(ug$wkt, crs = 2154)
@@ -182,6 +204,10 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
   placettes <- lire("placettes")
   controles <- rattacher_controles(lire("controles"), placettes)
   photos <- as.data.frame(lire("photos"))
+  # Couche ajoutee (brief du 2026-10-28) : un projet engendre avant elle n'en
+  # porte pas, et la tournee s'importe comme avant.
+  photos_terrain <- tryCatch(as.data.frame(lire("photos_terrain")),
+                             error = function(e) NULL)
   bilan <- list(travaux = 0L, placettes = 0L, controles = 0L,
                 deja_presents = 0L, photos = 0L, entrees = list())
 
@@ -213,7 +239,8 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
     params = list(foret_id))$id
   fautes <- controler_tournee_travaux(
     travaux, placettes, controles, photos, dossier,
-    travaux_connus = connus$id, placettes_connues = placettes_connues)
+    travaux_connus = connus$id, placettes_connues = placettes_connues,
+    photos_terrain = photos_terrain)
   if (length(fautes) > 0L) {
     stop("Import refuse, rien n'est ecrit :\n",
          paste0("- ", fautes, collapse = "\n"), call. = FALSE)
@@ -225,7 +252,8 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
            WHERE u.foret_id = $1 AND g.date_fin IS NULL",
     params = list(foret_id))
   photo <- function(uuid) {
-    deposees <- deposer_photos_constat(uuid, photos, dossier, depot)
+    deposees <- deposer_photos_travaux(uuid, photos, photos_terrain, dossier,
+                                       depot)
     bilan$photos <<- bilan$photos + length(deposees)
     if (length(deposees) > 0L) deposees
   }
@@ -347,8 +375,9 @@ placettes_du_projet <- function(con, foret_id) {
 
 controler_tournee_travaux <- function(travaux, placettes, controles, photos,
                                       dossier, travaux_connus,
-                                      placettes_connues) {
-  fautes <- character(0)
+                                      placettes_connues,
+                                      photos_terrain = NULL) {
+  fautes <- controler_photos_terrain(photos_terrain, photos, dossier)
   if (!is.null(travaux) && nrow(travaux) > 0L) {
     t <- as.data.frame(travaux)
     for (i in seq_len(nrow(t))) {
@@ -489,4 +518,134 @@ geometries_wgs84 <- function(x) {
       NULL
     )
   })
+}
+
+# ---------------------------------------------------------------------------
+# photos_terrain : ce que la tournee dit de la prise de vue.
+
+COLONNES_PHOTOS_TERRAIN <- c(
+  photo_uuid = "character", sujet = "character", placette_uuid = "character",
+  plant = "character", azimut_magnetique = "numeric", declinaison = "numeric",
+  modele = "character", precision_m = "numeric", source_gnss = "character",
+  referentiel_gnss = "character", age_fix_s = "numeric", simule = "integer",
+  empreinte = "character", fix_lat = "numeric", fix_lon = "numeric")
+
+# Une table vide, aux types de la couche.
+photos_terrain_vide <- function() {
+  as.data.frame(lapply(COLONNES_PHOTOS_TERRAIN, function(t) vector(t, 0L)),
+                stringsAsFactors = FALSE)
+}
+
+# Les fautes qui refusent la tournee : une ligne qui ne decrit aucune photo,
+# un sujet inconnu, une empreinte qui n'est pas celle du fichier rapporte.
+controler_photos_terrain <- function(pt, photos, dossier) {
+  if (is.null(pt) || nrow(pt) == 0L) {
+    return(character(0))
+  }
+  fautes <- character(0)
+  for (i in seq_len(nrow(pt))) {
+    x <- pt[i, ]
+    nom <- paste0("photos_terrain ", i)
+    cible <- which(tolower(photos$uuid) == tolower(x$photo_uuid))
+    if (is.na(x$photo_uuid) || length(cible) == 0L) {
+      fautes <- c(fautes, paste0(nom, " : aucune photo de la couche photos ",
+                                 "ne porte cet identifiant"))
+      next
+    }
+    if (!is.na(x$sujet) && !x$sujet %in% c("placette", "plant")) {
+      fautes <- c(fautes, paste0(nom, " : sujet inconnu (", x$sujet,
+                                 "), attendu placette ou plant"))
+    }
+    f <- file.path(dossier, photos$fichier[[cible[[1L]]]])
+    if (!is.na(x$empreinte) && file.exists(f) &&
+        !identical(empreinte_fichier(f), tolower(x$empreinte))) {
+      fautes <- c(fautes, paste0(nom, " : l'empreinte declaree n'est pas ",
+                                 "celle du fichier (", basename(f), ")"))
+    }
+  }
+  fautes
+}
+
+# Les photos d'un constat, deposees, avec leur identifiant et ce que la
+# tournee dit de leur prise de vue.
+deposer_photos_travaux <- function(uuid, photos, photos_terrain, dossier,
+                                   depot) {
+  siennes <- photos[tolower(photos$constat_uuid) == uuid, , drop = FALSE]
+  lapply(seq_len(nrow(siennes)), function(i) {
+    p <- sommier_deposer_photo(file.path(dossier, siennes$fichier[[i]]), depot)
+    if (!is.na(siennes$uuid[[i]])) {
+      p$uuid <- tolower(siennes$uuid[[i]])
+    }
+    if (!is.null(photos_terrain) && nrow(photos_terrain) > 0L) {
+      t <- photos_terrain[tolower(photos_terrain$photo_uuid) ==
+                            tolower(siennes$uuid[[i]]), , drop = FALSE]
+      if (nrow(t) > 0L) {
+        t <- as.list(t[1L, setdiff(names(t), "photo_uuid"), drop = FALSE])
+        p$terrain <- t[intersect(names(t), CHAMPS_PHOTO_TERRAIN)]
+      }
+    }
+    p
+  })
+}
+
+# Verse a l'aller les photos du dernier controle de chaque placette.
+verser_photos_aller <- function(con, foret_id, dossier, gpkg, depot) {
+  photos <- data.frame(uuid = character(0), constat_uuid = character(0),
+                       fichier = character(0),
+                       prise_le = as.POSIXct(character(0), tz = "UTC"),
+                       stringsAsFactors = FALSE)
+  terrain <- photos_terrain_vide()
+  if (!is.null(depot)) {
+    depot <- valider_texte(depot, "depot")
+    derniers <- DBI::dbGetQuery(
+      con,
+      "SELECT DISTINCT ON (c.payload ->> 'placette_id')
+              c.id::text AS id, (c.payload -> 'photos')::text AS photos
+         FROM entree_sommier c
+         JOIN v_placette p ON p.id = (c.payload ->> 'placette_id')::uuid
+        WHERE c.foret_id = $1 AND c.registre = 6
+          AND c.payload ->> 'type_entree' = 'controle' AND p.geom IS NOT NULL
+        ORDER BY c.payload ->> 'placette_id', c.date_evenement DESC, c.seq DESC",
+      params = list(foret_id))
+    for (k in seq_len(nrow(derniers))) {
+      if (is.na(derniers$photos[[k]])) next
+      for (p in jsonlite::fromJSON(derniers$photos[[k]],
+                                   simplifyVector = FALSE)) {
+        source <- tryCatch(chemin_photo(depot, p$sha256, p$type),
+                           error = function(e) NA_character_)
+        if (is.na(source) || !file.exists(source) ||
+            !identical(empreinte_fichier(source), p$sha256)) {
+          warning("Photo du controle ", derniers$id[[k]], " non versee a ",
+                  "l'aller : absente du depot ou alteree (", p$sha256, ").",
+                  call. = FALSE)
+          next
+        }
+        uuid <- if (is.null(p$uuid)) uuid_v4() else p$uuid
+        fichier <- paste0("DCIM/", uuid, ".", tools::file_ext(source))
+        file.copy(source, file.path(dossier, fichier), copy.date = TRUE)
+        photos[nrow(photos) + 1L, ] <- list(
+          uuid, derniers$id[[k]], fichier,
+          if (is.null(p$exif_date_utc)) as.POSIXct(NA, tz = "UTC") else
+            as.POSIXct(p$exif_date_utc, format = "%Y-%m-%dT%H:%M:%SZ",
+                       tz = "UTC"))
+        if (!is.null(p$terrain)) {
+          ligne <- photos_terrain_vide()[1L, ]
+          ligne$photo_uuid <- uuid
+          for (champ in intersect(names(p$terrain), names(ligne))) {
+            valeur <- p$terrain[[champ]]
+            ligne[[champ]] <- switch(COLONNES_PHOTOS_TERRAIN[[champ]],
+                                     numeric = as.numeric(valeur),
+                                     integer = as.integer(valeur),
+                                     as.character(valeur))
+          }
+          terrain <- rbind(terrain, ligne)
+        }
+      }
+    }
+  }
+  if (nrow(photos) > 0L) {
+    ecrire_table(photos, gpkg, "photos")
+  }
+  ecrire_table(terrain, gpkg, "photos_terrain")
+  invisible(nrow(photos))
 }

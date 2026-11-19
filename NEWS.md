@@ -1,3 +1,35 @@
+# sommieR 0.41.0
+
+Photos de placette et de plant (brief `surculus` du 2026-10-28,
+`2026-10-28-photos-placette-et-plant.md`).
+
+- **L'EXIF dit comment lire la date et la position.** `sommier_deposer_photo()`
+  lit en plus `GPSMapDatum` (`exif_datum`), `GPSHPositioningError`
+  (`exif_erreur_m`, en mètres) et `OffsetTimeOriginal` (`exif_decalage`, d'où
+  `exif_date_utc`). Une position n'est jamais tenue pour du WGS 84 : sans
+  `exif_datum`, son repère reste inconnu ; `ETRS89` (RTK Centipède) et `WGS-84`
+  sont recopiés tels quels. `exif_date` est inchangé. Le fichier n'est jamais
+  modifié. Ajout seul : les photos déjà inscrites se relisent à l'identique.
+- **Couche `photos_terrain`** du projet des travaux : table sans géométrie du
+  `travaux.gpkg`, vide à l'aller, qui décrit la prise de vue de chaque photo
+  (sujet placette ou plant, azimut magnétique, déclinaison, modèle, précision,
+  source et référentiel du GNSS, âge du fix, position simulée, empreinte
+  SHA-256, position du fix). `sommier_importer_qfield_travaux()` la lit si elle
+  est présente (un projet plus ancien s'importe comme avant), la recopie dans
+  le payload de la photo (`terrain`, avec l'`uuid` de la photo) et refuse la
+  tournée si une ligne ne décrit aucune photo, si le sujet est inconnu ou si
+  l'empreinte déclarée n'est pas celle du fichier.
+- **Photos à l'aller** : `sommier_projet_qfield_travaux(depot = )` verse les
+  photos du dernier contrôle de chaque placette (fichiers `DCIM/<uuid>.jpg`,
+  lignes de `photos` et de `photos_terrain`). Une photo absente du dépôt ou
+  altérée n'est pas versée (avertissement). Rapportées telles quelles, elles ne
+  sont jamais redéposées.
+- **Confirmé par test** : plusieurs photos par contrôle, JPEG à EXIF GPS sous
+  `DCIM/`, passent l'import ; la tournée de démonstration (une photo de
+  placette, une de plant) est importée sans faute.
+- Pas de rupture de contrat public : tous les ajouts sont facultatifs.
+
+
 # sommieR 0.40.0
 
 Niveaux de concurrence d'une plantation (brief `surculus` du 2026-11-04,
