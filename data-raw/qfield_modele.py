@@ -161,6 +161,23 @@ def ecrire_leurre(chemin):
     image = None
 
 
+def ecrire_leurre_tuile(chemin):
+    """Un MBTiles minimal en EPSG:3857 (le format de `ortho.mbtiles`, que
+    sommier_projet_qfield_travaux() ecrit a cote du projet)."""
+    from osgeo import gdal, osr
+    gdal.UseExceptions()
+    systeme = osr.SpatialReference()
+    systeme.ImportFromEPSG(3857)
+    source = "/vsimem/leurre_3857.tif"
+    image = gdal.GetDriverByName("GTiff").Create(source, 2, 2, 3, gdal.GDT_Byte)
+    image.SetGeoTransform((186379.42, 1.5, 0, 6006424.28, 0, -1.5))
+    image.SetProjection(systeme.ExportToWkt())
+    gdal.GetDriverByName("MBTiles").CreateCopy(
+        chemin, image, options=["TILE_FORMAT=PNG"])
+    image = None
+    gdal.Unlink(source)
+
+
 def couche(nom, titre=None, gpkg=GPKG, prefixe="limites_"):
     c = QgsVectorLayer("%s|layername=%s" % (gpkg, nom), titre or nom, "ogr")
     if not c.isValid():
@@ -1220,8 +1237,8 @@ def travaux():
         "SERVICE%3DWMTS%26REQUEST%3DGetCapabilities",
         "Orthophotographie IGN (réseau)", "wms")
     projet.addMapLayer(ortho)
-    leurre = os.path.join(SORTIE, "ortho.tif")
-    ecrire_leurre(leurre)
+    leurre = os.path.join(SORTIE, "ortho.mbtiles")
+    ecrire_leurre_tuile(leurre)
     locale = QgsRasterLayer(leurre, "Orthophotographie (hors ligne)", "gdal")
     if not locale.isValid():
         sys.exit("Ortho locale invalide.")

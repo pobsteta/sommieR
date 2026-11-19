@@ -90,7 +90,7 @@
         <Option/>
       </customproperties>
     </layer-tree-layer>
-    <layer-tree-layer name="Orthophotographie (hors ligne)" legend_exp="" checked="Qt::Checked" source="./ortho.tif" patch_size="-1,-1" providerKey="gdal" expanded="1" id="travaux_ortho" legend_split_behavior="0">
+    <layer-tree-layer name="Orthophotographie (hors ligne)" legend_exp="" checked="Qt::Checked" source="./ortho.mbtiles" patch_size="-1,-1" providerKey="gdal" expanded="1" id="travaux_ortho" legend_split_behavior="0">
       <customproperties>
         <Option/>
       </customproperties>
@@ -1580,10 +1580,10 @@
     </maplayer>
     <maplayer autoRefreshTime="0" minScale="1e+08" refreshOnNotifyMessage="" type="raster" hasScaleBasedVisibilityFlag="0" refreshOnNotifyEnabled="0" styleCategories="AllStyleCategories" maxScale="0" autoRefreshMode="Disabled" legendPlaceholderImage="">
       <extent>
-        <xmin>600000</xmin>
-        <ymin>6699998</ymin>
-        <xmax>600002</xmax>
-        <ymax>6700000</ymax>
+        <xmin>186379.42</xmin>
+        <ymin>6006421.27</ymin>
+        <xmax>186382.42</xmax>
+        <ymax>6006424.28</ymax>
       </extent>
       <wgs84extent>
         <xmin>1.67427483034870828</xmin>
@@ -1592,18 +1592,18 @@
         <ymax>47.39278724679981281</ymax>
       </wgs84extent>
       <id>travaux_ortho</id>
-      <datasource>./ortho.tif</datasource>
+      <datasource>./ortho.mbtiles</datasource>
       <layername>Orthophotographie (hors ligne)</layername>
       <srs>
         <spatialrefsys nativeFormat="Wkt">
-          <wkt>PROJCRS["RGF93 v1 / Lambert-93",BASEGEOGCRS["RGF93 v1",DATUM["Reseau Geodesique Francais 1993 v1",ELLIPSOID["GRS 1980",6378137,298.257222101,LENGTHUNIT["metre",1]]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],ID["EPSG",4171]],CONVERSION["Lambert-93",METHOD["Lambert Conic Conformal (2SP)",ID["EPSG",9802]],PARAMETER["Latitude of false origin",46.5,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8821]],PARAMETER["Longitude of false origin",3,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8822]],PARAMETER["Latitude of 1st standard parallel",49,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8823]],PARAMETER["Latitude of 2nd standard parallel",44,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8824]],PARAMETER["Easting at false origin",700000,LENGTHUNIT["metre",1],ID["EPSG",8826]],PARAMETER["Northing at false origin",6600000,LENGTHUNIT["metre",1],ID["EPSG",8827]]],CS[Cartesian,2],AXIS["easting (X)",east,ORDER[1],LENGTHUNIT["metre",1]],AXIS["northing (Y)",north,ORDER[2],LENGTHUNIT["metre",1]],USAGE[SCOPE["Engineering survey, topographic mapping."],AREA["France - onshore and offshore, mainland and Corsica (France métropolitaine including Corsica)."],BBOX[41.15,-9.86,51.56,10.38]],ID["EPSG",2154]]</wkt>
-          <proj4>+proj=lcc +lat_0=46.5 +lon_0=3 +lat_1=49 +lat_2=44 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs</proj4>
-          <srsid>145</srsid>
-          <srid>2154</srid>
-          <authid>EPSG:2154</authid>
-          <description>RGF93 v1 / Lambert-93</description>
-          <projectionacronym>lcc</projectionacronym>
-          <ellipsoidacronym>EPSG:7019</ellipsoidacronym>
+          <wkt>PROJCRS["WGS 84 / Pseudo-Mercator",BASEGEOGCRS["WGS 84",DATUM["World Geodetic System 1984",ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],ID["EPSG",4326]],CONVERSION["Popular Visualisation Pseudo-Mercator",METHOD["Popular Visualisation Pseudo Mercator",ID["EPSG",1024]],PARAMETER["Latitude of natural origin",0,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8801]],PARAMETER["Longitude of natural origin",0,ANGLEUNIT["degree",0.0174532925199433],ID["EPSG",8802]],PARAMETER["False easting",0,LENGTHUNIT["metre",1],ID["EPSG",8806]],PARAMETER["False northing",0,LENGTHUNIT["metre",1],ID["EPSG",8807]]],CS[Cartesian,2],AXIS["easting (X)",east,ORDER[1],LENGTHUNIT["metre",1]],AXIS["northing (Y)",north,ORDER[2],LENGTHUNIT["metre",1]],ID["EPSG",3857]]</wkt>
+          <proj4>+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs</proj4>
+          <srsid>3857</srsid>
+          <srid>3857</srid>
+          <authid>EPSG:3857</authid>
+          <description>WGS 84 / Pseudo-Mercator</description>
+          <projectionacronym>merc</projectionacronym>
+          <ellipsoidacronym>EPSG:7030</ellipsoidacronym>
           <geographicflag>false</geographicflag>
         </spatialrefsys>
       </srs>
@@ -1762,7 +1762,7 @@
         <provider>
           <resampling zoomedOutResamplingMethod="nearestNeighbour" maxOversampling="2" zoomedInResamplingMethod="nearestNeighbour" enabled="false"/>
         </provider>
-        <rasterrenderer greenBand="2" alphaBand="-1" opacity="1" blueBand="3" type="multibandcolor" redBand="1" nodataColor="">
+        <rasterrenderer greenBand="2" alphaBand="4" opacity="1" blueBand="3" type="multibandcolor" redBand="1" nodataColor="">
           <rasterTransparency/>
           <minMaxOrigin>
             <limits>MinMax</limits>
