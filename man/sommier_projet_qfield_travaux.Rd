@@ -12,7 +12,8 @@ sommier_projet_qfield_travaux(
   fond = NULL,
   ortho = NULL,
   programme = NULL,
-  depot = NULL
+  depot = NULL,
+  date_ortho = NULL
 )
 }
 \arguments{
@@ -35,6 +36,13 @@ PNG, fond hors emprise transparent), avec \code{attribution} et
 \code{date_mise_a_jour} (AAAA-MM-JJ, la date du GeoTIFF) dans sa table
 \code{metadata}. Il remplace \code{ortho.tif} : QField et Surculus le lisent sans
 reseau. Necessite \code{sf} et \code{RSQLite}.}
+
+\item{date_ortho}{Date facultative (AAAA-MM-JJ, ou \code{Date}) inscrite comme
+\code{date_mise_a_jour} de \code{ortho.mbtiles}. Elle dit \strong{quand l'image a ete
+obtenue} (jour du telechargement), pas quand elle a ete prise : le
+service ne donne pas la date de prise de vue. Sans elle, la date du
+fichier GeoTIFF, qui est le jour du telechargement tant qu'on ne l'a pas
+copie ; passez la vraie date si le fichier a ete copie ou touche depuis.}
 
 \item{programme}{Chemin du \verb{<projet>-programme-travaux.gpkg} de
 nemetonshiny (facultatif), lu par \code{\link[=sommier_lire_programme_travaux]{sommier_lire_programme_travaux()}} : ses
@@ -92,8 +100,14 @@ amendee le 2026-10-28) : POINT, une ligne par photo, \code{photo_uuid}
 \code{modele_geomagnetique}, \code{precision_m}, \code{source_gnss}, \code{referentiel_source}
 (\code{RGF93} ou \code{WGS84}), \code{age_fix_ms}, \code{simulee}, \code{sha256}.
 \code{\link[=sommier_importer_qfield_travaux]{sommier_importer_qfield_travaux()}} la lit au retour, si elle est
-presente, et refuse la tournee d'une couche aux colonnes manquantes
-(\code{photo_uuid}, \code{sujet}, \code{sha256}) ou inattendues.
+presente. Une colonne obligatoire manquante (\code{photo_uuid}, \code{sujet},
+\code{sha256}) refuse la tournee ; une colonne en plus est ignoree et nommee
+dans les \code{avertissements} du bilan. Une empreinte vide (non verifiee) ou
+deux lignes pour la meme photo (la premiere est gardee) sont aussi des
+avertissements ; chaque ligne reste controlee (sujet inconnu ou empreinte
+fausse : faute, y compris sur la seconde ligne d'une meme photo). La geometrie POINT est lue et inscrite au payload de la
+photo, sous \code{terrain} : \code{fix_x}, \code{fix_y} et \code{fix_scr} (code EPSG de la
+couche), a cote de \code{exif_position}, sans conversion de repere.
 
 \strong{La symbologie est celle de Marculus} (brief du 2026-10-16) : parcelles
 coloriees par proprietaire (remplissage a 20 \%, contour plein, numero de la

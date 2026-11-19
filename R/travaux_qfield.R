@@ -37,6 +37,12 @@
 #'   `date_mise_a_jour` (AAAA-MM-JJ, la date du GeoTIFF) dans sa table
 #'   `metadata`. Il remplace `ortho.tif` : QField et Surculus le lisent sans
 #'   reseau. Necessite `sf` et `RSQLite`.
+#' @param date_ortho Date facultative (AAAA-MM-JJ, ou `Date`) inscrite comme
+#'   `date_mise_a_jour` de `ortho.mbtiles`. Elle dit **quand l'image a ete
+#'   obtenue** (jour du telechargement), pas quand elle a ete prise : le
+#'   service ne donne pas la date de prise de vue. Sans elle, la date du
+#'   fichier GeoTIFF, qui est le jour du telechargement tant qu'on ne l'a pas
+#'   copie ; passez la vraie date si le fichier a ete copie ou touche depuis.
 #' @param programme Chemin du `<projet>-programme-travaux.gpkg` de
 #'   nemetonshiny (facultatif), lu par [sommier_lire_programme_travaux()] : ses
 #'   actions sont versees dans la table `programme` du projet, et l'import
@@ -67,8 +73,14 @@
 #' `modele_geomagnetique`, `precision_m`, `source_gnss`, `referentiel_source`
 #' (`RGF93` ou `WGS84`), `age_fix_ms`, `simulee`, `sha256`.
 #' [sommier_importer_qfield_travaux()] la lit au retour, si elle est
-#' presente, et refuse la tournee d'une couche aux colonnes manquantes
-#' (`photo_uuid`, `sujet`, `sha256`) ou inattendues.
+#' presente. Une colonne obligatoire manquante (`photo_uuid`, `sujet`,
+#' `sha256`) refuse la tournee ; une colonne en plus est ignoree et nommee
+#' dans les `avertissements` du bilan. Une empreinte vide (non verifiee) ou
+#' deux lignes pour la meme photo (la premiere est gardee) sont aussi des
+#' avertissements ; chaque ligne reste controlee (sujet inconnu ou empreinte
+#' fausse : faute, y compris sur la seconde ligne d'une meme photo). La geometrie POINT est lue et inscrite au payload de la
+#' photo, sous `terrain` : `fix_x`, `fix_y` et `fix_scr` (code EPSG de la
+#' couche), a cote de `exif_position`, sans conversion de repere.
 #'
 #' **La symbologie est celle de Marculus** (brief du 2026-10-16) : parcelles
 #' coloriees par proprietaire (remplissage a 20 %, contour plein, numero de la
@@ -84,7 +96,8 @@
 sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
                                           fond = NULL, ortho = NULL,
                                           programme = NULL,
-                                          depot = NULL) {
+                                          depot = NULL,
+                                          date_ortho = NULL) {
   for (paquet in c("sf", "xml2")) {
     if (!requireNamespace(paquet, quietly = TRUE)) {
       stop("Le paquet `", paquet, "` est requis pour ecrire le projet ",
@@ -158,7 +171,8 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
   proprietaires <- ecrire_parcelles(fond, gpkg)
 
   qgs <- file.path(dossier, "travaux.qgs")
-  joindre_ortho(qgs, dossier, ortho, "travaux_ortho", tuilee = TRUE)
+  joindre_ortho(qgs, dossier, ortho, "travaux_ortho", tuilee = TRUE,
+                date_ortho = date_ortho)
   if (!is.null(actions)) {
     poser_liste_actions(qgs, actions$action_id, libelle_action_programme(actions))
   }
@@ -204,7 +218,10 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
 #' @param auteur Compte qui importe. L'agent qui a releve est l'operateur.
 #'
 #' @return Invisiblement, un bilan : `travaux`, `placettes`, `controles`
-#'   (nombres d'entrees ecrites), `deja_presents`, `photos` et `entrees`.
+#'   (nombres d'entrees ecrites), `deja_presents`, `photos`, `entrees` et
+#'   `avertissements` (ecarts de forme acceptes : colonnes en trop de
+#'   `photos_terrain`, empreinte vide, photo en double ; chacun est aussi
+#'   rendu par `warning()`).
 #'
 #' @seealso [sommier_projet_qfield_travaux()], [sommier_verifier_photos()]
 #'
@@ -245,7 +262,8 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
   # porte pas, et la tournee s'importe comme avant.
   photos_terrain <- lire_photos_terrain(gpkg)
   bilan <- list(travaux = 0L, placettes = 0L, controles = 0L,
-                deja_presents = 0L, photos = 0L, entrees = list())
+                deja_presents = 0L, photos = 0L, entrees = list(),
+                avertissements = avertir_photos_terrain(photos_terrain))
 
   ids <- tolower(c(if (!is.null(travaux)) travaux$uuid, placettes$uuid,
                    controles$uuid))
@@ -347,6 +365,9 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
       bilan$entrees <- c(bilan$entrees, ecrites)
     }
   })
+  for (a in bilan$avertissements) {
+    warning(a, call. = FALSE)
+  }
   invisible(bilan)
 }
 
@@ -602,6 +623,9 @@ COLONNES_PHOTOS_TERRAIN_EXIGEES <- c("photo_uuid", "sujet", "sha256")
 # Les colonnes du fichier qui ne sont pas des champs (cle, geometrie).
 COLONNES_GPKG <- c("fid", "geom", "geometry")
 
+# Les colonnes que sommieR ajoute a la lecture : la position du fix.
+COLONNES_FIX <- c("fix_x", "fix_y", "fix_scr")
+
 # La couche, lue telle que Surculus l'ecrit. NULL si elle est absente (un
 # projet d'avant le brief) ; sinon une table sans geometrie.
 lire_photos_terrain <- function(gpkg) {
@@ -610,34 +634,57 @@ lire_photos_terrain <- function(gpkg) {
     return(NULL)
   }
   pt <- suppressWarnings(sf::read_sf(gpkg, layer = "photos_terrain"))
+  fix <- NULL
   if (inherits(pt, "sf")) {
+    fix <- position_du_fix(pt)
     pt <- sf::st_drop_geometry(pt)
   }
-  as.data.frame(pt)
+  pt <- as.data.frame(pt)
+  if (!is.null(fix)) {
+    pt$fix_x <- fix$x
+    pt$fix_y <- fix$y
+    pt$fix_scr <- fix$scr
+  }
+  pt
+}
+
+# La position du fix : la geometrie POINT de chaque ligne, telle que la couche
+# l'ecrit, avec le SCR de la couche (code EPSG). Aucune conversion de repere :
+# comme `exif_position`, c'est une declaration de l'appareil. Une ligne sans
+# point (Surculus n'ecrit aucune position si le fix a plus de 5 s ou est
+# simule) ou une couche sans SCR connu n'a pas de position.
+position_du_fix <- function(pt) {
+  n <- nrow(pt)
+  vide <- list(x = rep(NA_real_, n), y = rep(NA_real_, n),
+               scr = rep(NA_character_, n))
+  g <- sf::st_geometry(pt)
+  if (n == 0L || !inherits(g, "sfc_POINT")) {
+    return(vide)
+  }
+  epsg <- sf::st_crs(pt)$epsg
+  if (is.null(epsg) || is.na(epsg)) {
+    return(vide)
+  }
+  xy <- sf::st_coordinates(g)[, 1:2, drop = FALSE]
+  vivant <- !sf::st_is_empty(g) & stats::complete.cases(xy)
+  list(x = ifelse(vivant, xy[, 1L], NA_real_),
+       y = ifelse(vivant, xy[, 2L], NA_real_),
+       scr = ifelse(vivant, paste0("EPSG:", epsg), NA_character_))
 }
 
 # Les fautes qui refusent la tournee, en clair : une couche aux colonnes
-# manquantes ou inattendues, une ligne qui ne decrit aucune photo, un sujet
+# obligatoires manquantes, une ligne qui ne decrit aucune photo, un sujet
 # inconnu, une empreinte qui n'est pas celle du fichier rapporte.
 controler_photos_terrain <- function(pt, photos, dossier) {
   if (is.null(pt)) {
     return(character(0))
   }
   manquantes <- setdiff(COLONNES_PHOTOS_TERRAIN_EXIGEES, names(pt))
-  inattendues <- setdiff(names(pt), c(CHAMPS_PHOTO_TERRAIN, "photo_uuid",
-                                      COLONNES_GPKG))
   fautes <- character(0)
   if (length(manquantes) > 0L) {
     fautes <- c(fautes, paste0(
       "photos_terrain : colonne(s) manquante(s) : ",
       paste(manquantes, collapse = ", ")))
-  }
-  if (length(inattendues) > 0L) {
-    fautes <- c(fautes, paste0(
-      "photos_terrain : colonne(s) inattendue(s) : ",
-      paste(inattendues, collapse = ", "),
-      " (colonnes attendues : photo_uuid, ",
-      paste(CHAMPS_PHOTO_TERRAIN, collapse = ", "), ")"))
   }
   if (length(manquantes) > 0L || nrow(pt) == 0L) {
     return(fautes)
@@ -657,7 +704,8 @@ controler_photos_terrain <- function(pt, photos, dossier) {
                                  "), attendu placette ou plant"))
     }
     f <- file.path(dossier, photos$fichier[[cible[[1L]]]])
-    if (!is.na(x$sha256) && file.exists(f) &&
+    # Une empreinte vide n'est pas verifiable : avertissement, pas faute.
+    if (!est_vide_vec(x$sha256) && file.exists(f) &&
         !identical(empreinte_fichier(f), tolower(x$sha256))) {
       fautes <- c(fautes, paste0(nom, " : le sha256 declare n'est pas ",
                                  "celui du fichier (", basename(f), ")"))
@@ -665,6 +713,42 @@ controler_photos_terrain <- function(pt, photos, dossier) {
   }
   fautes
 }
+
+# Les ecarts de forme qui n'empechent pas la lecture : la tournee s'importe, le
+# compte rendu les nomme (un lecteur ignore les champs en plus, spec de
+# Surculus). Colonnes en trop (ignorees), empreinte vide (non verifiee), deux
+# lignes pour la meme photo (la premiere est gardee).
+avertir_photos_terrain <- function(pt) {
+  if (is.null(pt)) {
+    return(character(0))
+  }
+  avertissements <- character(0)
+  en_trop <- setdiff(names(pt), c(CHAMPS_PHOTO_TERRAIN, "photo_uuid",
+                                  COLONNES_GPKG, COLONNES_FIX))
+  if (length(en_trop) > 0L) {
+    avertissements <- c(avertissements, paste0(
+      "photos_terrain : colonne(s) inconnue(s) ignoree(s) : ",
+      paste(en_trop, collapse = ", ")))
+  }
+  if (all(c("photo_uuid", "sha256") %in% names(pt))) {
+    vides <- which(est_vide_vec(pt$sha256))
+    if (length(vides) > 0L) {
+      avertissements <- c(avertissements, paste0(
+        "photos_terrain : sha256 vide, empreinte non verifiee (ligne(s) ",
+        paste(vides, collapse = ", "), ")"))
+    }
+    id <- tolower(pt$photo_uuid)
+    doubles <- unique(id[!is.na(id) & duplicated(id)])
+    if (length(doubles) > 0L) {
+      avertissements <- c(avertissements, paste0(
+        "photos_terrain : plusieurs lignes pour la meme photo (",
+        paste(doubles, collapse = ", "), ") : la premiere est gardee"))
+    }
+  }
+  avertissements
+}
+
+est_vide_vec <- function(x) is.na(x) | !nzchar(trimws(as.character(x)))
 
 # Les photos d'un constat, deposees, avec leur identifiant et ce que la
 # tournee dit de leur prise de vue.
@@ -680,8 +764,12 @@ deposer_photos_travaux <- function(uuid, photos, photos_terrain, dossier,
       t <- photos_terrain[tolower(photos_terrain$photo_uuid) ==
                             tolower(siennes$uuid[[i]]), , drop = FALSE]
       if (nrow(t) > 0L) {
-        t <- as.list(t[1L, intersect(names(t), CHAMPS_PHOTO_TERRAIN),
+        t <- as.list(t[1L, intersect(names(t), c(CHAMPS_PHOTO_TERRAIN,
+                                                 COLONNES_FIX)),
                        drop = FALSE])
+        # Une valeur vide (empreinte "") n'est pas une declaration.
+        t <- t[!vapply(t, function(v) is.character(v) && !nzchar(trimws(v)),
+                       logical(1))]
         p$terrain <- t
       }
     }

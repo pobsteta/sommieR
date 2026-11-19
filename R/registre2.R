@@ -346,7 +346,9 @@ valider_photos <- function(photos) {
 # Ce que la tournee dit de la prise de vue (couche `photos_terrain`) : des
 # declarations de l'appareil, recopiees comme telles, jamais des faits.
 # Une seule liste : celle de la couche de Surculus, moins `photo_uuid`, que le
-# payload porte comme `uuid` de la photo.
+# payload porte comme `uuid` de la photo. S'y ajoute, au payload, la position
+# du fix lue sur la geometrie de la couche (`fix_x`, `fix_y`, `fix_scr`, voir
+# `COLONNES_FIX`), sans conversion de repere.
 CHAMPS_PHOTO_TERRAIN <- c("sujet", "placette_uuid", "plant_uuid",
                           "azimut_visee_mag_deg", "declinaison_deg",
                           "modele_geomagnetique", "precision_m", "source_gnss",
@@ -360,7 +362,7 @@ valider_photo_terrain <- function(x, nom) {
   if (!is.list(x) || is.null(names(x))) {
     stop("`", nom, "` doit etre une liste nommee.", call. = FALSE)
   }
-  inconnus <- setdiff(names(x), CHAMPS_PHOTO_TERRAIN)
+  inconnus <- setdiff(names(x), c(CHAMPS_PHOTO_TERRAIN, COLONNES_FIX))
   if (length(inconnus) > 0L) {
     stop("`", nom, "` : champ(s) inconnu(s) : ",
          paste(inconnus, collapse = ", "), ".", call. = FALSE)

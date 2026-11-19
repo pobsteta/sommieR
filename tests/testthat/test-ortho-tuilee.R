@@ -120,3 +120,28 @@ test_that("joindre_ortho tuile pour les travaux et copie pour les autres", {
   joindre_ortho("inutile.qgs", dest2, src, "limites_ortho")
   expect_true(file.exists(file.path(dest2, "ortho.tif")))
 })
+
+test_that("date_ortho fixe la date de l'ortho, sans elle c'est celle du fichier", {
+  d <- withr::local_tempdir()
+  src <- faire_ortho_test(d)
+  Sys.setFileTime(src, as.POSIXct("2026-10-27 12:00:00", tz = "UTC"))
+  sans <- file.path(d, "sans")
+  dir.create(sans)
+  joindre_ortho("inutile.qgs", sans, src, "travaux_ortho", tuilee = TRUE)
+  expect_equal(lire_meta(file.path(sans, "ortho.mbtiles"))[["date_mise_a_jour"]],
+               "2026-10-27")
+  avec <- file.path(d, "avec")
+  dir.create(avec)
+  joindre_ortho("inutile.qgs", avec, src, "travaux_ortho", tuilee = TRUE,
+                date_ortho = "2026-11-02")
+  expect_equal(lire_meta(file.path(avec, "ortho.mbtiles"))[["date_mise_a_jour"]],
+               "2026-11-02")
+  # Un Date vaut sa forme AAAA-MM-JJ.
+  jour <- file.path(d, "jour")
+  dir.create(jour)
+  joindre_ortho("inutile.qgs", jour, src, "travaux_ortho", tuilee = TRUE,
+                date_ortho = as.Date("2026-11-03"))
+  expect_equal(lire_meta(file.path(jour, "ortho.mbtiles"))[["date_mise_a_jour"]],
+               "2026-11-03")
+  expect_true("date_ortho" %in% names(formals(sommier_projet_qfield_travaux)))
+})

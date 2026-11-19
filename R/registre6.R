@@ -226,7 +226,14 @@ registre6_placette <- function(code_placette, travaux_id, geometrie,
 #'   vivants sur lesquels le contact avec la vegetation a ete note (au plus
 #'   `nb_vivants`), et parmi eux ceux au contact de la vegetation concurrente.
 #'   Ajout seul : `NULL` est accepte, et un controle sans ces champs se relit a
-#'   l'identique. Lis avec [sommier_niveau_concurrence()].
+#'   l'identique. Lis avec [sommier_niveau_concurrence()]. Quand les deux sont
+#'   fournis : si `concurrence` est absent, il est **deduit** par
+#'   [sommier_niveau_concurrence()] ; s'il est saisi et contredit les
+#'   comptages, il est **conserve tel que saisi**, un avertissement le dit et
+#'   le niveau calcule est inscrit au payload sous `concurrence_calculee`.
+#' @param concurrence_calculee Ne se saisit pas : c'est la trace que la
+#'   fonction inscrit quand le niveau saisi contredit les comptages. Accepte
+#'   pour que la relecture d'un payload ecrit se rejoue (il est recalcule).
 #'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
@@ -240,7 +247,8 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
                                releve_uuid = NULL, photos = NULL,
                                observations = NULL,
                                nb_plants_vivants = NULL,
-                               nb_plants_concurrences = NULL) {
+                               nb_plants_concurrences = NULL,
+                               concurrence_calculee = NULL) {
   nb_total <- valider_entier(nb_total, "nb_total", min = 0)
   nb_vivants <- valider_entier(nb_vivants, "nb_vivants", min = 0)
   if (nb_vivants > nb_total) {
@@ -272,6 +280,32 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
          ") que de plants vivants notes (", nb_plants_vivants, ").",
          call. = FALSE)
   }
+  concurrence <- si_present(concurrence, valider_choix, "concurrence",
+                            SOMMIER_CONCURRENCES)
+  # Les deux comptages permettent de deduire le niveau (regle de
+  # sommier_niveau_concurrence()). Un niveau saisi qui les contredit est
+  # accepte tel quel : le terrain n'est jamais bloque, l'ecart est inscrit.
+  relu <- !is.null(concurrence_calculee)  # relecture d'un payload deja ecrit
+  concurrence_calculee <- NULL
+  if (!is.null(nb_plants_concurrences)) {
+    concurrence_calculee <- sommier_niveau_concurrence(
+      nb_plants_concurrences, nb_plants_vivants)
+    # Aucun vivant note (0 sur 0) : pas de niveau a calculer, donc rien a
+    # deduire, rien a comparer, rien a inscrire.
+    if (is.na(concurrence_calculee)) {
+      concurrence_calculee <- NULL
+    } else if (is.null(concurrence)) {
+      concurrence <- concurrence_calculee
+      concurrence_calculee <- NULL
+    } else if (identical(concurrence, concurrence_calculee)) {
+      concurrence_calculee <- NULL
+    } else if (!relu) {
+      warning("concurrence saisie (", concurrence, ") differente du niveau ",
+              "calcule sur les comptages (", concurrence_calculee, ") : ",
+              "saisie conservee, ecart inscrit (concurrence_calculee).",
+              call. = FALSE)
+    }
+  }
   compacter(list(
     type_entree = "controle",
     placette_id = valider_uuid(placette_id, "placette_id"),
@@ -279,8 +313,7 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
     nb_vivants  = nb_vivants,
     h_moy_cm    = si_present(h_moy_cm, valider_entier, "h_moy_cm", min = 0),
     nb_abroutis = nb_abroutis,
-    concurrence = si_present(concurrence, valider_choix, "concurrence",
-                             SOMMIER_CONCURRENCES),
+    concurrence = concurrence,
     besoin      = si_present(besoin, valider_choix, "besoin",
                              c(SOMMIER_CODES_TRAVAUX$code, "aucun")),
     operateur   = si_present(operateur, valider_texte, "operateur"),
@@ -289,7 +322,8 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
     photos      = valider_photos(photos),
     observations = si_present(observations, valider_texte, "observations"),
     nb_plants_vivants = nb_plants_vivants,
-    nb_plants_concurrences = nb_plants_concurrences
+    nb_plants_concurrences = nb_plants_concurrences,
+    concurrence_calculee = concurrence_calculee
   ))
 }
 

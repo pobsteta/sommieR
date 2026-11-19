@@ -19,7 +19,10 @@ sommier_importer_qfield_travaux(con, foret_id, dossier, depot, auteur)
 }
 \value{
 Invisiblement, un bilan : \code{travaux}, \code{placettes}, \code{controles}
-(nombres d'entrees ecrites), \code{deja_presents}, \code{photos} et \code{entrees}.
+(nombres d'entrees ecrites), \code{deja_presents}, \code{photos}, \code{entrees} et
+\code{avertissements} (ecarts de forme acceptes : colonnes en trop de
+\code{photos_terrain}, empreinte vide, photo en double ; chacun est aussi
+rendu par \code{warning()}).
 }
 \description{
 Relit le projet rapporte du terrain et inscrit au registre 6 les travaux

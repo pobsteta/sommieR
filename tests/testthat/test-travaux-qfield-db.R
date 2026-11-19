@@ -505,6 +505,11 @@ test_that("une tournee avec une photo de placette et une de plant s'importe, pui
   expect_equal(pln$placette_uuid, f$placette)
   expect_equal(pln$plant_uuid, plant)
   expect_equal(pln$age_fix_ms, 1200L)
+  # La position du fix : la geometrie de la couche, avec son SCR, sans conversion.
+  expect_equal(c(pln$fix_x, pln$fix_y), c(600150, 6700100))
+  expect_equal(pln$fix_scr, "EPSG:2154")
+  expect_equal(pla$fix_scr, "EPSG:2154")
+  expect_length(bilan$avertissements, 0L)
   expect_equal(pln$referentiel_source, "WGS84")
   expect_false(pln$simulee)
   expect_equal(pln$sha256, unname(empreintes[["plant"]]))
@@ -554,7 +559,71 @@ test_that("une description de photo qui ne colle pas refuse la tournee, en clair
     params = list(t$k))$n, 0L)
 })
 
-test_that("une couche photos_terrain aux colonnes manquantes ou inattendues est une faute lisible", {
+test_that("une colonne en trop, une empreinte vide, une photo en double : l'import passe et le dit", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  depot <- file.path(withr::local_tempdir(), "photos")
+  t <- tournee_photos(con, f, dossier)
+  gpkg <- file.path(dossier, "travaux.gpkg")
+  emp <- empreinte_fichier(file.path(dossier, "DCIM",
+                                     paste0(t$ph[["placette"]], ".jpg")))
+  # Deux lignes pour la photo de placette (la seconde a une empreinte vide) ;
+  # plus une colonne que Surculus n'ecrit pas encore.
+  pt <- photos_terrain_surculus(
+    c(t$ph[["placette"]], t$ph[["placette"]]),
+    c("placette", "placette"), f$placette, NA_character_, c(emp, ""))
+  pt$colonne_future <- c("a", "b")
+  sf::st_write(pt, gpkg, layer = "photos_terrain", quiet = TRUE)
+  avertis <- character(0)
+  bilan <- withCallingHandlers(
+    sommier_importer_qfield_travaux(con, f$foret, dossier, depot,
+                                    auteur = "test"),
+    warning = function(w) {
+      avertis <<- c(avertis, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    })
+  expect_equal(bilan$controles, 1L)
+  expect_equal(bilan$photos, 2L)
+  expect_length(bilan$avertissements, 3L)
+  expect_match(bilan$avertissements[[1L]], "colonne_future")
+  expect_match(bilan$avertissements[[2L]], "sha256 vide")
+  expect_match(bilan$avertissements[[3L]], "la premiere est gardee")
+  expect_equal(avertis, bilan$avertissements)
+  # La premiere ligne fait foi ; la colonne en trop n'arrive pas au registre.
+  pla <- bilan$entrees[[1L]]$payload$photos[[1L]]$terrain
+  expect_equal(pla$sha256, emp)
+  expect_null(pla$colonne_future)
+  expect_true(sommier_verifier(con, f$foret)$valide)
+})
+
+test_that("une empreinte vide sur une ligne unique : gardee, avertissement, absente du payload", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  depot <- file.path(withr::local_tempdir(), "photos")
+  t <- tournee_photos(con, f, dossier)
+  gpkg <- file.path(dossier, "travaux.gpkg")
+  pt <- photos_terrain_surculus(t$ph[["placette"]], "placette", f$placette,
+                                NA_character_, "")
+  sf::st_write(pt, gpkg, layer = "photos_terrain", quiet = TRUE)
+  bilan <- suppressWarnings(
+    sommier_importer_qfield_travaux(con, f$foret, dossier, depot,
+                                    auteur = "test"))
+  expect_equal(bilan$photos, 2L)
+  expect_length(bilan$avertissements, 1L)
+  expect_match(bilan$avertissements, "sha256 vide")
+  pla <- bilan$entrees[[1L]]$payload$photos[[1L]]$terrain
+  expect_equal(pla$sujet, "placette")
+  expect_null(pla$sha256)
+  expect_equal(pla$fix_scr, "EPSG:2154")
+})
+
+test_that("une couche photos_terrain aux colonnes manquantes est une faute lisible, les colonnes en trop non", {
   skip_if_not_installed("sf")
   skip_if_not_installed("xml2")
   con <- base_travaux_qfield()
@@ -575,7 +644,7 @@ test_that("une couche photos_terrain aux colonnes manquantes ou inattendues est 
                                     auteur = "test"),
     error = function(e) e)
   expect_match(conditionMessage(err), "colonne\\(s\\) manquante\\(s\\) : sha256")
-  expect_match(conditionMessage(err),
-               "colonne\\(s\\) inattendue\\(s\\) : colonne_inventee")
+  # La colonne en trop n'est pas une faute (elle est ignoree, avertissement).
+  expect_false(grepl("colonne_inventee", conditionMessage(err)))
   expect_false(grepl("missing value", conditionMessage(err)))
 })
