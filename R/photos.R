@@ -32,6 +32,16 @@ SOMMIER_TYPES_PHOTO <- c(jpg = "image/jpeg", jpeg = "image/jpeg",
 #' de l'ecriture - pas quand ni ou elle a ete prise. `exif_date` est l'heure
 #' locale de l'appareil, sans fuseau : l'EXIF n'en porte pas.
 #'
+#' **Trois balises disent comment lire la date et la position** :
+#' `OffsetTimeOriginal` (`exif_decalage`, ex. `+01:00`) donne le fuseau de
+#' `exif_date` et permet d'en tirer `exif_date_utc` ; `GPSMapDatum`
+#' (`exif_datum`, ex. `ETRS89` en RTK Centipede, `WGS-84` en GNSS autonome)
+#' dit dans quel repere est `exif_position` ; `GPSHPositioningError`
+#' (`exif_erreur_m`) en donne la precision horizontale, en metres. **Une
+#' position n'est jamais tenue pour du WGS 84 sans que le fichier le dise** :
+#' sans `exif_datum`, le repere est inconnu, et `exif_position` reste une
+#' declaration de l'appareil.
+#'
 #' Deposer deux fois la meme photo ne la copie qu'une fois. Un fichier deja
 #' present sous ce nom mais d'un autre contenu est une alteration du depot :
 #' elle est signalee, et rien n'est ecrase.
@@ -40,7 +50,8 @@ SOMMIER_TYPES_PHOTO <- c(jpg = "image/jpeg", jpeg = "image/jpeg",
 #' @param depot Repertoire du depot. Cree s'il n'existe pas.
 #'
 #' @return Une liste : `sha256`, `octets`, `type`, `fichier` (nom d'origine),
-#'   et `exif_date`, `exif_position` lorsque l'EXIF les porte.
+#'   et, lorsque l'EXIF les porte, `exif_date`, `exif_decalage`,
+#'   `exif_date_utc`, `exif_position`, `exif_datum`, `exif_erreur_m`.
 #'
 #' @seealso [sommier_verifier_photos()], [sommier_importer_qfield()]
 #'
@@ -79,7 +90,11 @@ sommier_deposer_photo <- function(fichier, depot) {
     type = type,
     fichier = basename(fichier),
     exif_date = exif$date,
-    exif_position = exif$position
+    exif_decalage = exif$decalage,
+    exif_date_utc = exif$date_utc,
+    exif_position = exif$position,
+    exif_datum = exif$datum,
+    exif_erreur_m = exif$erreur_m
   ))
 }
 
@@ -243,6 +258,13 @@ decoder_tiff <- function(tiff) {
   if (!is.null(ifd0[["34665"]])) {
     exif <- lire_ifd(entier(ifd0[["34665"]]$valeur, 4L))
     if (!is.null(exif[["36867"]])) date <- texte(exif[["36867"]])
+    # OffsetTimeOriginal : le fuseau de DateTimeOriginal, « +01:00 ».
+    if (!is.null(exif[["36881"]])) {
+      decalage <- texte(exif[["36881"]])
+      if (grepl("^[+-][0-9]{2}:[0-9]{2}$", decalage)) {
+        resultat$decalage <- decalage
+      }
+    }
   }
   if (is.null(date) && !is.null(ifd0[["306"]])) {
     date <- texte(ifd0[["306"]])
@@ -250,6 +272,11 @@ decoder_tiff <- function(tiff) {
   if (!is.null(date) && grepl("^[0-9]{4}:[0-9]{2}:[0-9]{2} [0-9:]{8}$", date)) {
     resultat$date <- sub("^([0-9]{4}):([0-9]{2}):([0-9]{2}) ", "\\1-\\2-\\3T",
                          date)
+    if (!is.null(resultat$decalage)) {
+      resultat$date_utc <- date_utc_exif(resultat$date, resultat$decalage)
+    }
+  } else {
+    resultat$decalage <- NULL
   }
 
   if (!is.null(ifd0[["34853"]])) {
@@ -262,8 +289,27 @@ decoder_tiff <- function(tiff) {
       if (identical(texte(gps[["3"]]), "W")) lon <- -lon
       if (is.finite(lat) && is.finite(lon)) {
         resultat$position <- sprintf("%.6f,%.6f", lat, lon)
+        # GPSMapDatum (18) et GPSHPositioningError (31) ne se lisent qu'avec
+        # une position : sans elle, ils ne decrivent rien.
+        if (!is.null(gps[["18"]])) {
+          datum <- trimws(texte(gps[["18"]]))
+          if (nzchar(datum)) resultat$datum <- datum
+        }
+        if (!is.null(gps[["31"]]) && gps[["31"]]$nombre == 1L) {
+          erreur <- rationnels(gps[["31"]])
+          if (is.finite(erreur) && erreur >= 0) resultat$erreur_m <- erreur
+        }
       }
     }
   }
   resultat
+}
+
+# L'heure locale de l'appareil ramenee a l'UTC par son decalage.
+date_utc_exif <- function(date, decalage) {
+  local <- as.POSIXct(date, format = "%Y-%m-%dT%H:%M:%S", tz = "UTC")
+  signe <- if (startsWith(decalage, "-")) -1 else 1
+  minutes <- as.integer(substr(decalage, 2L, 3L)) * 60L +
+    as.integer(substr(decalage, 5L, 6L))
+  format(local - signe * minutes * 60, "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 }

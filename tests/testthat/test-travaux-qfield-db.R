@@ -426,3 +426,156 @@ test_that("une couche sans action_id et une qui en porte : seule l'action sort",
   expect_equal(r$travaux_id, u_surf)
   expect_equal(r$action_id, "act_20261105093012_k3x9a1")
 })
+# Brief surculus du 2026-10-28 : photos de placette et de plant.
+
+# La couche `photos_terrain` telle que Surculus l'ecrit (docs/spec.md § 5) :
+# POINT dans le repere de la tournee, types du GeoPackage de Surculus.
+photos_terrain_surculus <- function(photo_uuid, sujet, placette_uuid,
+                                    plant_uuid, sha256) {
+  n <- length(photo_uuid)
+  sf::st_sf(
+    photo_uuid = photo_uuid, sujet = sujet, placette_uuid = placette_uuid,
+    plant_uuid = plant_uuid, azimut_visee_mag_deg = seq(180, by = 10,
+                                                       length.out = n),
+    declinaison_deg = 1.4, modele_geomagnetique = "WMM2025",
+    precision_m = c(0.03, 2)[seq_len(n)], source_gnss = c("rtk", "interne")[seq_len(n)],
+    referentiel_source = c("RGF93", "WGS84")[seq_len(n)],
+    age_fix_ms = c(800L, 1200L)[seq_len(n)], simulee = FALSE, sha256 = sha256,
+    geometry = sf::st_sfc(rep(list(sf::st_point(c(600150, 6700100))), n),
+                          crs = 2154))
+}
+
+# Une tournee avec un controle portant deux photos (placette, plant).
+tournee_photos <- function(con, f, dossier) {
+  sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.")
+  k <- uuid_v4()
+  saisir(dossier, "controles", controle(k, f$placette, 18, "2026-11-18"))
+  ph <- c(placette = uuid_v4(), plant = uuid_v4())
+  photo_exif(file.path(dossier, "DCIM", paste0(ph[["placette"]], ".jpg")),
+             decalage = "+01:00",
+             gps = list(lat = 47.977, lon = 2.030667, datum = "ETRS89",
+                        erreur_m = 0.03))
+  photo_exif(file.path(dossier, "DCIM", paste0(ph[["plant"]], ".jpg")),
+             decalage = "+01:00",
+             gps = list(lat = 47.977, lon = 2.030667, datum = "WGS-84",
+                        erreur_m = 2))
+  saisir(dossier, "photos", data.frame(
+    uuid = unname(ph), constat_uuid = k,
+    fichier = paste0("DCIM/", ph, ".jpg"),
+    prise_le = as.POSIXct("2026-11-18 09:31:05", tz = "UTC")))
+  list(k = k, ph = ph)
+}
+
+test_that("une tournee avec une photo de placette et une de plant s'importe, puis revient a l'aller", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  depot <- file.path(withr::local_tempdir(), "photos")
+  t <- tournee_photos(con, f, dossier)
+  gpkg <- file.path(dossier, "travaux.gpkg")
+  # sommieR n'ecrit pas la couche a l'aller : Surculus la cree.
+  expect_false("photos_terrain" %in% sf::st_layers(gpkg)$name)
+
+  plant <- uuid_v4()
+  empreintes <- vapply(t$ph, function(u) {
+    empreinte_fichier(file.path(dossier, "DCIM", paste0(u, ".jpg")))
+  }, "")
+  sf::st_write(photos_terrain_surculus(
+    unname(t$ph), c("placette", "plant"), f$placette, c(NA, plant),
+    unname(empreintes)), gpkg, layer = "photos_terrain", quiet = TRUE)
+
+  bilan <- sommier_importer_qfield_travaux(con, f$foret, dossier, depot,
+                                           auteur = "test")
+  expect_equal(bilan$controles, 1L)
+  expect_equal(bilan$photos, 2L)
+  payload <- bilan$entrees[[1L]]$payload
+  expect_length(payload$photos, 2L)
+  expect_equal(vapply(payload$photos, function(p) p$exif_datum, ""),
+               c("ETRS89", "WGS-84"))
+  expect_equal(payload$photos[[1L]]$uuid, t$ph[["placette"]])
+  # Placette, plant, unites et empreinte arrivent au registre, par leurs noms.
+  pla <- payload$photos[[1L]]$terrain
+  pln <- payload$photos[[2L]]$terrain
+  expect_equal(pla$sujet, "placette")
+  expect_equal(pla$placette_uuid, f$placette)
+  expect_null(pla$plant_uuid)
+  expect_equal(pln$sujet, "plant")
+  expect_equal(pln$placette_uuid, f$placette)
+  expect_equal(pln$plant_uuid, plant)
+  expect_equal(pln$age_fix_ms, 1200L)
+  expect_equal(pln$referentiel_source, "WGS84")
+  expect_false(pln$simulee)
+  expect_equal(pln$sha256, unname(empreintes[["plant"]]))
+  expect_true(all(sommier_verifier_photos(con, f$foret, depot)$statut ==
+                    "conforme"))
+  expect_true(sommier_verifier(con, f$foret)$valide)
+
+  # A l'aller suivant, les deux photos du dernier controle reviennent par la
+  # couche `photos` seule.
+  suivant <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(con, f$foret, suivant, "P. O.", depot = depot)
+  retour <- sf::read_sf(file.path(suivant, "travaux.gpkg"), "photos")
+  expect_equal(nrow(retour), 2L)
+  expect_equal(retour$constat_uuid, rep(t$k, 2L))
+  expect_true(all(file.exists(file.path(suivant, retour$fichier))))
+  expect_false("photos_terrain" %in%
+                 sf::st_layers(file.path(suivant, "travaux.gpkg"))$name)
+  # Rapportee telle quelle, cette tournee n'ecrit rien de plus.
+  encore <- sommier_importer_qfield_travaux(con, f$foret, suivant, depot,
+                                            auteur = "test")
+  expect_equal(c(encore$controles, encore$photos), c(0L, 0L))
+})
+
+test_that("une description de photo qui ne colle pas refuse la tournee, en clair", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  depot <- file.path(withr::local_tempdir(), "photos")
+  t <- tournee_photos(con, f, dossier)
+  gpkg <- file.path(dossier, "travaux.gpkg")
+  pt <- photos_terrain_surculus(
+    c(t$ph[["placette"]], uuid_v4()), c("arbre", "plant"), f$placette,
+    NA_character_, c(strrep("0", 64), NA))
+  sf::st_write(pt, gpkg, layer = "photos_terrain", quiet = TRUE)
+  err <- tryCatch(
+    sommier_importer_qfield_travaux(con, f$foret, dossier, depot,
+                                    auteur = "test"),
+    error = function(e) conditionMessage(e))
+  expect_match(err, "rien n'est ecrit")
+  expect_match(err, "sujet inconnu")
+  expect_match(err, "sha256 declare")
+  expect_match(err, "aucune photo")
+  expect_equal(DBI::dbGetQuery(
+    con, "SELECT count(*)::int AS n FROM entree_sommier WHERE id = $1",
+    params = list(t$k))$n, 0L)
+})
+
+test_that("une couche photos_terrain aux colonnes manquantes ou inattendues est une faute lisible", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  depot <- file.path(withr::local_tempdir(), "photos")
+  t <- tournee_photos(con, f, dossier)
+  gpkg <- file.path(dossier, "travaux.gpkg")
+  pt <- photos_terrain_surculus(
+    unname(t$ph), c("placette", "plant"), f$placette, NA_character_,
+    NA_character_)
+  # Sans sha256, avec une colonne que Surculus n'ecrit pas.
+  pt$sha256 <- NULL
+  pt$colonne_inventee <- 1
+  sf::st_write(pt, gpkg, layer = "photos_terrain", quiet = TRUE)
+  err <- tryCatch(
+    sommier_importer_qfield_travaux(con, f$foret, dossier, depot,
+                                    auteur = "test"),
+    error = function(e) e)
+  expect_match(conditionMessage(err), "colonne\\(s\\) manquante\\(s\\) : sha256")
+  expect_match(conditionMessage(err),
+               "colonne\\(s\\) inattendue\\(s\\) : colonne_inventee")
+  expect_false(grepl("missing value", conditionMessage(err)))
+})

@@ -11,7 +11,8 @@ sommier_projet_qfield_travaux(
   operateur,
   fond = NULL,
   ortho = NULL,
-  programme = NULL
+  programme = NULL,
+  depot = NULL
 )
 }
 \arguments{
@@ -34,6 +35,20 @@ l'ecrit \code{\link[=sommier_ortho_ign]{sommier_ortho_ign()}} (facultatif).}
 nemetonshiny (facultatif), lu par \code{\link[=sommier_lire_programme_travaux]{sommier_lire_programme_travaux()}} : ses
 actions sont versees dans la table \code{programme} du projet, et l'import
 refuse un \code{action_id} saisi qui n'y figure pas.}
+
+\item{depot}{Repertoire du depot de photos (facultatif). S'il est donne, la
+tournee emporte les photos du \strong{dernier controle de chaque placette},
+pour que l'agent les voie au passage suivant : les fichiers sous
+\verb{DCIM/<uuid>.<extension>}, une ligne de la couche \code{photos} par photo
+(rattachee au controle precedent, qui n'est pas dans la tournee). Une
+photo absente du depot ou alteree (empreinte differente) n'est pas
+versee, et un avertissement le dit. Ces lignes restent telles quelles au
+retour : elles ne rattachent aucune photo a un controle de la tournee,
+donc l'import ne les redepose jamais. \strong{Elles ne sont visibles que pour
+Surculus}, qui lit la couche \code{photos} ; la relation \code{photos_du_controle}
+de QField, elle, ne montre que les photos des controles de la tournee.
+La couche \code{photos_terrain} n'est \strong{pas} ecrite a l'aller : c'est
+Surculus qui la cree.}
 }
 \value{
 Invisiblement, le chemin du projet \code{.qgs}.
@@ -64,6 +79,16 @@ travaux suivis (ceux d'une unite de gestion).
 \strong{Le champ \code{action_id}} des trois couches de travaux est celui de l'action
 du programme que le travaux realise : l'operateur la choisit dans la liste
 tiree du programme (table \code{programme}). Elle passe telle quelle au registre 6.
+
+\strong{La couche \code{photos_terrain}} est celle de Surculus (\verb{docs/spec.md} § 5,
+amendee le 2026-10-28) : POINT, une ligne par photo, \code{photo_uuid}
+(= \code{photos.uuid}), \code{sujet} (\code{placette} ou \code{plant}), \code{placette_uuid},
+\code{plant_uuid}, \code{azimut_visee_mag_deg}, \code{declinaison_deg},
+\code{modele_geomagnetique}, \code{precision_m}, \code{source_gnss}, \code{referentiel_source}
+(\code{RGF93} ou \code{WGS84}), \code{age_fix_ms}, \code{simulee}, \code{sha256}.
+\code{\link[=sommier_importer_qfield_travaux]{sommier_importer_qfield_travaux()}} la lit au retour, si elle est
+presente, et refuse la tournee d'une couche aux colonnes manquantes
+(\code{photo_uuid}, \code{sujet}, \code{sha256}) ou inattendues.
 
 \strong{La symbologie est celle de Marculus} (brief du 2026-10-16) : parcelles
 coloriees par proprietaire (remplissage a 20 \%, contour plein, numero de la

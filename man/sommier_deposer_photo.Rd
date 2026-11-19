@@ -13,7 +13,8 @@ sommier_deposer_photo(fichier, depot)
 }
 \value{
 Une liste : \code{sha256}, \code{octets}, \code{type}, \code{fichier} (nom d'origine),
-et \code{exif_date}, \code{exif_position} lorsque l'EXIF les porte.
+et, lorsque l'EXIF les porte, \code{exif_date}, \code{exif_decalage},
+\code{exif_date_utc}, \code{exif_position}, \code{exif_datum}, \code{exif_erreur_m}.
 }
 \description{
 Hache une photo (SHA-256), la copie dans le depot sous le nom
@@ -36,6 +37,16 @@ comme telles (\code{exif_date}, \code{exif_position}) et jamais presentees comme
 faits : la chaine atteste que la photo existait, avec ces octets, au moment
 de l'ecriture - pas quand ni ou elle a ete prise. \code{exif_date} est l'heure
 locale de l'appareil, sans fuseau : l'EXIF n'en porte pas.
+
+\strong{Trois balises disent comment lire la date et la position} :
+\code{OffsetTimeOriginal} (\code{exif_decalage}, ex. \verb{+01:00}) donne le fuseau de
+\code{exif_date} et permet d'en tirer \code{exif_date_utc} ; \code{GPSMapDatum}
+(\code{exif_datum}, ex. \code{ETRS89} en RTK Centipede, \code{WGS-84} en GNSS autonome)
+dit dans quel repere est \code{exif_position} ; \code{GPSHPositioningError}
+(\code{exif_erreur_m}) en donne la precision horizontale, en metres. \strong{Une
+position n'est jamais tenue pour du WGS 84 sans que le fichier le dise} :
+sans \code{exif_datum}, le repere est inconnu, et \code{exif_position} reste une
+declaration de l'appareil.
 
 Deposer deux fois la meme photo ne la copie qu'une fois. Un fichier deja
 present sous ce nom mais d'un autre contenu est une alteration du depot :
