@@ -104,7 +104,8 @@ presente. Une colonne obligatoire manquante (\code{photo_uuid}, \code{sujet},
 \code{sha256}) refuse la tournee ; une colonne en plus est ignoree et nommee
 dans les \code{avertissements} du bilan. Une empreinte vide (non verifiee) ou
 deux lignes pour la meme photo (la premiere est gardee) sont aussi des
-avertissements. La geometrie POINT est lue et inscrite au payload de la
+avertissements ; chaque ligne reste controlee (sujet inconnu ou empreinte
+fausse : faute, y compris sur la seconde ligne d'une meme photo). La geometrie POINT est lue et inscrite au payload de la
 photo, sous \code{terrain} : \code{fix_x}, \code{fix_y} et \code{fix_scr} (code EPSG de la
 couche), a cote de \code{exif_position}, sans conversion de repere.
 

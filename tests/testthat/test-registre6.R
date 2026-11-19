@@ -171,3 +171,23 @@ test_that("la concurrence absente est deduite des comptages, la contradiction es
   expect_null(registre6_controle(id, 10, 9)$concurrence)
   expect_null(registre6_controle(id, 10, 9, nb_plants_vivants = 8)$concurrence)
 })
+
+test_that("0 plant vivant note sur 0 : aucun niveau a deduire, l'entree s'ecrit comme avant", {
+  id <- "11111111-1111-4111-8111-111111111111"
+  expect_no_warning(a <- registre6_controle(
+    id, 10, 9, nb_plants_vivants = 0, nb_plants_concurrences = 0))
+  expect_null(a$concurrence)
+  expect_null(a$concurrence_calculee)
+  expect_no_error(jcs(a))
+  expect_no_warning(b <- registre6_controle(
+    id, 10, 9, concurrence = "faible", nb_plants_vivants = 0,
+    nb_plants_concurrences = 0))
+  expect_equal(b$concurrence, "faible")
+  expect_null(b$concurrence_calculee)
+  expect_no_error(jcs(b))
+  # Jusqu'a l'ecriture : l'entree se construit.
+  e <- sommier_entree(foret_id = id, registre = 6L,
+                      date_evenement = as.Date("2026-11-18"), auteur = "t",
+                      ndp = 0L, payload = b)
+  expect_equal(e$payload$nb_plants_vivants, 0)
+})

@@ -77,7 +77,8 @@
 #' `sha256`) refuse la tournee ; une colonne en plus est ignoree et nommee
 #' dans les `avertissements` du bilan. Une empreinte vide (non verifiee) ou
 #' deux lignes pour la meme photo (la premiere est gardee) sont aussi des
-#' avertissements. La geometrie POINT est lue et inscrite au payload de la
+#' avertissements ; chaque ligne reste controlee (sujet inconnu ou empreinte
+#' fausse : faute, y compris sur la seconde ligne d'une meme photo). La geometrie POINT est lue et inscrite au payload de la
 #' photo, sous `terrain` : `fix_x`, `fix_y` et `fix_scr` (code EPSG de la
 #' couche), a cote de `exif_position`, sans conversion de repere.
 #'

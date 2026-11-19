@@ -570,10 +570,10 @@ test_that("une colonne en trop, une empreinte vide, une photo en double : l'impo
   gpkg <- file.path(dossier, "travaux.gpkg")
   emp <- empreinte_fichier(file.path(dossier, "DCIM",
                                      paste0(t$ph[["placette"]], ".jpg")))
-  # Trois lignes : la photo de placette deux fois (la seconde a une empreinte
-  # vide), la photo de plant ; plus une colonne que Surculus n'ecrit pas encore.
+  # Deux lignes pour la photo de placette (la seconde a une empreinte vide) ;
+  # plus une colonne que Surculus n'ecrit pas encore.
   pt <- photos_terrain_surculus(
-    c(t$ph[["placette"]], t$ph[["placette"]], t$ph[["plant"]])[1:2],
+    c(t$ph[["placette"]], t$ph[["placette"]]),
     c("placette", "placette"), f$placette, NA_character_, c(emp, ""))
   pt$colonne_future <- c("a", "b")
   sf::st_write(pt, gpkg, layer = "photos_terrain", quiet = TRUE)
@@ -597,6 +597,30 @@ test_that("une colonne en trop, une empreinte vide, une photo en double : l'impo
   expect_equal(pla$sha256, emp)
   expect_null(pla$colonne_future)
   expect_true(sommier_verifier(con, f$foret)$valide)
+})
+
+test_that("une empreinte vide sur une ligne unique : gardee, avertissement, absente du payload", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  depot <- file.path(withr::local_tempdir(), "photos")
+  t <- tournee_photos(con, f, dossier)
+  gpkg <- file.path(dossier, "travaux.gpkg")
+  pt <- photos_terrain_surculus(t$ph[["placette"]], "placette", f$placette,
+                                NA_character_, "")
+  sf::st_write(pt, gpkg, layer = "photos_terrain", quiet = TRUE)
+  bilan <- suppressWarnings(
+    sommier_importer_qfield_travaux(con, f$foret, dossier, depot,
+                                    auteur = "test"))
+  expect_equal(bilan$photos, 2L)
+  expect_length(bilan$avertissements, 1L)
+  expect_match(bilan$avertissements, "sha256 vide")
+  pla <- bilan$entrees[[1L]]$payload$photos[[1L]]$terrain
+  expect_equal(pla$sujet, "placette")
+  expect_null(pla$sha256)
+  expect_equal(pla$fix_scr, "EPSG:2154")
 })
 
 test_that("une couche photos_terrain aux colonnes manquantes est une faute lisible, les colonnes en trop non", {

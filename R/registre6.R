@@ -290,7 +290,11 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
   if (!is.null(nb_plants_concurrences)) {
     concurrence_calculee <- sommier_niveau_concurrence(
       nb_plants_concurrences, nb_plants_vivants)
-    if (is.null(concurrence)) {
+    # Aucun vivant note (0 sur 0) : pas de niveau a calculer, donc rien a
+    # deduire, rien a comparer, rien a inscrire.
+    if (is.na(concurrence_calculee)) {
+      concurrence_calculee <- NULL
+    } else if (is.null(concurrence)) {
       concurrence <- concurrence_calculee
       concurrence_calculee <- NULL
     } else if (identical(concurrence, concurrence_calculee)) {
