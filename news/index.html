@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.40.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.41.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,17 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.41.0" id="sommier-0410">sommieR 0.41.0<a class="anchor" aria-label="anchor" href="#sommier-0410"></a></h2>
+<p>Le réalisé des travaux revient au plan d’action de nemetonshiny (brief <code>2026-11-17-actions-realisees-vers-nemetonshiny</code>, mission 021).</p>
+<ul><li>
+<strong><code><a href="../reference/sommier_actions_realisees.html">sommier_actions_realisees()</a></code></strong> écrit le CSV que nemetonshiny lit déjà : une ligne par travaux reçu du registre 6 portant une <code>action_id</code>, avec exactement <code>action_id, travaux_id, code_travaux, date_reception, quantite, unite</code>. Un travaux sans réception ou sans <code>action_id</code> n’y figure pas ; la période borne la date de réception. Exemple versionné : <code>tests/testthat/fixtures/actions-realisees-exemple.csv</code>.</li>
+<li>
+<strong><code>action_id</code></strong>, champ facultatif du payload de travaux (<code>registre6_travaux(action_id = )</code>), colonne de <code>v_travaux</code>, colonne de la reprise tableur (<code>SOMMIER_COLONNES_TABLEUR_TRAVAUX</code>) et de l’import de la tournée QField. Ajout seul : aucun contrat existant ne change ; une tournée d’avant 0.41.0, sans cette colonne, s’importe encore.</li>
+<li>
+<strong>Le programme de nemetonshiny arrive jusqu’au registre 6.</strong> <code><a href="../reference/sommier_lire_programme_travaux.html">sommier_lire_programme_travaux()</a></code> lit la couche <code>actions</code> de <code>&lt;projet&gt;-programme-travaux.gpkg</code> (<code>id</code> devient <code>action_id</code>) ; <code>sommier_projet_qfield_travaux(programme = )</code> verse les actions dans la table <code>programme</code> du projet de tournée et en offre la liste au champ <code>action_id</code> des couches de travaux ; l’import refuse un <code>action_id</code> hors du programme et le porte au registre 6. Exemple : <code>tests/testthat/fixtures/programme-travaux-exemple.gpkg</code>.</li>
+<li>Une reprise tableur sans colonne <code>geometrie</code> n’échoue plus.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.40.0" id="sommier-0400">sommieR 0.40.0<a class="anchor" aria-label="anchor" href="#sommier-0400"></a></h2>
 <p>Niveaux de concurrence d’une plantation (brief <code>surculus</code> du 2026-11-04, issue <a href="https://github.com/pobsteta/sommieR/issues/69" class="external-link">#69</a>).</p>

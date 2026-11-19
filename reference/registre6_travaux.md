@@ -31,7 +31,8 @@ registre6_travaux(
   geometrie = NULL,
   precision_m = NULL,
   source_gnss = NULL,
-  photos = NULL
+  photos = NULL,
+  action_id = NULL
 )
 ```
 
@@ -131,6 +132,13 @@ registre6_travaux(
 
   Photos, par leur empreinte (voir
   [`sommier_deposer_photo()`](https://pobsteta.github.io/sommieR/reference/sommier_deposer_photo.md)).
+
+- action_id:
+
+  Identifiant de l'action du plan d'action de nemetonshiny que ces
+  travaux realisent (facultatif) : c'est lui que
+  [`sommier_actions_realisees()`](https://pobsteta.github.io/sommieR/reference/sommier_actions_realisees.md)
+  rend au plan.
 
 ## Value
 

@@ -15,7 +15,8 @@ sommier_projet_qfield_travaux(
   dossier,
   operateur,
   fond = NULL,
-  ortho = NULL
+  ortho = NULL,
+  programme = NULL
 )
 ```
 
@@ -50,6 +51,14 @@ sommier_projet_qfield_travaux(
   [`sommier_ortho_ign()`](https://pobsteta.github.io/sommieR/reference/sommier_ortho_ign.md)
   (facultatif).
 
+- programme:
+
+  Chemin du `<projet>-programme-travaux.gpkg` de nemetonshiny
+  (facultatif), lu par
+  [`sommier_lire_programme_travaux()`](https://pobsteta.github.io/sommieR/reference/sommier_lire_programme_travaux.md)
+  : ses actions sont versees dans la table `programme` du projet, et
+  l'import refuse un `action_id` saisi qui n'y figure pas.
+
 ## Value
 
 Invisiblement, le chemin du projet `.qgs`.
@@ -72,6 +81,11 @@ leur dernier controle : besoin signale, sans besoin, jamais controlee.
 On les controle en ajoutant un controle a la placette ; on en installe
 une nouvelle en placant un point, rattache a des travaux de la liste des
 travaux suivis (ceux d'une unite de gestion).
+
+**Le champ `action_id`** des trois couches de travaux est celui de
+l'action du programme que le travaux realise : l'operateur la choisit
+dans la liste tiree du programme (table `programme`). Elle passe telle
+quelle au registre 6.
 
 **La symbologie est celle de Marculus** (brief du 2026-10-16) :
 parcelles coloriees par proprietaire (remplissage a 20 %, contour plein,

@@ -11,7 +11,7 @@ hors unite de gestion)."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.40.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.41.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,7 +75,8 @@ hors unite de gestion).</p>
 <span>  geometrie <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  precision_m <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  source_gnss <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  photos <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  photos <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  action_id <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -171,6 +172,12 @@ pour les travaux de reboisement (facultatif).</p></dd>
 
 <dt id="arg-photos">photos<a class="anchor" aria-label="anchor" href="#arg-photos"></a></dt>
 <dd><p>Photos, par leur empreinte (voir <code><a href="sommier_deposer_photo.html">sommier_deposer_photo()</a></code>).</p></dd>
+
+
+<dt id="arg-action-id">action_id<a class="anchor" aria-label="anchor" href="#arg-action-id"></a></dt>
+<dd><p>Identifiant de l'action du plan d'action de nemetonshiny
+que ces travaux realisent (facultatif) : c'est lui que
+<code><a href="sommier_actions_realisees.html">sommier_actions_realisees()</a></code> rend au plan.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -15,7 +15,7 @@ on y saisit leurs controles."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.40.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.41.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,8 @@ on y saisit leurs controles.</p>
 <span>  <span class="va">dossier</span>,</span>
 <span>  <span class="va">operateur</span>,</span>
 <span>  fond <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  ortho <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  ortho <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  programme <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -97,6 +98,13 @@ rapatriee ne doit jamais etre ecrasee.</p></dd>
 <dd><p>GeoTIFF d'orthophotographie a joindre au projet, tel que
 l'ecrit <code><a href="sommier_ortho_ign.html">sommier_ortho_ign()</a></code> (facultatif).</p></dd>
 
+
+<dt id="arg-programme">programme<a class="anchor" aria-label="anchor" href="#arg-programme"></a></dt>
+<dd><p>Chemin du <code>&lt;projet&gt;-programme-travaux.gpkg</code> de
+nemetonshiny (facultatif), lu par <code><a href="sommier_lire_programme_travaux.html">sommier_lire_programme_travaux()</a></code> : ses
+actions sont versees dans la table <code>programme</code> du projet, et l'import
+refuse un <code>action_id</code> saisi qui n'y figure pas.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -116,6 +124,9 @@ dernier controle : besoin signale, sans besoin, jamais controlee. On les
 controle en ajoutant un controle a la placette ; on en installe une
 nouvelle en placant un point, rattache a des travaux de la liste des
 travaux suivis (ceux d'une unite de gestion).</p>
+<p><strong>Le champ <code>action_id</code></strong> des trois couches de travaux est celui de l'action
+du programme que le travaux realise : l'operateur la choisit dans la liste
+tiree du programme (table <code>programme</code>). Elle passe telle quelle au registre 6.</p>
 <p><strong>La symbologie est celle de Marculus</strong> (brief du 2026-10-16) : parcelles
 coloriees par proprietaire (remplissage a 20 %, contour plein, numero de la
 parcelle au centre ; gris-vert sans proprietaire), houppiers en contour
