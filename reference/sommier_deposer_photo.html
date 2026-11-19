@@ -11,7 +11,7 @@ reconnaissance de limite."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.41.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.42.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,8 @@ reconnaissance de limite.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Une liste : <code>sha256</code>, <code>octets</code>, <code>type</code>, <code>fichier</code> (nom d'origine),
-et <code>exif_date</code>, <code>exif_position</code> lorsque l'EXIF les porte.</p>
+et, lorsque l'EXIF les porte, <code>exif_date</code>, <code>exif_decalage</code>,
+<code>exif_date_utc</code>, <code>exif_position</code>, <code>exif_datum</code>, <code>exif_erreur_m</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -86,6 +87,15 @@ comme telles (<code>exif_date</code>, <code>exif_position</code>) et jamais pres
 faits : la chaine atteste que la photo existait, avec ces octets, au moment
 de l'ecriture - pas quand ni ou elle a ete prise. <code>exif_date</code> est l'heure
 locale de l'appareil, sans fuseau : l'EXIF n'en porte pas.</p>
+<p><strong>Trois balises disent comment lire la date et la position</strong> :
+<code>OffsetTimeOriginal</code> (<code>exif_decalage</code>, ex. <code>+01:00</code>) donne le fuseau de
+<code>exif_date</code> et permet d'en tirer <code>exif_date_utc</code> ; <code>GPSMapDatum</code>
+(<code>exif_datum</code>, ex. <code>ETRS89</code> en RTK Centipede, <code>WGS-84</code> en GNSS autonome)
+dit dans quel repere est <code>exif_position</code> ; <code>GPSHPositioningError</code>
+(<code>exif_erreur_m</code>) en donne la precision horizontale, en metres. <strong>Une
+position n'est jamais tenue pour du WGS 84 sans que le fichier le dise</strong> :
+sans <code>exif_datum</code>, le repere est inconnu, et <code>exif_position</code> reste une
+declaration de l'appareil.</p>
 <p>Deposer deux fois la meme photo ne la copie qu'une fois. Un fichier deja
 present sous ce nom mais d'un autre contenu est une alteration du depot :
 elle est signalee, et rien n'est ecrase.</p>

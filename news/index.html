@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.41.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.42.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,20 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.42.0" id="sommier-0420">sommieR 0.42.0<a class="anchor" aria-label="anchor" href="#sommier-0420"></a></h2>
+<p>Photos de placette et de plant (brief <code>surculus</code> du 2026-10-28, <code>2026-10-28-photos-placette-et-plant.md</code>).</p>
+<ul><li>
+<strong>L’EXIF dit comment lire la date et la position.</strong> <code><a href="../reference/sommier_deposer_photo.html">sommier_deposer_photo()</a></code> lit en plus <code>GPSMapDatum</code> (<code>exif_datum</code>), <code>GPSHPositioningError</code> (<code>exif_erreur_m</code>, en mètres) et <code>OffsetTimeOriginal</code> (<code>exif_decalage</code>, d’où <code>exif_date_utc</code>). Une position n’est jamais tenue pour du WGS 84 : sans <code>exif_datum</code>, son repère reste inconnu ; <code>ETRS89</code> (RTK Centipède) et <code>WGS-84</code> sont recopiés tels quels. <code>exif_date</code> est inchangé. Le fichier n’est jamais modifié. Ajout seul : les photos déjà inscrites se relisent à l’identique.</li>
+<li>
+<strong>Couche <code>photos_terrain</code>, celle de Surculus</strong> (<code>docs/spec.md</code> § 5, amendée le 2026-10-28) : POINT, <code>photo_uuid</code>, <code>sujet</code>, <code>placette_uuid</code>, <code>plant_uuid</code>, <code>azimut_visee_mag_deg</code>, <code>declinaison_deg</code>, <code>modele_geomagnetique</code>, <code>precision_m</code>, <code>source_gnss</code>, <code>referentiel_source</code> (<code>RGF93</code>, <code>WGS84</code>), <code>age_fix_ms</code>, <code>simulee</code>, <code>sha256</code>. <strong>sommieR la lit au retour et ne l’écrit jamais à l’aller</strong> : Surculus la crée. <code><a href="../reference/sommier_importer_qfield_travaux.html">sommier_importer_qfield_travaux()</a></code> la lit si elle est présente (un projet plus ancien s’importe comme avant), la recopie dans le payload de la photo (<code>terrain</code>, avec l’<code>uuid</code> de la photo) et refuse la tournée, en clair, si ses colonnes <code>photo_uuid</code>, <code>sujet</code> ou <code>sha256</code> manquent, si une colonne est inattendue, si une ligne ne décrit aucune photo, si le sujet est inconnu ou si le <code>sha256</code> déclaré n’est pas celui du fichier.</li>
+<li>
+<strong>Photos à l’aller</strong> : <code>sommier_projet_qfield_travaux(depot = )</code> verse les photos du dernier contrôle de chaque placette (fichiers <code>DCIM/&lt;uuid&gt;.jpg</code>, lignes de la couche <code>photos</code>, dont le schéma ne change pas). Une photo absente du dépôt ou altérée n’est pas versée (avertissement). Rapportées telles quelles, elles ne sont jamais redéposées. Elles ne sont visibles que pour Surculus, pas dans la relation <code>photos_du_controle</code> de QField.</li>
+<li>
+<strong>Confirmé par test</strong> : plusieurs photos par contrôle, JPEG à EXIF GPS sous <code>DCIM/</code>, passent l’import ; la tournée de démonstration (une photo de placette, une de plant) est importée sans faute.</li>
+<li>
+<strong>Ruptures</strong> : aucune pour le code existant (nouvel argument <code>depot</code>, nouveaux champs de photo, couche lue si présente). Ce qui change pour QField et Surculus : une tournée dont la couche <code>photos_terrain</code> porte d’autres colonnes que celles de Surculus, ou qui n’a pas <code>photo_uuid</code>, <code>sujet</code> ou <code>sha256</code>, est désormais <strong>refusée</strong> à l’import ; et le projet QField ne porte pas de couche <code>photos_terrain</code> à l’aller (Surculus la crée).</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.41.0" id="sommier-0410">sommieR 0.41.0<a class="anchor" aria-label="anchor" href="#sommier-0410"></a></h2>
 <p>Le réalisé des travaux revient au plan d’action de nemetonshiny (brief <code>2026-11-17-actions-realisees-vers-nemetonshiny</code>, mission 021).</p>

@@ -22,8 +22,9 @@ sommier_deposer_photo(fichier, depot)
 
 ## Value
 
-Une liste : `sha256`, `octets`, `type`, `fichier` (nom d'origine), et
-`exif_date`, `exif_position` lorsque l'EXIF les porte.
+Une liste : `sha256`, `octets`, `type`, `fichier` (nom d'origine), et,
+lorsque l'EXIF les porte, `exif_date`, `exif_decalage`, `exif_date_utc`,
+`exif_position`, `exif_datum`, `exif_erreur_m`.
 
 ## Details
 
@@ -45,6 +46,16 @@ presentees comme des faits : la chaine atteste que la photo existait,
 avec ces octets, au moment de l'ecriture - pas quand ni ou elle a ete
 prise. `exif_date` est l'heure locale de l'appareil, sans fuseau :
 l'EXIF n'en porte pas.
+
+**Trois balises disent comment lire la date et la position** :
+`OffsetTimeOriginal` (`exif_decalage`, ex. `+01:00`) donne le fuseau de
+`exif_date` et permet d'en tirer `exif_date_utc` ; `GPSMapDatum`
+(`exif_datum`, ex. `ETRS89` en RTK Centipede, `WGS-84` en GNSS autonome)
+dit dans quel repere est `exif_position` ; `GPSHPositioningError`
+(`exif_erreur_m`) en donne la precision horizontale, en metres. **Une
+position n'est jamais tenue pour du WGS 84 sans que le fichier le dise**
+: sans `exif_datum`, le repere est inconnu, et `exif_position` reste une
+declaration de l'appareil.
 
 Deposer deux fois la meme photo ne la copie qu'une fois. Un fichier deja
 present sous ce nom mais d'un autre contenu est une alteration du depot

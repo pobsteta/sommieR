@@ -16,7 +16,8 @@ sommier_projet_qfield_travaux(
   operateur,
   fond = NULL,
   ortho = NULL,
-  programme = NULL
+  programme = NULL,
+  depot = NULL
 )
 ```
 
@@ -59,6 +60,22 @@ sommier_projet_qfield_travaux(
   : ses actions sont versees dans la table `programme` du projet, et
   l'import refuse un `action_id` saisi qui n'y figure pas.
 
+- depot:
+
+  Repertoire du depot de photos (facultatif). S'il est donne, la tournee
+  emporte les photos du **dernier controle de chaque placette**, pour
+  que l'agent les voie au passage suivant : les fichiers sous
+  `DCIM/<uuid>.<extension>`, une ligne de la couche `photos` par photo
+  (rattachee au controle precedent, qui n'est pas dans la tournee). Une
+  photo absente du depot ou alteree (empreinte differente) n'est pas
+  versee, et un avertissement le dit. Ces lignes restent telles quelles
+  au retour : elles ne rattachent aucune photo a un controle de la
+  tournee, donc l'import ne les redepose jamais. **Elles ne sont
+  visibles que pour Surculus**, qui lit la couche `photos` ; la relation
+  `photos_du_controle` de QField, elle, ne montre que les photos des
+  controles de la tournee. La couche `photos_terrain` n'est **pas**
+  ecrite a l'aller : c'est Surculus qui la cree.
+
 ## Value
 
 Invisiblement, le chemin du projet `.qgs`.
@@ -86,6 +103,18 @@ travaux suivis (ceux d'une unite de gestion).
 l'action du programme que le travaux realise : l'operateur la choisit
 dans la liste tiree du programme (table `programme`). Elle passe telle
 quelle au registre 6.
+
+**La couche `photos_terrain`** est celle de Surculus (`docs/spec.md` §
+5, amendee le 2026-10-28) : POINT, une ligne par photo, `photo_uuid` (=
+`photos.uuid`), `sujet` (`placette` ou `plant`), `placette_uuid`,
+`plant_uuid`, `azimut_visee_mag_deg`, `declinaison_deg`,
+`modele_geomagnetique`, `precision_m`, `source_gnss`,
+`referentiel_source` (`RGF93` ou `WGS84`), `age_fix_ms`, `simulee`,
+`sha256`.
+[`sommier_importer_qfield_travaux()`](https://pobsteta.github.io/sommieR/reference/sommier_importer_qfield_travaux.md)
+la lit au retour, si elle est presente, et refuse la tournee d'une
+couche aux colonnes manquantes (`photo_uuid`, `sujet`, `sha256`) ou
+inattendues.
 
 **La symbologie est celle de Marculus** (brief du 2026-10-16) :
 parcelles coloriees par proprietaire (remplissage a 20 %, contour plein,

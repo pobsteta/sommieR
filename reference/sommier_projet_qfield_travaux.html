@@ -15,7 +15,7 @@ on y saisit leurs controles."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.41.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.42.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,7 +64,8 @@ on y saisit leurs controles.</p>
 <span>  <span class="va">operateur</span>,</span>
 <span>  fond <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ortho <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  programme <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  programme <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  depot <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -105,6 +106,22 @@ nemetonshiny (facultatif), lu par <code><a href="sommier_lire_programme_travaux.
 actions sont versees dans la table <code>programme</code> du projet, et l'import
 refuse un <code>action_id</code> saisi qui n'y figure pas.</p></dd>
 
+
+<dt id="arg-depot">depot<a class="anchor" aria-label="anchor" href="#arg-depot"></a></dt>
+<dd><p>Repertoire du depot de photos (facultatif). S'il est donne, la
+tournee emporte les photos du <strong>dernier controle de chaque placette</strong>,
+pour que l'agent les voie au passage suivant : les fichiers sous
+<code>DCIM/&lt;uuid&gt;.&lt;extension&gt;</code>, une ligne de la couche <code>photos</code> par photo
+(rattachee au controle precedent, qui n'est pas dans la tournee). Une
+photo absente du depot ou alteree (empreinte differente) n'est pas
+versee, et un avertissement le dit. Ces lignes restent telles quelles au
+retour : elles ne rattachent aucune photo a un controle de la tournee,
+donc l'import ne les redepose jamais. <strong>Elles ne sont visibles que pour
+Surculus</strong>, qui lit la couche <code>photos</code> ; la relation <code>photos_du_controle</code>
+de QField, elle, ne montre que les photos des controles de la tournee.
+La couche <code>photos_terrain</code> n'est <strong>pas</strong> ecrite a l'aller : c'est
+Surculus qui la cree.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -127,6 +144,15 @@ travaux suivis (ceux d'une unite de gestion).</p>
 <p><strong>Le champ <code>action_id</code></strong> des trois couches de travaux est celui de l'action
 du programme que le travaux realise : l'operateur la choisit dans la liste
 tiree du programme (table <code>programme</code>). Elle passe telle quelle au registre 6.</p>
+<p><strong>La couche <code>photos_terrain</code></strong> est celle de Surculus (<code>docs/spec.md</code> § 5,
+amendee le 2026-10-28) : POINT, une ligne par photo, <code>photo_uuid</code>
+(= <code>photos.uuid</code>), <code>sujet</code> (<code>placette</code> ou <code>plant</code>), <code>placette_uuid</code>,
+<code>plant_uuid</code>, <code>azimut_visee_mag_deg</code>, <code>declinaison_deg</code>,
+<code>modele_geomagnetique</code>, <code>precision_m</code>, <code>source_gnss</code>, <code>referentiel_source</code>
+(<code>RGF93</code> ou <code>WGS84</code>), <code>age_fix_ms</code>, <code>simulee</code>, <code>sha256</code>.
+<code><a href="sommier_importer_qfield_travaux.html">sommier_importer_qfield_travaux()</a></code> la lit au retour, si elle est
+presente, et refuse la tournee d'une couche aux colonnes manquantes
+(<code>photo_uuid</code>, <code>sujet</code>, <code>sha256</code>) ou inattendues.</p>
 <p><strong>La symbologie est celle de Marculus</strong> (brief du 2026-10-16) : parcelles
 coloriees par proprietaire (remplissage a 20 %, contour plein, numero de la
 parcelle au centre ; gris-vert sans proprietaire), houppiers en contour
