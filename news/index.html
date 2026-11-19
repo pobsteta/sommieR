@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.43.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.44.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,18 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.44.0" id="sommier-0440">sommieR 0.44.0<a class="anchor" aria-label="anchor" href="#sommier-0440"></a></h2>
+<p>L’import d’une tournée de terrain n’est plus refusé pour un écart de forme quand la donnée reste lisible : l’écart est accepté et signalé (mission 027). Aucune rupture : l’import accepte plus qu’avant, il ne refuse rien de ce qu’il acceptait.</p>
+<ul><li>
+<strong><code>photos_terrain</code>, colonnes en trop</strong> : une colonne inconnue est ignorée et nommée dans le bilan (<code>avertissements</code>, et un <code><a href="https://rdrr.io/r/base/warning.html" class="external-link">warning()</a></code>), comme le veut la spec de Surculus (un lecteur ignore les champs en plus). Une colonne obligatoire manquante (<code>photo_uuid</code>, <code>sujet</code>, <code>sha256</code>) reste une faute lisible. Un <code>sha256</code> vide (empreinte non vérifiée) et deux lignes pour la même photo (la première est gardée) sont des avertissements, plus des fautes. La seconde ligne d’une même photo reste contrôlée : un sujet inconnu ou une empreinte fausse y est une faute.</li>
+<li>
+<strong>Position du fix</strong> : la géométrie POINT de <code>photos_terrain</code> est lue et inscrite au payload de la photo, sous <code>terrain</code> (<code>fix_x</code>, <code>fix_y</code>, <code>fix_scr</code>, le code EPSG de la couche), à côté de <code>exif_position</code>, sans conversion de repère.</li>
+<li>
+<strong>Concurrence</strong> : <code><a href="../reference/registre6_controle.html">registre6_controle()</a></code>, quand <code>nb_plants_vivants</code> et <code>nb_plants_concurrences</code> sont fournis, déduit <code>concurrence</code> s’il est absent (<code><a href="../reference/sommier_niveau_concurrence.html">sommier_niveau_concurrence()</a></code>, seuils 20 % et 50 % inchangés) ; s’il est saisi et contredit les comptages, il est <strong>conservé tel que saisi</strong>, un avertissement le dit et le niveau calculé est inscrit sous <code>concurrence_calculee</code>. Répond au commentaire P2 de la PR <a href="https://github.com/pobsteta/sommieR/issues/78" class="external-link">#78</a>. <strong>Correction de la note de 0.40.0</strong> « la validation de <code><a href="../reference/registre6_controle.html">registre6_controle()</a></code> inchangée » : elle ne l’est plus à partir de cette version (NEWS ne se réécrit pas en arrière). Le rejeu (<code><a href="../reference/registre6_depuis_payload.html">registre6_depuis_payload()</a></code>) d’un payload écrit de 0.40 à 0.43 qui porte les deux comptages peut donc ajouter <code>concurrence</code> (absente) ou <code>concurrence_calculee</code> (saisie contredite), avec un avertissement ; 0 vivant noté sur 0 ne déduit ni ne signale rien. L’import de tournée QField ne lit pas encore ces deux comptages : la déduction passe par l’API R.</li>
+<li>
+<strong>Date de l’ortho</strong> : <code>sommier_projet_qfield_travaux(date_ortho =)</code>, facultatif, fixe <code>date_mise_a_jour</code> de <code>ortho.mbtiles</code> (quand l’image a été obtenue, pas prise) ; sans elle, la date du fichier GeoTIFF comme avant.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.43.0" id="sommier-0430">sommieR 0.43.0<a class="anchor" aria-label="anchor" href="#sommier-0430"></a></h2>
 <ul><li>

@@ -17,7 +17,8 @@ sommier_projet_qfield_travaux(
   fond = NULL,
   ortho = NULL,
   programme = NULL,
-  depot = NULL
+  depot = NULL,
+  date_ortho = NULL
 )
 ```
 
@@ -55,6 +56,16 @@ sommier_projet_qfield_travaux(
   transparent), avec `attribution` et `date_mise_a_jour` (AAAA-MM-JJ, la
   date du GeoTIFF) dans sa table `metadata`. Il remplace `ortho.tif` :
   QField et Surculus le lisent sans reseau. Necessite `sf` et `RSQLite`.
+
+- date_ortho:
+
+  Date facultative (AAAA-MM-JJ, ou `Date`) inscrite comme
+  `date_mise_a_jour` de `ortho.mbtiles`. Elle dit **quand l'image a ete
+  obtenue** (jour du telechargement), pas quand elle a ete prise : le
+  service ne donne pas la date de prise de vue. Sans elle, la date du
+  fichier GeoTIFF, qui est le jour du telechargement tant qu'on ne l'a
+  pas copie ; passez la vraie date si le fichier a ete copie ou touche
+  depuis.
 
 - programme:
 
@@ -116,9 +127,16 @@ quelle au registre 6.
 `referentiel_source` (`RGF93` ou `WGS84`), `age_fix_ms`, `simulee`,
 `sha256`.
 [`sommier_importer_qfield_travaux()`](https://pobsteta.github.io/sommieR/reference/sommier_importer_qfield_travaux.md)
-la lit au retour, si elle est presente, et refuse la tournee d'une
-couche aux colonnes manquantes (`photo_uuid`, `sujet`, `sha256`) ou
-inattendues.
+la lit au retour, si elle est presente. Une colonne obligatoire
+manquante (`photo_uuid`, `sujet`, `sha256`) refuse la tournee ; une
+colonne en plus est ignoree et nommee dans les `avertissements` du
+bilan. Une empreinte vide (non verifiee) ou deux lignes pour la meme
+photo (la premiere est gardee) sont aussi des avertissements ; chaque
+ligne reste controlee (sujet inconnu ou empreinte fausse : faute, y
+compris sur la seconde ligne d'une meme photo). La geometrie POINT est
+lue et inscrite au payload de la photo, sous `terrain` : `fix_x`,
+`fix_y` et `fix_scr` (code EPSG de la couche), a cote de
+`exif_position`, sans conversion de repere.
 
 **La symbologie est celle de Marculus** (brief du 2026-10-16) :
 parcelles coloriees par proprietaire (remplissage a 20 %, contour plein,

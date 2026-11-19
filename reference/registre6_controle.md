@@ -22,7 +22,8 @@ registre6_controle(
   photos = NULL,
   observations = NULL,
   nb_plants_vivants = NULL,
-  nb_plants_concurrences = NULL
+  nb_plants_concurrences = NULL,
+  concurrence_calculee = NULL
 )
 ```
 
@@ -85,6 +86,18 @@ registre6_controle(
   contact de la vegetation concurrente. Ajout seul : `NULL` est accepte,
   et un controle sans ces champs se relit a l'identique. Lis avec
   [`sommier_niveau_concurrence()`](https://pobsteta.github.io/sommieR/reference/sommier_niveau_concurrence.md).
+  Quand les deux sont fournis : si `concurrence` est absent, il est
+  **deduit** par
+  [`sommier_niveau_concurrence()`](https://pobsteta.github.io/sommieR/reference/sommier_niveau_concurrence.md)
+  ; s'il est saisi et contredit les comptages, il est **conserve tel que
+  saisi**, un avertissement le dit et le niveau calcule est inscrit au
+  payload sous `concurrence_calculee`.
+
+- concurrence_calculee:
+
+  Ne se saisit pas : c'est la trace que la fonction inscrit quand le
+  niveau saisi contredit les comptages. Accepte pour que la relecture
+  d'un payload ecrit se rejoue (il est recalcule).
 
 ## Value
 

@@ -35,7 +35,10 @@ sommier_importer_qfield_travaux(con, foret_id, dossier, depot, auteur)
 ## Value
 
 Invisiblement, un bilan : `travaux`, `placettes`, `controles` (nombres
-d'entrees ecrites), `deja_presents`, `photos` et `entrees`.
+d'entrees ecrites), `deja_presents`, `photos`, `entrees` et
+`avertissements` (ecarts de forme acceptes : colonnes en trop de
+`photos_terrain`, empreinte vide, photo en double ; chacun est aussi
+rendu par [`warning()`](https://rdrr.io/r/base/warning.html)).
 
 ## Details
 

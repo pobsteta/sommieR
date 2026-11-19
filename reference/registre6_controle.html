@@ -13,7 +13,7 @@ l'annee des travaux suivis."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.43.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.44.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,7 +68,8 @@ l'annee des travaux suivis.</p>
 <span>  photos <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  observations <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  nb_plants_vivants <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  nb_plants_concurrences <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  nb_plants_concurrences <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  concurrence_calculee <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -128,7 +129,17 @@ dont <code>concurrence</code> est tiree, pour qu'on puisse la verifier. Plants
 vivants sur lesquels le contact avec la vegetation a ete note (au plus
 <code>nb_vivants</code>), et parmi eux ceux au contact de la vegetation concurrente.
 Ajout seul : <code>NULL</code> est accepte, et un controle sans ces champs se relit a
-l'identique. Lis avec <code><a href="sommier_niveau_concurrence.html">sommier_niveau_concurrence()</a></code>.</p></dd>
+l'identique. Lis avec <code><a href="sommier_niveau_concurrence.html">sommier_niveau_concurrence()</a></code>. Quand les deux sont
+fournis : si <code>concurrence</code> est absent, il est <strong>deduit</strong> par
+<code><a href="sommier_niveau_concurrence.html">sommier_niveau_concurrence()</a></code> ; s'il est saisi et contredit les
+comptages, il est <strong>conserve tel que saisi</strong>, un avertissement le dit et
+le niveau calcule est inscrit au payload sous <code>concurrence_calculee</code>.</p></dd>
+
+
+<dt id="arg-concurrence-calculee">concurrence_calculee<a class="anchor" aria-label="anchor" href="#arg-concurrence-calculee"></a></dt>
+<dd><p>Ne se saisit pas : c'est la trace que la
+fonction inscrit quand le niveau saisi contredit les comptages. Accepte
+pour que la relecture d'un payload ecrit se rejoue (il est recalcule).</p></dd>
 
 </dl></div>
     <div class="section level2">

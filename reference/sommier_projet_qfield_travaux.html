@@ -15,7 +15,7 @@ on y saisit leurs controles."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.43.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.44.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,7 +65,8 @@ on y saisit leurs controles.</p>
 <span>  fond <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ortho <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  programme <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  depot <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  depot <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  date_ortho <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -103,6 +104,15 @@ PNG, fond hors emprise transparent), avec <code>attribution</code> et
 <code>date_mise_a_jour</code> (AAAA-MM-JJ, la date du GeoTIFF) dans sa table
 <code>metadata</code>. Il remplace <code>ortho.tif</code> : QField et Surculus le lisent sans
 reseau. Necessite <code>sf</code> et <code>RSQLite</code>.</p></dd>
+
+
+<dt id="arg-date-ortho">date_ortho<a class="anchor" aria-label="anchor" href="#arg-date-ortho"></a></dt>
+<dd><p>Date facultative (AAAA-MM-JJ, ou <code>Date</code>) inscrite comme
+<code>date_mise_a_jour</code> de <code>ortho.mbtiles</code>. Elle dit <strong>quand l'image a ete
+obtenue</strong> (jour du telechargement), pas quand elle a ete prise : le
+service ne donne pas la date de prise de vue. Sans elle, la date du
+fichier GeoTIFF, qui est le jour du telechargement tant qu'on ne l'a pas
+copie ; passez la vraie date si le fichier a ete copie ou touche depuis.</p></dd>
 
 
 <dt id="arg-programme">programme<a class="anchor" aria-label="anchor" href="#arg-programme"></a></dt>
@@ -156,8 +166,14 @@ amendee le 2026-10-28) : POINT, une ligne par photo, <code>photo_uuid</code>
 <code>modele_geomagnetique</code>, <code>precision_m</code>, <code>source_gnss</code>, <code>referentiel_source</code>
 (<code>RGF93</code> ou <code>WGS84</code>), <code>age_fix_ms</code>, <code>simulee</code>, <code>sha256</code>.
 <code><a href="sommier_importer_qfield_travaux.html">sommier_importer_qfield_travaux()</a></code> la lit au retour, si elle est
-presente, et refuse la tournee d'une couche aux colonnes manquantes
-(<code>photo_uuid</code>, <code>sujet</code>, <code>sha256</code>) ou inattendues.</p>
+presente. Une colonne obligatoire manquante (<code>photo_uuid</code>, <code>sujet</code>,
+<code>sha256</code>) refuse la tournee ; une colonne en plus est ignoree et nommee
+dans les <code>avertissements</code> du bilan. Une empreinte vide (non verifiee) ou
+deux lignes pour la meme photo (la premiere est gardee) sont aussi des
+avertissements ; chaque ligne reste controlee (sujet inconnu ou empreinte
+fausse : faute, y compris sur la seconde ligne d'une meme photo). La geometrie POINT est lue et inscrite au payload de la
+photo, sous <code>terrain</code> : <code>fix_x</code>, <code>fix_y</code> et <code>fix_scr</code> (code EPSG de la
+couche), a cote de <code>exif_position</code>, sans conversion de repere.</p>
 <p><strong>La symbologie est celle de Marculus</strong> (brief du 2026-10-16) : parcelles
 coloriees par proprietaire (remplissage a 20 %, contour plein, numero de la
 parcelle au centre ; gris-vert sans proprietaire), houppiers en contour
