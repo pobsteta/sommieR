@@ -349,7 +349,7 @@ test_that("l'action_id du programme passe de la tournee au registre 6", {
   expect_length(xml2::xml_find_all(
     doc, "//field[@name='action_id']/editWidget[@type='ValueMap']"), 3L)
   expect_length(xml2::xml_find_all(
-    doc, "//editWidget[@type='ValueMap']//Option[@value='act_20261105093012_k3x9a1']"), 3L)
+    doc, "//field[@name='action_id']/editWidget[@type='ValueMap']//Option[@value='act_20261105093012_k3x9a1']"), 3L)
 
   # Une seule couche porte l'action (l'autre la laisse vide) : l'import
   # tient, l'action arrive au registre 6, et le realise la rend au plan.
@@ -402,7 +402,7 @@ test_that("une couche sans action_id et une qui en porte : seule l'action sort",
   dossier <- file.path(withr::local_tempdir(), "travaux")
   sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.")
   gpkg <- file.path(dossier, "travaux.gpkg")
-  # Une tournee d'avant 0.38.0 : la couche des lignes est recreee sans la
+  # Une tournee d'avant 0.41.0 : la couche des lignes est recreee sans la
   # colonne action_id, comme le faisait l'ancien modele.
   u_lin <- uuid_v4()
   ligne <- intervention(u_lin, "PG", sf::st_linestring(rbind(

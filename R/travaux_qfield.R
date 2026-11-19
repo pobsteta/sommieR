@@ -199,7 +199,7 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
     if (nrow(t) == 0L) return(NULL)
     t$couche <- nom
     sf::st_geometry(t) <- "geometry"
-    # Une couche sans la colonne (projet d'avant 0.38.0) : pas d'action, pas
+    # Une couche sans la colonne (projet d'avant 0.41.0) : pas d'action, pas
     # une faute ; et rbind exige les memes colonnes partout.
     if (!"action_id" %in% names(t)) t$action_id <- NA_character_
     t

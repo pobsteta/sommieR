@@ -326,7 +326,7 @@ SELECT
   (e.payload ->> 'motif_ecart')::TEXT         AS motif_ecart,
   (e.payload ->> 'date_reception')::DATE      AS date_reception,
   (e.geom IS NOT NULL)                        AS localise,
-  -- v0.38.0 : l'action du plan d'action de nemetonshiny que les travaux realisent.
+  -- v0.41.0 : l'action du plan d'action de nemetonshiny que les travaux realisent.
   (e.payload ->> 'action_id')::TEXT           AS action_id
 FROM v_entree_courante e
 WHERE e.registre = 6
