@@ -244,6 +244,9 @@ registre5_coupe <- function(type_entree,
 #'   (voir [geom_polygone()]).
 #' @param precision_m,source_gnss Precision et source de la position relevee.
 #' @param photos Photos, par leur empreinte (voir [sommier_deposer_photo()]).
+#' @param action_id Identifiant de l'action du plan d'action de nemetonshiny
+#'   que ces travaux realisent (facultatif) : c'est lui que
+#'   [sommier_actions_realisees()] rend au plan.
 #'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
@@ -282,7 +285,8 @@ registre6_travaux <- function(annee,
                               geometrie = NULL,
                               precision_m = NULL,
                               source_gnss = NULL,
-                              photos = NULL) {
+                              photos = NULL,
+                              action_id = NULL) {
   if (!est_vide(quantite) && est_vide(unite)) {
     stop("`unite` est obligatoire des lors que `quantite` est renseignee : ",
          "un nombre sans unite n'est pas exploitable dans un registre.",
@@ -337,7 +341,8 @@ registre6_travaux <- function(annee,
     precision_m       = si_present(precision_m, valider_nombre, "precision_m",
                                    min = 0),
     source_gnss       = si_present(source_gnss, valider_texte, "source_gnss"),
-    photos            = valider_photos(photos)
+    photos            = valider_photos(photos),
+    action_id         = si_present(action_id, valider_texte, "action_id")
   ))
 }
 

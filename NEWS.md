@@ -1,3 +1,29 @@
+# sommieR 0.41.0
+
+Le réalisé des travaux revient au plan d'action de nemetonshiny (brief
+`2026-11-17-actions-realisees-vers-nemetonshiny`, mission 021).
+
+- **`sommier_actions_realisees()`** écrit le CSV que nemetonshiny lit déjà :
+  une ligne par travaux reçu du registre 6 portant une `action_id`, avec
+  exactement `action_id, travaux_id, code_travaux, date_reception, quantite,
+  unite`. Un travaux sans réception ou sans `action_id` n'y figure pas ; la
+  période borne la date de réception. Exemple versionné :
+  `tests/testthat/fixtures/actions-realisees-exemple.csv`.
+- **`action_id`**, champ facultatif du payload de travaux
+  (`registre6_travaux(action_id = )`), colonne de `v_travaux`, colonne de la
+  reprise tableur (`SOMMIER_COLONNES_TABLEUR_TRAVAUX`) et de l'import de la
+  tournée QField. Ajout seul : aucun contrat existant ne change ; une tournée
+  d'avant 0.41.0, sans cette colonne, s'importe encore.
+- **Le programme de nemetonshiny arrive jusqu'au registre 6.**
+  `sommier_lire_programme_travaux()` lit la couche `actions` de
+  `<projet>-programme-travaux.gpkg` (`id` devient `action_id`) ;
+  `sommier_projet_qfield_travaux(programme = )` verse les actions dans la table
+  `programme` du projet de tournée et en offre la liste au champ `action_id`
+  des couches de travaux ; l'import refuse un `action_id` hors du programme et
+  le porte au registre 6. Exemple :
+  `tests/testthat/fixtures/programme-travaux-exemple.gpkg`.
+- Une reprise tableur sans colonne `geometrie` n'échoue plus.
+
 # sommieR 0.40.0
 
 Niveaux de concurrence d'une plantation (brief `surculus` du 2026-11-04,

@@ -30,14 +30,15 @@ SOMMIER_COLONNES_TABLEUR_TRAVAUX <- data.frame(
               "quantite", "unite", "nb_plants", "provenance_plants",
               "montant_eur", "taux_reprise_pct", "execution", "intervenant",
               "prevu", "motif_ecart", "date_reception", "geometrie",
-              "observations"),
+              "observations", "action_id"),
   alias = c("unite_de_gestion, unite_gestion, parcelle", "date_realisation",
             "", "code", "nature, nature_des_travaux, libelle", "", "essence",
             "lieu", "repere", "surface, longueur", "", "plants",
             "provenance", "montant, cout, cout_eur, montant_ht",
             "reprise, taux_reprise, reprise_pct", "mode_execution",
             "entreprise", "prevu_au_document", "motif, motif_ecart_au_prevu",
-            "reception", "wkt, geom", "remarques, commentaire, commentaires"),
+            "reception", "wkt, geom", "remarques, commentaire, commentaires",
+            ""),
   description = c(
     "Numero de l'unite de gestion ; vide hors unite (A50H).",
     "Date de realisation (AAAA-MM-JJ ou JJ/MM/AAAA).",
@@ -60,7 +61,8 @@ SOMMIER_COLONNES_TABLEUR_TRAVAUX <- data.frame(
     "Motif d'un ecart au prevu ; obligatoire hors prevu.",
     "Date de reception.",
     "Emprise en WKT (POINT, LINESTRING, POLYGON), dans le CRS `crs`.",
-    "Observations libres."
+    "Observations libres.",
+    "Identifiant de l'action du plan d'action de nemetonshiny que les travaux realisent."
   ),
   stringsAsFactors = FALSE
 )
@@ -165,7 +167,8 @@ sommier_reprendre_travaux <- function(con, foret_id, fichier, auteur,
     fautes <<- c(fautes, paste0("ligne ", lignes[[i]], " : ", msg))
   }
 
-  geometries <- geometries_tableur(t$geometrie, crs, faute)
+  geometries <- geometries_tableur(t$geometrie %||% rep(NA_character_, nrow(t)),
+                                  crs, faute)
   ug <- ug_lire(con, foret_id = foret_id)
   ug_geom <- if (any(!vapply(geometries$l93, is.null, logical(1)))) {
     DBI::dbGetQuery(
@@ -213,7 +216,8 @@ sommier_reprendre_travaux <- function(con, foret_id, fichier, auteur,
         prevu = choix_tableur(x$prevu),
         motif_ecart = x$motif_ecart,
         date_reception = reception,
-        geometrie = geometries$wgs84[[i]]
+        geometrie = geometries$wgs84[[i]],
+        action_id = x$action_id
       )
       sommier_reprise(
         foret_id = foret_id, registre = 6L, date_evenement = date_evenement,

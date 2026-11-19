@@ -10,7 +10,8 @@ sommier_projet_qfield_travaux(
   dossier,
   operateur,
   fond = NULL,
-  ortho = NULL
+  ortho = NULL,
+  programme = NULL
 )
 }
 \arguments{
@@ -28,6 +29,11 @@ rapatriee ne doit jamais etre ecrasee.}
 
 \item{ortho}{GeoTIFF d'orthophotographie a joindre au projet, tel que
 l'ecrit \code{\link[=sommier_ortho_ign]{sommier_ortho_ign()}} (facultatif).}
+
+\item{programme}{Chemin du \verb{<projet>-programme-travaux.gpkg} de
+nemetonshiny (facultatif), lu par \code{\link[=sommier_lire_programme_travaux]{sommier_lire_programme_travaux()}} : ses
+actions sont versees dans la table \code{programme} du projet, et l'import
+refuse un \code{action_id} saisi qui n'y figure pas.}
 }
 \value{
 Invisiblement, le chemin du projet \code{.qgs}.
@@ -54,6 +60,10 @@ dernier controle : besoin signale, sans besoin, jamais controlee. On les
 controle en ajoutant un controle a la placette ; on en installe une
 nouvelle en placant un point, rattache a des travaux de la liste des
 travaux suivis (ceux d'une unite de gestion).
+
+\strong{Le champ \code{action_id}} des trois couches de travaux est celui de l'action
+du programme que le travaux realise : l'operateur la choisit dans la liste
+tiree du programme (table \code{programme}). Elle passe telle quelle au registre 6.
 
 \strong{La symbologie est celle de Marculus} (brief du 2026-10-16) : parcelles
 coloriees par proprietaire (remplissage a 20 \%, contour plein, numero de la
