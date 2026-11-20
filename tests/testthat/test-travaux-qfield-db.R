@@ -648,3 +648,120 @@ test_that("une couche photos_terrain aux colonnes manquantes est une faute lisib
   expect_false(grepl("colonne_inventee", conditionMessage(err)))
   expect_false(grepl("missing value", conditionMessage(err)))
 })
+
+# Mission 028 : les deux comptages de plants d'un controle (nb_plants_vivants,
+# nb_plants_concurrences) sont lus a l'import et passes a registre6_controle().
+# Un jour different a chaque appel : une placette ne se controle qu'une fois
+# par jour.
+jours_comptages <- new.env()
+jours_comptages$n <- 0L
+importer_comptages <- function(con, f, ...) {
+  jours_comptages$n <- jours_comptages$n + 1L
+  jour <- sprintf("2026-07-%02d", jours_comptages$n)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.")
+  k <- uuid_v4()
+  tab <- sf::st_drop_geometry(controle(k, f$placette, 18, jour))
+  extra <- list(...)
+  for (n in names(extra)) tab[[n]] <- extra[[n]]
+  sf::st_write(tab, file.path(dossier, "travaux.gpkg"), layer = "controles",
+               delete_layer = TRUE, quiet = TRUE)
+  av <- character(0)
+  bilan <- withCallingHandlers(
+    sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                    withr::local_tempdir(), auteur = "test"),
+    warning = function(w) {
+      av <<- c(av, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    })
+  list(bilan = bilan, payload = bilan$entrees[[1L]]$payload, warnings = av)
+}
+
+test_that("l'import deduit la concurrence des deux comptages", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  # 6 sur 10 = 60 % : forte ; le niveau saisi est vide.
+  r <- importer_comptages(con, f, nb_plants_vivants = 10L,
+                          nb_plants_concurrences = 6L,
+                          concurrence = NA_character_)
+  expect_equal(r$payload$concurrence, "forte")
+  expect_equal(r$payload$nb_plants_vivants, 10L)
+  expect_equal(r$payload$nb_plants_concurrences, 6L)
+  expect_null(r$payload$concurrence_calculee)
+  expect_length(r$bilan$avertissements, 0L)
+})
+
+test_that("un niveau saisi qui contredit les comptages est garde et signale", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  # Saisi : moyenne ; comptages : 6 sur 10 = forte.
+  r <- importer_comptages(con, f, nb_plants_vivants = 10L,
+                          nb_plants_concurrences = 6L)
+  expect_equal(r$payload$concurrence, "moyenne")
+  expect_equal(r$payload$concurrence_calculee, "forte")
+  expect_length(r$bilan$avertissements, 1L)
+  expect_match(r$bilan$avertissements, "^controle 1 : concurrence saisie")
+  # Le warning() final reprend le bilan, une seule fois.
+  expect_length(r$warnings, 1L)
+})
+
+test_that("0 sur 0 : aucun niveau, saisi conserve, aucun signalement", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  r <- importer_comptages(con, f, nb_plants_vivants = 0L,
+                          nb_plants_concurrences = 0L)
+  expect_equal(r$payload$concurrence, "moyenne")
+  expect_null(r$payload$concurrence_calculee)
+  expect_length(r$bilan$avertissements, 0L)
+  r <- importer_comptages(con, f, nb_plants_vivants = 0L,
+                          nb_plants_concurrences = 0L,
+                          concurrence = NA_character_)
+  expect_null(r$payload$concurrence)
+})
+
+test_that("colonnes absentes, NA ou isolees : rien ne bloque", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  # Absentes : comme avant.
+  r <- importer_comptages(con, f)
+  expect_null(r$payload$nb_plants_vivants)
+  expect_equal(r$payload$concurrence, "moyenne")
+  expect_length(r$bilan$avertissements, 0L)
+  # Presentes mais NA.
+  r <- importer_comptages(con, f, nb_plants_vivants = NA_integer_,
+                          nb_plants_concurrences = NA_integer_)
+  expect_null(r$payload$nb_plants_vivants)
+  expect_length(r$bilan$avertissements, 0L)
+  # Seule la colonne des vivants : inscrite, rien a deduire.
+  r <- importer_comptages(con, f, nb_plants_vivants = 12L)
+  expect_equal(r$payload$nb_plants_vivants, 12L)
+  expect_null(r$payload$nb_plants_concurrences)
+  expect_equal(r$payload$concurrence, "moyenne")
+  # Seule la colonne des concurrences (vivants NA) : ignoree et signalee.
+  r <- importer_comptages(con, f, nb_plants_concurrences = 3L)
+  expect_null(r$payload$nb_plants_concurrences)
+  expect_equal(r$payload$concurrence, "moyenne")
+  expect_length(r$bilan$avertissements, 1L)
+  expect_match(r$bilan$avertissements, "sans nb_plants_vivants")
+})
+
+test_that("concurrences > vivants : la regle de registre6_controle() refuse", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  erreur <- tryCatch(
+    importer_comptages(con, f, nb_plants_vivants = 4L,
+                       nb_plants_concurrences = 9L),
+    error = conditionMessage)
+  expect_match(erreur, "rien n'est ecrit")
+  expect_match(erreur, "Plus de plants au contact")
+})

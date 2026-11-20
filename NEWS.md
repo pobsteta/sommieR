@@ -1,3 +1,25 @@
+# sommieR 2026.11.2 (2026-11-20)
+
+L'import de tournée QField des travaux lit les deux comptages de plants d'un
+contrôle, `nb_plants_vivants` et `nb_plants_concurrences`, et les passe à
+`registre6_controle()` : le niveau de concurrence est déduit ou signalé à l'import
+comme il l'est déjà par l'API R (mission 028). Aucune rupture : une tournée sans
+ces colonnes s'importe comme avant.
+
+- **Lecture** : colonnes facultatives de la couche `controles`. Les noms sont ceux
+  de l'API R, la spec de Surculus ne nommant pas ces comptages ; le projet QField
+  (`sommier_projet_qfield_travaux()`) n'ajoute aucun champ, la spec de Surculus ne
+  les plaçant pas dans la couche des contrôles.
+- **Déduction** : avec les deux comptages et sans niveau saisi, `concurrence` est
+  déduite (seuils 20 % / 50 % inchangés). 0 vivant noté sur 0 : aucun niveau.
+- **Écart signalé, non bloquant** : un niveau saisi qui contredit les comptages est
+  gardé tel que saisi, nommé dans `bilan$avertissements` (puis `warning()`), et le
+  niveau calculé est inscrit sous `concurrence_calculee`.
+- **Comptage isolé** : `nb_plants_concurrences` sans `nb_plants_vivants` est ignoré
+  et signalé (la donnée reste lisible) ; `nb_plants_vivants` seul est inscrit.
+- **Refus (règles de `registre6_controle()`, inchangées)** : plus de plants au
+  contact que de plants notés, ou plus de plants notés que de vivants.
+
 # sommieR 2026.11.1 (2026-11-20)
 
 sommieR passe au versionnage calendaire `AAAA.M.N`, celui de `nemeton`, pour qu'une

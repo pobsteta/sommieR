@@ -21,7 +21,8 @@ sommier_importer_qfield_travaux(con, foret_id, dossier, depot, auteur)
 Invisiblement, un bilan : \code{travaux}, \code{placettes}, \code{controles}
 (nombres d'entrees ecrites), \code{deja_presents}, \code{photos}, \code{entrees} et
 \code{avertissements} (ecarts de forme acceptes : colonnes en trop de
-\code{photos_terrain}, empreinte vide, photo en double ; chacun est aussi
+\code{photos_terrain}, empreinte vide, photo en double, niveau de concurrence
+contredit par les comptages de plants ; chacun est aussi
 rendu par \code{warning()}).
 }
 \description{
