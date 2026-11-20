@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.44.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2026.11.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -105,6 +105,10 @@
 <strong>Jamais de push direct sur <code>main</code>.</strong> Tout passe par une PR.</li>
 <li>Le dépôt est un paquet R : <code>R CMD check</code> passe avant toute PR (la CI échoue sur un avertissement). Ne pas relancer <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> : la version locale de roxygen diffère de celle du dépôt.</li>
 </ul></div>
+<div class="section level2">
+<h2 id="version-tags-et-releases">Version, tags et releases<a class="anchor" aria-label="anchor" href="#version-tags-et-releases"></a></h2>
+<p>Versionnage calendaire <code>AAAA.M.N</code> depuis 2026.11.1 (mission 029), celui de <code>nemeton</code> : règle complète dans <code>/home/pascal/dev/nemeton/CLAUDE.md</code> § « Consignes de release pour ce projet » (mois sans zéro en tête, N repart à 1 chaque mois, <code>AAAA.M.N.9000</code> entre deux releases). Ici : <code>DESCRIPTION</code>, <code>NEWS.md</code> (<code># sommieR AAAA.M.N (AAAA-MM-JJ)</code>) et <code>CITATION.cff</code> portent la même version, et <code>AAAA.M</code> est l’année et le mois de la date NEWS (<code>.github/scripts/verifier-version.sh</code>, job <code>version-consistency</code>, test <code>test-version.R</code>). Le tag et la release sont posés par <code>release.yml</code> au merge sur <code>main</code> : jamais à la main.</p>
+</div>
 </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

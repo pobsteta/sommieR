@@ -97,3 +97,15 @@ Repris des sources du dépôt, qui font foi (un lien, pas une copie) :
   échoue sur un avertissement). Ne pas relancer
   [`devtools::document()`](https://devtools.r-lib.org/reference/document.html)
   : la version locale de roxygen diffère de celle du dépôt.
+
+## Version, tags et releases
+
+Versionnage calendaire `AAAA.M.N` depuis 2026.11.1 (mission 029), celui
+de `nemeton` : règle complète dans `/home/pascal/dev/nemeton/CLAUDE.md`
+§ « Consignes de release pour ce projet » (mois sans zéro en tête, N
+repart à 1 chaque mois, `AAAA.M.N.9000` entre deux releases). Ici :
+`DESCRIPTION`, `NEWS.md` (`# sommieR AAAA.M.N (AAAA-MM-JJ)`) et
+`CITATION.cff` portent la même version, et `AAAA.M` est l’année et le
+mois de la date NEWS (`.github/scripts/verifier-version.sh`, job
+`version-consistency`, test `test-version.R`). Le tag et la release sont
+posés par `release.yml` au merge sur `main` : jamais à la main.

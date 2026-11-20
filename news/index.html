@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.44.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2026.11.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,17 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2026.11.1" id="sommier-2026111-2026-11-20">sommieR 2026.11.1 (2026-11-20)<a class="anchor" aria-label="anchor" href="#sommier-2026111-2026-11-20"></a></h2>
+<p>sommieR passe au versionnage calendaire <code>AAAA.M.N</code>, celui de <code>nemeton</code>, pour qu’une seule convention de version vaille sur la plateforme (mission 029). Aucun code fonctionnel ne change ; l’ordre des versions est gardé (<code>package_version("2026.11.1") &gt; package_version("0.44.0")</code>).</p>
+<ul><li>
+<strong>Forme</strong> : <code>AAAA</code> = année, <code>M</code> = mois <strong>sans zéro en tête</strong> (<code>2026.1.1</code>, jamais <code>2026.01.1</code>), <code>N</code> = numéro de la release dans le mois, qui repart à 1 chaque mois. Entre deux releases, <code>DESCRIPTION</code> porte <code>AAAA.M.N.9000</code>.</li>
+<li>
+<strong>Tags et releases</strong> : <code>release.yml</code> ne pose le tag <code>vAAAA.M.N</code> et la release que pour une version stable de cette forme ; les tags <code>v0.x</code> déjà posés restent.</li>
+<li>
+<strong>Garde-fou</strong> : le job <code>version-consistency</code> (script <code>.github/scripts/verifier-version.sh</code>, testé par <code>test-version.R</code>) vérifie DESCRIPTION = NEWS = CITATION et que <code>AAAA.M</code> est l’année et le mois de la date de l’entrée NEWS.</li>
+<li>Les entrées 0.x ci-dessous ne sont pas réécrites.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.44.0" id="sommier-0440">sommieR 0.44.0<a class="anchor" aria-label="anchor" href="#sommier-0440"></a></h2>
 <p>L’import d’une tournée de terrain n’est plus refusé pour un écart de forme quand la donnée reste lisible : l’écart est accepté et signalé (mission 027). Aucune rupture : l’import accepte plus qu’avant, il ne refuse rien de ce qu’il acceptait.</p>
