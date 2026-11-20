@@ -29,21 +29,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: DESCRIPTION = NEWS.md = CITATION.cff
-        run: |
-          desc=$(awk '/^Version:/{print $2; exit}' DESCRIPTION)
-          if ! [[ "$desc" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Cycle dev ($desc) — garde-fou de cohérence sauté."
-            exit 0
-          fi
-          news=$(grep -m1 -oE '[0-9]+\.[0-9]+\.[0-9]+' NEWS.md)
-          cff=$(grep -m1 -E '^version:' CITATION.cff | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-          echo "DESCRIPTION=$desc  NEWS=$news  CITATION=$cff"
-          if [ -z "$desc" ] || [ "$desc" != "$news" ] || [ "$desc" != "$cff" ]; then
-            echo "::error::Versions désalignées (DESCRIPTION=$desc, NEWS=$news, CITATION=$cff)"
-            exit 1
-          fi
-          echo "✅ versions alignées : $desc"
+      - name: DESCRIPTION = NEWS.md = CITATION.cff (AAAA.M.N, année et mois = date NEWS)
+        run: bash .github/scripts/verifier-version.sh
 
   # ============================================================
   # Job 1 : R CMD check (structure, documentation, imports)
