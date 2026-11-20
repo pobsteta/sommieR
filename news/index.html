@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2026.11.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2026.11.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,20 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2026.11.2" id="sommier-2026112-2026-11-20">sommieR 2026.11.2 (2026-11-20)<a class="anchor" aria-label="anchor" href="#sommier-2026112-2026-11-20"></a></h2>
+<p>L’import de tournée QField des travaux lit les deux comptages de plants d’un contrôle, <code>nb_plants_vivants</code> et <code>nb_plants_concurrences</code>, et les passe à <code><a href="../reference/registre6_controle.html">registre6_controle()</a></code> : le niveau de concurrence est déduit ou signalé à l’import comme il l’est déjà par l’API R (mission 028). Aucune rupture : une tournée sans ces colonnes s’importe comme avant.</p>
+<ul><li>
+<strong>Lecture</strong> : colonnes facultatives de la couche <code>controles</code>. Les noms sont ceux de l’API R, la spec de Surculus ne nommant pas ces comptages ; le projet QField (<code><a href="../reference/sommier_projet_qfield_travaux.html">sommier_projet_qfield_travaux()</a></code>) n’ajoute aucun champ, la spec de Surculus ne les plaçant pas dans la couche des contrôles.</li>
+<li>
+<strong>Déduction</strong> : avec les deux comptages et sans niveau saisi, <code>concurrence</code> est déduite (seuils 20 % / 50 % inchangés). 0 vivant noté sur 0 : aucun niveau.</li>
+<li>
+<strong>Écart signalé, non bloquant</strong> : un niveau saisi qui contredit les comptages est gardé tel que saisi, nommé dans <code>bilan$avertissements</code> (puis <code><a href="https://rdrr.io/r/base/warning.html" class="external-link">warning()</a></code>), et le niveau calculé est inscrit sous <code>concurrence_calculee</code>.</li>
+<li>
+<strong>Comptage isolé</strong> : <code>nb_plants_concurrences</code> sans <code>nb_plants_vivants</code> (colonne absente ou NA) est <strong>gardé tel quel</strong> au payload, sans niveau déduit ni comparé, et signalé au bilan ; <code>nb_plants_vivants</code> seul est inscrit. Pour cela, <code><a href="../reference/registre6_controle.html">registre6_controle()</a></code> accepte désormais ce cas, qu’elle refusait (« exige nb_plants_vivants ») : pour les autres appelants de l’API R, seul ce refus disparaît, tout le reste est inchangé. Le cas n’est pas muet : <code><a href="../reference/registre6_controle.html">registre6_controle()</a></code> émet un <code><a href="https://rdrr.io/r/base/warning.html" class="external-link">warning()</a></code> (comptage gardé tel quel, aucun niveau calculé), repris une seule fois au bilan d’import ; <code><a href="../reference/registre6_depuis_payload.html">registre6_depuis_payload()</a></code> ne le répète pas au rejeu.</li>
+<li>
+<strong>Refus (règles de <code><a href="../reference/registre6_controle.html">registre6_controle()</a></code>, inchangées)</strong> : plus de plants au contact que de plants notés, ou plus de plants notés que de vivants.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2026.11.1" id="sommier-2026111-2026-11-20">sommieR 2026.11.1 (2026-11-20)<a class="anchor" aria-label="anchor" href="#sommier-2026111-2026-11-20"></a></h2>
 <p>sommieR passe au versionnage calendaire <code>AAAA.M.N</code>, celui de <code>nemeton</code>, pour qu’une seule convention de version vaille sur la plateforme (mission 029). Aucun code fonctionnel ne change ; l’ordre des versions est gardé (<code>package_version("2026.11.1") &gt; package_version("0.44.0")</code>).</p>

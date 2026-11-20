@@ -13,7 +13,7 @@ l'annee des travaux suivis."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2026.11.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2026.11.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -128,6 +128,9 @@ l'annee des travaux suivis.</p>
 dont <code>concurrence</code> est tiree, pour qu'on puisse la verifier. Plants
 vivants sur lesquels le contact avec la vegetation a ete note (au plus
 <code>nb_vivants</code>), et parmi eux ceux au contact de la vegetation concurrente.
+<code>nb_plants_concurrences</code> peut arriver <strong>sans</strong> <code>nb_plants_vivants</code> : il est
+alors garde tel quel, sans niveau deduit ni compare, et un avertissement le
+dit (rien ne se perd, rien n'est muet ; pas d'avertissement au rejeu).
 Ajout seul : <code>NULL</code> est accepte, et un controle sans ces champs se relit a
 l'identique. Lis avec <code><a href="sommier_niveau_concurrence.html">sommier_niveau_concurrence()</a></code>. Quand les deux sont
 fournis : si <code>concurrence</code> est absent, il est <strong>deduit</strong> par
