@@ -225,6 +225,8 @@ registre6_placette <- function(code_placette, travaux_id, geometrie,
 #'   dont `concurrence` est tiree, pour qu'on puisse la verifier. Plants
 #'   vivants sur lesquels le contact avec la vegetation a ete note (au plus
 #'   `nb_vivants`), et parmi eux ceux au contact de la vegetation concurrente.
+#'   `nb_plants_concurrences` peut arriver **sans** `nb_plants_vivants` : il est
+#'   alors garde tel quel, sans niveau deduit ni compare (rien ne se perd).
 #'   Ajout seul : `NULL` est accepte, et un controle sans ces champs se relit a
 #'   l'identique. Lis avec [sommier_niveau_concurrence()]. Quand les deux sont
 #'   fournis : si `concurrence` est absent, il est **deduit** par
@@ -266,15 +268,11 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
                                   "nb_plants_vivants", min = 0)
   nb_plants_concurrences <- si_present(nb_plants_concurrences, valider_entier,
                                        "nb_plants_concurrences", min = 0)
-  if (!is.null(nb_plants_concurrences) && is.null(nb_plants_vivants)) {
-    stop("nb_plants_concurrences exige nb_plants_vivants : une part ",
-         "se lit sur un denominateur.", call. = FALSE)
-  }
   if (!is.null(nb_plants_vivants) && nb_plants_vivants > nb_vivants) {
     stop("Plus de plants notes (", nb_plants_vivants, ") que de vivants (",
          nb_vivants, ").", call. = FALSE)
   }
-  if (!is.null(nb_plants_concurrences) &&
+  if (!is.null(nb_plants_concurrences) && !is.null(nb_plants_vivants) &&
       nb_plants_concurrences > nb_plants_vivants) {
     stop("Plus de plants au contact (", nb_plants_concurrences,
          ") que de plants vivants notes (", nb_plants_vivants, ").",
@@ -287,7 +285,7 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
   # accepte tel quel : le terrain n'est jamais bloque, l'ecart est inscrit.
   relu <- !is.null(concurrence_calculee)  # relecture d'un payload deja ecrit
   concurrence_calculee <- NULL
-  if (!is.null(nb_plants_concurrences)) {
+  if (!is.null(nb_plants_concurrences) && !is.null(nb_plants_vivants)) {
     concurrence_calculee <- sommier_niveau_concurrence(
       nb_plants_concurrences, nb_plants_vivants)
     # Aucun vivant note (0 sur 0) : pas de niveau a calculer, donc rien a

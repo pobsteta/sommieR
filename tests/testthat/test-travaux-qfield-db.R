@@ -745,12 +745,38 @@ test_that("colonnes absentes, NA ou isolees : rien ne bloque", {
   expect_equal(r$payload$nb_plants_vivants, 12L)
   expect_null(r$payload$nb_plants_concurrences)
   expect_equal(r$payload$concurrence, "moyenne")
-  # Seule la colonne des concurrences (vivants NA) : ignoree et signalee.
+  # Seule la colonne des concurrences (colonne des vivants absente) : le
+  # nombre est garde brut, aucun niveau deduit, signale.
   r <- importer_comptages(con, f, nb_plants_concurrences = 3L)
-  expect_null(r$payload$nb_plants_concurrences)
+  expect_equal(r$payload$nb_plants_concurrences, 3L)
+  expect_null(r$payload$nb_plants_vivants)
   expect_equal(r$payload$concurrence, "moyenne")
+  expect_null(r$payload$concurrence_calculee)
   expect_length(r$bilan$avertissements, 1L)
   expect_match(r$bilan$avertissements, "sans nb_plants_vivants")
+  # Vivants presents mais NA, concurrences renseignees : meme sort.
+  r <- importer_comptages(con, f, nb_plants_vivants = NA_integer_,
+                          nb_plants_concurrences = 3L,
+                          concurrence = NA_character_)
+  expect_equal(r$payload$nb_plants_concurrences, 3L)
+  expect_null(r$payload$nb_plants_vivants)
+  expect_null(r$payload$concurrence)
+  expect_length(r$bilan$avertissements, 1L)
+  expect_match(r$bilan$avertissements, "sans nb_plants_vivants")
+})
+
+test_that("plus de plants notes que de vivants : la tournee est refusee", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  # Le controle compte 18 vivants ; 25 plants notes.
+  erreur <- tryCatch(
+    importer_comptages(con, f, nb_plants_vivants = 25L,
+                       nb_plants_concurrences = 2L),
+    error = conditionMessage)
+  expect_match(erreur, "rien n'est ecrit")
+  expect_match(erreur, "Plus de plants notes")
 })
 
 test_that("concurrences > vivants : la regle de registre6_controle() refuse", {

@@ -355,29 +355,30 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
             bilan$avertissements,
             paste0("controle ", i, " : ", cpt$avertissement))
         }
-        # L'ecart entre niveau saisi et comptages est un warning() de
-        # registre6_controle() : on le range au bilan, comme les autres.
+        # Tous les avertissements de sommier_controler_placette() (dont
+        # l'ecart entre niveau saisi et comptages, un warning() de
+        # registre6_controle()) vont au bilan, comme les autres.
         withCallingHandlers(
-        sommier_controler_placette(
-          con, tolower(k$placette_uuid), k$nb_total, k$nb_vivants, auteur,
-          visite_le = as.POSIXct(k$visite_le), id = k$uuid,
-          h_moy_cm = nombre_ou_null(k$h_moy_cm),
-          nb_abroutis = nombre_ou_null(k$nb_abroutis),
-          nb_plants_vivants = cpt$nb_plants_vivants,
-          nb_plants_concurrences = cpt$nb_plants_concurrences,
-          concurrence = texte_ou_null(k$concurrence),
-          besoin = texte_ou_null(k$besoin),
-          operateur = texte_ou_null(k$operateur),
-          releve_uuid = k$uuid,
-          photos = photo(k$uuid),
-          observations = texte_ou_null(k$observations)
-        ),
-        warning = function(w) {
-          bilan$avertissements <<- c(
-            bilan$avertissements,
-            paste0("controle ", i, " : ", conditionMessage(w)))
-          invokeRestart("muffleWarning")
-        })[[1L]]
+          sommier_controler_placette(
+            con, tolower(k$placette_uuid), k$nb_total, k$nb_vivants, auteur,
+            visite_le = as.POSIXct(k$visite_le), id = k$uuid,
+            h_moy_cm = nombre_ou_null(k$h_moy_cm),
+            nb_abroutis = nombre_ou_null(k$nb_abroutis),
+            nb_plants_vivants = cpt$nb_plants_vivants,
+            nb_plants_concurrences = cpt$nb_plants_concurrences,
+            concurrence = texte_ou_null(k$concurrence),
+            besoin = texte_ou_null(k$besoin),
+            operateur = texte_ou_null(k$operateur),
+            releve_uuid = k$uuid,
+            photos = photo(k$uuid),
+            observations = texte_ou_null(k$observations)
+          ),
+          warning = function(w) {
+            bilan$avertissements <<- c(
+              bilan$avertissements,
+              paste0("controle ", i, " : ", conditionMessage(w)))
+            invokeRestart("muffleWarning")
+          })[[1L]]
       })
       bilan$controles <- length(ecrites)
       bilan$entrees <- c(bilan$entrees, ecrites)
@@ -554,9 +555,9 @@ controler_tournee_travaux <- function(travaux, placettes, controles, photos,
 # nb_plants_concurrences : les noms de l'API R, la spec de Surculus ne les nomme
 # pas). Colonnes absentes (tournee d'un ancien format) ou NA : rien. Les regles
 # de valeur sont celles de registre6_controle(), qui les refuse si elles sont
-# contredites (concurrences > vivants, vivants notes > vivants). Seul cas
-# rattrape ici : concurrences sans vivants, que registre6_controle() refuserait
-# alors que la donnee reste lisible : le comptage seul est ignore et signale.
+# contredites (concurrences > vivants, vivants notes > vivants). Un
+# nb_plants_concurrences sans vivants reste lisible : il est garde brut au
+# payload, sans niveau deduit ni compare, et signale.
 comptages_concurrence <- function(x) {
   prendre <- function(nom) {
     if (!nom %in% names(x)) return(NULL)
@@ -567,8 +568,8 @@ comptages_concurrence <- function(x) {
   avert <- NULL
   if (!is.null(con) && is.null(viv)) {
     avert <- paste0("nb_plants_concurrences sans nb_plants_vivants : ",
-                    "comptage ignore, niveau de concurrence non deduit")
-    con <- NULL
+                    "comptage garde tel quel, niveau de concurrence non ",
+                    "deduit")
   }
   list(nb_plants_vivants = viv, nb_plants_concurrences = con,
        avertissement = avert)

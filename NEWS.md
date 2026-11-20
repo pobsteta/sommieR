@@ -15,8 +15,12 @@ ces colonnes s'importe comme avant.
 - **Écart signalé, non bloquant** : un niveau saisi qui contredit les comptages est
   gardé tel que saisi, nommé dans `bilan$avertissements` (puis `warning()`), et le
   niveau calculé est inscrit sous `concurrence_calculee`.
-- **Comptage isolé** : `nb_plants_concurrences` sans `nb_plants_vivants` est ignoré
-  et signalé (la donnée reste lisible) ; `nb_plants_vivants` seul est inscrit.
+- **Comptage isolé** : `nb_plants_concurrences` sans `nb_plants_vivants` (colonne
+  absente ou NA) est **gardé tel quel** au payload, sans niveau déduit ni comparé, et
+  signalé au bilan ; `nb_plants_vivants` seul est inscrit. Pour cela,
+  `registre6_controle()` accepte désormais ce cas, qu'elle refusait (« exige
+  nb_plants_vivants ») : pour les autres appelants de l'API R, seul ce refus
+  disparaît, tout le reste est inchangé.
 - **Refus (règles de `registre6_controle()`, inchangées)** : plus de plants au
   contact que de plants notés, ou plus de plants notés que de vivants.
 
