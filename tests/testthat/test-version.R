@@ -6,6 +6,18 @@ script <- normalizePath(
   mustWork = FALSE
 )
 
+# Dans le dépôt source (présence de pilotage/), l'absence du script est un échec
+# explicite qui arrête le test, pas un saut. Seule la copie installée du paquet
+# (couverture, R CMD check : .github et pilotage exclus) saute.
+exiger_script <- function() {
+  if (file.exists(script)) return(invisible(TRUE))
+  racine <- dirname(dirname(dirname(script)))
+  if (dir.exists(file.path(racine, "pilotage"))) {
+    stop("script de version absent : ", script, call. = FALSE)
+  }
+  skip("script de version absent (paquet installé, hors dépôt source)")
+}
+
 lancer <- function(fichiers) {
   sortie <- suppressWarnings(system2(
     "bash", c(shQuote(script), shQuote(fichiers)),
@@ -18,11 +30,7 @@ lancer <- function(fichiers) {
 
 verifier <- function(version, news_version = version, cff_version = version,
                      date_news = "2026-11-20") {
-  # Pas de saut silencieux : si le script disparaît, le test échoue.
-  if (!file.exists(script)) {
-    fail(paste("script de version absent :", script))
-    return(invisible(NULL))
-  }
+  exiger_script()
   skip_if(Sys.which("bash") == "", "bash absent")
   d <- tempfile("version-")
   dir.create(d)
@@ -71,7 +79,7 @@ test_that("l'ordre des versions reste croissant", {
 
 test_that("DESCRIPTION, NEWS et CITATION du dépôt sont alignés", {
   racine <- dirname(dirname(dirname(script)))
-  expect_true(file.exists(script), info = "script de version absent")
+  exiger_script()
   skip_if(!file.exists(file.path(racine, "CITATION.cff")), "dépôt source absent")
   r <- lancer(file.path(racine, c("DESCRIPTION", "NEWS.md", "CITATION.cff")))
   expect_identical(r$code, 0L, info = r$sortie)
