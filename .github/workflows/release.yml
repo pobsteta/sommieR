@@ -6,9 +6,9 @@ name: release
 # Quand un commit arrive sur `main` (typiquement un merge de la branche
 # de dev contenant un bump `Version:` dans DESCRIPTION), ce workflow :
 #   1. lit `Version:` dans DESCRIPTION ;
-#   2. ne procède QUE pour une version STABLE `X.Y.Z` (un éventuel cycle
-#      dev `X.Y.Z.9000+` est ignoré) ;
-#   3. ne procède QUE si le tag `vX.Y.Z` n'existe pas déjà
+#   2. ne procède QUE pour une version STABLE calendaire `AAAA.M.N` (mois
+#      sans zéro en tête ; un éventuel cycle dev `AAAA.M.N.9000` est ignoré) ;
+#   3. ne procède QUE si le tag `vAAAA.M.N` n'existe pas déjà
 #      (idempotent : un re-push de main sans bump ne recrée rien) ;
 #   4. crée le tag annoté + la release GitHub (`--generate-notes`).
 #
@@ -41,18 +41,18 @@ jobs:
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "Version lue : ${version}"
 
-      - name: Gate — stable X.Y.Z only (skip dev cycle .9000+)
+      - name: Gate — stable AAAA.M.N only (skip dev cycle .9000+)
         id: gate
         run: |
           v="${{ steps.ver.outputs.version }}"
-          if [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ "$v" =~ ^[0-9]{4}\.([1-9]|1[0-2])\.[1-9][0-9]*$ ]]; then
             echo "release=true" >> "$GITHUB_OUTPUT"
           else
             echo "release=false" >> "$GITHUB_OUTPUT"
             echo "Version de cycle dev ($v) — pas de release."
           fi
 
-      - name: Gate — tag vX.Y.Z must not already exist
+      - name: Gate — tag vAAAA.M.N must not already exist
         id: tag
         if: steps.gate.outputs.release == 'true'
         run: |
