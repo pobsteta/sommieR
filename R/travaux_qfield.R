@@ -220,7 +220,8 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
 #' @return Invisiblement, un bilan : `travaux`, `placettes`, `controles`
 #'   (nombres d'entrees ecrites), `deja_presents`, `photos`, `entrees` et
 #'   `avertissements` (ecarts de forme acceptes : colonnes en trop de
-#'   `photos_terrain`, empreinte vide, photo en double ; chacun est aussi
+#'   `photos_terrain`, empreinte vide, photo en double, niveau de concurrence
+#'   contredit par les comptages de plants ; chacun est aussi
 #'   rendu par `warning()`).
 #'
 #' @seealso [sommier_projet_qfield_travaux()], [sommier_verifier_photos()]
@@ -348,18 +349,31 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
     if (nrow(controles) > 0L) {
       ecrites <- lapply(seq_len(nrow(controles)), function(i) {
         k <- controles[i, ]
-        sommier_controler_placette(
-          con, tolower(k$placette_uuid), k$nb_total, k$nb_vivants, auteur,
-          visite_le = as.POSIXct(k$visite_le), id = k$uuid,
-          h_moy_cm = nombre_ou_null(k$h_moy_cm),
-          nb_abroutis = nombre_ou_null(k$nb_abroutis),
-          concurrence = texte_ou_null(k$concurrence),
-          besoin = texte_ou_null(k$besoin),
-          operateur = texte_ou_null(k$operateur),
-          releve_uuid = k$uuid,
-          photos = photo(k$uuid),
-          observations = texte_ou_null(k$observations)
-        )[[1L]]
+        cpt <- comptages_concurrence(k)
+        # Tous les avertissements de sommier_controler_placette() (dont
+        # l'ecart entre niveau saisi et comptages, un warning() de
+        # registre6_controle()) vont au bilan, comme les autres.
+        withCallingHandlers(
+          sommier_controler_placette(
+            con, tolower(k$placette_uuid), k$nb_total, k$nb_vivants, auteur,
+            visite_le = as.POSIXct(k$visite_le), id = k$uuid,
+            h_moy_cm = nombre_ou_null(k$h_moy_cm),
+            nb_abroutis = nombre_ou_null(k$nb_abroutis),
+            nb_plants_vivants = cpt$nb_plants_vivants,
+            nb_plants_concurrences = cpt$nb_plants_concurrences,
+            concurrence = texte_ou_null(k$concurrence),
+            besoin = texte_ou_null(k$besoin),
+            operateur = texte_ou_null(k$operateur),
+            releve_uuid = k$uuid,
+            photos = photo(k$uuid),
+            observations = texte_ou_null(k$observations)
+          ),
+          warning = function(w) {
+            bilan$avertissements <<- c(
+              bilan$avertissements,
+              paste0("controle ", i, " : ", conditionMessage(w)))
+            invokeRestart("muffleWarning")
+          })[[1L]]
       })
       bilan$controles <- length(ecrites)
       bilan$entrees <- c(bilan$entrees, ecrites)
@@ -508,15 +522,18 @@ controler_tournee_travaux <- function(travaux, placettes, controles, photos,
     if (is.na(x$visite_le)) {
       fautes <- c(fautes, paste0(nom, " : date de controle absente"))
     }
-    essai <- tryCatch({
+    cpt <- comptages_concurrence(x)
+    essai <- tryCatch(suppressWarnings({
       registre6_controle(
         uuid_v4(), x$nb_total, x$nb_vivants,
         h_moy_cm = nombre_ou_null(x$h_moy_cm),
         nb_abroutis = nombre_ou_null(x$nb_abroutis),
+        nb_plants_vivants = cpt$nb_plants_vivants,
+        nb_plants_concurrences = cpt$nb_plants_concurrences,
         concurrence = texte_ou_null(x$concurrence),
         besoin = texte_ou_null(x$besoin))
       NULL
-    }, error = function(e) conditionMessage(e))
+    }), error = function(e) conditionMessage(e))
     if (!is.null(essai)) fautes <- c(fautes, paste0(nom, " : ", essai))
     fautes <- c(fautes, controler_photos_constat(x, nom, photos, dossier))
   }
@@ -527,6 +544,24 @@ controler_tournee_travaux <- function(travaux, placettes, controles, photos,
     fautes <- c(fautes, "deux controles d'une meme placette le meme jour")
   }
   fautes
+}
+
+# Les deux comptages de plants d'un controle (nb_plants_vivants,
+# nb_plants_concurrences : les noms de l'API R, la spec de Surculus ne les nomme
+# pas). Colonnes absentes (tournee d'un ancien format) ou NA : rien. Les regles
+# de valeur sont celles de registre6_controle(), qui les refuse si elles sont
+# contredites (concurrences > vivants, vivants notes > vivants). Un
+# nb_plants_concurrences sans vivants reste lisible : il est garde brut au
+# payload, sans niveau deduit ni compare ; c'est registre6_controle() qui le
+# signale (un seul message, relaye au bilan).
+comptages_concurrence <- function(x) {
+  prendre <- function(nom) {
+    if (!nom %in% names(x)) return(NULL)
+    nombre_ou_null(x[[nom]][1L])
+  }
+  viv <- prendre("nb_plants_vivants")
+  con <- prendre("nb_plants_concurrences")
+  list(nb_plants_vivants = viv, nb_plants_concurrences = con)
 }
 
 payload_travaux <- function(t, geometrie, photos) {
