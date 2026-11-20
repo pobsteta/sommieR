@@ -753,7 +753,9 @@ test_that("colonnes absentes, NA ou isolees : rien ne bloque", {
   expect_equal(r$payload$concurrence, "moyenne")
   expect_null(r$payload$concurrence_calculee)
   expect_length(r$bilan$avertissements, 1L)
-  expect_match(r$bilan$avertissements, "sans nb_plants_vivants")
+  expect_match(r$bilan$avertissements, "sans plants vivants notes")
+  # Un seul message, relaye une fois par le warning() final.
+  expect_length(r$warnings, 1L)
   # Vivants presents mais NA, concurrences renseignees : meme sort.
   r <- importer_comptages(con, f, nb_plants_vivants = NA_integer_,
                           nb_plants_concurrences = 3L,
@@ -762,7 +764,8 @@ test_that("colonnes absentes, NA ou isolees : rien ne bloque", {
   expect_null(r$payload$nb_plants_vivants)
   expect_null(r$payload$concurrence)
   expect_length(r$bilan$avertissements, 1L)
-  expect_match(r$bilan$avertissements, "sans nb_plants_vivants")
+  expect_match(r$bilan$avertissements, "sans plants vivants notes")
+  expect_length(r$warnings, 1L)
 })
 
 test_that("plus de plants notes que de vivants : la tournee est refusee", {

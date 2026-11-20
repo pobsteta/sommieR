@@ -350,11 +350,6 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
       ecrites <- lapply(seq_len(nrow(controles)), function(i) {
         k <- controles[i, ]
         cpt <- comptages_concurrence(k)
-        if (!is.null(cpt$avertissement)) {
-          bilan$avertissements <<- c(
-            bilan$avertissements,
-            paste0("controle ", i, " : ", cpt$avertissement))
-        }
         # Tous les avertissements de sommier_controler_placette() (dont
         # l'ecart entre niveau saisi et comptages, un warning() de
         # registre6_controle()) vont au bilan, comme les autres.
@@ -557,7 +552,8 @@ controler_tournee_travaux <- function(travaux, placettes, controles, photos,
 # de valeur sont celles de registre6_controle(), qui les refuse si elles sont
 # contredites (concurrences > vivants, vivants notes > vivants). Un
 # nb_plants_concurrences sans vivants reste lisible : il est garde brut au
-# payload, sans niveau deduit ni compare, et signale.
+# payload, sans niveau deduit ni compare ; c'est registre6_controle() qui le
+# signale (un seul message, relaye au bilan).
 comptages_concurrence <- function(x) {
   prendre <- function(nom) {
     if (!nom %in% names(x)) return(NULL)
@@ -565,14 +561,7 @@ comptages_concurrence <- function(x) {
   }
   viv <- prendre("nb_plants_vivants")
   con <- prendre("nb_plants_concurrences")
-  avert <- NULL
-  if (!is.null(con) && is.null(viv)) {
-    avert <- paste0("nb_plants_concurrences sans nb_plants_vivants : ",
-                    "comptage garde tel quel, niveau de concurrence non ",
-                    "deduit")
-  }
-  list(nb_plants_vivants = viv, nb_plants_concurrences = con,
-       avertissement = avert)
+  list(nb_plants_vivants = viv, nb_plants_concurrences = con)
 }
 
 payload_travaux <- function(t, geometrie, photos) {

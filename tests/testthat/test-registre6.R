@@ -145,17 +145,20 @@ test_that("le comptage de la concurrence est conserve, facultatif, ajout seul", 
 
 test_that("un comptage de plants au contact sans vivants notes est garde brut", {
   id <- "11111111-1111-4111-8111-111111111111"
-  c1 <- registre6_controle(id, 10, 9, nb_plants_concurrences = 2)
+  expect_warning(c1 <- registre6_controle(id, 10, 9, nb_plants_concurrences = 2),
+                 "sans plants vivants notes")
   expect_equal(c1$nb_plants_concurrences, 2)
   expect_null(c1$nb_plants_vivants)
   expect_null(c1$concurrence)
   expect_null(c1$concurrence_calculee)
-  # Avec un niveau saisi : rien a comparer, rien a signaler.
-  expect_no_warning(c2 <- registre6_controle(
-    id, 10, 9, concurrence = "forte", nb_plants_concurrences = 2))
+  # Avec un niveau saisi : rien a comparer, le comptage isole est signale.
+  expect_warning(c2 <- registre6_controle(
+    id, 10, 9, concurrence = "forte", nb_plants_concurrences = 2),
+    "sans plants vivants notes")
   expect_equal(c2$concurrence, "forte")
   # Rejouable, et jusqu'a l'entree.
-  expect_equal(registre6_depuis_payload(c1), c1)
+  expect_no_warning(rejoue <- registre6_depuis_payload(c1))
+  expect_equal(rejoue, c1)
   e <- sommier_entree(foret_id = id, registre = 6L,
                       date_evenement = as.Date("2026-11-18"), auteur = "t",
                       ndp = 0L, payload = c1)

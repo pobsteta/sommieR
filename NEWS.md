@@ -20,7 +20,9 @@ ces colonnes s'importe comme avant.
   signalé au bilan ; `nb_plants_vivants` seul est inscrit. Pour cela,
   `registre6_controle()` accepte désormais ce cas, qu'elle refusait (« exige
   nb_plants_vivants ») : pour les autres appelants de l'API R, seul ce refus
-  disparaît, tout le reste est inchangé.
+  disparaît, tout le reste est inchangé. Le cas n'est pas muet : `registre6_controle()`
+  émet un `warning()` (comptage gardé tel quel, aucun niveau calculé), repris une seule
+  fois au bilan d'import ; `registre6_depuis_payload()` ne le répète pas au rejeu.
 - **Refus (règles de `registre6_controle()`, inchangées)** : plus de plants au
   contact que de plants notés, ou plus de plants notés que de vivants.
 

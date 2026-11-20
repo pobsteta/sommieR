@@ -52,7 +52,8 @@ dont \code{concurrence} est tiree, pour qu'on puisse la verifier. Plants
 vivants sur lesquels le contact avec la vegetation a ete note (au plus
 \code{nb_vivants}), et parmi eux ceux au contact de la vegetation concurrente.
 \code{nb_plants_concurrences} peut arriver \strong{sans} \code{nb_plants_vivants} : il est
-alors garde tel quel, sans niveau deduit ni compare (rien ne se perd).
+alors garde tel quel, sans niveau deduit ni compare, et un avertissement le
+dit (rien ne se perd, rien n'est muet ; pas d'avertissement au rejeu).
 Ajout seul : \code{NULL} est accepte, et un controle sans ces champs se relit a
 l'identique. Lis avec \code{\link[=sommier_niveau_concurrence]{sommier_niveau_concurrence()}}. Quand les deux sont
 fournis : si \code{concurrence} est absent, il est \strong{deduit} par

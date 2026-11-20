@@ -226,7 +226,8 @@ registre6_placette <- function(code_placette, travaux_id, geometrie,
 #'   vivants sur lesquels le contact avec la vegetation a ete note (au plus
 #'   `nb_vivants`), et parmi eux ceux au contact de la vegetation concurrente.
 #'   `nb_plants_concurrences` peut arriver **sans** `nb_plants_vivants` : il est
-#'   alors garde tel quel, sans niveau deduit ni compare (rien ne se perd).
+#'   alors garde tel quel, sans niveau deduit ni compare, et un avertissement le
+#'   dit (rien ne se perd, rien n'est muet ; pas d'avertissement au rejeu).
 #'   Ajout seul : `NULL` est accepte, et un controle sans ces champs se relit a
 #'   l'identique. Lis avec [sommier_niveau_concurrence()]. Quand les deux sont
 #'   fournis : si `concurrence` est absent, il est **deduit** par
@@ -285,7 +286,11 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
   # accepte tel quel : le terrain n'est jamais bloque, l'ecart est inscrit.
   relu <- !is.null(concurrence_calculee)  # relecture d'un payload deja ecrit
   concurrence_calculee <- NULL
-  if (!is.null(nb_plants_concurrences) && !is.null(nb_plants_vivants)) {
+  if (!is.null(nb_plants_concurrences) && is.null(nb_plants_vivants)) {
+    warning("comptage de plants au contact (", nb_plants_concurrences,
+            ") sans plants vivants notes : garde tel quel, aucun niveau de ",
+            "concurrence calcule.", call. = FALSE)
+  } else if (!is.null(nb_plants_concurrences)) {
     concurrence_calculee <- sommier_niveau_concurrence(
       nb_plants_concurrences, nb_plants_vivants)
     # Aucun vivant note (0 sur 0) : pas de niveau a calculer, donc rien a
@@ -347,12 +352,13 @@ registre6_depuis_payload <- function(payload) {
   if (type != "travaux") {
     arguments$type_entree <- NULL
   }
-  do.call(switch(
+  # Un rejeu ne signale rien : l'ecart a ete dit a l'ecriture.
+  suppressWarnings(do.call(switch(
     type,
     travaux  = registre6_travaux,
     placette = registre6_placette,
     controle = registre6_controle
-  ), arguments)
+  ), arguments))
 }
 
 # Les formes d'un code, en types GeoJSON.
