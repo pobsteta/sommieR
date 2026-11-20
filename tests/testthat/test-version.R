@@ -18,7 +18,11 @@ lancer <- function(fichiers) {
 
 verifier <- function(version, news_version = version, cff_version = version,
                      date_news = "2026-11-20") {
-  skip_if(!file.exists(script), "script de version absent (paquet installé)")
+  # Pas de saut silencieux : si le script disparaît, le test échoue.
+  if (!file.exists(script)) {
+    fail(paste("script de version absent :", script))
+    return(invisible(NULL))
+  }
   skip_if(Sys.which("bash") == "", "bash absent")
   d <- tempfile("version-")
   dir.create(d)
@@ -67,8 +71,8 @@ test_that("l'ordre des versions reste croissant", {
 
 test_that("DESCRIPTION, NEWS et CITATION du dépôt sont alignés", {
   racine <- dirname(dirname(dirname(script)))
-  skip_if(!file.exists(script) || !file.exists(file.path(racine, "CITATION.cff")),
-          "dépôt source absent")
+  expect_true(file.exists(script), info = "script de version absent")
+  skip_if(!file.exists(file.path(racine, "CITATION.cff")), "dépôt source absent")
   r <- lancer(file.path(racine, c("DESCRIPTION", "NEWS.md", "CITATION.cff")))
   expect_identical(r$code, 0L, info = r$sortie)
 })
