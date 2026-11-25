@@ -50,7 +50,9 @@ sommier_controler_placette(
   Champs de
   [`registre6_controle()`](https://pobsteta.github.io/sommieR/reference/registre6_controle.md)
   : `h_moy_cm`, `nb_abroutis`, `concurrence`, `besoin`, `operateur`,
-  `releve_uuid`, `photos`, `observations`.
+  `releve_uuid`, `photos`, `observations`, et la position mesuree
+  (`geometrie`, `precision_m`, `rattache_par_identite`,
+  `sans_position_mesuree`).
 
 ## Value
 

@@ -22,7 +22,7 @@ existante.
 | **Surface**          | 16,37 ha                                          |
 | **Période couverte** | Du 2016-01-01 au 2025-12-31                       |
 | **Référentiel**      | amenagement                                       |
-| **Édité le**         | 20/11/2026                                        |
+| **Édité le**         | 25/11/2026                                        |
 
 ### 1.1 Parcellaire
 
@@ -60,7 +60,7 @@ document.
 | **État de la chaîne** | intacte |
 | **Entrées** | 76 |
 | **Séquence de tête** | 76 |
-| **Empreinte de tête** | `1992bda57778e30992fa686648fa6d63e5d3a10c00368e6915aee9d9ba9c7903` |
+| **Empreinte de tête** | `2921ed778d2a0181bd50c7b6958e8664f60870f28d679cbb7b4804c59d8bd233` |
 
 ## 2 Provenance des écritures
 
@@ -359,5 +359,5 @@ imprimé (`sommier_registre_quarto()`).
 
 ------------------------------------------------------------------------
 
-*Engendré par [sommieR](https://github.com/pobsteta/sommieR) 2026.11.2
-le 20/11/2026.*
+*Engendré par [sommieR](https://github.com/pobsteta/sommieR)
+2026.11.2.9000 le 25/11/2026.*

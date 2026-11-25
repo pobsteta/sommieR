@@ -11,7 +11,7 @@ photos deposees sous leur empreinte."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2026.11.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2026.11.2.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,6 +99,17 @@ sa position, a 15 m pres. L'ecriture se fait en une
 transaction, dans cet ordre : travaux, placettes, controles - une placette
 peut suivre des travaux releves dans la meme tournee, un controle porter sur
 une placette qui vient d'etre installee.</p>
+<p><strong>La position mesuree des controles.</strong> Si la tournee porte la couche
+<code>positions_controles</code> de Surculus (cle <code>controle_uuid</code>, un point par
+controle), chaque position est inscrite au controle : <code>geometrie</code> (WGS 84,
+reprojetee depuis le SCR de la couche), <code>precision_m</code>,
+<code>rattache_par_identite</code>, <code>sans_position_mesuree</code>. Une ligne a geometrie NULL
+(ou POINT EMPTY) donne un controle <strong>sans</strong> geometrie et
+<code>sans_position_mesuree = TRUE</code> : jamais un point (0, 0). Une couche sans SCR,
+une position hors des bornes WGS 84, une position qui contredit son drapeau
+ou deux lignes pour un meme controle sont des fautes (rien n'est ecrit) ; une
+ligne pour un controle absent de la tournee est ignoree et dite aux
+avertissements. Sans la couche, la tournee s'importe comme avant.</p>
 <p><strong>Rejouable.</strong> L'UUID que QField a donne a chaque saisie devient celui de
 l'entree : reimporter le meme dossier n'ecrit rien de plus. Les placettes
 deja inscrites, versees dans le projet, ne se reinscrivent pas.</p>

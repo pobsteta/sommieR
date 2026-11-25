@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">sommieR</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2026.11.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2026.11.2.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,20 @@
       <small>Source: <a href="https://github.com/pobsteta/sommieR/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2026.11.2.9000" id="sommier-20261129000-en-développement">sommieR 2026.11.2.9000 (en développement)<a class="anchor" aria-label="anchor" href="#sommier-20261129000-en-d%C3%A9veloppement"></a></h2>
+<p>La position mesurée de chaque contrôle de placette de Surculus est gardée au registre, lue à l’import de la tournée et exposée par <code>v_controle_plantation</code> (mission 052 ; brief de Surculus du 2026-10-22 et complément du 2026-11-02, déposé dans <code>specs/brief_travaux-2b_position_controle.md</code>). Aucune rupture : champs facultatifs, colonnes de vue ajoutées à la fin.</p>
+<ul><li>
+<strong>Payload du contrôle</strong> : <code><a href="../reference/registre6_controle.html">registre6_controle()</a></code> et <code><a href="../reference/sommier_controler_placette.html">sommier_controler_placette()</a></code> acceptent <code>geometrie</code> (point WGS 84, comme les autres entrées : <code>entree_sommier.geom</code> la reprend sans règle nouvelle), <code>precision_m</code>, <code>rattache_par_identite</code> et <code>sans_position_mesuree</code>, avec les noms de Surculus. Un contrôle sans ces champs s’écrit et se relit à l’identique. <code>sans_position_mesuree = TRUE</code> n’admet ni <code>geometrie</code> ni <code>precision_m</code> ; une <code>precision_m</code> exige une <code>geometrie</code> ; un point hors des bornes WGS 84 (des mètres Lambert-93 pris pour des degrés) est refusé avec un message clair, avant toute écriture.</li>
+<li>
+<strong>Import</strong> : si la tournée porte la couche <code>positions_controles</code> (clé <code>controle_uuid</code>), chaque position est inscrite au contrôle, reprojetée en WGS 84 depuis le SCR de la couche. Une ligne à géométrie NULL (ou POINT EMPTY) donne un contrôle sans <code>geometrie</code> et <code>sans_position_mesuree = TRUE</code>, jamais un point (0, 0). Fautes (rien n’est écrit) : couche sans SCR, position hors bornes, position qui contredit son drapeau, deux lignes pour un même contrôle. Une ligne pour un contrôle absent de la tournée est ignorée et dite au bilan. Sans la couche, la tournée s’importe comme avant. <code>source_gnss</code>, <code>referentiel_source</code> et <code>simulee</code> de la couche ne sont pas lues (hors du brief).</li>
+<li>
+<strong>Vue <code>v_controle_plantation</code></strong> : cinq colonnes à la fin, <code>position_mesuree</code> (Lambert-93, NULL sans mesure), <code>a_position_mesuree</code>, <code>precision_position_m</code>, <code>rattache_par_identite</code>, <code>sans_position_mesuree</code> (NULL pour un contrôle qui ne les a pas inscrits). Aucune colonne existante ne change de nom, de type ni de place ; <code>CREATE OR REPLACE VIEW</code> met à jour une base existante.</li>
+<li>
+<strong>Précision</strong> : <code>precision_m</code> est strictement positive (jamais 0, comme dans Surculus, ADR 0003) ; 0 ou négative est refusée, par l’API R comme à l’import.</li>
+<li>
+<strong>Conséquence voulue</strong> : les contrôles qui portent une position mesurée apparaissent désormais dans <code>v_objet_localise</code>, désignés « controle » (leur <code>payload-&gt;'geometrie'</code> alimente <code>entree_sommier.geom</code>) ; un contrôle sans position n’y figure pas.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2026.11.2" id="sommier-2026112-2026-11-20">sommieR 2026.11.2 (2026-11-20)<a class="anchor" aria-label="anchor" href="#sommier-2026112-2026-11-20"></a></h2>
 <p>L’import de tournée QField des travaux lit les deux comptages de plants d’un contrôle, <code>nb_plants_vivants</code> et <code>nb_plants_concurrences</code>, et les passe à <code><a href="../reference/registre6_controle.html">registre6_controle()</a></code> : le niveau de concurrence est déduit ou signalé à l’import comme il l’est déjà par l’API R (mission 028). Aucune rupture : une tournée sans ces colonnes s’importe comme avant.</p>
