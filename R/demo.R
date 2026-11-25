@@ -400,7 +400,8 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
   # Le destin des plants, par placette : morts et absents au controle de
   # 2023, morts entre 2023 et 2025, et le regarni (plant 21) qui remplace un
   # plant mort ou absent. Les effectifs reproduisent les comptages
-  # d'origine (vivants 17, 18, 15 en 2023 ; 16, 17, 13 en 2025 sur 20).
+  # d'origine (vivants 17, 18, 15 en 2023 ; 16, 17, 13 en 2025 sur 20) ; les
+  # hauteurs moyennes 2025 des placettes 1 et 3 baissent (regarni de 45 cm).
   destins <- list(
     list(morts = c(18L, 19L, 20L), absents = integer(0),
          meurent = c(16L, 17L), regarni_de = 20L),

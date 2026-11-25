@@ -100,8 +100,9 @@ facultatifs, colonnes de vue ajoutées à la fin.
   « Démo Couchey »). `sommier_demo_couchey()` pointe 20 plants (CHS, numéros uniques)
   sur chacune des 3 placettes de la plantation 2022 de l'UG 35, un regarni sur deux
   d'entre elles, et écrit leur état aux contrôles de 2023 et 2025 (morts et absents
-  compris). Les totaux des contrôles, déduits des états, restent ceux d'avant (20 plants,
-  17/18/15 vivants en 2023, 16/17/13 en 2025). La démo exerce ainsi `v_plant`,
+  compris). Les comptes des contrôles, déduits des états, restent ceux d'avant (20 plants,
+  17/18/15 vivants en 2023, 16/17/13 en 2025) ; les hauteurs moyennes 2025 changent sur
+  les placettes 1 et 3 (89 et 72 cm au lieu de 92 et 74), le regarni de 45 cm y comptant. La démo exerce ainsi `v_plant`,
   `v_etat_plant`, la mortalité entre passages (12,5 % en 2025) et `nb_regarnis` (2).
   Positions, destins et causes sont construits : données de démonstration, marquées
   comme telles. Reste hors périmètre : modèle QField, versement des plants à l'aller,
