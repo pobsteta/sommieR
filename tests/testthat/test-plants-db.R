@@ -597,3 +597,58 @@ test_that("l'import refuse un plant mort au passage 1 sans etat au passage 2, sa
                                                "agent-01"), "il en faut un")
   expect_equal(nb_entrees(con, h$foret), n2)
 })
+
+# La demonstration de Couchey exerce tout le lot 2 (mission 062) : les trois
+# placettes de la plantation 2022 de l'UG 35 recoivent leurs plants et leurs
+# etats aux controles de 2023 et 2025.
+test_that("la demonstration de Couchey pointe des plants et les suit en 2023 et 2025", {
+  con <- base_plants()
+  demo <- sommier_demo_couchey(con, suffixe = paste0("plants-", substr(uuid_v4(), 1L, 8L)))
+  foret <- demo$foret_id
+  q <- function(sql) DBI::dbGetQuery(con, sql, params = list(foret))
+
+  # Les plants : 20 par placette, plus un regarni sur deux d'entre elles.
+  p <- q("SELECT code_placette, count(*)::int AS n,
+                 count(*) FILTER (WHERE regarni)::int AS regarnis,
+                 count(DISTINCT numero)::int AS numeros,
+                 count(DISTINCT essence)::int AS essences, min(essence) AS essence
+            FROM v_plant WHERE foret_id = $1 GROUP BY 1 ORDER BY 1")
+  expect_equal(p$code_placette, c("P35-01", "P35-02", "P35-03"))
+  expect_equal(p$n, c(21L, 20L, 21L))
+  expect_equal(p$numeros, p$n)               # numeros uniques par placette
+  expect_equal(p$regarnis, c(1L, 0L, 1L))
+  expect_equal(p$essence, rep("CHS", 3L))    # essence de la plantation
+  expect_equal(p$essences, rep(1L, 3L))
+  # Chaque regarni remplace un plant mort ou absent de sa placette.
+  r <- q("SELECT r.etat FROM v_plant g JOIN v_plant o ON o.id = g.remplace_uuid
+            AND o.placette_id = g.placette_id
+            JOIN v_etat_plant r ON r.plant_id = o.id
+           WHERE g.foret_id = $1 AND g.regarni")
+  expect_true(all(r$etat %in% c("mort", "absent")))
+  expect_equal(nrow(r), 4L)  # deux regarnis, vus a deux controles
+
+  # Un etat par plant actif et par controle ; les morts en gardent un.
+  e <- q("SELECT extract(year FROM visite_le)::int AS an, code_placette,
+                 count(*)::int AS n, count(*) FILTER (WHERE etat = 'mort')::int AS morts
+            FROM v_etat_plant WHERE foret_id = $1 GROUP BY 1, 2 ORDER BY 1, 2")
+  expect_equal(e$an, rep(c(2023L, 2025L), each = 3L))
+  expect_equal(e$n, c(20L, 20L, 20L, 21L, 20L, 21L))
+  expect_gt(min(e$morts), 0L)
+
+  # Les totaux du controle, derives des etats, sont ceux de la demonstration.
+  c6 <- q("SELECT code_placette, extract(year FROM visite_le)::int AS an,
+                  nb_total, nb_vivants FROM v_controle_plantation
+            WHERE foret_id = $1 ORDER BY 2, 1")
+  expect_equal(c6$nb_total, rep(20L, 6L))
+  expect_equal(c6$nb_vivants, c(17L, 18L, 15L, 16L, 17L, 13L))
+
+  # Le suivi rend une mortalite entre passages et des regarnis non nuls en 2025.
+  s <- sommier_suivi_plantations(con, foret)
+  s25 <- s[s$annee_controle == 2025L, ]
+  expect_gt(s25$mortalite_passage_pct, 0)
+  expect_equal(s25$nb_regarnis, 2L)
+  expect_equal(s[s$annee_controle == 2023L, ]$nb_regarnis, 0L)
+
+  # La chaine se verifie, plants compris.
+  expect_true(sommier_verifier(con, foret)$valide)
+})

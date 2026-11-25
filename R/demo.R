@@ -125,6 +125,11 @@ SOMMIER_PARCELLES_COUCHEY <- data.frame(
 #' temps. Le jeu montre ainsi les deux etats qu'un sommier repris melange, et
 #' ce que le rapport engendre doit en dire. Voir [sommier_reprise()].
 #'
+#' Les trois placettes de la plantation 2022 de l'UG 35 portent leurs plants :
+#' vingt pointes a la reception des travaux, un regarni sur deux placettes, et
+#' un etat par plant aux controles de 2023 et de 2025 (morts et absents compris).
+#' Positions, destins et causes sont construits pour la demonstration.
+#'
 #' Trois precautions le rendent visible plutot que de compter sur la memoire du
 #' lecteur : le nom de la foret porte la mention, le rapport engendre l'affiche
 #' en tete, et la fonction refuse de s'executer sur une base ou le jeu existe
@@ -370,10 +375,80 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
       date_evenement = "2022-12-02", materialisation = "piquet bois"
     )[[1L]]$id
   }, character(1))
+  # Les plants de la plantation, pointes a la reception des travaux : vingt
+  # par placette, numerotes par azimut depuis le nord dans le sens horaire,
+  # sur un cercle de 2,5 m autour du piquet (la placette fait 50 m2). Donnees
+  # de demonstration : positions et destins sont construits, aucun plant n'a
+  # ete releve. L'essence est celle des travaux suivis (CHS).
+  point_plant <- function(centre, azimut_deg, rayon_m) {
+    a <- azimut_deg * pi / 180
+    geom_point(
+      centre[[1L]] + rayon_m * sin(a) / (111320 * cos(centre[[2L]] * pi / 180)),
+      centre[[2L]] + rayon_m * cos(a) / 111320
+    )
+  }
+  plants <- lapply(seq_along(placettes), function(k) {
+    vapply(1:20, function(n) {
+      sommier_pointer_plant(
+        con, placettes[[k]], point_plant(centres[[k]], (n - 1) * 18, 2.5), n,
+        auteur, date_evenement = "2022-12-02",
+        observations = "Plant de demonstration (position construite)"
+      )[[1L]]$id
+    }, character(1))
+  })
+
+  # Le destin des plants, par placette : morts et absents au controle de
+  # 2023, morts entre 2023 et 2025, et le regarni (plant 21) qui remplace un
+  # plant mort ou absent. Les effectifs reproduisent les comptages
+  # d'origine (vivants 17, 18, 15 en 2023 ; 16, 17, 13 en 2025 sur 20) ; les
+  # hauteurs moyennes 2025 des placettes 1 et 3 baissent (regarni de 45 cm).
+  destins <- list(
+    list(morts = c(18L, 19L, 20L), absents = integer(0),
+         meurent = c(16L, 17L), regarni_de = 20L),
+    list(morts = 19L, absents = 20L, meurent = 18L, regarni_de = NA_integer_),
+    list(morts = c(16L, 17L, 18L, 19L), absents = 20L,
+         meurent = c(13L, 14L, 15L), regarni_de = 20L)
+  )
+  cause_plant <- function(n) {
+    switch(n %% 3L + 1L,
+      list(cause_groupe = "entomologique", cause_detail = "hylobe"),
+      list(cause_groupe = "abiotique_complexe_indetermine",
+           cause_detail = "secheresse"),
+      list(cause_groupe = "animaux", cause_detail = "abroutissement"))
+  }
+  # L'etat de chaque plant a un passage : `mort`/`absent` le restent, les
+  # autres sont sains (les `abroutis` premiers vivants portent le detail
+  # abroutissement, le cinquieme suivant est atteint par l'oidium), leur
+  # hauteur s'ecarte de quelques cm de la moyenne visee.
+  etats_passage <- function(d, annee, abroutis, hauteur) {
+    numeros <- 1:20
+    if (annee == 2025L && !is.na(d$regarni_de)) {
+      numeros <- c(numeros, 21L)
+    }
+    morts <- c(d$morts, if (annee == 2025L) d$meurent)
+    vivants <- setdiff(numeros, c(morts, d$absents))
+    lapply(numeros, function(n) {
+      if (n %in% d$absents) {
+        return(list(etat = "absent"))
+      }
+      if (n %in% morts) {
+        return(c(list(etat = "mort"), cause_plant(n)))
+      }
+      rang <- match(n, vivants)
+      h <- if (n == 21L) 45L else as.integer(hauteur + (rang %% 5L - 2L) * 2L)
+      if (rang <= abroutis) {
+        list(etat = "sain", cause_detail = "abroutissement", hauteur_cm = h)
+      } else if (rang == abroutis + 5L) {
+        list(etat = "atteint", cause_groupe = "pathologique",
+             cause_detail = "oidium", hauteur_cm = h)
+      } else {
+        list(etat = "sain", hauteur_cm = h)
+      }
+    })
+  }
   releves <- data.frame(
     annee = c(2023L, 2023L, 2023L, 2025L, 2025L, 2025L),
     k = c(1L, 2L, 3L, 1L, 2L, 3L),
-    vivants = c(17L, 18L, 15L, 16L, 17L, 13L),
     hauteur = c(38L, 41L, 33L, 92L, 101L, 74L),
     abroutis = c(3L, 2L, 5L, 1L, 2L, 4L),
     concurrence = c("forte", "moyenne", "forte", "moyenne", "faible", "forte"),
@@ -381,12 +456,26 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
   )
   for (i in seq_len(nrow(releves))) {
     r <- releves[i, ]
+    d <- destins[[r$k]]
+    if (r$annee == 2025L && !is.na(d$regarni_de)) {
+      # Le regarni de l'hiver 2024, avant le controle de 2025.
+      plants[[r$k]] <- c(plants[[r$k]], sommier_pointer_plant(
+        con, placettes[[r$k]],
+        point_plant(centres[[r$k]], (d$regarni_de - 1) * 18, 3.5), 21, auteur,
+        date_evenement = "2024-02-20", regarni = TRUE,
+        remplace_uuid = plants[[r$k]][[d$regarni_de]],
+        observations = "Regarni de demonstration"
+      )[[1L]]$id)
+    }
+    etats <- etats_passage(d, r$annee, r$abroutis, r$hauteur)
+    for (n in seq_along(etats)) {
+      etats[[n]]$plant_id <- plants[[r$k]][[n]]
+    }
     sommier_controler_placette(
-      con, placettes[[r$k]], nb_total = 20L, nb_vivants = r$vivants, auteur,
+      con, placettes[[r$k]], auteur = auteur,
       visite_le = sprintf("%d-06-1%dT09:30:00Z", r$annee, r$k),
-      h_moy_cm = r$hauteur, nb_abroutis = r$abroutis,
       concurrence = r$concurrence, besoin = r$besoin,
-      operateur = "Agent patrimonial"
+      operateur = "Agent patrimonial", plants = etats
     )
   }
   ecrire(6L, registre6_travaux(

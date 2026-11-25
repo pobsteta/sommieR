@@ -27,8 +27,11 @@ test_that("le sommier imprime chaque ecriture, transcriptions comprises", {
   s <- sommier_registre(con, demo$foret_id)
 
   expect_s3_class(s, "sommier_registre")
+  # Le sommier imprime n'a pas de ligne par plant (decompte sous la placette,
+  # mission 054) : les plants pointes par la demo (mission 062) n'y comptent pas.
   n <- DBI::dbGetQuery(con, "SELECT count(*)::int AS n FROM entree_sommier
-                              WHERE foret_id = $1",
+                              WHERE foret_id = $1
+                                AND COALESCE(payload->>'type_entree', '') <> 'plant'",
                        params = list(demo$foret_id))$n
   expect_equal(nrow(s$ecritures), n)
   # Dans chaque registre, l'ordre de la chaine.
@@ -44,6 +47,11 @@ test_that("le sommier imprime chaque ecriture, transcriptions comprises", {
                                             "constat"])))
   # Les empreintes sont celles de la chaine, et la derniere est la tete.
   lues <- sommier_lire(con, demo$foret_id)
+  plants_seq <- DBI::dbGetQuery(
+    con, "SELECT seq FROM entree_sommier
+           WHERE foret_id = $1 AND payload->>'type_entree' = 'plant'",
+    params = list(demo$foret_id))$seq
+  lues <- lues[!lues$seq %in% plants_seq, ]
   ordre <- order(s$ecritures$seq)
   expect_equal(s$ecritures$hash[ordre], lues$hash)
   expect_equal(s$ecritures$hash[ordre][[n]], s$verification$hash_tete)
