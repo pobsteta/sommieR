@@ -10,12 +10,15 @@ base_croquis <- function() {
 
 # Ce que la base sait localiser, compte sans passer par l'extraction : une
 # geometrie propre, une unite qui a un contour, ou la foret entiere pour ce
-# qui n'a ni l'une ni l'autre, hors visas et comptes.
+# qui n'a ni l'une ni l'autre, hors visas et comptes. Les plants (demo de
+# Couchey, mission 062) n'ont pas de ligne imprimee ni d'objet de croquis : leur
+# decompte se lit sous la placette (registre imprime).
 compter_localisees <- function(con, foret, jusqu_a = 9e15) {
   DBI::dbGetQuery(
     con,
     "SELECT count(*)::int AS n FROM entree_sommier e
       WHERE e.foret_id = $1 AND e.seq <= $2
+        AND COALESCE(e.payload->>'type_entree', '') <> 'plant'
         AND (e.geom IS NOT NULL OR EXISTS (
           SELECT 1 FROM ug_geometrie g WHERE g.ug_uuid = e.ug_uuid)
           OR (e.ug_uuid IS NULL AND e.registre NOT IN (1, 7)))",
