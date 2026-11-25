@@ -135,6 +135,8 @@ le suivi des plantations sur placettes permanentes.
   : Types d'entree du registre 6
 - [`SOMMIER_ETATS_PLANT`](https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_PLANT.md)
   : Etats d'un plant a un controle
+- [`SOMMIER_METHODES_POINTAGE`](https://pobsteta.github.io/sommieR/reference/SOMMIER_METHODES_POINTAGE.md)
+  : Methodes de pointage d'un plant
 - [`SOMMIER_GROUPES_CAUSE_PLANT`](https://pobsteta.github.io/sommieR/reference/SOMMIER_GROUPES_CAUSE_PLANT.md)
   : Groupes de causes d'une atteinte ou d'une mort de plant
 - [`SOMMIER_EXECUTIONS_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_EXECUTIONS_TRAVAUX.md)

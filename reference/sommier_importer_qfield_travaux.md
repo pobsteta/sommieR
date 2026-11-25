@@ -35,7 +35,9 @@ sommier_importer_qfield_travaux(con, foret_id, dossier, depot, auteur)
 ## Value
 
 Invisiblement, un bilan : `travaux`, `placettes`, `plants`, `controles`
-(nombres d'entrees ecrites), `deja_presents`, `photos`, `entrees` et
+(nombres d'entrees ecrites), `etats_deja_au_registre` (etats verses a
+l'aller, ignores a l'import ; un etat modifie est signale aux
+`avertissements`), `deja_presents`, `photos`, `entrees` et
 `avertissements` (ecarts de forme acceptes : colonnes en trop de
 `photos_terrain`, empreinte vide, photo en double, niveau de concurrence
 contredit par les comptages de plants ; chacun est aussi rendu par
@@ -80,7 +82,12 @@ tournee, deux etats du meme plant dans un controle, totaux qui ne
 concordent pas avec les etats, plant vivant (ou jamais vu) au passage
 precedent sans etat, plant mort ou absent redit vivant. Un plant
 remplace par un regarni d'un passage anterieur n'a plus d'etat a donner.
-Sans les couches, la tournee s'importe comme avant.
+La colonne facultative `methode_pointage` de `plants` doit valoir l'une
+de
+[SOMMIER_METHODES_POINTAGE](https://pobsteta.github.io/sommieR/reference/SOMMIER_METHODES_POINTAGE.md)
+(sinon faute, rien n'est ecrit) ; un etat dont le controle est deja au
+registre (ceux verses a l'aller) est ignore. Sans les couches, la
+tournee s'importe comme avant.
 
 **Rejouable.** L'UUID que QField a donne a chaque saisie devient celui
 de l'entree : reimporter le meme dossier n'ecrit rien de plus. Les

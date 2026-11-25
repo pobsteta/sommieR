@@ -81,7 +81,9 @@ photos deposees sous leur empreinte.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Invisiblement, un bilan : <code>travaux</code>, <code>placettes</code>, <code>plants</code>,
-<code>controles</code> (nombres d'entrees ecrites), <code>deja_presents</code>, <code>photos</code>, <code>entrees</code> et
+<code>controles</code> (nombres d'entrees ecrites), <code>etats_deja_au_registre</code> (etats
+verses a l'aller, ignores a l'import ; un etat modifie est signale aux
+<code>avertissements</code>), <code>deja_presents</code>, <code>photos</code>, <code>entrees</code> et
 <code>avertissements</code> (ecarts de forme acceptes : colonnes en trop de
 <code>photos_terrain</code>, empreinte vide, photo en double, niveau de concurrence
 contredit par les comptages de plants ; chacun est aussi
@@ -122,7 +124,10 @@ inconnu ou d'un controle absent de la tournee, deux etats du meme plant dans
 un controle, totaux qui ne concordent pas avec les etats, plant vivant (ou
 jamais vu) au passage precedent sans etat, plant mort ou absent redit
 vivant. Un plant remplace par un regarni d'un passage anterieur n'a plus
-d'etat a donner. Sans les couches, la tournee s'importe comme avant.</p>
+d'etat a donner. La colonne facultative <code>methode_pointage</code> de <code>plants</code> doit
+valoir l'une de <a href="SOMMIER_METHODES_POINTAGE.html">SOMMIER_METHODES_POINTAGE</a> (sinon faute, rien n'est ecrit) ; un
+etat dont le controle est deja au registre (ceux verses a l'aller) est ignore.
+Sans les couches, la tournee s'importe comme avant.</p>
 <p><strong>Rejouable.</strong> L'UUID que QField a donne a chaque saisie devient celui de
 l'entree : reimporter le meme dossier n'ecrit rien de plus. Les placettes
 deja inscrites, versees dans le projet, ne se reinscrivent pas.</p>

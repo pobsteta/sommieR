@@ -61,7 +61,8 @@ sommier_pointer_plant(
   [`registre6_plant()`](https://pobsteta.github.io/sommieR/reference/registre6_plant.md)
   : `essence`, `regarni`, `remplace_uuid`, `distance_m`, `azimut_mag`,
   `unite_azimut`, `declinaison_deg`, `convergence_deg`,
-  `azimut_geo_deg`, `modele_geomagnetique`, `pointe_le`, `observations`.
+  `azimut_geo_deg`, `modele_geomagnetique`, `methode_pointage`,
+  `pointe_le`, `observations`.
 
 ## Value
 

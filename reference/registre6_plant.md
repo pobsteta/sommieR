@@ -33,7 +33,8 @@ registre6_plant(
   azimut_geo_deg = NULL,
   modele_geomagnetique = NULL,
   pointe_le = NULL,
-  observations = NULL
+  observations = NULL,
+  methode_pointage = NULL
 )
 ```
 
@@ -81,6 +82,12 @@ registre6_plant(
 - modele_geomagnetique:
 
   Modele de la declinaison (`WMM2025`).
+
+- methode_pointage:
+
+  Comment la position a ete obtenue : l'une de
+  [SOMMIER_METHODES_POINTAGE](https://pobsteta.github.io/sommieR/reference/SOMMIER_METHODES_POINTAGE.md)
+  (facultatif ; omise, elle n'est pas inscrite).
 
 - pointe_le:
 
