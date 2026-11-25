@@ -7,7 +7,11 @@
      decompte des plants sous leur placette, pas une ligne par plant.
      Realise en 2026.11.2.9000 : voir NEWS.md. Non realise dans cette mission : modele QField (`qfield_modele.py`,
      PyQGIS absent), plants vivants verses a l'aller, SOMMIER_METHODES_POINTAGE, demo Couchey, demandes
-     complementaires. -->
+     complementaires.      ECART A LA DECISION 5 (reprise 1 de la mission 054, decision de l'orchestrateur sous delegation) : un plant
+     mort ou absent NE PEUT PAS etre omis des controles suivants. Chaque plant pointe de la placette (hors remplaces
+     par un regarni anterieur) a un etat a chaque controle qui porte des plants, comme « Terminer » dans Surculus
+     (spec § 4.3). Raison : un mort omis sort de nb_total et fait passer taux_reprise_pct de 50 a 100 sans qu'aucun
+     plant ait repris. Un etat date avant le pointage du plant est aussi refuse. -->
 
 # Brief — Travaux, lot 2 : les plants, pointés et suivis d'un passage à l'autre
 

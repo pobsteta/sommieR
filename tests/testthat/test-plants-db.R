@@ -146,12 +146,19 @@ test_that("un plant mort ou absent le reste ; un plant vivant doit avoir un etat
     visite_le = "2026-06-10T09:00:00Z",
     plants = list(etat(p[1], "sain"), etat(uuid_v4(), "sain"))), "inconnu")
   expect_equal(nb_entrees(con, f$foret), n)
-  # Le mort et l'absent peuvent etre omis ; non observe : un vivant sans mesure.
+  # Un mort ou un absent omis : refuse (il sortirait de nb_total).
+  expect_error(sommier_controler_placette(con, f$placette, auteur = "agent-01",
+    visite_le = "2026-06-10T09:00:00Z", plants = list(etat(p[1], "sain"))),
+    "il en faut un")
+  expect_equal(nb_entrees(con, f$foret), n)
+  # Non observe : un plant sans mesure, hors totaux ; mort et absent redits.
   k <- sommier_controler_placette(con, f$placette, auteur = "agent-01",
-    visite_le = "2026-06-10T09:00:00Z", plants = list(etat(p[1], "non_observe")))[[1L]]
+    visite_le = "2026-06-10T09:00:00Z",
+    plants = list(etat(p[1], "non_observe"), etat(p[2], "mort"),
+                  etat(p[3], "absent")))[[1L]]
   v <- DBI::dbGetQuery(con, "SELECT nb_total, nb_vivants FROM v_controle_plantation
                              WHERE id = $1", params = list(k$id))
-  expect_equal(unlist(v[1, ]), c(nb_total = 0, nb_vivants = 0))
+  expect_equal(unlist(v[1, ]), c(nb_total = 2, nb_vivants = 0))
 })
 
 test_that("un regarni remplace un mort ou un absent ; le remplace sort des totaux suivants", {
@@ -241,6 +248,9 @@ test_that("le sommier imprime compte les plants sous leur placette, sans ligne p
   expect_match(l, "plants pointes : 3 (1 vivants, 1 morts, 1 absents)", fixed = TRUE)
   k <- s$ecritures$contenu[s$ecritures$type_entree %in% "controle"]
   expect_match(k, "plants : 3 (1 vivants, 1 morts, 1 absents)", fixed = TRUE)
+  # non_observe se dit "non observes", jamais "sans etat".
+  expect_equal(decompte_etats(c("sain", "non_observe")),
+               "2 (1 vivants, 0 morts, 0 absents, 1 non observes)")
   # La chaine, elle, garde les plants.
   expect_true(s$verification$valide)
   expect_equal(nrow(sommier_lire(con, f$foret)), 1L + 1L + 3L + 1L)
@@ -368,4 +378,30 @@ test_that("une tournee dont un plant ou un etat est fautif n'ecrit rien du tout"
   essai(function(c) { c$plants[[2]]$numero <- 1; c }, "pris deux fois")
   essai(function(c) { c$plants[[2]]$remplace <- c$u[1]; c }, "mort ou absent")
   essai(function(c) { c$k_etats <- uuid_v4(); c }, "controle absent de la tournee")
+})
+
+test_that("sonde : 2 sains et 2 morts, morts omis au passage 2, est refuse ; le taux ne bondit pas", {
+  con <- base_plants()
+  f <- foret_plants(con)
+  p <- vapply(1:4, function(i) pointer(con, f$placette, i), "")
+  sommier_controler_placette(con, f$placette, auteur = "agent-01",
+    visite_le = "2025-06-10T09:00:00Z",
+    plants = list(etat(p[1], "sain"), etat(p[2], "sain"),
+                  etat(p[3], "mort"), etat(p[4], "mort")))
+  n <- nb_entrees(con, f$foret)
+  expect_error(sommier_controler_placette(con, f$placette, auteur = "agent-01",
+    visite_le = "2026-06-10T09:00:00Z",
+    plants = list(etat(p[1], "sain"), etat(p[2], "sain"))), "il en faut un")
+  expect_equal(nb_entrees(con, f$foret), n)
+})
+
+test_that("un etat dans un controle date avant le pointage du plant est refuse", {
+  con <- base_plants()
+  f <- foret_plants(con)
+  p <- pointer(con, f$placette, 1, jour = "2026-06-10")
+  n <- nb_entrees(con, f$foret)
+  expect_error(sommier_controler_placette(con, f$placette, auteur = "agent-01",
+    visite_le = "2026-05-01T09:00:00Z", plants = list(etat(p, "sain"))),
+    "avant son pointage")
+  expect_equal(nb_entrees(con, f$foret), n)
 })

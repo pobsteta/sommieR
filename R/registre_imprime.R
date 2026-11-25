@@ -432,10 +432,11 @@ decompte_etats <- function(etats) {
   vivants <- sum(etats %in% c("sain", "atteint"))
   morts <- sum(etats == "mort")
   absents <- sum(etats == "absent")
-  sans <- sum(!etats %in% c("sain", "atteint", "mort", "absent"))
+  sans <- sum(etats == "non_observe")
+  jamais <- sum(etats == "sans_etat")
   paste0(length(etats), " (", vivants, " vivants, ", morts, " morts, ",
-         absents, " absents", if (sans > 0L) paste0(", ", sans, " sans etat"),
-         ")")
+         absents, " absents", if (sans > 0L) paste0(", ", sans, " non observes"),
+         if (jamais > 0L) paste0(", ", jamais, " sans etat"), ")")
 }
 
 # Decision de Pascal (delegation, mission 054) : le sommier imprime ne porte

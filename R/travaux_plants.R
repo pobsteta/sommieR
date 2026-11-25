@@ -203,8 +203,8 @@ fautes_regarni <- function(regarni_id, remplace_uuid, jour, placette_id,
 
 # Les fautes d'un controle qui porte l'etat de ses plants, face aux plants de
 # sa placette et a ce qui est deja inscrit : un plant inconnu de la placette,
-# un plant vivant (ou jamais vu) au passage precedent sans etat, un plant mort
-# ou absent redit vivant. Les plants remplaces par un regarni d'un passage
+# un plant pointe de la placette (vivant, mort, absent ou jamais vu) sans etat,
+# un plant mort ou absent redit vivant, un etat date avant le pointage. Les plants remplaces par un regarni d'un passage
 # anterieur n'ont plus d'etat a donner, et leur etat ne compte plus. Rend
 # `fautes` et `remplaces` (ceux de la liste, a passer a registre6_controle()).
 controler_plants_du_controle <- function(etats, placette_id, jour, plants,
@@ -225,7 +225,9 @@ controler_plants_du_controle <- function(etats, placette_id, jour, plants,
   names(avant) <- r$plant_id
   actifs <- r$plant_id[r$pointe_le <= jour & !r$plant_id %in% remplaces]
   for (u in actifs) {
-    if (!is.na(avant[[u]]) && avant[[u]] %in% c("mort", "absent")) next
+    # Un mort ou un absent garde un etat a chaque controle, comme dans
+    # Surculus (spec § 4.3, "Terminer") : l'omettre le sortirait de nb_total
+    # et gonflerait le taux de reprise sans qu'un plant ait repris.
     if (!u %in% ids) {
       fautes <- c(fautes, paste0(
         "plant ", numero[[u]], " (", u, ") : ",
@@ -235,6 +237,12 @@ controler_plants_du_controle <- function(etats, placette_id, jour, plants,
     }
   }
   for (u in intersect(ids, r$plant_id)) {
+    if (r$pointe_le[r$plant_id == u] > jour) {
+      fautes <- c(fautes, paste0(
+        "plant ", numero[[u]], " (", u, ") : etat dans un controle du ", jour,
+        ", avant son pointage du ", r$pointe_le[r$plant_id == u]))
+      next
+    }
     if (u %in% remplaces) next
     if (etat_de[[u]] %in% c("sain", "atteint") && !is.na(avant[[u]]) &&
         avant[[u]] %in% c("mort", "absent")) {

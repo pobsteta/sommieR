@@ -50,8 +50,12 @@ facultatifs, colonnes de vue ajoutées à la fin.
     (`nb_total` hors non observés et plants remplacés, `nb_vivants` = sains + atteints,
     `nb_abroutis`, `h_moy_cm` arrondie demi vers le haut) ; omis, ils sont déduits ;
     contradictoires, le contrôle est refusé avant toute écriture. Un plant mort ou
-    absent le reste (un contrôle qui le dit vivant est refusé) ; un plant vivant au
-    passage précédent doit avoir un état. Le plant qu'un regarni d'un passage
+    absent le reste (un contrôle qui le dit vivant est refusé) ; **chaque plant pointé
+    de la placette doit avoir un état à chaque contrôle qui porte des plants, morts
+    et absents compris** (écart voulu à la décision 5 du brief, qui les laissait
+    omettre : un mort omis sortirait de `nb_total` et ferait passer le taux de
+    reprise de 50 % à 100 % sans qu'un plant ait repris ; Surculus exige déjà cet
+    état, § 4.3 « Terminer ») ; un état daté avant le pointage du plant est refusé. Le plant qu'un regarni d'un passage
     antérieur remplace sort des totaux (`plants_remplaces`).
   - **Vues** `v_plant` et `v_etat_plant` (un état par plant et par contrôle) ;
     `v_controle_plantation` inchangée.
