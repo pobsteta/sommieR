@@ -1,0 +1,217 @@
+{
+  "fichier": "identite.json",
+  "regle": "Un plant appartient à une seule placette et garde son UUID",
+  "format": "voir fixtures/README.md",
+  "cas": [
+    {
+      "id": "I1",
+      "description": "Même UUID de plant dans deux placettes.",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "u1",
+            "placette": "P-001",
+            "numero": 1
+          },
+          {
+            "uuid": "u1",
+            "placette": "P-002",
+            "numero": 1
+          }
+        ]
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/spec.md § 6 (un plant appartient à une seule placette et garde son UUID)"
+    },
+    {
+      "id": "I2",
+      "description": "Plant relu au passage suivant : même UUID, même numéro.",
+      "entree": {
+        "passage_1": [
+          {
+            "uuid": "u1",
+            "placette": "P-001",
+            "numero": 3
+          }
+        ],
+        "passage_2": [
+          {
+            "uuid": "u1",
+            "placette": "P-001",
+            "numero": 3
+          }
+        ]
+      },
+      "attendu": {
+        "accepte": true,
+        "uuid_conserve": true,
+        "numero_conserve": true
+      },
+      "source": "docs/spec.md § 6 (un plant appartient à une seule placette et garde son UUID) ; tranche 5 (docs/spec.md § 7)"
+    },
+    {
+      "id": "I2b",
+      "description": "Plant relu avec un autre numéro : refus.",
+      "entree": {
+        "passage_1": [
+          {
+            "uuid": "u1",
+            "placette": "P-001",
+            "numero": 3
+          }
+        ],
+        "passage_2": [
+          {
+            "uuid": "u1",
+            "placette": "P-001",
+            "numero": 4
+          }
+        ]
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/spec.md § 6 (un plant appartient à une seule placette et garde son UUID) (déduit : le numéro est stable)"
+    },
+    {
+      "id": "I3",
+      "description": "Deux plants avec le même UUID dans la même placette.",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "u1",
+            "placette": "P-001",
+            "numero": 1
+          },
+          {
+            "uuid": "u1",
+            "placette": "P-001",
+            "numero": 2
+          }
+        ]
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "arbitrage de Pascal 2026-10-16 (Q14) : UUID en double refusé"
+    },
+    {
+      "id": "I4",
+      "description": "Plant pointé après coup : numéro suivant le plus grand déjà donné, sans renuméroter.",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "u1",
+            "placette": "P-001",
+            "numero": 1
+          },
+          {
+            "uuid": "u2",
+            "placette": "P-001",
+            "numero": 2
+          }
+        ],
+        "ajout": {
+          "uuid": "u3",
+          "placette": "P-001",
+          "azimut_geo_deg": 5.0
+        }
+      },
+      "attendu": {
+        "numero_ajoute": 3,
+        "numeros_existants_inchanges": {
+          "u1": 1,
+          "u2": 2
+        }
+      },
+      "source": "arbitrage de Pascal 2026-10-16 (I4) ; docs/spec.md § 6 (un plant appartient à une seule placette et garde son UUID)"
+    },
+    {
+      "id": "I4b",
+      "description": "Le plus grand numéro compte, pas le nombre de plants (numéros 1, 2 et 5).",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "u1",
+            "placette": "P-001",
+            "numero": 1
+          },
+          {
+            "uuid": "u2",
+            "placette": "P-001",
+            "numero": 2
+          },
+          {
+            "uuid": "u5",
+            "placette": "P-001",
+            "numero": 5
+          }
+        ],
+        "ajout": {
+          "uuid": "u6",
+          "placette": "P-001",
+          "azimut_geo_deg": 200.0
+        }
+      },
+      "attendu": {
+        "numero_ajoute": 6,
+        "numeros_existants_inchanges": {
+          "u1": 1,
+          "u2": 2,
+          "u5": 5
+        }
+      },
+      "source": "arbitrage de Pascal 2026-10-16 (I4) : numéro suivant le plus grand déjà donné"
+    },
+    {
+      "id": "I4c",
+      "description": "L'azimut du plant ajouté ne change pas son numéro (azimut le plus petit, mais numéro suivant).",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "u1",
+            "placette": "P-001",
+            "numero": 1,
+            "azimut_geo_deg": 90.0
+          }
+        ],
+        "ajout": {
+          "uuid": "u2",
+          "placette": "P-001",
+          "azimut_geo_deg": 10.0
+        }
+      },
+      "attendu": {
+        "numero_ajoute": 2,
+        "numeros_existants_inchanges": {
+          "u1": 1
+        }
+      },
+      "source": "arbitrage de Pascal 2026-10-16 (I4)"
+    },
+    {
+      "id": "I5",
+      "description": "Numéro déjà pris dans la placette : refusé.",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "u1",
+            "placette": "P-001",
+            "numero": 1
+          }
+        ],
+        "ajout": {
+          "uuid": "u2",
+          "placette": "P-001",
+          "numero": 1
+        }
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "spec § 6, arbitrage de Pascal du 2026-10-16 (règle de sommieR, sommier_pointer_plant)"
+    }
+  ]
+}

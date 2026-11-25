@@ -1,0 +1,222 @@
+{
+  "fichier": "regarni.json",
+  "regle": "Un regarni remplace exactement un plant mort ou absent de la même placette (remplace_uuid obligatoire)",
+  "format": "voir fixtures/README.md",
+  "cas": [
+    {
+      "id": "G1",
+      "description": "Regarni lié à un plant mort de la même placette.",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "m1",
+            "etat": "mort",
+            "placette": "P-001"
+          }
+        ],
+        "regarni": {
+          "uuid": "r1",
+          "placette": "P-001",
+          "remplace_uuid": "m1"
+        }
+      },
+      "attendu": {
+        "accepte": true
+      },
+      "source": "docs/spec.md § 6 (PR #15) : un regarni remplace exactement un plant mort ou absent de la même placette, remplace_uuid obligatoire"
+    },
+    {
+      "id": "G2",
+      "description": "Regarni lié à un plant absent.",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "x1",
+            "etat": "absent",
+            "placette": "P-001"
+          }
+        ],
+        "regarni": {
+          "uuid": "r1",
+          "placette": "P-001",
+          "remplace_uuid": "x1"
+        }
+      },
+      "attendu": {
+        "accepte": true
+      },
+      "source": "docs/spec.md § 6 (PR #15) : un regarni remplace exactement un plant mort ou absent de la même placette, remplace_uuid obligatoire"
+    },
+    {
+      "id": "G3",
+      "description": "Regarni lié à un plant sain.",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain",
+            "placette": "P-001"
+          }
+        ],
+        "regarni": {
+          "uuid": "r1",
+          "placette": "P-001",
+          "remplace_uuid": "s1"
+        }
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/spec.md § 6 (PR #15) : un regarni remplace exactement un plant mort ou absent de la même placette, remplace_uuid obligatoire"
+    },
+    {
+      "id": "G4",
+      "description": "Regarni lié à un plant atteint.",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "a1",
+            "etat": "atteint",
+            "placette": "P-001"
+          }
+        ],
+        "regarni": {
+          "uuid": "r1",
+          "placette": "P-001",
+          "remplace_uuid": "a1"
+        }
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/spec.md § 6 (PR #15) : un regarni remplace exactement un plant mort ou absent de la même placette, remplace_uuid obligatoire"
+    },
+    {
+      "id": "G5",
+      "description": "Regarni lié à un plant mort d'une autre placette.",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "m9",
+            "etat": "mort",
+            "placette": "P-002"
+          }
+        ],
+        "regarni": {
+          "uuid": "r1",
+          "placette": "P-001",
+          "remplace_uuid": "m9"
+        }
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/spec.md § 6 (PR #15) : un regarni remplace exactement un plant mort ou absent de la même placette, remplace_uuid obligatoire"
+    },
+    {
+      "id": "G6",
+      "description": "Regarni lié à un UUID inconnu.",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "m1",
+            "etat": "mort",
+            "placette": "P-001"
+          }
+        ],
+        "regarni": {
+          "uuid": "r1",
+          "placette": "P-001",
+          "remplace_uuid": "inconnu"
+        }
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/spec.md § 6 (PR #15) : un regarni remplace exactement un plant mort ou absent de la même placette, remplace_uuid obligatoire (déduit)"
+    },
+    {
+      "id": "G7",
+      "description": "Deux regarnis liés au même plant mort : le second est refusé.",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "m1",
+            "etat": "mort",
+            "placette": "P-001"
+          },
+          {
+            "uuid": "r1",
+            "etat": "sain",
+            "placette": "P-001",
+            "regarni": true,
+            "remplace_uuid": "m1"
+          }
+        ],
+        "regarni": {
+          "uuid": "r2",
+          "placette": "P-001",
+          "remplace_uuid": "m1"
+        }
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/spec.md § 6 (PR #15) : un regarni remplace exactement un plant mort ou absent de la même placette, remplace_uuid obligatoire (exactement un)"
+    },
+    {
+      "id": "G9",
+      "description": "Regarni sans remplace_uuid.",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "m1",
+            "etat": "mort",
+            "placette": "P-001"
+          }
+        ],
+        "regarni": {
+          "uuid": "r1",
+          "placette": "P-001",
+          "remplace_uuid": null
+        }
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/spec.md § 6 (PR #15) : un regarni remplace exactement un plant mort ou absent de la même placette, remplace_uuid obligatoire"
+    },
+    {
+      "id": "G10",
+      "description": "Le mort remplacé compte dans le contrôle où il est vu, puis sort des suivants.",
+      "entree": {
+        "plants": [
+          {
+            "uuid": "m1",
+            "etat": "mort",
+            "placette": "P-001"
+          },
+          {
+            "uuid": "r1",
+            "etat": "sain",
+            "placette": "P-001",
+            "regarni": true,
+            "remplace_uuid": "m1"
+          }
+        ],
+        "regarnis": [
+          {
+            "uuid": "r1",
+            "remplace_uuid": "m1",
+            "pose_au_controle": 1
+          }
+        ]
+      },
+      "attendu": {
+        "m1_compte_au_controle_1": true,
+        "m1_compte_au_controle_2": false
+      },
+      "source": "arbitrage de Pascal 2026-10-16 (Q13) ; docs/spec.md § 4.3"
+    }
+  ]
+}

@@ -1,0 +1,326 @@
+{
+  "fichier": "etats-causes.json",
+  "regle": "États et causes uniquement ceux de etats-plants.yaml ; essence de essences.csv",
+  "format": "voir fixtures/README.md",
+  "note": "Les listes d'états et de causes valides sont relues dans docs/referentiels/etats-plants.yaml par les tests, jamais recopiées.",
+  "cas": [
+    {
+      "id": "E1-sain",
+      "description": "État « sain ».",
+      "entree": {
+        "etat": "sain"
+      },
+      "attendu": {
+        "accepte": true
+      },
+      "source": "docs/referentiels/etats-plants.yaml (DSF24 p. 8)"
+    },
+    {
+      "id": "E1-atteint",
+      "description": "État « atteint ».",
+      "entree": {
+        "etat": "atteint"
+      },
+      "attendu": {
+        "accepte": true
+      },
+      "source": "docs/referentiels/etats-plants.yaml (DSF24 p. 8)"
+    },
+    {
+      "id": "E1-mort",
+      "description": "État « mort ».",
+      "entree": {
+        "etat": "mort"
+      },
+      "attendu": {
+        "accepte": true
+      },
+      "source": "docs/referentiels/etats-plants.yaml (DSF24 p. 8)"
+    },
+    {
+      "id": "E1-absent",
+      "description": "État « absent ».",
+      "entree": {
+        "etat": "absent"
+      },
+      "attendu": {
+        "accepte": true
+      },
+      "source": "docs/referentiels/etats-plants.yaml (DSF24 p. 8)"
+    },
+    {
+      "id": "E2-malade",
+      "description": "État hors référentiel « malade ».",
+      "entree": {
+        "etat": "malade"
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/referentiels/etats-plants.yaml (DSF24 p. 8) ; docs/spec.md § 6"
+    },
+    {
+      "id": "E2-vivant",
+      "description": "État hors référentiel « vivant ».",
+      "entree": {
+        "etat": "vivant"
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/referentiels/etats-plants.yaml (DSF24 p. 8) ; docs/spec.md § 6"
+    },
+    {
+      "id": "E2-SAIN",
+      "description": "État hors référentiel « SAIN ».",
+      "entree": {
+        "etat": "SAIN"
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/referentiels/etats-plants.yaml (DSF24 p. 8) ; docs/spec.md § 6"
+    },
+    {
+      "id": "E2-non_observé",
+      "description": "État hors référentiel « non observé ».",
+      "entree": {
+        "etat": "non observé"
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/referentiels/etats-plants.yaml (DSF24 p. 8) ; docs/spec.md § 6"
+    },
+    {
+      "id": "E2-mort_hors_entreprise",
+      "description": "État hors référentiel « mort_hors_entreprise ».",
+      "entree": {
+        "etat": "mort_hors_entreprise"
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/referentiels/etats-plants.yaml (DSF24 p. 8) ; docs/spec.md § 6"
+    },
+    {
+      "id": "E3-entomologique",
+      "description": "Cause « entomologique » sur un plant atteint.",
+      "entree": {
+        "etat": "atteint",
+        "cause_groupe": "entomologique"
+      },
+      "attendu": {
+        "accepte": true
+      },
+      "source": "docs/referentiels/etats-plants.yaml (DSF24 p. 8) ; docs/spec.md § 4.3"
+    },
+    {
+      "id": "E3-pathologique",
+      "description": "Cause « pathologique » sur un plant atteint.",
+      "entree": {
+        "etat": "atteint",
+        "cause_groupe": "pathologique"
+      },
+      "attendu": {
+        "accepte": true
+      },
+      "source": "docs/referentiels/etats-plants.yaml (DSF24 p. 8) ; docs/spec.md § 4.3"
+    },
+    {
+      "id": "E3-animaux",
+      "description": "Cause « animaux » sur un plant atteint.",
+      "entree": {
+        "etat": "atteint",
+        "cause_groupe": "animaux"
+      },
+      "attendu": {
+        "accepte": true
+      },
+      "source": "docs/referentiels/etats-plants.yaml (DSF24 p. 8) ; docs/spec.md § 4.3"
+    },
+    {
+      "id": "E3-abiotique_complexe_indetermine",
+      "description": "Cause « abiotique_complexe_indetermine » sur un plant atteint.",
+      "entree": {
+        "etat": "atteint",
+        "cause_groupe": "abiotique_complexe_indetermine"
+      },
+      "attendu": {
+        "accepte": true
+      },
+      "source": "docs/referentiels/etats-plants.yaml (DSF24 p. 8) ; docs/spec.md § 4.3"
+    },
+    {
+      "id": "E3m",
+      "description": "Cause sur un plant mort.",
+      "entree": {
+        "etat": "mort",
+        "cause_groupe": "animaux"
+      },
+      "attendu": {
+        "accepte": true
+      },
+      "source": "docs/spec.md § 4.3"
+    },
+    {
+      "id": "E4a",
+      "description": "Cause sur un plant sain : refusée.",
+      "entree": {
+        "etat": "sain",
+        "cause_groupe": "animaux"
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "arbitrage de Pascal 2026-10-16 (Q15)"
+    },
+    {
+      "id": "E4b",
+      "description": "Cause sur un plant absent : refusée.",
+      "entree": {
+        "etat": "absent",
+        "cause_groupe": "animaux"
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "arbitrage de Pascal 2026-10-16 (Q15) ; docs/referentiels/etats-plants.yaml (DSF24 p. 8) (les absents n'ont pas de cause)"
+    },
+    {
+      "id": "E4c",
+      "description": "Plant sain, détail « abroutissement » seul : accepté.",
+      "entree": {
+        "etat": "sain",
+        "cause_detail": "abroutissement"
+      },
+      "attendu": {
+        "accepte": true
+      },
+      "source": "Pascal 2026-10-16 : sur un plant sain, un groupe de cause est refusé, mais le détail « abroutissement » est permis, et lui seul ; docs/spec.md § 4.3"
+    },
+    {
+      "id": "E4d",
+      "description": "Plant sain, autre détail seul (« gel ») : refusé.",
+      "entree": {
+        "etat": "sain",
+        "cause_detail": "gel"
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "Pascal 2026-10-16 (le détail « abroutissement » est le seul permis sur un sain)"
+    },
+    {
+      "id": "E4e",
+      "description": "Plant sain, groupe de cause avec le détail « abroutissement » : refusé (le groupe est refusé).",
+      "entree": {
+        "etat": "sain",
+        "cause_groupe": "animaux",
+        "cause_detail": "abroutissement"
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "Pascal 2026-10-16 : sur un plant sain, un groupe de cause est refusé"
+    },
+    {
+      "id": "E7a",
+      "description": "Non observé avec une hauteur : refusé.",
+      "entree": {
+        "etat": "non_observe",
+        "hauteur_cm": 45
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "spec § 6, arbitrage de Pascal du 2026-10-16"
+    },
+    {
+      "id": "E7b",
+      "description": "Non observé avec un groupe de cause : refusé.",
+      "entree": {
+        "etat": "non_observe",
+        "cause_groupe": "animaux"
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "spec § 6, arbitrage de Pascal du 2026-10-16"
+    },
+    {
+      "id": "E7c",
+      "description": "Non observé avec un détail de cause : refusé.",
+      "entree": {
+        "etat": "non_observe",
+        "cause_detail": "abroutissement"
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "spec § 6, arbitrage de Pascal du 2026-10-16"
+    },
+    {
+      "id": "E7d",
+      "description": "Absent avec une hauteur : refusé.",
+      "entree": {
+        "etat": "absent",
+        "hauteur_cm": 45
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "spec § 6, arbitrage de Pascal du 2026-10-16"
+    },
+    {
+      "id": "E5",
+      "description": "« gel » comme groupe de cause (c'est un détail) : refusé.",
+      "entree": {
+        "etat": "mort",
+        "cause_groupe": "gel"
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/referentiels/etats-plants.yaml (DSF24 p. 8) (gel est un détail du groupe abiotique)"
+    },
+    {
+      "id": "E5b",
+      "description": "« gel » comme détail sous le groupe abiotique.",
+      "entree": {
+        "etat": "mort",
+        "cause_groupe": "abiotique_complexe_indetermine",
+        "cause_detail": "gel"
+      },
+      "attendu": {
+        "accepte": true
+      },
+      "source": "docs/spec.md § 4.3 (détail facultatif)"
+    },
+    {
+      "id": "E6",
+      "description": "Atteint sans cause ni détail.",
+      "entree": {
+        "etat": "atteint"
+      },
+      "attendu": {
+        "accepte": true
+      },
+      "source": "docs/spec.md § 4.3 (cause facultative)"
+    },
+    {
+      "id": "E8",
+      "description": "Code d'essence inventé « XYZ » : refusé (la valeur doit appartenir à docs/referentiels/essences.csv).",
+      "entree": {
+        "etat": "sain",
+        "essence": "XYZ"
+      },
+      "attendu": {
+        "accepte": false
+      },
+      "source": "docs/spec.md § 9 ; docs/referentiels/essences.csv (codes ONF à 3 caractères)",
+      "note": "Les cas positifs lisent essences.csv à l'exécution ; aucune liste n'est copiée ici.",
+      "verifier_que_XYZ_est_absent_de": "docs/referentiels/essences.csv"
+    }
+  ]
+}

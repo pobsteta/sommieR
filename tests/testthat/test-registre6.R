@@ -12,7 +12,7 @@ test_that("une intervention d'avant la v0.28.0 se relit a l'identique", {
                                 taux_reprise_pct = 78)
   expect_null(ancienne$type_entree)
   expect_identical(jcs(valider_payload(6L, ancienne)), jcs(ancienne))
-  expect_equal(SOMMIER_SCHEMA_VERSIONS[["6"]], "r6-1.2.0")
+  expect_equal(SOMMIER_SCHEMA_VERSIONS[["6"]], "r6-1.3.0")
 })
 
 test_that("une intervention codee, localisee, se relit a l'identique", {

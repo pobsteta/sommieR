@@ -50,21 +50,34 @@ sommier_installer_placette <- function(con, travaux_id, code_placette,
 #'
 #' @param con Connexion DBI.
 #' @param placette_id UUID de la placette.
-#' @param nb_total,nb_vivants Plants comptes, et vivants parmi eux.
+#' @param nb_total,nb_vivants Plants comptes, et vivants parmi eux. Avec
+#'   `plants`, ils se deduisent des etats (voir [registre6_controle()]).
 #' @param auteur Compte qui ecrit.
 #' @param visite_le Instant du controle ; sa date est la date de l'entree.
 #' @param id UUID de l'entree.
 #' @param ... Champs de [registre6_controle()] : `h_moy_cm`, `nb_abroutis`,
 #'   `concurrence`, `besoin`, `operateur`, `releve_uuid`, `photos`,
 #'   `observations`, et la position mesuree (`geometrie`, `precision_m`,
-#'   `rattache_par_identite`, `sans_position_mesuree`).
+#'   `rattache_par_identite`, `sans_position_mesuree`), et `plants`, l'etat de
+#'   chaque plant a ce passage.
+#'
+#' @details
+#' **Avec `plants`**, les totaux en decoulent et doivent concorder (un total
+#' contradictoire est refuse avant toute ecriture), et le controle est
+#' confronte aux plants de la placette : un plant inconnu de la placette, un
+#' plant vivant (ou pas encore vu) au passage precedent sans etat, ou un plant
+#' mort ou absent redit vivant sont refuses. Un plant remplace par un regarni
+#' d'un passage anterieur n'a plus d'etat a donner : s'il en a un, il ne
+#' compte pas. Un controle sans `plants` s'ecrit comme avant.
 #'
 #' @return Invisiblement, l'entree chainee (liste d'une entree).
 #'
-#' @seealso [sommier_installer_placette()], [registre6_controle()]
+#' @seealso [sommier_installer_placette()], [registre6_controle()],
+#'   [sommier_pointer_plant()]
 #'
 #' @export
-sommier_controler_placette <- function(con, placette_id, nb_total, nb_vivants,
+sommier_controler_placette <- function(con, placette_id, nb_total = NULL,
+                                       nb_vivants = NULL,
                                        auteur, visite_le = Sys.time(),
                                        id = uuid_v4(), ...) {
   sommier_ajouter(con, entree_controle(
@@ -121,8 +134,11 @@ entree_placette <- function(con, travaux_id, code_placette, geometrie, auteur,
   )
 }
 
-entree_controle <- function(con, placette_id, nb_total, nb_vivants, auteur,
-                            visite_le = Sys.time(), id = uuid_v4(), ...) {
+entree_controle <- function(con, placette_id, nb_total = NULL,
+                            nb_vivants = NULL, auteur,
+                            visite_le = Sys.time(), id = uuid_v4(),
+                            ..., verifier_plants = TRUE,
+                            plants_remplaces = NULL) {
   placette_id <- valider_uuid(placette_id, "placette_id")
   visite_le <- format_instant(visite_le, "visite_le")
   jour <- substr(visite_le, 1L, 10L)
@@ -146,6 +162,22 @@ entree_controle <- function(con, placette_id, nb_total, nb_vivants, auteur,
          " (", deja$id[[1L]], ") : un comptage faux se rectifie.",
          call. = FALSE)
   }
+  champs <- list(...)
+  # L'etat des plants : confronte aux plants de la placette et a l'histoire
+  # deja inscrite. L'import de tournee l'a deja fait sur la tournee entiere
+  # (verifier_plants = FALSE) et donne les plants remplaces.
+  if (isTRUE(verifier_plants) && !est_vide(champs$plants)) {
+    detail <- normaliser_plants_controle(champs$plants, NULL)
+    verdict <- controler_plants_du_controle(
+      detail$plants, placette_id, as.Date(jour),
+      plants_de_la_placette(con, placette_id),
+      histoire_de_la_placette(con, placette_id))
+    if (length(verdict$fautes) > 0L) {
+      stop("Controle refuse : ", paste(verdict$fautes, collapse = " ; "),
+           call. = FALSE)
+    }
+    plants_remplaces <- verdict$remplaces
+  }
   sommier_entree(
     foret_id = placette$foret_id[[1L]],
     registre = 6L,
@@ -154,7 +186,9 @@ entree_controle <- function(con, placette_id, nb_total, nb_vivants, auteur,
     ug_uuid = placette$ug_uuid[[1L]],
     ndp = 0L,
     id = id,
-    payload = registre6_controle(placette_id, nb_total, nb_vivants,
-                                 visite_le = visite_le, ...)
+    payload = do.call(registre6_controle, c(
+      list(placette_id = placette_id, nb_total = nb_total,
+           nb_vivants = nb_vivants, visite_le = visite_le,
+           plants_remplaces = plants_remplaces), champs))
   )
 }

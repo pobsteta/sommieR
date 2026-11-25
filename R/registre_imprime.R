@@ -131,7 +131,7 @@ sommier_registre <- function(con, foret_id, registres = 1:9,
     con, "SELECT uuid::text AS uuid, numero_affichage FROM ug WHERE foret_id = $1",
     params = parametres(list(foret_id))
   )
-  ecritures <- ecritures_imprimees(toutes, ug)
+  ecritures <- decompter_plants(ecritures_imprimees(toutes, ug), toutes)
   ecritures <- ecritures[ecritures$registre %in% registres, , drop = FALSE]
   rownames(ecritures) <- NULL
 
@@ -395,7 +395,7 @@ ecritures_imprimees <- function(toutes, ug) {
 # dites par leur forme et leur nombre).
 contenu_generique <- function(p) {
   champs <- setdiff(names(p), c("type_entree", "reprise", "geometrie",
-                                "photos"))
+                                "photos", "plants", "plants_remplaces"))
   morceaux <- vapply(champs, function(n) {
     v <- p[[n]]
     texte <- if (is.list(v)) {
@@ -417,7 +417,64 @@ contenu_generique <- function(p) {
   if (length(p$photos) > 0L) {
     morceaux <- c(morceaux, paste0("photos : ", length(p$photos)))
   }
+  # L'etat des plants d'un controle se dit par un decompte : le detail, plant
+  # par plant, est dans le registre numerique (v_etat_plant).
+  if (length(p$plants) > 0L) {
+    morceaux <- c(morceaux, paste0(
+      "plants : ", decompte_etats(vapply(p$plants, function(e) e$etat,
+                                         character(1)))))
+  }
   paste(morceaux, collapse = " ; ")
+}
+
+# "6 etats (4 vivants, 1 mort, 1 absent)" : les etats dits en un decompte.
+decompte_etats <- function(etats) {
+  vivants <- sum(etats %in% c("sain", "atteint"))
+  morts <- sum(etats == "mort")
+  absents <- sum(etats == "absent")
+  sans <- sum(etats == "non_observe")
+  jamais <- sum(etats == "sans_etat")
+  paste0(length(etats), " (", vivants, " vivants, ", morts, " morts, ",
+         absents, " absents", if (sans > 0L) paste0(", ", sans, " non observes"),
+         if (jamais > 0L) paste0(", ", jamais, " sans etat"), ")")
+}
+
+# Decision de Pascal (delegation, mission 054) : le sommier imprime ne porte
+# pas une ligne par plant mais, sous leur placette, un decompte (vivants, morts,
+# absents d'apres le dernier etat de chaque plant). Les plants restent dans la
+# chaine, que la verification et le manifeste transportent entiers, et dans
+# les vues v_plant et v_etat_plant.
+decompter_plants <- function(ecritures, toutes) {
+  est_plant <- !is.na(ecritures$type_entree) & ecritures$registre == 6L &
+    ecritures$type_entree == "plant"
+  if (!any(est_plant)) {
+    return(ecritures)
+  }
+  # le dernier etat de chaque plant, controles pris dans l'ordre de la chaine
+  dernier <- list()
+  for (i in which(ecritures$registre == 6L & ecritures$type_entree %in%
+                    "controle")) {
+    pl <- jsonlite::fromJSON(toutes$payload[[i]],
+                             simplifyVector = FALSE)$plants
+    for (e in pl) dernier[[e$plant_id]] <- e$etat
+  }
+  par_placette <- list()
+  for (i in which(est_plant)) {
+    p <- jsonlite::fromJSON(toutes$payload[[i]], simplifyVector = FALSE)
+    id <- as.character(toutes$id[[i]])
+    par_placette[[p$placette_id]] <- c(
+      par_placette[[p$placette_id]],
+      if (is.null(dernier[[id]])) "sans_etat" else dernier[[id]])
+  }
+  for (i in which(ecritures$registre == 6L & ecritures$type_entree %in%
+                    "placette")) {
+    etats <- par_placette[[as.character(toutes$id[[i]])]]
+    if (!is.null(etats)) {
+      ecritures$contenu[[i]] <- paste0(
+        ecritures$contenu[[i]], " ; plants pointes : ", decompte_etats(etats))
+    }
+  }
+  ecritures[!est_plant, , drop = FALSE]
 }
 
 masquer_tiers <- function(ecritures) {

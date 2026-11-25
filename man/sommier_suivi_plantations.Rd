@@ -16,7 +16,11 @@ Un \code{data.frame} : \code{ug}, \code{travaux_id}, \code{annee_travaux},
 \code{code_travaux}, \code{age_ans}, \code{annee_controle}, \code{n_placettes},
 \code{taux_reprise_pct}, \code{densite_ha}, \code{h_moy_cm}, \code{abroutis_pct}, \code{besoins}
 (codes signales, hors \code{aucun}, separes par une virgule ; \code{NA} s'il n'y en
-a pas).
+a pas), \code{mortalite_passage_pct} (part des plants vivants au passage
+precedent qui sont morts ou absents a celui-ci, moyenne des controles du
+groupe) et \code{nb_regarnis} (regarnis poses depuis le passage precedent,
+somme des controles du groupe). Ces deux colonnes ne se renseignent que
+pour les controles qui portent l'etat de leurs plants ; \code{NA} sinon.
 }
 \description{
 Rend, par unite de gestion, par plantation suivie et par age, ce que les

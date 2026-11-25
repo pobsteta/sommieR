@@ -222,3 +222,11 @@ soi-même depuis l'INPN. Les lignes ont été choisies pour exercer ce que
 - un taxon fictif de code 3 dont la sensibilité tombe après 5 ans ;
 - un taxon fictif cité sous un `CD_NOM` qui n'est pas son `CD_REF`, pour
   vérifier qu'une fiche saisie sous le nom valide le retrouve.
+
+## plants/*.json
+
+Copie, sans modification, des cas `fixtures/regles/plants/` du depot `surculus`
+(commit 792cedd, brief `2026-10-15-travaux-2-plants.md`) : `etats-causes`,
+`totaux-controle`, `regarni`, `identite`. Resultats attendus ecrits a la main
+par le `testeur` de Surculus ; `test-plants.R` les rejoue en R. `numerotation.json`
+n'est pas rejoue : sommieR recoit le numero de Surculus et ne le recalcule pas.

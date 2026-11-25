@@ -418,6 +418,83 @@ COMMENT ON VIEW v_controle_plantation IS
   'sans_position_mesuree et rattache_par_identite sont NULL pour un controle '
   'qui ne les a pas inscrits.';
 
+-- Plants pointes (r6-1.3.0) : un plant par ligne, avec sa placette, son numero
+-- et son essence. Il garde son id d'un passage a l'autre ; son etat a chaque
+-- passage est dans v_etat_plant. remplace_par : le regarni qui le remplace.
+CREATE OR REPLACE VIEW v_plant AS
+SELECT
+  p.id,
+  p.foret_id,
+  p.ug_uuid,
+  p.seq,
+  p.date_evenement                              AS pointe_le,
+  p.auteur,
+  (p.payload ->> 'placette_id')::UUID           AS placette_id,
+  l.code_placette,
+  l.travaux_id,
+  (p.payload ->> 'numero')::INTEGER             AS numero,
+  (p.payload ->> 'essence')::TEXT               AS essence,
+  COALESCE((p.payload ->> 'regarni')::BOOLEAN, FALSE) AS regarni,
+  (p.payload ->> 'remplace_uuid')::UUID         AS remplace_uuid,
+  (SELECT r.id FROM v_entree_courante r
+    WHERE r.registre = 6 AND r.payload ->> 'type_entree' = 'plant'
+      AND r.payload ->> 'remplace_uuid' = p.id::TEXT
+    ORDER BY r.seq LIMIT 1)                     AS remplace_par,
+  (p.payload ->> 'distance_m')::NUMERIC         AS distance_m,
+  (p.payload ->> 'azimut_mag')::NUMERIC         AS azimut_mag,
+  (p.payload ->> 'unite_azimut')::TEXT          AS unite_azimut,
+  (p.payload ->> 'declinaison_deg')::NUMERIC    AS declinaison_deg,
+  (p.payload ->> 'convergence_deg')::NUMERIC    AS convergence_deg,
+  (p.payload ->> 'azimut_geo_deg')::NUMERIC     AS azimut_geo_deg,
+  (p.payload ->> 'modele_geomagnetique')::TEXT  AS modele_geomagnetique,
+  p.geom
+FROM v_entree_courante p
+LEFT JOIN v_placette l ON l.id = (p.payload ->> 'placette_id')::UUID
+WHERE p.registre = 6 AND p.payload ->> 'type_entree' = 'plant';
+
+COMMENT ON VIEW v_plant IS
+  'Plants pointes des placettes de suivi. remplace_uuid : le plant mort ou '
+  'absent qu''un regarni remplace ; remplace_par : le regarni qui remplace ce '
+  'plant. L''etat a chaque passage : v_etat_plant.';
+
+-- Un etat par plant et par controle (les controles qui portent l'etat de leurs
+-- plants). compte : le plant entre dans les totaux du controle (ni non observe,
+-- ni remplace par un regarni d'un passage anterieur).
+CREATE OR REPLACE VIEW v_etat_plant AS
+SELECT
+  c.id                                          AS controle_id,
+  c.foret_id,
+  c.ug_uuid,
+  c.seq,
+  c.date_evenement                              AS visite_le,
+  (c.payload ->> 'placette_id')::UUID           AS placette_id,
+  p.code_placette,
+  (e ->> 'plant_id')::UUID                      AS plant_id,
+  p.numero,
+  p.essence,
+  (e ->> 'etat')::TEXT                          AS etat,
+  (e ->> 'cause_groupe')::TEXT                  AS cause_groupe,
+  (e ->> 'cause_detail')::TEXT                  AS cause_detail,
+  (e ->> 'hauteur_cm')::INTEGER                 AS hauteur_cm,
+  ((e ->> 'etat') IN ('sain', 'atteint'))       AS vivant,
+  ((e ->> 'etat') IN ('sain', 'atteint')
+     AND (e ->> 'cause_detail') = 'abroutissement') AS abrouti,
+  COALESCE(jsonb_exists(c.payload -> 'plants_remplaces', e ->> 'plant_id'),
+           FALSE)                               AS remplace,
+  ((e ->> 'etat') <> 'non_observe'
+     AND NOT COALESCE(jsonb_exists(c.payload -> 'plants_remplaces',
+                                   e ->> 'plant_id'), FALSE)) AS compte
+FROM v_entree_courante c
+CROSS JOIN LATERAL jsonb_array_elements(
+  CASE WHEN jsonb_typeof(c.payload -> 'plants') = 'array'
+       THEN c.payload -> 'plants' ELSE '[]'::jsonb END) AS e
+LEFT JOIN v_plant p ON p.id = (e ->> 'plant_id')::UUID
+WHERE c.registre = 6 AND c.payload ->> 'type_entree' = 'controle';
+
+COMMENT ON VIEW v_etat_plant IS
+  'Etat de chaque plant a chaque controle qui en porte la liste. compte : le '
+  'plant entre dans les totaux du controle.';
+
 -- ---------------------------------------------------------------------
 -- Etat de la chaine
 -- ---------------------------------------------------------------------

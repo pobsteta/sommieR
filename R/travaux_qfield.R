@@ -213,6 +213,20 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
 #' ligne pour un controle absent de la tournee est ignoree et dite aux
 #' avertissements. Sans la couche, la tournee s'importe comme avant.
 #'
+#' **Les plants.** Si la tournee porte les couches `plants` (POINT) et
+#' `etats_plants` de Surculus, les plants s'inscrivent entre les placettes et
+#' les controles (type `plant`, UUID de la couche), et les etats de chaque
+#' controle entrent dans son payload (`plants`), les totaux devant en decouler.
+#' Fautes (rien n'est ecrit) : plant sans placette ou sans position, numero deja
+#' pris dans la placette, plant deja inscrit sous un autre numero ou une autre
+#' placette, regarni qui ne remplace pas un plant mort ou absent de sa placette
+#' (le mort peut l'etre dans un controle de la meme tournee), etat d'un plant
+#' inconnu ou d'un controle absent de la tournee, deux etats du meme plant dans
+#' un controle, totaux qui ne concordent pas avec les etats, plant vivant (ou
+#' jamais vu) au passage precedent sans etat, plant mort ou absent redit
+#' vivant. Un plant remplace par un regarni d'un passage anterieur n'a plus
+#' d'etat a donner. Sans les couches, la tournee s'importe comme avant.
+#'
 #' **Rejouable.** L'UUID que QField a donne a chaque saisie devient celui de
 #' l'entree : reimporter le meme dossier n'ecrit rien de plus. Les placettes
 #' deja inscrites, versees dans le projet, ne se reinscrivent pas.
@@ -229,8 +243,8 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
 #' @param depot Repertoire du depot de photos.
 #' @param auteur Compte qui importe. L'agent qui a releve est l'operateur.
 #'
-#' @return Invisiblement, un bilan : `travaux`, `placettes`, `controles`
-#'   (nombres d'entrees ecrites), `deja_presents`, `photos`, `entrees` et
+#' @return Invisiblement, un bilan : `travaux`, `placettes`, `plants`,
+#'   `controles` (nombres d'entrees ecrites), `deja_presents`, `photos`, `entrees` et
 #'   `avertissements` (ecarts de forme acceptes : colonnes en trop de
 #'   `photos_terrain`, empreinte vide, photo en double, niveau de concurrence
 #'   contredit par les comptages de plants ; chacun est aussi
@@ -277,14 +291,20 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
   # Couche de Surculus (brief du 2026-10-22) : la position mesuree de chaque
   # controle. Absente d'une tournee ancienne : elle s'importe comme avant.
   positions <- lire_positions_controles(gpkg)
-  bilan <- list(travaux = 0L, placettes = 0L, controles = 0L,
+  # Couches de Surculus (brief travaux-2) : les plants pointes et leurs etats.
+  # Absentes d'une tournee ancienne : elle s'importe comme avant.
+  plants_tournee <- lire_plants_tournee(gpkg)
+  bilan <- list(travaux = 0L, placettes = 0L, plants = 0L, controles = 0L,
                 deja_presents = 0L, photos = 0L, entrees = list(),
                 avertissements = c(
                   avertir_photos_terrain(photos_terrain),
                   avertir_positions_orphelines(positions, controles$uuid)))
 
+  uuids_plants <- if (!is.null(plants_tournee$plants)) {
+    tolower(as.character(plants_tournee$plants$uuid))
+  }
   ids <- tolower(c(if (!is.null(travaux)) travaux$uuid, placettes$uuid,
-                   controles$uuid))
+                   uuids_plants, controles$uuid))
   presents <- if (length(ids) == 0L) character(0) else DBI::dbGetQuery(
     con, "SELECT id::text AS id FROM entree_sommier WHERE id = ANY($1::uuid[])",
     params = list(paste0("{", paste(ids[!is.na(ids)], collapse = ","), "}"))
@@ -297,9 +317,17 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
   bilan$deja_presents <- sum(ids %in% presents)
   travaux <- garder(travaux)
   placettes <- garder(placettes)
+  controles_tournee <- data.frame(
+    uuid = tolower(controles$uuid),
+    jour = as.Date(vapply(seq_len(nrow(controles)), function(i) {
+      format(utc_jour(controles$visite_le[i]))
+    }, character(1))), stringsAsFactors = FALSE)
   controles <- garder(controles)
+  plants_a_ecrire <- if (length(uuids_plants) > 0L) {
+    which(!is.na(uuids_plants) & !uuids_plants %in% presents)
+  } else integer(0)
   if ((is.null(travaux) || nrow(travaux) == 0L) && nrow(placettes) == 0L &&
-      nrow(controles) == 0L) {
+      nrow(controles) == 0L && length(plants_a_ecrire) == 0L) {
     return(invisible(bilan))
   }
 
@@ -309,11 +337,25 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
   placettes_connues <- DBI::dbGetQuery(
     con, "SELECT id::text AS id FROM v_placette WHERE foret_id = $1",
     params = list(foret_id))$id
+  plants_db <- DBI::dbGetQuery(
+    con, "SELECT id::text AS plant_id, placette_id::text AS placette_id,
+                 numero, pointe_le, remplace_uuid::text AS remplace_uuid
+            FROM v_plant WHERE foret_id = $1", params = list(foret_id))
+  plants_db$pointe_le <- as.Date(plants_db$pointe_le)
+  histoire_db <- DBI::dbGetQuery(
+    con, "SELECT plant_id::text AS plant_id, visite_le AS jour, etat
+            FROM v_etat_plant WHERE foret_id = $1", params = list(foret_id))
+  histoire_db$jour <- as.Date(histoire_db$jour)
+  plants_prets <- preparer_plants_tournee(
+    plants_tournee, controles,
+    placettes_valides = c(placettes_connues, tolower(placettes$uuid)),
+    controles_tournee = controles_tournee, plants_db = plants_db,
+    histoire_db = histoire_db)
   fautes <- controler_tournee_travaux(
     travaux, placettes, controles, photos, dossier,
     travaux_connus = connus$id, placettes_connues = placettes_connues,
     programme = programme, photos_terrain = photos_terrain,
-    positions = positions)
+    positions = positions, plants_prets = plants_prets)
   if (length(fautes) > 0L) {
     stop("Import refuse, rien n'est ecrit :\n",
          paste0("- ", fautes, collapse = "\n"), call. = FALSE)
@@ -364,10 +406,25 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
       bilan$placettes <- length(ecrites)
       bilan$entrees <- c(bilan$entrees, ecrites)
     }
+    if (length(plants_prets$nouveaux) > 0L) {
+      pp <- plants_tournee$plants
+      ecrites <- lapply(plants_prets$nouveaux, function(i) {
+        champs <- champs_plant(pp, i)
+        jour <- format(utc_jour(pp$pointe_le[[i]]))
+        do.call(sommier_pointer_plant, c(
+          list(con, tolower(pp$placette_uuid[[i]]),
+               plants_tournee$geometries[[i]], pp$numero[[i]], auteur,
+               date_evenement = jour, id = tolower(pp$uuid[[i]]),
+               verifier_regarni = FALSE), champs))[[1L]]
+      })
+      bilan$plants <- length(ecrites)
+      bilan$entrees <- c(bilan$entrees, ecrites)
+    }
     if (nrow(controles) > 0L) {
       ecrites <- lapply(seq_len(nrow(controles)), function(i) {
         k <- controles[i, ]
         cpt <- comptages_concurrence(k)
+        prets <- plants_prets$par_controle[[tolower(k$uuid)]]
         pos <- position_du_controle(positions, k$uuid)
         # Tous les avertissements de sommier_controler_placette() (dont
         # l'ecart entre niveau saisi et comptages, un warning() de
@@ -389,7 +446,9 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
             geometrie = pos$geometrie,
             precision_m = pos$precision_m,
             rattache_par_identite = pos$rattache_par_identite,
-            sans_position_mesuree = pos$sans_position_mesuree
+            sans_position_mesuree = pos$sans_position_mesuree,
+            plants = prets$plants, plants_remplaces = prets$remplaces,
+            verifier_plants = FALSE
           ),
           warning = function(w) {
             bilan$avertissements <<- c(
@@ -471,9 +530,10 @@ controler_tournee_travaux <- function(travaux, placettes, controles, photos,
                                       dossier, travaux_connus,
                                       placettes_connues, programme = NULL,
                                       photos_terrain = NULL,
-                                      positions = NULL) {
+                                      positions = NULL,
+                                      plants_prets = NULL) {
   fautes <- controler_photos_terrain(photos_terrain, photos, dossier)
-  fautes <- c(fautes, positions$fautes)
+  fautes <- c(fautes, positions$fautes, plants_prets$fautes)
   if (!is.null(travaux) && nrow(travaux) > 0L) {
     t <- as.data.frame(travaux)
     for (i in seq_len(nrow(t))) {
@@ -549,9 +609,11 @@ controler_tournee_travaux <- function(travaux, placettes, controles, photos,
     }
     cpt <- comptages_concurrence(x)
     pos <- position_du_controle(positions, x$uuid)
+    prets <- plants_prets$par_controle[[tolower(x$uuid)]]
     essai <- tryCatch(suppressWarnings({
       registre6_controle(
         uuid_v4(), x$nb_total, x$nb_vivants,
+        plants = prets$plants, plants_remplaces = prets$remplaces,
         h_moy_cm = nombre_ou_null(x$h_moy_cm),
         nb_abroutis = nombre_ou_null(x$nb_abroutis),
         nb_plants_vivants = cpt$nb_plants_vivants,

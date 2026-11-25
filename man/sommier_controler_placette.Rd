@@ -7,8 +7,8 @@
 sommier_controler_placette(
   con,
   placette_id,
-  nb_total,
-  nb_vivants,
+  nb_total = NULL,
+  nb_vivants = NULL,
   auteur,
   visite_le = Sys.time(),
   id = uuid_v4(),
@@ -20,7 +20,8 @@ sommier_controler_placette(
 
 \item{placette_id}{UUID de la placette.}
 
-\item{nb_total, nb_vivants}{Plants comptes, et vivants parmi eux.}
+\item{nb_total, nb_vivants}{Plants comptes, et vivants parmi eux. Avec
+\code{plants}, ils se deduisent des etats (voir \code{\link[=registre6_controle]{registre6_controle()}}).}
 
 \item{auteur}{Compte qui ecrit.}
 
@@ -31,7 +32,8 @@ sommier_controler_placette(
 \item{...}{Champs de \code{\link[=registre6_controle]{registre6_controle()}} : \code{h_moy_cm}, \code{nb_abroutis},
 \code{concurrence}, \code{besoin}, \code{operateur}, \code{releve_uuid}, \code{photos},
 \code{observations}, et la position mesuree (\code{geometrie}, \code{precision_m},
-\code{rattache_par_identite}, \code{sans_position_mesuree}).}
+\code{rattache_par_identite}, \code{sans_position_mesuree}), et \code{plants}, l'etat de
+chaque plant a ce passage.}
 }
 \value{
 Invisiblement, l'entree chainee (liste d'une entree).
@@ -45,7 +47,16 @@ ensuite. L'entree prend l'unite de gestion de la placette.
 Une placette inconnue, ou qui n'en est pas une, est refusee, de meme qu'un
 second controle de la meme placette le meme jour : une erreur de
 comptage se rectifie, elle ne se double pas.
+
+\strong{Avec \code{plants}}, les totaux en decoulent et doivent concorder (un total
+contradictoire est refuse avant toute ecriture), et le controle est
+confronte aux plants de la placette : un plant inconnu de la placette, un
+plant vivant (ou pas encore vu) au passage precedent sans etat, ou un plant
+mort ou absent redit vivant sont refuses. Un plant remplace par un regarni
+d'un passage anterieur n'a plus d'etat a donner : s'il en a un, il ne
+compte pas. Un controle sans \code{plants} s'ecrit comme avant.
 }
 \seealso{
-\code{\link[=sommier_installer_placette]{sommier_installer_placette()}}, \code{\link[=registre6_controle]{registre6_controle()}}
+\code{\link[=sommier_installer_placette]{sommier_installer_placette()}}, \code{\link[=registre6_controle]{registre6_controle()}},
+\code{\link[=sommier_pointer_plant]{sommier_pointer_plant()}}
 }
