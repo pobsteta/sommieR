@@ -685,7 +685,7 @@ plants_suivis <- function(con, f) {
   list(p = p, r = r, r5 = r5)
 }
 
-test_that("le projet recoit les plants vivants avec leur dernier etat ; morts, absents et remplaces restent au registre", {
+test_that("le projet recoit les plants non remplaces avec leur dernier etat ; un plant remplace reste au registre, son regarni part", {
   skip_if_not_installed("sf"); skip_if_not_installed("xml2")
   con <- base_plants()
   f <- foret_plants(con)
@@ -695,10 +695,11 @@ test_that("le projet recoit les plants vivants avec leur dernier etat ; morts, a
   expect_true(all(c("plants", "etats_plants") %in% sf::st_layers(gpkg)$name))
   pl <- sf::read_sf(gpkg, layer = "plants")
   et <- as.data.frame(sf::read_sf(gpkg, layer = "etats_plants"))
-  # Vivants : p1, p2, p4 (dernier etat mesure : sain au passage 1), r, r5.
+  # p1, p2, p4 (dernier etat mesure : sain au passage 1), r, r5 ; p3 et p5,
+  # remplaces par un regarni, ne partent pas.
   attendus <- c(s$p[1], s$p[2], s$p[4], s$r, s$r5)
   expect_setequal(pl$uuid, attendus)
-  expect_false(any(c(s$p[3], s$p[5]) %in% pl$uuid))  # mort, absent
+  expect_false(any(c(s$p[3], s$p[5]) %in% pl$uuid))  # remplaces
   expect_equal(nrow(pl), 5L)
   # Numero, placette, regarni et remplace_uuid sont ceux du registre.
   pl <- pl[order(pl$numero), ]
@@ -718,7 +719,6 @@ test_that("le projet recoit les plants vivants avec leur dernier etat ; morts, a
   expect_equal(e(s$p[4])$etat, "sain"); expect_equal(e(s$p[4])$hauteur_cm, 41L)
   expect_equal(e(s$r5)$etat, "atteint")
   expect_equal(nrow(et), 5L)
-  expect_true(all(et$etat %in% c("sain", "atteint")))
   expect_false(anyDuplicated(et$uuid) > 0L)
   # Le controle de l'etat est celui du dernier passage qui l'a mesure.
   ctl <- DBI::dbGetQuery(con, "SELECT id::text AS id, visite_le::text AS jour
@@ -742,13 +742,6 @@ test_that("une placette sans plant : le projet est celui d'avant, sans couches d
   couches <- sf::st_layers(file.path(d, "travaux.gpkg"))$name
   expect_false(any(c("plants", "etats_plants") %in% couches))
   expect_true(all(c("placettes", "controles", "photos") %in% couches))
-  # Des plants tous morts ne partent pas non plus : pas de couche vide.
-  g <- foret_plants(con)
-  p <- pointer(con, g$placette, 1)
-  sommier_controler_placette(con, g$placette, auteur = "agent-01",
-    visite_le = "2025-09-15T09:00:00Z", plants = list(etat(p, "mort")))
-  d2 <- projet_tournee(con, g)
-  expect_false("plants" %in% sf::st_layers(file.path(d2, "travaux.gpkg"))$name)
 })
 
 test_that("aller-retour : etats du nouveau controle, aucun plant duplique, aucun numero change, chaine intacte", {
@@ -859,4 +852,88 @@ test_that("l'import refuse une methode de pointage hors liste, rien n'est ecrit,
   t3 <- tournee(c(NA_character_))
   expect_equal(sommier_importer_qfield_travaux(con, t3$g$foret, t3$dossier,
                                                depot, "agent-01")$plants, 1L)
+})
+
+# Decision de Pascal (2026-11-25) : tous les plants non remplaces partent.
+plant_mort_et_vierge <- function(con, f) {
+  p <- vapply(1:3, function(i) pointer(con, f$placette, i, jour = "2025-06-10"), "")
+  sommier_controler_placette(con, f$placette, auteur = "agent-01",
+    visite_le = "2025-09-15T09:00:00Z",
+    plants = list(etat(p[1], "sain"), etat(p[2], "mort", cause_groupe = "animaux"),
+                  etat(p[3], "absent")))
+  # p4 : pointe apres le controle, jamais controle.
+  p[4] <- pointer(con, f$placette, 4, jour = "2025-10-01")
+  p
+}
+
+test_that("un mort, un absent et un plant jamais controle partent ; l'aller-retour avec un etat par plant s'importe sans faute", {
+  skip_if_not_installed("sf"); skip_if_not_installed("xml2")
+  con <- base_plants()
+  f <- foret_plants(con)
+  p <- plant_mort_et_vierge(con, f)
+  d <- projet_tournee(con, f)
+  gpkg <- file.path(d, "travaux.gpkg")
+  pl <- sf::read_sf(gpkg, layer = "plants")
+  et <- as.data.frame(sf::read_sf(gpkg, layer = "etats_plants"))
+  expect_setequal(pl$uuid, p)
+  # Le mort et l'absent partent avec leur etat ; le jamais controle, sans etat.
+  expect_equal(et$etat[match(c(p[1], p[2], p[3]), et$plant_uuid)],
+               c("sain", "mort", "absent"))
+  expect_false(p[4] %in% et$plant_uuid)
+  expect_equal(nrow(et), 3L)
+  # Le forestier renote tout : un etat pour chaque plant.
+  depot <- file.path(withr::local_tempdir(), "photos")
+  n <- nb_entrees(con, f$foret)
+  k <- uuid_v4()
+  ecrire_couche_g(d, ligne_controle(k, f$placette, "2026-06-10", 3, 2), "controles")
+  ecrire_couche_g(d, couche_etats(k, list(
+    list(plant = p[1], etat = "sain"), list(plant = p[2], etat = "mort"),
+    list(plant = p[3], etat = "non_observe"),
+    list(plant = p[4], etat = "atteint"))), "etats_plants")
+  b <- sommier_importer_qfield_travaux(con, f$foret, d, depot, "agent-01")
+  expect_equal(c(b$plants, b$controles), c(0L, 1L))
+  expect_equal(nb_entrees(con, f$foret), n + 1L)
+  expect_equal(nrow(DBI::dbGetQuery(con, "SELECT 1 FROM v_plant WHERE foret_id = $1",
+                                    params = list(f$foret))), 4L)
+  expect_equal(nrow(DBI::dbGetQuery(con, "SELECT 1 FROM v_etat_plant
+                    WHERE controle_id = $1", params = list(k))), 4L)
+  expect_true(sommier_verifier(con, f$foret)$valide)
+})
+
+test_that("un plant jamais controle part sans etat et l'aller-retour passe", {
+  skip_if_not_installed("sf"); skip_if_not_installed("xml2")
+  con <- base_plants()
+  f <- foret_plants(con)
+  p <- pointer(con, f$placette, 1, jour = "2025-06-10")
+  d <- projet_tournee(con, f)
+  gpkg <- file.path(d, "travaux.gpkg")
+  expect_equal(sf::read_sf(gpkg, layer = "plants")$uuid, p)
+  expect_equal(nrow(sf::read_sf(gpkg, layer = "etats_plants")), 0L)
+  k <- uuid_v4()
+  ecrire_couche_g(d, ligne_controle(k, f$placette, "2026-06-10", 1, 1), "controles")
+  ecrire_couche_g(d, couche_etats(k, list(list(plant = p, etat = "sain"))),
+                  "etats_plants")
+  b <- sommier_importer_qfield_travaux(con, f$foret, d,
+                                       file.path(withr::local_tempdir(), "ph"),
+                                       "agent-01")
+  expect_equal(c(b$plants, b$controles), c(0L, 1L))
+  expect_true(sommier_verifier(con, f$foret)$valide)
+})
+
+test_that("non-regression 054 : un etat manquant au controle suivant refuse l'import, rien n'est ecrit", {
+  skip_if_not_installed("sf"); skip_if_not_installed("xml2")
+  con <- base_plants()
+  f <- foret_plants(con)
+  p <- plant_mort_et_vierge(con, f)
+  d <- projet_tournee(con, f)
+  n <- nb_entrees(con, f$foret)
+  k <- uuid_v4()
+  ecrire_couche_g(d, ligne_controle(k, f$placette, "2026-06-10", 1, 1), "controles")
+  # Seul le vivant est renote : le mort, l'absent et le vierge n'ont pas d'etat.
+  ecrire_couche_g(d, couche_etats(k, list(list(plant = p[1], etat = "sain"))),
+                  "etats_plants")
+  expect_error(sommier_importer_qfield_travaux(
+    con, f$foret, d, file.path(withr::local_tempdir(), "ph"), "agent-01"),
+    "il en faut un a ce controle")
+  expect_equal(nb_entrees(con, f$foret), n)
 })

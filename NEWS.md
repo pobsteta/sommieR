@@ -112,14 +112,17 @@ facultatifs, colonnes de vue ajoutées à la fin.
   mission 054, brief de Surculus du 2026-10-15). Aucune rupture : une tournée sans
   plant, ou un projet sans plant vivant, est celui d'avant ; aucun hachage existant
   ne change (le champ nouveau n'est écrit que s'il est donné).
-  - **Versement à l'aller** : `sommier_projet_qfield_travaux()` écrit les couches
-    `plants` (POINT, Lambert-93) et `etats_plants` de Surculus pour les plants dont le
-    dernier état est `sain` ou `atteint`, avec leur numéro, leur position, leur
-    observation brute et leur dernier état (cause, détail, hauteur) : le forestier les
-    retrouve et les renote au contrôle suivant. `non_observe` n'est pas un état (le
-    dernier état mesuré compte). Les morts et absents restent au registre ; un regarni
-    vivant part comme un plant ; un plant déjà remplacé ne part pas. Sans plant vivant,
-    aucune des deux couches n'est écrite. Rien n'est écrit au registre par la préparation.
+  - **Versement à l'aller** (décision de Pascal, 2026-11-25 : « les morts partent
+    aussi ») : `sommier_projet_qfield_travaux()` écrit les couches `plants` (POINT,
+    Lambert-93) et `etats_plants` de Surculus pour **tous les plants non remplacés par
+    un regarni** (vivants, morts, absents, jamais contrôlés), avec leur numéro, leur
+    position, leur observation brute et leur dernier état s'ils en ont un (cause,
+    détail, hauteur). `non_observe` n'est pas un état (le dernier état mesuré compte).
+    Le forestier confirme `mort` ou `absent`, ou met `non_observe` : la règle de la
+    mission 054 (un état par plant pointé à chaque contrôle) reste entière. Seuls les
+    plants remplacés par un regarni ne partent pas ; un regarni part comme un plant.
+    Sans plant à verser, aucune des deux couches n'est écrite. Rien n'est écrit au
+    registre par la préparation.
   - **Retour** : à l'import, les lignes de l'aller ne se réinscrivent pas (plant déjà
     inscrit, même numéro, même placette) et un état qui porte sur un contrôle déjà au
     registre est ignoré ; aucun plant dupliqué, aucun numéro changé.
@@ -131,11 +134,6 @@ facultatifs, colonnes de vue ajoutées à la fin.
     n'est écrit. `v_plant` gagne `methode_pointage` en dernière colonne (NULL si non
     dite ; `CREATE OR REPLACE VIEW` met à jour une base existante). La démo Couchey
     pose `construit`. Aucune colonne SQL de table : la méthode vit dans le payload.
-  - **Écart connu, à trancher par Pascal** : un plant mort ou absent, non remplacé, ne
-    part pas à l'aller (décision 1 de la mission), mais l'import exige un état de
-    chaque plant pointé à chaque contrôle (mission 054) : une tournée qui n'a que les
-    états des vivants est refusée (« était mort au passage précédent, il en faut un à
-    ce contrôle »). Les plants morts remplacés par un regarni échappent à la règle.
   - **Non fait** : modèle QField (PyQGIS absent).
 
 # sommieR 2026.11.2 (2026-11-20)

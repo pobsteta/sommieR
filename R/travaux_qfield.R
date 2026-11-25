@@ -62,17 +62,18 @@
 #'   Surculus qui la cree.
 #'
 #' @details
-#' **Les plants vivants sont dans le projet** (couches `plants`, POINT en
-#' Lambert-93, et `etats_plants`, table, celles que Surculus lit) : pour chaque
-#' plant dont le dernier etat est `sain` ou `atteint`, son numero, sa position,
-#' son observation brute et son dernier etat (cause, detail, hauteur), pour que
-#' le forestier le retrouve et le renote au controle suivant. `non_observe`
-#' n'est pas un etat : le dernier etat mesure compte. Les morts et les absents
-#' restent au registre et ne partent pas ; un regarni vivant part comme un
-#' plant ; un plant deja remplace par un regarni ne part pas. Sans plant vivant,
-#' aucune de ces couches n'est ecrite. A l'import, ces lignes ne se reinscrivent
-#' pas : le plant est deja au registre, et l'etat porte sur un controle deja
-#' inscrit.
+#' **Les plants sont dans le projet** (couches `plants`, POINT en Lambert-93, et
+#' `etats_plants`, table, celles que Surculus lit) : tous les plants non remplaces
+#' par un regarni, vivants, morts, absents ou jamais controles, chacun avec son
+#' numero, sa position, son observation brute et son dernier etat s'il en a un
+#' (cause, detail, hauteur ; `non_observe` n'est pas un etat : le dernier etat
+#' mesure compte). Le forestier retrouve chaque plant et le renote au controle
+#' suivant : l'import exige un etat de chaque plant a chaque controle, il confirme
+#' `mort` ou `absent`, ou met `non_observe`. Seuls les plants remplaces par un
+#' regarni restent au registre sans partir ; un regarni part comme un plant. Sans
+#' plant a verser, aucune de ces couches n'est ecrite. A l'import, ces lignes ne se
+#' reinscrivent pas : le plant est deja au registre, et l'etat porte sur un
+#' controle deja inscrit.
 #'
 #' **Le champ `action_id`** des trois couches de travaux est celui de l'action
 #' du programme que le travaux realise : l'operateur la choisit dans la liste

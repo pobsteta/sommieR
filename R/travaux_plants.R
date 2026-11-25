@@ -540,14 +540,14 @@ texte_vec <- function(x) {
 }
 
 # ---------------------------------------------------------------------------
-# L'aller : les plants vivants d'un projet, avec leur dernier etat, dans les
-# couches que Surculus lit (`plants`, POINT en Lambert-93 ; `etats_plants`,
-# table), pour que le forestier retrouve et renote chaque plant au controle
-# suivant. Vivant = dernier etat `sain` ou `atteint` (`non_observe` n'est pas
-# un etat : le dernier etat mesure compte) ; les morts, les absents et les
-# plants deja remplaces restent au registre. Un regarni vivant part comme un
-# plant. Sans plant vivant, aucune couche n'est ecrite : le projet est celui
-# d'avant.
+# L'aller : tous les plants non remplaces d'un projet, avec leur dernier etat
+# s'ils en ont un, dans les couches que Surculus lit (`plants`, POINT en
+# Lambert-93 ; `etats_plants`, table), pour que le forestier retrouve et
+# renote chaque plant au controle suivant. Partent les vivants, les morts, les
+# absents et ceux jamais controles (sans etat) ; seuls les plants remplaces par
+# un regarni restent au registre sans partir. `non_observe` n'est pas un etat :
+# le dernier etat mesure compte. Sans plant a verser, aucune couche n'est
+# ecrite : le projet est celui d'avant.
 verser_plants_aller <- function(con, foret_id, gpkg) {
   p <- DBI::dbGetQuery(
     con,
@@ -568,14 +568,13 @@ verser_plants_aller <- function(con, foret_id, gpkg) {
             ST_AsText(p.geom) AS wkt
        FROM v_plant p
        JOIN v_entree_courante e ON e.id = p.id
-       JOIN (SELECT DISTINCT ON (plant_id) plant_id, controle_id, etat,
+       LEFT JOIN (SELECT DISTINCT ON (plant_id) plant_id, controle_id, etat,
                     cause_groupe, cause_detail, hauteur_cm
                FROM v_etat_plant
               WHERE foret_id = $1 AND etat <> 'non_observe'
               ORDER BY plant_id, visite_le DESC, seq DESC) d
          ON d.plant_id = p.id
       WHERE p.foret_id = $1 AND p.geom IS NOT NULL AND p.remplace_par IS NULL
-        AND d.etat IN ('sain', 'atteint')
       ORDER BY p.code_placette, p.numero",
     params = list(foret_id))
   if (nrow(p) == 0L) return(invisible(0L))
@@ -590,18 +589,18 @@ verser_plants_aller <- function(con, foret_id, gpkg) {
                                  tz = "UTC")
   ecrire_couche(sf::st_sf(couche, geometry = sf::st_as_sfc(p$wkt, crs = 2154)),
                 gpkg, "plants")
-  # L'etat verse est celui du dernier controle ; son identifiant de ligne se
-  # deduit de (controle, plant) pour que deux projets du meme registre
-  # s'accordent.
-  h <- vapply(paste(p$etat_controle_uuid, p$uuid), function(x) {
+  # Un etat par plant qui en a un, celui du dernier controle qui l'a mesure.
+  # Son identifiant de ligne se deduit de (controle, plant).
+  e <- p[!is.na(p$etat), , drop = FALSE]
+  h <- vapply(paste(e$etat_controle_uuid, e$uuid), function(x) {
     as.character(openssl::md5(charToRaw(x)))
   }, character(1), USE.NAMES = FALSE)
   ecrire_table(data.frame(
     uuid = sprintf("%s-%s-%s-%s-%s", substr(h, 1, 8), substr(h, 9, 12),
                    substr(h, 13, 16), substr(h, 17, 20), substr(h, 21, 32)),
-    controle_uuid = p$etat_controle_uuid, plant_uuid = p$uuid, etat = p$etat,
-    cause_groupe = p$cause_groupe, cause_detail = p$cause_detail,
-    hauteur_cm = p$hauteur_cm, stringsAsFactors = FALSE),
+    controle_uuid = e$etat_controle_uuid, plant_uuid = e$uuid, etat = e$etat,
+    cause_groupe = e$cause_groupe, cause_detail = e$cause_detail,
+    hauteur_cm = e$hauteur_cm, stringsAsFactors = FALSE),
     gpkg, "etats_plants")
   invisible(nrow(p))
 }
