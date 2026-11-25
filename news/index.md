@@ -21,6 +21,7 @@ facultatifs, colonnes de vue ajoutées à la fin.
   `precision_m` ; une `precision_m` exige une `geometrie` ; un point
   hors des bornes WGS 84 (des mètres Lambert-93 pris pour des degrés)
   est refusé avec un message clair, avant toute écriture.
+
 - **Import** : si la tournée porte la couche `positions_controles` (clé
   `controle_uuid`), chaque position est inscrite au contrôle, reprojetée
   en WGS 84 depuis le SCR de la couche. Une ligne à géométrie NULL (ou
@@ -32,19 +33,75 @@ facultatifs, colonnes de vue ajoutées à la fin.
   Sans la couche, la tournée s’importe comme avant. `source_gnss`,
   `referentiel_source` et `simulee` de la couche ne sont pas lues (hors
   du brief).
+
 - **Vue `v_controle_plantation`** : cinq colonnes à la fin,
   `position_mesuree` (Lambert-93, NULL sans mesure),
   `a_position_mesuree`, `precision_position_m`, `rattache_par_identite`,
   `sans_position_mesuree` (NULL pour un contrôle qui ne les a pas
   inscrits). Aucune colonne existante ne change de nom, de type ni de
   place ; `CREATE OR REPLACE VIEW` met à jour une base existante.
+
 - **Précision** : `precision_m` est strictement positive (jamais 0,
   comme dans Surculus, ADR 0003) ; 0 ou négative est refusée, par l’API
   R comme à l’import.
+
 - **Conséquence voulue** : les contrôles qui portent une position
   mesurée apparaissent désormais dans `v_objet_localise`, désignés «
   controle » (leur `payload->'geometrie'` alimente
   `entree_sommier.geom`) ; un contrôle sans position n’y figure pas.
+
+- **Plants pointes et suivis (mission 054 ; brief de Surculus du
+  2026-10-15, deposé dans `specs/brief_travaux-2_plants.md`).** Registre
+  6 en `r6-1.3.0` ; les entrées `r6-1.2.0` se relisent sans changement
+  de hachage. Aucune rupture : un contrôle sans plants (QField, anciens
+  payloads) s’écrit et se lit comme avant.
+
+  - **Type d’entrée `plant`** :
+    [`registre6_plant()`](https://pobsteta.github.io/sommieR/reference/registre6_plant.md)
+    et
+    [`sommier_pointer_plant()`](https://pobsteta.github.io/sommieR/reference/sommier_pointer_plant.md)
+    (placette inconnue et numéro déjà pris refusés ; essence préremplie
+    par l’essence objectif des travaux suivis). Observation brute
+    relative au piquet (distance, azimut et unité, déclinaison,
+    convergence, azimut géographique, modèle) et position dérivée. Un
+    regarni (`regarni`, `remplace_uuid`) remplace un plant mort ou
+    absent de la même placette, une seule fois.
+  - **Le contrôle porte l’état de ses plants** :
+    `registre6_controle(plants = )` (`SOMMIER_ETATS_PLANT`,
+    `SOMMIER_GROUPES_CAUSE_PLANT`). Les totaux en découlent (`nb_total`
+    hors non observés et plants remplacés, `nb_vivants` = sains +
+    atteints, `nb_abroutis`, `h_moy_cm` arrondie demi vers le haut) ;
+    omis, ils sont déduits ; contradictoires, le contrôle est refusé
+    avant toute écriture. Un plant mort ou absent le reste (un contrôle
+    qui le dit vivant est refusé) ; **chaque plant pointé de la placette
+    doit avoir un état à chaque contrôle qui porte des plants, morts et
+    absents compris** (écart voulu à la décision 5 du brief, qui les
+    laissait omettre : un mort omis sortirait de `nb_total` et ferait
+    passer le taux de reprise de 50 % à 100 % sans qu’un plant ait
+    repris ; Surculus exige déjà cet état, § 4.3 « Terminer ») ; un état
+    daté avant le pointage du plant est refusé. Le plant qu’un regarni
+    d’un passage antérieur remplace sort des totaux
+    (`plants_remplaces`).
+  - **Vues** `v_plant` et `v_etat_plant` (un état par plant et par
+    contrôle) ; `v_controle_plantation` inchangée.
+  - **Import** :
+    [`sommier_importer_qfield_travaux()`](https://pobsteta.github.io/sommieR/reference/sommier_importer_qfield_travaux.md)
+    lit `plants` et `etats_plants`, écrit travaux, placettes, plants,
+    contrôles ; rejouable ; fautes listées, rien n’est écrit (plant sans
+    placette, état d’un plant inconnu, deux états, totaux discordants,
+    vivant sans état, regarni invalide, numéro pris…). Une tournée sans
+    ces couches s’importe comme avant. Le bilan gagne `plants`.
+  - **Suivi** :
+    [`sommier_suivi_plantations()`](https://pobsteta.github.io/sommieR/reference/sommier_suivi_plantations.md)
+    gagne `mortalite_passage_pct` et `nb_regarnis` (NA pour les
+    contrôles sans états de plants).
+  - **Sommier imprimé** : pas de ligne par plant ; un décompte sous la
+    placette et sous le contrôle. La chaîne et le manifeste gardent tous
+    les plants.
+  - **Non fait** : modèle QField (PyQGIS absent), versement des plants à
+    l’aller, `SOMMIER_METHODES_POINTAGE` (aucune source n’en nomme les
+    valeurs), démo Couchey, alignement du jour de contrôle sur
+    Europe/Paris.
 
 ## sommieR 2026.11.2 (2026-11-20)
 

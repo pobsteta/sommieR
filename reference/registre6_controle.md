@@ -10,8 +10,8 @@ de l'annee des travaux suivis.
 ``` r
 registre6_controle(
   placette_id,
-  nb_total,
-  nb_vivants,
+  nb_total = NULL,
+  nb_vivants = NULL,
   h_moy_cm = NULL,
   nb_abroutis = NULL,
   concurrence = NULL,
@@ -27,7 +27,9 @@ registre6_controle(
   geometrie = NULL,
   precision_m = NULL,
   rattache_par_identite = NULL,
-  sans_position_mesuree = NULL
+  sans_position_mesuree = NULL,
+  plants = NULL,
+  plants_remplaces = NULL
 )
 ```
 
@@ -39,7 +41,9 @@ registre6_controle(
 
 - nb_total, nb_vivants:
 
-  Plants comptes, et vivants parmi eux.
+  Plants comptes, et vivants parmi eux. Obligatoires sans `plants` ;
+  avec `plants`, ils se deduisent des etats et, s'ils sont donnes,
+  doivent concorder (voir `plants`).
 
 - h_moy_cm:
 
@@ -125,6 +129,40 @@ registre6_controle(
   celle de la placette. Un point hors des bornes WGS 84 (par exemple des
   metres Lambert-93), ou une position donnee avec
   `sans_position_mesuree = TRUE`, est refuse.
+
+- plants:
+
+  Facultatif : l'etat de chaque plant a ce passage, une liste d'elements
+  `list(plant_id, etat, cause_groupe, cause_detail, hauteur_cm)` (ou un
+  `data.frame` a ces colonnes). `etat` : l'un de
+  [SOMMIER_ETATS_PLANT](https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_PLANT.md)
+  ; `cause_groupe` : l'un de
+  [SOMMIER_GROUPES_CAUSE_PLANT](https://pobsteta.github.io/sommieR/reference/SOMMIER_GROUPES_CAUSE_PLANT.md),
+  admis pour un plant `atteint` ou `mort` seulement ; `cause_detail` :
+  texte libre, admis pour un `atteint` ou un `mort`, et pour un `sain`
+  seulement s'il vaut `"abroutissement"` (jamais pour un `absent` ni un
+  `non_observe`) ; `hauteur_cm` : entier strictement positif, refuse
+  pour un `absent` et un `non_observe`. Un meme plant ne porte qu'un
+  etat par controle.
+
+  **Les totaux en decoulent** : `nb_total` = plants dont l'etat est
+  sain, atteint, mort ou absent (hors `non_observe` et hors plants
+  remplaces), `nb_vivants` = sains + atteints, `nb_abroutis` = vivants
+  dont le detail est `"abroutissement"` (un plant mort d'abroutissement
+  n'y compte pas), `h_moy_cm` = moyenne des hauteurs des vivants
+  mesures, arrondie a l'entier le plus proche, demi vers le haut (42,5
+  donne 43 ; [`round()`](https://rdrr.io/r/base/Round.html) de R
+  donnerait 42). Totaux omis : ils sont deduits et inscrits. Totaux
+  donnes qui contredisent les etats : refus, avant toute ecriture. Un
+  controle sans `plants` s'ecrit comme avant.
+
+- plants_remplaces:
+
+  Facultatif : ceux des `plants` qu'un regarni pose a un passage
+  anterieur a remplaces ; ils sortent des totaux. Doit etre inclus dans
+  `plants`.
+  [`sommier_controler_placette()`](https://pobsteta.github.io/sommieR/reference/sommier_controler_placette.md)
+  le calcule.
 
 ## Value
 

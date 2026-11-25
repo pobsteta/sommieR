@@ -10,6 +10,10 @@ peut donc pas se faire passer pour l'ancienne.
 SOMMIER_SCHEMA_VERSIONS
 ```
 
+## Format
+
+An object of class `character` of length 9.
+
 ## Details
 
 Les registres 2, 4, 5, 8 et 9 sont passes en `1.1.0` lorsque la
@@ -34,6 +38,9 @@ registre 8 est passe en `1.3.0` quand la suite d'une detection est
 devenue un constat complet : position, precision, operateur, photos. Le
 registre 1 est passe en `1.2.0` avec l'amenagement : la periode et la
 possibilite que l'arrete ou l'agrement fixe entrent dans la chaine. Le
-registre 9 est passe en `1.3.0` quand une espece a pu porter son
-`CD_NOM` de TAXREF ; les fiches anterieures, sans `cd_nom`, restent
-valides.
+registre 6 est passe en `1.3.0` avec les plants pointes : un type
+d'entree `plant`, et l'etat des plants porte par le controle. Les
+entrees ecrites sous `r6-1.2.0` gardent leur version, et leur hachage ne
+change pas. Le registre 9 est passe en `1.3.0` quand une espece a pu
+porter son `CD_NOM` de TAXREF ; les fiches anterieures, sans `cd_nom`,
+restent valides.

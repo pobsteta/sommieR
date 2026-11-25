@@ -34,8 +34,8 @@ sommier_importer_qfield_travaux(con, foret_id, dossier, depot, auteur)
 
 ## Value
 
-Invisiblement, un bilan : `travaux`, `placettes`, `controles` (nombres
-d'entrees ecrites), `deja_presents`, `photos`, `entrees` et
+Invisiblement, un bilan : `travaux`, `placettes`, `plants`, `controles`
+(nombres d'entrees ecrites), `deja_presents`, `photos`, `entrees` et
 `avertissements` (ecarts de forme acceptes : colonnes en trop de
 `photos_terrain`, empreinte vide, photo en double, niveau de concurrence
 contredit par les comptages de plants ; chacun est aussi rendu par
@@ -66,6 +66,21 @@ drapeau ou deux lignes pour un meme controle sont des fautes (rien n'est
 ecrit) ; une ligne pour un controle absent de la tournee est ignoree et
 dite aux avertissements. Sans la couche, la tournee s'importe comme
 avant.
+
+**Les plants.** Si la tournee porte les couches `plants` (POINT) et
+`etats_plants` de Surculus, les plants s'inscrivent entre les placettes
+et les controles (type `plant`, UUID de la couche), et les etats de
+chaque controle entrent dans son payload (`plants`), les totaux devant
+en decouler. Fautes (rien n'est ecrit) : plant sans placette ou sans
+position, numero deja pris dans la placette, plant deja inscrit sous un
+autre numero ou une autre placette, regarni qui ne remplace pas un plant
+mort ou absent de sa placette (le mort peut l'etre dans un controle de
+la meme tournee), etat d'un plant inconnu ou d'un controle absent de la
+tournee, deux etats du meme plant dans un controle, totaux qui ne
+concordent pas avec les etats, plant vivant (ou jamais vu) au passage
+precedent sans etat, plant mort ou absent redit vivant. Un plant
+remplace par un regarni d'un passage anterieur n'a plus d'etat a donner.
+Sans les couches, la tournee s'importe comme avant.
 
 **Rejouable.** L'UUID que QField a donne a chaque saisie devient celui
 de l'entree : reimporter le meme dossier n'ecrit rien de plus. Les

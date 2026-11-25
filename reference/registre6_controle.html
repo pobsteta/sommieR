@@ -56,8 +56,8 @@ l'annee des travaux suivis.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">registre6_controle</span><span class="op">(</span></span>
 <span>  <span class="va">placette_id</span>,</span>
-<span>  <span class="va">nb_total</span>,</span>
-<span>  <span class="va">nb_vivants</span>,</span>
+<span>  nb_total <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  nb_vivants <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  h_moy_cm <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  nb_abroutis <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  concurrence <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -73,7 +73,9 @@ l'annee des travaux suivis.</p>
 <span>  geometrie <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  precision_m <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  rattache_par_identite <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  sans_position_mesuree <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  sans_position_mesuree <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  plants <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  plants_remplaces <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -86,7 +88,9 @@ l'annee des travaux suivis.</p>
 
 
 <dt id="arg-nb-total-nb-vivants">nb_total, nb_vivants<a class="anchor" aria-label="anchor" href="#arg-nb-total-nb-vivants"></a></dt>
-<dd><p>Plants comptes, et vivants parmi eux.</p></dd>
+<dd><p>Plants comptes, et vivants parmi eux. Obligatoires
+sans <code>plants</code> ; avec <code>plants</code>, ils se deduisent des etats et, s'ils sont
+donnes, doivent concorder (voir <code>plants</code>).</p></dd>
 
 
 <dt id="arg-h-moy-cm">h_moy_cm<a class="anchor" aria-label="anchor" href="#arg-h-moy-cm"></a></dt>
@@ -165,6 +169,34 @@ point (0, 0), jamais un point vide), et sa position est celle de la
 placette. Un point hors des bornes WGS 84 (par exemple des metres
 Lambert-93), ou une position donnee avec <code>sans_position_mesuree = TRUE</code>,
 est refuse.</p></dd>
+
+
+<dt id="arg-plants">plants<a class="anchor" aria-label="anchor" href="#arg-plants"></a></dt>
+<dd><p>Facultatif : l'etat de chaque plant a ce passage, une liste
+d'elements <code>list(plant_id, etat, cause_groupe, cause_detail, hauteur_cm)</code>
+(ou un <code>data.frame</code> a ces colonnes). <code>etat</code> : l'un de
+<a href="SOMMIER_ETATS_PLANT.html">SOMMIER_ETATS_PLANT</a> ; <code>cause_groupe</code> : l'un de
+<a href="SOMMIER_GROUPES_CAUSE_PLANT.html">SOMMIER_GROUPES_CAUSE_PLANT</a>, admis pour un plant <code>atteint</code> ou <code>mort</code>
+seulement ; <code>cause_detail</code> : texte libre, admis pour un <code>atteint</code> ou un
+<code>mort</code>, et pour un <code>sain</code> seulement s'il vaut <code>"abroutissement"</code> (jamais
+pour un <code>absent</code> ni un <code>non_observe</code>) ; <code>hauteur_cm</code> : entier strictement
+positif, refuse pour un <code>absent</code> et un <code>non_observe</code>. Un meme plant ne
+porte qu'un etat par controle.</p>
+<p><strong>Les totaux en decoulent</strong> : <code>nb_total</code> = plants dont l'etat est sain,
+atteint, mort ou absent (hors <code>non_observe</code> et hors plants remplaces),
+<code>nb_vivants</code> = sains + atteints, <code>nb_abroutis</code> = vivants dont le detail
+est <code>"abroutissement"</code> (un plant mort d'abroutissement n'y compte pas),
+<code>h_moy_cm</code> = moyenne des hauteurs des vivants mesures, arrondie a l'entier
+le plus proche, demi vers le haut (42,5 donne 43 ; <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">round()</a></code> de R donnerait
+42). Totaux omis : ils sont deduits et inscrits. Totaux donnes qui
+contredisent les etats : refus, avant toute ecriture. Un controle sans
+<code>plants</code> s'ecrit comme avant.</p></dd>
+
+
+<dt id="arg-plants-remplaces">plants_remplaces<a class="anchor" aria-label="anchor" href="#arg-plants-remplaces"></a></dt>
+<dd><p>Facultatif : ceux des <code>plants</code> qu'un regarni pose a
+un passage anterieur a remplaces ; ils sortent des totaux. Doit etre inclus
+dans <code>plants</code>. <code><a href="sommier_controler_placette.html">sommier_controler_placette()</a></code> le calcule.</p></dd>
 
 </dl></div>
     <div class="section level2">

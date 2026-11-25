@@ -55,6 +55,10 @@ pas se faire passer pour l'ancienne.</p>
     </div>
 
     <div class="section level2">
+    <h2 id="format">Format<a class="anchor" aria-label="anchor" href="#format"></a></h2>
+    <p>An object of class <code>character</code> of length 9.</p>
+    </div>
+    <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Les registres 2, 4, 5, 8 et 9 sont passes en <code>1.1.0</code> lorsque la geometrie
 est entree dans leurs payloads. Les neuf sont passes a la version suivante
@@ -75,6 +79,9 @@ Le registre 8 est passe en <code>1.3.0</code> quand la suite d'une detection est
 devenue un constat complet : position, precision, operateur, photos.
 Le registre 1 est passe en <code>1.2.0</code> avec l'amenagement : la periode et la
 possibilite que l'arrete ou l'agrement fixe entrent dans la chaine.
+Le registre 6 est passe en <code>1.3.0</code> avec les plants pointes : un type d'entree
+<code>plant</code>, et l'etat des plants porte par le controle. Les entrees ecrites
+sous <code>r6-1.2.0</code> gardent leur version, et leur hachage ne change pas.
 Le registre 9 est passe en <code>1.3.0</code> quand une espece a pu porter son
 <code>CD_NOM</code> de TAXREF ; les fiches anterieures, sans <code>cd_nom</code>, restent valides.</p>
     </div>

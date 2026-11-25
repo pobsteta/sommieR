@@ -26,7 +26,12 @@ sommier_suivi_plantations(con, foret_id)
 Un `data.frame` : `ug`, `travaux_id`, `annee_travaux`, `code_travaux`,
 `age_ans`, `annee_controle`, `n_placettes`, `taux_reprise_pct`,
 `densite_ha`, `h_moy_cm`, `abroutis_pct`, `besoins` (codes signales,
-hors `aucun`, separes par une virgule ; `NA` s'il n'y en a pas).
+hors `aucun`, separes par une virgule ; `NA` s'il n'y en a pas),
+`mortalite_passage_pct` (part des plants vivants au passage precedent
+qui sont morts ou absents a celui-ci, moyenne des controles du groupe)
+et `nb_regarnis` (regarnis poses depuis le passage precedent, somme des
+controles du groupe). Ces deux colonnes ne se renseignent que pour les
+controles qui portent l'etat de leurs plants ; `NA` sinon.
 
 ## Details
 

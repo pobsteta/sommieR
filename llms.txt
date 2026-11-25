@@ -599,6 +599,10 @@ le suivi des plantations sur placettes permanentes.
   : Payload du registre 6 - placette de suivi
 - [`registre6_controle()`](https://pobsteta.github.io/sommieR/reference/registre6_controle.md)
   : Payload du registre 6 - controle d'une placette
+- [`registre6_plant()`](https://pobsteta.github.io/sommieR/reference/registre6_plant.md)
+  : Payload du registre 6 - plant pointe
+- [`sommier_pointer_plant()`](https://pobsteta.github.io/sommieR/reference/sommier_pointer_plant.md)
+  : Pointer un plant
 - [`registre6_depuis_payload()`](https://pobsteta.github.io/sommieR/reference/registre6_depuis_payload.md)
   : Relecture d'un payload du registre 6
 - [`sommier_installer_placette()`](https://pobsteta.github.io/sommieR/reference/sommier_installer_placette.md)
@@ -623,6 +627,10 @@ le suivi des plantations sur placettes permanentes.
   : Codes des travaux sylvicoles
 - [`SOMMIER_TYPES_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_TYPES_TRAVAUX.md)
   : Types d'entree du registre 6
+- [`SOMMIER_ETATS_PLANT`](https://pobsteta.github.io/sommieR/reference/SOMMIER_ETATS_PLANT.md)
+  : Etats d'un plant a un controle
+- [`SOMMIER_GROUPES_CAUSE_PLANT`](https://pobsteta.github.io/sommieR/reference/SOMMIER_GROUPES_CAUSE_PLANT.md)
+  : Groupes de causes d'une atteinte ou d'une mort de plant
 - [`SOMMIER_EXECUTIONS_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_EXECUTIONS_TRAVAUX.md)
   : Modes d'execution des travaux
 - [`SOMMIER_PREVUS_TRAVAUX`](https://pobsteta.github.io/sommieR/reference/SOMMIER_PREVUS_TRAVAUX.md)

@@ -54,8 +54,8 @@ ensuite. L'entree prend l'unite de gestion de la placette.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sommier_controler_placette</span><span class="op">(</span></span>
 <span>  <span class="va">con</span>,</span>
 <span>  <span class="va">placette_id</span>,</span>
-<span>  <span class="va">nb_total</span>,</span>
-<span>  <span class="va">nb_vivants</span>,</span>
+<span>  nb_total <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  nb_vivants <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">auteur</span>,</span>
 <span>  visite_le <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  id <span class="op">=</span> <span class="fu"><a href="uuid_v4.html">uuid_v4</a></span><span class="op">(</span><span class="op">)</span>,</span>
@@ -76,7 +76,8 @@ ensuite. L'entree prend l'unite de gestion de la placette.</p>
 
 
 <dt id="arg-nb-total-nb-vivants">nb_total, nb_vivants<a class="anchor" aria-label="anchor" href="#arg-nb-total-nb-vivants"></a></dt>
-<dd><p>Plants comptes, et vivants parmi eux.</p></dd>
+<dd><p>Plants comptes, et vivants parmi eux. Avec
+<code>plants</code>, ils se deduisent des etats (voir <code><a href="registre6_controle.html">registre6_controle()</a></code>).</p></dd>
 
 
 <dt id="arg-auteur">auteur<a class="anchor" aria-label="anchor" href="#arg-auteur"></a></dt>
@@ -95,7 +96,8 @@ ensuite. L'entree prend l'unite de gestion de la placette.</p>
 <dd><p>Champs de <code><a href="registre6_controle.html">registre6_controle()</a></code> : <code>h_moy_cm</code>, <code>nb_abroutis</code>,
 <code>concurrence</code>, <code>besoin</code>, <code>operateur</code>, <code>releve_uuid</code>, <code>photos</code>,
 <code>observations</code>, et la position mesuree (<code>geometrie</code>, <code>precision_m</code>,
-<code>rattache_par_identite</code>, <code>sans_position_mesuree</code>).</p></dd>
+<code>rattache_par_identite</code>, <code>sans_position_mesuree</code>), et <code>plants</code>, l'etat de
+chaque plant a ce passage.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -107,10 +109,18 @@ ensuite. L'entree prend l'unite de gestion de la placette.</p>
     <p>Une placette inconnue, ou qui n'en est pas une, est refusee, de meme qu'un
 second controle de la meme placette le meme jour : une erreur de
 comptage se rectifie, elle ne se double pas.</p>
+<p><strong>Avec <code>plants</code></strong>, les totaux en decoulent et doivent concorder (un total
+contradictoire est refuse avant toute ecriture), et le controle est
+confronte aux plants de la placette : un plant inconnu de la placette, un
+plant vivant (ou pas encore vu) au passage precedent sans etat, ou un plant
+mort ou absent redit vivant sont refuses. Un plant remplace par un regarni
+d'un passage anterieur n'a plus d'etat a donner : s'il en a un, il ne
+compte pas. Un controle sans <code>plants</code> s'ecrit comme avant.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="sommier_installer_placette.html">sommier_installer_placette()</a></code>, <code><a href="registre6_controle.html">registre6_controle()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="sommier_installer_placette.html">sommier_installer_placette()</a></code>, <code><a href="registre6_controle.html">registre6_controle()</a></code>,
+<code><a href="sommier_pointer_plant.html">sommier_pointer_plant()</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

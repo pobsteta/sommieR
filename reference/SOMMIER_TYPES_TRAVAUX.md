@@ -8,6 +8,10 @@
 
 - `controle` : un passage sur une placette.
 
+- `plant` : un plant pointe dans une placette, qu'on retrouve d'un
+  passage a l'autre (voir
+  [`registre6_plant()`](https://pobsteta.github.io/sommieR/reference/registre6_plant.md)).
+
 ## Usage
 
 ``` r
@@ -16,4 +20,4 @@ SOMMIER_TYPES_TRAVAUX
 
 ## Format
 
-An object of class `character` of length 3.
+An object of class `character` of length 4.
