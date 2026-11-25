@@ -242,8 +242,8 @@ registre6_placette <- function(code_placette, travaux_id, geometrie,
 #'   seul : un controle sans ces champs se relit a l'identique.
 #'   `geometrie` est un point WGS 84 (voir [geom_point()]) ; `entree_sommier.geom`
 #'   la projette comme pour toute entree, et la vue `v_controle_plantation` la
-#'   rend. `precision_m` est la precision de cette position, en metres (au
-#'   moins 0 ; elle ne s'inscrit qu'avec une `geometrie`).
+#'   rend. `precision_m` est la precision de cette position, en metres
+#'   (strictement positive ; elle ne s'inscrit qu'avec une `geometrie`).
 #'   `rattache_par_identite` (`TRUE`/`FALSE`) dit que le code lu du piquet a
 #'   designe la placette, et non la position mesuree (piquet a plus de 15 m, ou
 #'   controle sans position mesuree).
@@ -372,7 +372,11 @@ valider_position_controle <- function(geometrie, precision_m,
   }
   rattache <- booleen(rattache_par_identite, "rattache_par_identite")
   sans <- booleen(sans_position_mesuree, "sans_position_mesuree")
-  precision <- si_present(precision_m, valider_nombre, "precision_m", min = 0)
+  precision <- si_present(precision_m, valider_nombre, "precision_m")
+  if (!is.null(precision) && precision <= 0) {
+    stop("`precision_m` doit etre strictement positive (jamais 0 : un zero ",
+         "n'est pas une precision), recu : ", precision, ".", call. = FALSE)
+  }
   point <- if (est_vide(geometrie)) NULL else tryCatch(
     valider_geometrie(geometrie, "Point"),
     error = function(e) {

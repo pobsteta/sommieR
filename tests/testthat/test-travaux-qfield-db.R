@@ -1107,3 +1107,48 @@ test_that("une position hors WGS 84 par l'API R : refus clair, rien n'est ecrit"
     "point WGS 84")
   expect_equal(sommier_verifier(con, f$foret)$hash_tete, avant)
 })
+
+test_that("une precision nulle refuse l'API et l'import, rien n'est ecrit", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  avant <- sommier_verifier(con, f$foret)$hash_tete
+  expect_error(
+    sommier_controler_placette(
+      con, f$placette, 20, 15, "agent-01", visite_le = "2026-08-31T09:00:00Z",
+      geometrie = lambert_vers_wgs84(600151, 6700099), precision_m = 0),
+    "strictement positive")
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.")
+  k <- uuid_v4()
+  saisir(dossier, "controles", controle(k, f$placette, 18, "2026-09-20"))
+  ecrire_positions(dossier, k, 600150, 6700100, 0, FALSE, FALSE)
+  expect_error(sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                               withr::local_tempdir(),
+                                               auteur = "test"),
+               "rien n'est ecrit.*strictement positive")
+  expect_equal(sommier_verifier(con, f$foret)$hash_tete, avant)
+})
+
+test_that("un controle avec position est un objet localise, sans position il n'y est pas", {
+  skip_if_not_installed("sf")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  k1 <- uuid_v4()
+  k2 <- uuid_v4()
+  sommier_controler_placette(
+    con, f$placette, 20, 15, "agent-01", visite_le = "2026-08-23T09:00:00Z",
+    id = k1, geometrie = lambert_vers_wgs84(600151, 6700099), precision_m = 0.4)
+  sommier_controler_placette(
+    con, f$placette, 20, 15, "agent-01", visite_le = "2026-08-24T09:00:00Z",
+    id = k2, sans_position_mesuree = TRUE)
+  o <- DBI::dbGetQuery(
+    con, "SELECT id::text AS id, type_objet, designation, type_geometrie
+            FROM v_objet_localise WHERE id = ANY($1::uuid[])",
+    params = list(paste0("{", k1, ",", k2, "}")))
+  expect_equal(o$id, k1)
+  expect_equal(o$type_objet, "controle")
+  expect_equal(o$designation, "controle")
+  expect_equal(o$type_geometrie, "ST_Point")
+})

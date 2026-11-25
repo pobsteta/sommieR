@@ -275,3 +275,13 @@ test_that("une position hors WGS 84 est refusee avec un message clair", {
   expect_error(registre6_controle(id, 10, 9, geometrie = geom_point(4.9, 47),
                                   precision_m = -1), "precision_m")
 })
+
+test_that("une precision de 0 ou negative est refusee (strictement positive)", {
+  id <- "11111111-1111-4111-8111-111111111111"
+  for (p in c(0, -1)) {
+    expect_error(registre6_controle(id, 10, 9, geometrie = geom_point(4.9, 47),
+                                    precision_m = p), "strictement positive")
+  }
+  expect_equal(registre6_controle(id, 10, 9, geometrie = geom_point(4.9, 47),
+                                  precision_m = 0.01)$precision_m, 0.01)
+})

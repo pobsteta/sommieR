@@ -28,6 +28,12 @@ facultatifs, colonnes de vue ajoutées à la fin.
   `rattache_par_identite`, `sans_position_mesuree` (NULL pour un contrôle qui ne les a
   pas inscrits). Aucune colonne existante ne change de nom, de type ni de place ;
   `CREATE OR REPLACE VIEW` met à jour une base existante.
+- **Précision** : `precision_m` est strictement positive (jamais 0, comme dans
+  Surculus, ADR 0003) ; 0 ou négative est refusée, par l'API R comme à l'import.
+- **Conséquence voulue** : les contrôles qui portent une position mesurée
+  apparaissent désormais dans `v_objet_localise`, désignés « controle » (leur
+  `payload->'geometrie'` alimente `entree_sommier.geom`) ; un contrôle sans position
+  n'y figure pas.
 
 # sommieR 2026.11.2 (2026-11-20)
 

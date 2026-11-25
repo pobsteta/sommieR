@@ -73,8 +73,8 @@ pour que la relecture d'un payload ecrit se rejoue (il est recalcule).}
 seul : un controle sans ces champs se relit a l'identique.
 \code{geometrie} est un point WGS 84 (voir \code{\link[=geom_point]{geom_point()}}) ; \code{entree_sommier.geom}
 la projette comme pour toute entree, et la vue \code{v_controle_plantation} la
-rend. \code{precision_m} est la precision de cette position, en metres (au
-moins 0 ; elle ne s'inscrit qu'avec une \code{geometrie}).
+rend. \code{precision_m} est la precision de cette position, en metres
+(strictement positive ; elle ne s'inscrit qu'avec une \code{geometrie}).
 \code{rattache_par_identite} (\code{TRUE}/\code{FALSE}) dit que le code lu du piquet a
 designe la placette, et non la position mesuree (piquet a plus de 15 m, ou
 controle sans position mesuree).
