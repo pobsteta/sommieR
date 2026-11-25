@@ -61,7 +61,7 @@
 <li>
 <strong>Sommier imprimé</strong> : pas de ligne par plant ; un décompte sous la placette et sous le contrôle. La chaîne et le manifeste gardent tous les plants.</li>
 <li>
-<strong>Non fait</strong> : modèle QField (PyQGIS absent), versement des plants à l’aller, <code>SOMMIER_METHODES_POINTAGE</code> (aucune source n’en nomme les valeurs), démo Couchey. (Le jour de contrôle en Europe/Paris est fait par la mission 057, ci-dessous.)</li>
+<strong>Non fait</strong> : modèle QField (PyQGIS absent), versement des plants à l’aller, <code>SOMMIER_METHODES_POINTAGE</code> (aucune source n’en nomme les valeurs). (Le jour de contrôle en Europe/Paris est fait par la mission 057, ci-dessous.)</li>
 </ul></li>
 <li>
 <p><strong>Plants : robustesse (mission 057).</strong> Aucune rupture de signature ; <code>main</code> reste en cycle dev.</p>
@@ -72,6 +72,7 @@
 <li>
 <strong>Tests</strong> : import d’une tournée où un plant mort au passage 1 n’a pas d’état au passage 2, refusé sans aucune écriture (les deux passages dans la tournée, ou le passage 1 déjà au registre).</li>
 </ul></li>
+<li><p><strong>Démo Couchey : les plants</strong> (mission 062 ; brief Surculus <code>2026-10-15-travaux-2-plants</code>, « Démo Couchey »). <code><a href="../reference/sommier_demo_couchey.html">sommier_demo_couchey()</a></code> pointe 20 plants (CHS, numéros uniques) sur chacune des 3 placettes de la plantation 2022 de l’UG 35, un regarni sur deux d’entre elles, et écrit leur état aux contrôles de 2023 et 2025 (morts et absents compris). Les comptes des contrôles, déduits des états, restent ceux d’avant (20 plants, 17/18/15 vivants en 2023, 16/17/13 en 2025) ; les hauteurs moyennes 2025 changent sur les placettes 1 et 3 (89 et 72 cm au lieu de 92 et 74), le regarni de 45 cm y comptant. La démo exerce ainsi <code>v_plant</code>, <code>v_etat_plant</code>, la mortalité entre passages (12,5 % en 2025) et <code>nb_regarnis</code> (2). Positions, destins et causes sont construits : données de démonstration, marquées comme telles. Reste hors périmètre : modèle QField, versement des plants à l’aller, <code>SOMMIER_METHODES_POINTAGE</code>.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="2026.11.2" id="sommier-2026112-2026-11-20">sommieR 2026.11.2 (2026-11-20)<a class="anchor" aria-label="anchor" href="#sommier-2026112-2026-11-20"></a></h2>

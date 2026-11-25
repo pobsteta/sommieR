@@ -76,6 +76,12 @@ etats qu'un sommier repris melange, et ce que le rapport engendre doit
 en dire. Voir
 [`sommier_reprise()`](https://pobsteta.github.io/sommieR/reference/sommier_reprise.md).
 
+Les trois placettes de la plantation 2022 de l'UG 35 portent leurs
+plants : vingt pointes a la reception des travaux, un regarni sur deux
+placettes, et un etat par plant aux controles de 2023 et de 2025 (morts
+et absents compris). Positions, destins et causes sont construits pour
+la demonstration.
+
 Trois precautions le rendent visible plutot que de compter sur la
 memoire du lecteur : le nom de la foret porte la mention, le rapport
 engendre l'affiche en tete, et la fonction refuse de s'executer sur une

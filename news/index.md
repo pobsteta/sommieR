@@ -100,8 +100,8 @@ facultatifs, colonnes de vue ajoutées à la fin.
     les plants.
   - **Non fait** : modèle QField (PyQGIS absent), versement des plants à
     l’aller, `SOMMIER_METHODES_POINTAGE` (aucune source n’en nomme les
-    valeurs), démo Couchey. (Le jour de contrôle en Europe/Paris est
-    fait par la mission 057, ci-dessous.)
+    valeurs). (Le jour de contrôle en Europe/Paris est fait par la
+    mission 057, ci-dessous.)
 
 - **Plants : robustesse (mission 057).** Aucune rupture de signature ;
   `main` reste en cycle dev.
@@ -135,6 +135,22 @@ facultatifs, colonnes de vue ajoutées à la fin.
   - **Tests** : import d’une tournée où un plant mort au passage 1 n’a
     pas d’état au passage 2, refusé sans aucune écriture (les deux
     passages dans la tournée, ou le passage 1 déjà au registre).
+
+- **Démo Couchey : les plants** (mission 062 ; brief Surculus
+  `2026-10-15-travaux-2-plants`, « Démo Couchey »).
+  [`sommier_demo_couchey()`](https://pobsteta.github.io/sommieR/reference/sommier_demo_couchey.md)
+  pointe 20 plants (CHS, numéros uniques) sur chacune des 3 placettes de
+  la plantation 2022 de l’UG 35, un regarni sur deux d’entre elles, et
+  écrit leur état aux contrôles de 2023 et 2025 (morts et absents
+  compris). Les comptes des contrôles, déduits des états, restent ceux
+  d’avant (20 plants, 17/18/15 vivants en 2023, 16/17/13 en 2025) ; les
+  hauteurs moyennes 2025 changent sur les placettes 1 et 3 (89 et 72 cm
+  au lieu de 92 et 74), le regarni de 45 cm y comptant. La démo exerce
+  ainsi `v_plant`, `v_etat_plant`, la mortalité entre passages (12,5 %
+  en 2025) et `nb_regarnis` (2). Positions, destins et causes sont
+  construits : données de démonstration, marquées comme telles. Reste
+  hors périmètre : modèle QField, versement des plants à l’aller,
+  `SOMMIER_METHODES_POINTAGE`.
 
 ## sommieR 2026.11.2 (2026-11-20)
 

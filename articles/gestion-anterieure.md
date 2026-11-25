@@ -174,10 +174,10 @@ registre a bougé.
 verif <- sommier_verifier(con, foret)
 verif
 #> Verification de chaine - sommier
-#>   foret     : 55ea2e05-46e1-48b6-abca-c0bcd762b03a
-#>   entrees   : 76
-#>   seq tete  : 76
-#>   hash tete : 4c3c90aeb36d122e4ad420aed999fcfb6535565fa62de31e640064dc16a42d58
+#>   foret     : 8f48d999-a311-4db0-a07d-fcbeb1bbacc2
+#>   entrees   : 138
+#>   seq tete  : 138
+#>   hash tete : efa6c584a97600f00fb9717f0763d8fe172f1e0fdc3e066c0bde1bb236e905c2
 #>   etat      : chaine intacte
 ```
 
@@ -221,7 +221,7 @@ tableau(
 | 3 | Droits & concessions | 5 | 1 | 1 | 2018-04-01 | 2018-04-01 |
 | 4 | Infrastructures | 0 | 3 | 1 | 2016-06-01 | 2016-06-01 |
 | 5 | Coupes & récoltes | 6 | 5 | 1 | 2016-03-05 | 2020-03-05 |
-| 6 | Travaux | 12 | 0 | 0 | NA | NA |
+| 6 | Travaux | 74 | 0 | 0 | NA | NA |
 | 7 | Comptabilité | 21 | 0 | 0 | NA | NA |
 | 8 | Évènements & faune | 9 | 1 | 1 | 2020-08-10 | 2020-08-10 |
 | 9 | Patrimoine remarquable | 4 | 3 | 1 | 2016-07-12 | 2019-06-03 |
@@ -286,12 +286,12 @@ tableau(
 
 | seq | registre | date_evenement | transcrit |
 |----:|---------:|:---------------|:----------|
-|  76 |        9 | 2018-10-04     | TRUE      |
-|  75 |        9 | 2019-06-03     | TRUE      |
-|  74 |        9 | 2016-07-12     | TRUE      |
-|  73 |        8 | 2020-08-10     | TRUE      |
-|  72 |        5 | 2020-03-05     | TRUE      |
-|  71 |        5 | 2019-03-05     | TRUE      |
+| 138 |        9 | 2018-10-04     | TRUE      |
+| 137 |        9 | 2019-06-03     | TRUE      |
+| 136 |        9 | 2016-07-12     | TRUE      |
+| 135 |        8 | 2020-08-10     | TRUE      |
+| 134 |        5 | 2020-03-05     | TRUE      |
+| 133 |        5 | 2019-03-05     | TRUE      |
 
 Les six dernières écritures de la chaîne : le bloc transcrit {.table}
 
@@ -559,7 +559,7 @@ tableau(
 |:-----------------|-----------:|----------:|------------------:|--------------------:|
 | 102              |       4.28 |         6 |               252 |                   0 |
 | 15               |       4.88 |         6 |               258 |                   0 |
-| 35               |       7.17 |        18 |               398 |               6 530 |
+| 35               |       7.17 |        80 |               398 |               6 530 |
 
 Ce que chaque unité porte sur la période {.table}
 
@@ -648,6 +648,68 @@ tableau(
 | 6 | 2022-12-02 | placette | ST_Point |
 | 6 | 2022-12-02 | placette | ST_Point |
 | 6 | 2022-12-02 | placette | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2022-12-02 | plant | ST_Point |
+| 6 | 2024-02-20 | plant | ST_Point |
+| 6 | 2024-02-20 | plant | ST_Point |
 | 8 | 2020-08-10 | secheresse | ST_Polygon |
 | 8 | 2022-02-17 | tempete | ST_Polygon |
 | 9 | 2016-07-12 | Chene de la Justice | ST_Point |
@@ -833,7 +895,7 @@ couche <- tempfile(fileext = ".geojson")
 export <- sommier_exporter_sig(con, foret, couche, format = "geojson")
 str(export)
 #> List of 3
-#>  $ chemin               : chr "/tmp/Rtmpt88JMo/file37cc3287b771.geojson"
+#>  $ chemin               : chr "/tmp/RtmpreQtxu/file386e6a69b470.geojson"
 #>  $ n_unites             : int 3
 #>  $ unites_sans_geometrie: chr(0)
 ```
@@ -906,10 +968,10 @@ chemin <- tempfile(fileext = ".json")
 sommier_exporter_manifeste(con, foret, chemin)
 sommier_verifier_manifeste(chemin)
 #> Verification de chaine - sommier
-#>   foret     : 55ea2e05-46e1-48b6-abca-c0bcd762b03a
-#>   entrees   : 76
-#>   seq tete  : 76
-#>   hash tete : 4c3c90aeb36d122e4ad420aed999fcfb6535565fa62de31e640064dc16a42d58
+#>   foret     : 8f48d999-a311-4db0-a07d-fcbeb1bbacc2
+#>   entrees   : 138
+#>   seq tete  : 138
+#>   hash tete : efa6c584a97600f00fb9717f0763d8fe172f1e0fdc3e066c0bde1bb236e905c2
 #>   etat      : chaine intacte
 #>   reserve   : revocation des certificats non verifiee : CRL et OCSP demandent le reseau
 ```

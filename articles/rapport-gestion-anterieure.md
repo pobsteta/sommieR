@@ -58,9 +58,9 @@ document.
 |  |  |
 |----|----|
 | **État de la chaîne** | intacte |
-| **Entrées** | 76 |
-| **Séquence de tête** | 76 |
-| **Empreinte de tête** | `4c3c90aeb36d122e4ad420aed999fcfb6535565fa62de31e640064dc16a42d58` |
+| **Entrées** | 138 |
+| **Séquence de tête** | 138 |
+| **Empreinte de tête** | `efa6c584a97600f00fb9717f0763d8fe172f1e0fdc3e066c0bde1bb236e905c2` |
 
 ## 2 Provenance des écritures
 
@@ -78,7 +78,7 @@ tableaux qui suivent portent une colonne `provenance` pour le dire ligne
 | 3 — Droits & concessions | 5 | 1 | 1 | 2018-04-01 | 2018-04-01 |
 | 4 — Infrastructures | 0 | 3 | 1 | 2016-06-01 | 2016-06-01 |
 | 5 — Coupes & récoltes | 6 | 5 | 1 | 2016-03-05 | 2020-03-05 |
-| 6 — Travaux | 12 | 0 | 0 | — | — |
+| 6 — Travaux | 74 | 0 | 0 | — | — |
 | 7 — Comptabilité | 21 | 0 | 0 | — | — |
 | 8 — Évènements & faune | 9 | 1 | 1 | 2020-08-10 | 2020-08-10 |
 | 9 — Patrimoine remarquable | 4 | 3 | 1 | 2016-07-12 | 2019-06-03 |
@@ -88,7 +88,7 @@ tableaux qui suivent portent une colonne `provenance` pour le dire ligne
 
 NoteUne partie de ce document est transcrite
 
-15 écriture(s) sur 76 ont été recopiées de pièces antérieures au
+15 écriture(s) sur 138 ont été recopiées de pièces antérieures au
 sommier, chacune citant la sienne. Elles sont datées du fait, non de
 leur saisie : la chaîne les a écrites le jour de la transcription, et le
 dit.
@@ -197,7 +197,7 @@ Taux de reprise par âge de plantation, une ligne par plantation suivie.
 | Unité | Plantation | Âge (ans) | Placettes | Reprise (%) | Densité (tiges/ha) | Hauteur (cm) | Abroutis (%) | Besoins |
 |:---|:---|---:|---:|---:|---:|---:|---:|:---|
 | 35 | 2022 | 1 | 3 | 83,3 | 3 332 | 37 | 20,7 | DG |
-| 35 | 2022 | 3 | 3 | 76,7 | 3 066 | 89 | 16,3 | DG |
+| 35 | 2022 | 3 | 3 | 76,7 | 3 066 | 87 | 16,3 | DG |
 
 Mesures des placettes, par plantation et par âge {.caption-top .table}
 
@@ -342,7 +342,7 @@ registre 2.
 
 Ce rapport est une **mise en forme**, pas la preuve. La valeur probante
 tient au registre lui-même : l’empreinte de tête donnée plus haut scelle
-les 76 entrées de la chaîne.
+les 138 entrées de la chaîne.
 
 Pour contrôler ces chiffres sans accès à la base, demander l’export
 manifeste et le vérifier hors ligne :
