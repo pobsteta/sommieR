@@ -84,7 +84,8 @@ registre6_plant(
 
 - pointe_le:
 
-  Instant du pointage (UTC).
+  Instant du pointage (UTC) ; sa date civile, en Europe/Paris, est celle
+  du plant.
 
 - observations:
 

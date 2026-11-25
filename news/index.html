@@ -61,7 +61,16 @@
 <li>
 <strong>Sommier imprimé</strong> : pas de ligne par plant ; un décompte sous la placette et sous le contrôle. La chaîne et le manifeste gardent tous les plants.</li>
 <li>
-<strong>Non fait</strong> : modèle QField (PyQGIS absent), versement des plants à l’aller, <code>SOMMIER_METHODES_POINTAGE</code> (aucune source n’en nomme les valeurs), démo Couchey, alignement du jour de contrôle sur Europe/Paris.</li>
+<strong>Non fait</strong> : modèle QField (PyQGIS absent), versement des plants à l’aller, <code>SOMMIER_METHODES_POINTAGE</code> (aucune source n’en nomme les valeurs), démo Couchey. (Le jour de contrôle en Europe/Paris est fait par la mission 057, ci-dessous.)</li>
+</ul></li>
+<li>
+<p><strong>Plants : robustesse (mission 057).</strong> Aucune rupture de signature ; <code>main</code> reste en cycle dev.</p>
+<ul><li>
+<strong>Numéro de plant unique par placette, garanti par la base</strong> : l’index unique partiel <code>plant_numero_par_placette_unique</code> (<code>inst/sql/005_unicite_plant.sql</code>, posé par <code><a href="../reference/sommier_init_schema.html">sommier_init_schema()</a></code>) refuse un second plant de même numéro dans la même placette, même quand deux écritures concurrentes ont passé ensemble la vérification de <code><a href="../reference/sommier_pointer_plant.html">sommier_pointer_plant()</a></code> (qui lit puis écrit sans verrou). Ajout seul : aucune entrée n’est réécrite. Sur une base qui porte déjà un doublon, l’installation du schéma échoue (« Installation refusee : deux plants portent le meme numero dans la meme placette (placette …, numero …) ») avant de créer l’index, sans rien modifier. Les entrées qui en corrigent une autre (<code>corrige_id</code>) restent hors de l’index : une correction garde le numéro du plant corrigé.</li>
+<li>
+<strong>Le jour civil se compte en Europe/Paris, comme dans Surculus, et non plus en UTC</strong> : la date d’un contrôle (<code>visite_le</code>), celle d’un plant pointé (<code>pointe_le</code>) et leur comparaison (« état avant le pointage », regarni, plants remplacés, deux contrôles le même jour), à l’API R comme à l’import de tournée. Un contrôle fait à 23 h 30 heure de Paris est de ce jour-là (et non du lendemain UTC) ; l’instant gardé au payload reste en UTC. <strong>Changement de comportement pour les entrées écrites de 22 h/23 h UTC à minuit UTC</strong> (heures d’été/hiver) : leur <code>date_evenement</code> est désormais celle de Paris, le lendemain. Les entrées déjà chaînées ne sont pas touchées (ajout seul).</li>
+<li>
+<strong>Tests</strong> : import d’une tournée où un plant mort au passage 1 n’a pas d’état au passage 2, refusé sans aucune écriture (les deux passages dans la tournée, ou le passage 1 déjà au registre).</li>
 </ul></li>
 </ul></div>
     <div class="section level2">

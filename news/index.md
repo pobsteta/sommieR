@@ -100,8 +100,41 @@ facultatifs, colonnes de vue ajoutées à la fin.
     les plants.
   - **Non fait** : modèle QField (PyQGIS absent), versement des plants à
     l’aller, `SOMMIER_METHODES_POINTAGE` (aucune source n’en nomme les
-    valeurs), démo Couchey, alignement du jour de contrôle sur
-    Europe/Paris.
+    valeurs), démo Couchey. (Le jour de contrôle en Europe/Paris est
+    fait par la mission 057, ci-dessous.)
+
+- **Plants : robustesse (mission 057).** Aucune rupture de signature ;
+  `main` reste en cycle dev.
+
+  - **Numéro de plant unique par placette, garanti par la base** :
+    l’index unique partiel `plant_numero_par_placette_unique`
+    (`inst/sql/005_unicite_plant.sql`, posé par
+    [`sommier_init_schema()`](https://pobsteta.github.io/sommieR/reference/sommier_init_schema.md))
+    refuse un second plant de même numéro dans la même placette, même
+    quand deux écritures concurrentes ont passé ensemble la vérification
+    de
+    [`sommier_pointer_plant()`](https://pobsteta.github.io/sommieR/reference/sommier_pointer_plant.md)
+    (qui lit puis écrit sans verrou). Ajout seul : aucune entrée n’est
+    réécrite. Sur une base qui porte déjà un doublon, l’installation du
+    schéma échoue (« Installation refusee : deux plants portent le meme
+    numero dans la meme placette (placette …, numero …) ») avant de
+    créer l’index, sans rien modifier. Les entrées qui en corrigent une
+    autre (`corrige_id`) restent hors de l’index : une correction garde
+    le numéro du plant corrigé.
+  - **Le jour civil se compte en Europe/Paris, comme dans Surculus, et
+    non plus en UTC** : la date d’un contrôle (`visite_le`), celle d’un
+    plant pointé (`pointe_le`) et leur comparaison (« état avant le
+    pointage », regarni, plants remplacés, deux contrôles le même jour),
+    à l’API R comme à l’import de tournée. Un contrôle fait à 23 h 30
+    heure de Paris est de ce jour-là (et non du lendemain UTC) ;
+    l’instant gardé au payload reste en UTC. **Changement de
+    comportement pour les entrées écrites de 22 h/23 h UTC à minuit
+    UTC** (heures d’été/hiver) : leur `date_evenement` est désormais
+    celle de Paris, le lendemain. Les entrées déjà chaînées ne sont pas
+    touchées (ajout seul).
+  - **Tests** : import d’une tournée où un plant mort au passage 1 n’a
+    pas d’état au passage 2, refusé sans aucune écriture (les deux
+    passages dans la tournée, ou le passage 1 déjà au registre).
 
 ## sommieR 2026.11.2 (2026-11-20)
 

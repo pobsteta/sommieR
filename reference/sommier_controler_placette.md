@@ -41,7 +41,8 @@ sommier_controler_placette(
 
 - visite_le:
 
-  Instant du controle ; sa date est la date de l'entree.
+  Instant du controle ; sa date civile, en Europe/Paris, est la date de
+  l'entree.
 
 - id:
 
