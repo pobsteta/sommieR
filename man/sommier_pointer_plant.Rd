@@ -35,7 +35,7 @@ du releve.}
 \item{...}{Champs de \code{\link[=registre6_plant]{registre6_plant()}} : \code{essence}, \code{regarni},
 \code{remplace_uuid}, \code{distance_m}, \code{azimut_mag}, \code{unite_azimut},
 \code{declinaison_deg}, \code{convergence_deg}, \code{azimut_geo_deg},
-\code{modele_geomagnetique}, \code{pointe_le}, \code{observations}.}
+\code{modele_geomagnetique}, \code{methode_pointage}, \code{pointe_le}, \code{observations}.}
 }
 \value{
 Invisiblement, l'entree chainee (liste d'une entree).

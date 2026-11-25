@@ -447,7 +447,8 @@ SELECT
   (p.payload ->> 'convergence_deg')::NUMERIC    AS convergence_deg,
   (p.payload ->> 'azimut_geo_deg')::NUMERIC     AS azimut_geo_deg,
   (p.payload ->> 'modele_geomagnetique')::TEXT  AS modele_geomagnetique,
-  p.geom
+  p.geom,
+  (p.payload ->> 'methode_pointage')::TEXT      AS methode_pointage
 FROM v_entree_courante p
 LEFT JOIN v_placette l ON l.id = (p.payload ->> 'placette_id')::UUID
 WHERE p.registre = 6 AND p.payload ->> 'type_entree' = 'plant';
@@ -455,7 +456,9 @@ WHERE p.registre = 6 AND p.payload ->> 'type_entree' = 'plant';
 COMMENT ON VIEW v_plant IS
   'Plants pointes des placettes de suivi. remplace_uuid : le plant mort ou '
   'absent qu''un regarni remplace ; remplace_par : le regarni qui remplace ce '
-  'plant. L''etat a chaque passage : v_etat_plant.';
+  'plant. methode_pointage : comment la position a ete obtenue '
+  '(relatif_boussole, relatif_saisie, gnss_plant, construit ; NULL si non '
+  'dite). L''etat a chaque passage : v_etat_plant.';
 
 -- Un etat par plant et par controle (les controles qui portent l'etat de leurs
 -- plants). compte : le plant entre dans les totaux du controle (ni non observe,

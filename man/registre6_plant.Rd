@@ -19,7 +19,8 @@ registre6_plant(
   azimut_geo_deg = NULL,
   modele_geomagnetique = NULL,
   pointe_le = NULL,
-  observations = NULL
+  observations = NULL,
+  methode_pointage = NULL
 )
 }
 \arguments{
@@ -47,6 +48,9 @@ declinaison magnetique, convergence des meridiens, azimut geographique
 dans [0, 360[ (nord geographique, sens horaire).}
 
 \item{modele_geomagnetique}{Modele de la declinaison (\code{WMM2025}).}
+
+\item{methode_pointage}{Comment la position a ete obtenue : l'une de
+\link{SOMMIER_METHODES_POINTAGE} (facultatif ; omise, elle n'est pas inscrite).}
 
 \item{pointe_le}{Instant du pointage (UTC) ; sa date civile, en Europe/Paris, est celle du plant.}
 

@@ -61,7 +61,12 @@ test_that("la tournee de Marsannay a le schema de celle de Couchey", {
   gm <- file.path(dm, "travaux.gpkg")
   gc <- file.path(dc, "travaux.gpkg")
   couches <- sf::st_layers(gm)$name
-  expect_equal(sort(couches), sort(sf::st_layers(gc)$name))
+  # Couchey porte des plants vivants (mission 065) : ses deux couches de plants
+  # s'ajoutent a l'aller ; Marsannay n'a pas de plant, donc pas ces couches.
+  couches_c <- sf::st_layers(gc)$name
+  expect_equal(sort(couches),
+               sort(setdiff(couches_c, c("plants", "etats_plants"))))
+  expect_true(all(c("plants", "etats_plants") %in% couches_c))
   for (couche in couches) {
     expect_equal(names(sf::read_sf(gm, couche)),
                  names(sf::read_sf(gc, couche)), info = couche)

@@ -62,6 +62,18 @@
 #'   Surculus qui la cree.
 #'
 #' @details
+#' **Les plants vivants sont dans le projet** (couches `plants`, POINT en
+#' Lambert-93, et `etats_plants`, table, celles que Surculus lit) : pour chaque
+#' plant dont le dernier etat est `sain` ou `atteint`, son numero, sa position,
+#' son observation brute et son dernier etat (cause, detail, hauteur), pour que
+#' le forestier le retrouve et le renote au controle suivant. `non_observe`
+#' n'est pas un etat : le dernier etat mesure compte. Les morts et les absents
+#' restent au registre et ne partent pas ; un regarni vivant part comme un
+#' plant ; un plant deja remplace par un regarni ne part pas. Sans plant vivant,
+#' aucune de ces couches n'est ecrite. A l'import, ces lignes ne se reinscrivent
+#' pas : le plant est deja au registre, et l'etat porte sur un controle deja
+#' inscrit.
+#'
 #' **Le champ `action_id`** des trois couches de travaux est celui de l'action
 #' du programme que le travaux realise : l'operateur la choisit dans la liste
 #' tiree du programme (table `programme`). Elle passe telle quelle au registre 6.
@@ -157,6 +169,8 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
     ), gpkg, "placettes")
   }
 
+  verser_plants_aller(con, foret_id, gpkg)
+
   verser_photos_aller(con, foret_id, dossier, gpkg, depot)
 
   ug <- terrain$ug
@@ -225,7 +239,10 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
 #' un controle, totaux qui ne concordent pas avec les etats, plant vivant (ou
 #' jamais vu) au passage precedent sans etat, plant mort ou absent redit
 #' vivant. Un plant remplace par un regarni d'un passage anterieur n'a plus
-#' d'etat a donner. Sans les couches, la tournee s'importe comme avant.
+#' d'etat a donner. La colonne facultative `methode_pointage` de `plants` doit
+#' valoir l'une de [SOMMIER_METHODES_POINTAGE] (sinon faute, rien n'est ecrit) ; un
+#' etat dont le controle est deja au registre (ceux verses a l'aller) est ignore.
+#' Sans les couches, la tournee s'importe comme avant.
 #'
 #' **Rejouable.** L'UUID que QField a donne a chaque saisie devient celui de
 #' l'entree : reimporter le meme dossier n'ecrit rien de plus. Les placettes
@@ -346,11 +363,16 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
     con, "SELECT plant_id::text AS plant_id, visite_le AS jour, etat
             FROM v_etat_plant WHERE foret_id = $1", params = list(foret_id))
   histoire_db$jour <- as.Date(histoire_db$jour)
+  # Les controles deja au registre : les etats que l'aller a verses s'y
+  # rattachent et ne sont pas rejoues.
+  controles_db <- DBI::dbGetQuery(
+    con, "SELECT id::text AS id FROM v_controle_plantation
+           WHERE foret_id = $1", params = list(foret_id))$id
   plants_prets <- preparer_plants_tournee(
     plants_tournee, controles,
     placettes_valides = c(placettes_connues, tolower(placettes$uuid)),
     controles_tournee = controles_tournee, plants_db = plants_db,
-    histoire_db = histoire_db)
+    histoire_db = histoire_db, controles_db = controles_db)
   fautes <- controler_tournee_travaux(
     travaux, placettes, controles, photos, dossier,
     travaux_connus = connus$id, placettes_connues = placettes_connues,

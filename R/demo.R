@@ -392,6 +392,7 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
       sommier_pointer_plant(
         con, placettes[[k]], point_plant(centres[[k]], (n - 1) * 18, 2.5), n,
         auteur, date_evenement = "2022-12-02",
+        methode_pointage = "construit",
         observations = "Plant de demonstration (position construite)"
       )[[1L]]$id
     }, character(1))
@@ -463,6 +464,7 @@ sommier_demo_couchey <- function(con, auteur = "demo-sommieR",
         con, placettes[[r$k]],
         point_plant(centres[[r$k]], (d$regarni_de - 1) * 18, 3.5), 21, auteur,
         date_evenement = "2024-02-20", regarni = TRUE,
+        methode_pointage = "construit",
         remplace_uuid = plants[[r$k]][[d$regarni_de]],
         observations = "Regarni de demonstration"
       )[[1L]]$id)
