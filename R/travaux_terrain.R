@@ -53,7 +53,7 @@ sommier_installer_placette <- function(con, travaux_id, code_placette,
 #' @param nb_total,nb_vivants Plants comptes, et vivants parmi eux. Avec
 #'   `plants`, ils se deduisent des etats (voir [registre6_controle()]).
 #' @param auteur Compte qui ecrit.
-#' @param visite_le Instant du controle ; sa date est la date de l'entree.
+#' @param visite_le Instant du controle ; sa date civile, en Europe/Paris, est la date de l'entree.
 #' @param id UUID de l'entree.
 #' @param ... Champs de [registre6_controle()] : `h_moy_cm`, `nb_abroutis`,
 #'   `concurrence`, `besoin`, `operateur`, `releve_uuid`, `photos`,
@@ -141,7 +141,9 @@ entree_controle <- function(con, placette_id, nb_total = NULL,
                             plants_remplaces = NULL) {
   placette_id <- valider_uuid(placette_id, "placette_id")
   visite_le <- format_instant(visite_le, "visite_le")
-  jour <- substr(visite_le, 1L, 10L)
+  # Le jour civil du controle est celui de Paris (comme Surculus), pas celui
+  # d'UTC : il date l'entree et se compare au pointage des plants.
+  jour <- format(jour_paris(visite_le))
   placette <- DBI::dbGetQuery(
     con,
     "SELECT foret_id::text AS foret_id, ug_uuid::text AS ug_uuid

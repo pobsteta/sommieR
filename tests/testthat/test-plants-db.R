@@ -405,3 +405,195 @@ test_that("un etat dans un controle date avant le pointage du plant est refuse",
     "avant son pointage")
   expect_equal(nb_entrees(con, f$foret), n)
 })
+
+# ---------------------------------------------------------------------------
+# Mission 057 : robustesse du suivi des plants
+
+test_that("la base refuse deux plants de meme numero dans la meme placette, meme en concurrence", {
+  con <- base_plants()
+  f <- foret_plants(con)
+  # Deux ecritures concurrentes : chacune passe la verification applicative
+  # (aucune des deux n'est encore ecrite), seule la base les departage.
+  a <- entree_plant(con, f$placette, pt_wgs(1, 1), 7L, "agent-01",
+                    date_evenement = "2025-06-10")
+  b <- entree_plant(con, f$placette, pt_wgs(2, 1), 7L, "agent-01",
+                    date_evenement = "2025-06-10")
+  sommier_ajouter(con, a)
+  n <- nb_entrees(con, f$foret)
+  expect_error(sommier_ajouter(con, b), "plant_numero_par_placette_unique")
+  expect_equal(nb_entrees(con, f$foret), n)
+  expect_true(sommier_verifier(con, f$foret)$valide)
+  # Le meme numero dans une autre placette, et un autre numero dans la meme,
+  # restent permis.
+  autre <- sommier_installer_placette(con, f$plantation, "P35-02", pt_wgs(0, 0),
+                                      "agent-01",
+                                      date_evenement = "2024-12-01")[[1L]]$id
+  expect_no_error(pointer(con, autre, 7))
+  expect_no_error(pointer(con, f$placette, 8))
+  # L'insertion directe, hors de l'API, est refusee de la meme facon.
+  expect_error(
+    DBI::dbExecute(con, paste0("INSERT INTO entree_sommier
+      (foret_id, registre, seq, date_evenement, auteur, payload,
+       schema_version, hash_prev, hash)
+      SELECT foret_id, registre, 9999, date_evenement, auteur, payload,
+             schema_version, hash_prev, '\\x0000000000000000000000000000000000000000000000000000000000000001'::bytea
+        FROM entree_sommier
+       WHERE foret_id = '", f$foret, "' AND payload ->> 'type_entree' = 'plant'
+         AND payload ->> 'numero' = '8'")),
+    "plant_numero_par_placette_unique")
+})
+
+test_that("une correction de plant garde son numero ; l'index ne la bloque pas", {
+  con <- base_plants()
+  f <- foret_plants(con)
+  p <- pointer(con, f$placette, 3)
+  e <- DBI::dbGetQuery(con, "SELECT payload::text AS payload, ug_uuid::text AS ug
+                              FROM entree_sommier WHERE id = $1",
+                       params = list(p))
+  payload <- registre6_plant(placette_id = f$placette, numero = 3L,
+                             geometrie = pt_wgs(3, 2), essence = "CHS")
+  expect_no_error(sommier_ajouter(con, sommier_entree(
+    foret_id = f$foret, registre = 6L, date_evenement = "2025-06-11",
+    auteur = "agent-01", ug_uuid = f$ug, corrige_id = p, payload = payload)))
+  expect_equal(nrow(DBI::dbGetQuery(con, "SELECT 1 FROM v_plant
+    WHERE foret_id = $1", params = list(f$foret))), 1L)
+})
+
+test_that("l'installation du schema : sans doublon elle passe, avec un doublon elle echoue clairement sans rien modifier", {
+  con <- base_plants()
+  f <- foret_plants(con)
+  pointer(con, f$placette, 1)
+  expect_no_error(sommier_init_schema(con))
+  expect_no_error(sommier_init_schema(con))
+  existe <- function() DBI::dbGetQuery(con, "SELECT count(*)::int AS n FROM
+    pg_indexes WHERE indexname = 'plant_numero_par_placette_unique'")$n
+  expect_equal(existe(), 1L)
+  n <- nb_entrees(con, f$foret)
+  # Un doublon fabrique (l'index retire le temps de l'essai) : tout est dans
+  # une transaction annulee, la base d'essai reste saine pour les autres tests.
+  a <- entree_plant(con, f$placette, pt_wgs(5, 1), 2L, "agent-01",
+                    date_evenement = "2025-06-10")
+  b <- entree_plant(con, f$placette, pt_wgs(6, 1), 2L, "agent-01",
+                    date_evenement = "2025-06-10")
+  expect_error(
+    transaction(con, {
+      DBI::dbExecute(con, "DROP INDEX plant_numero_par_placette_unique")
+      sommier_ajouter(con, a)
+      sommier_ajouter(con, b)
+      sommier_init_schema(con)
+    }),
+    "Installation refusee : deux plants portent le meme numero")
+  expect_equal(existe(), 1L)
+  expect_equal(nb_entrees(con, f$foret), n)
+  expect_no_error(sommier_init_schema(con))
+})
+
+test_that("le jour d'un pointage et d'un controle est celui de Paris, pas d'UTC", {
+  con <- base_plants()
+  # (a) Controle a 00 h 30 a Paris le 16 (22 h 30 UTC le 15), plant pointe a
+  # midi a Paris le 16 : meme jour civil, accepte. En UTC, le controle (15)
+  # aurait precede le pointage (16).
+  f <- foret_plants(con)
+  p <- sommier_pointer_plant(con, f$placette, pt_wgs(1, 1), 1, "agent-01",
+                             pointe_le = "2026-06-16T10:00:00Z")[[1L]]
+  expect_equal(p$date_evenement, "2026-06-16")
+  k <- sommier_controler_placette(con, f$placette, auteur = "agent-01",
+    visite_le = "2026-06-15T22:30:00Z", plants = list(etat(p$id, "sain")))[[1L]]
+  expect_equal(k$date_evenement, "2026-06-16")
+  expect_equal(DBI::dbGetQuery(con, "SELECT visite_le::text AS d
+    FROM v_controle_plantation WHERE id = $1", params = list(k$id))$d, "2026-06-16")
+  # (b) Symetrique : controle a 23 h 30 a Paris le 15 (21 h 30 UTC), plant
+  # pointe a 00 h 30 a Paris le 16 (22 h 30 UTC le 15) : le plant est pose
+  # apres le controle, refuse. En UTC, les deux etaient du 15.
+  g <- foret_plants(con)
+  q <- sommier_pointer_plant(con, g$placette, pt_wgs(1, 1), 1, "agent-01",
+                             pointe_le = "2026-06-15T22:30:00Z")[[1L]]
+  expect_equal(q$date_evenement, "2026-06-16")
+  n <- nb_entrees(con, g$foret)
+  expect_error(sommier_controler_placette(con, g$placette, auteur = "agent-01",
+    visite_le = "2026-06-15T21:30:00Z", plants = list(etat(q$id, "sain"))),
+    "avant son pointage")
+  expect_equal(nb_entrees(con, g$foret), n)
+  # (c) Un plant pointe a 23 h 30 a Paris (21 h 30 UTC) le 15, controle le
+  # meme jour : accepte, et le plant est du 15.
+  h <- foret_plants(con)
+  r <- sommier_pointer_plant(con, h$placette, pt_wgs(1, 1), 1, "agent-01",
+                             pointe_le = "2026-06-15T21:30:00Z")[[1L]]
+  expect_equal(r$date_evenement, "2026-06-15")
+  expect_no_error(sommier_controler_placette(con, h$placette, auteur = "agent-01",
+    visite_le = "2026-06-15T21:45:00Z", plants = list(etat(r$id, "sain"))))
+  # Deux controles le meme jour civil a Paris : refuses (22 h 30 UTC le 15 et
+  # 08 h UTC le 16 sont du 16).
+  expect_error(sommier_controler_placette(con, f$placette, auteur = "agent-01",
+    visite_le = "2026-06-16T08:00:00Z", plants = list(etat(p$id, "sain"))),
+    "deja ete controlee")
+})
+
+test_that("l'import compte le jour en heure de Paris : meme jour accepte, pointage posterieur refuse", {
+  skip_if_not_installed("sf"); skip_if_not_installed("xml2")
+  con <- base_plants()
+  depot <- file.path(withr::local_tempdir(), "photos")
+  cas <- function(pointe, visite) {
+    g <- foret_plants(con)
+    dossier <- projet_tournee(con, g)
+    u <- uuid_v4(); k <- uuid_v4()
+    ecrire_couche_g(dossier, couche_plants(g$placette, list(
+      list(uuid = u, numero = 1, dx = 1, dy = 1, pointe = pointe))), "plants")
+    lc <- ligne_controle(k, g$placette, "2026-06-15", 1, 1)
+    lc$visite_le <- as.POSIXct(visite, tz = "UTC")
+    ecrire_couche_g(dossier, lc, "controles")
+    ecrire_couche_g(dossier, couche_etats(k, list(list(plant = u, etat = "sain"))),
+                    "etats_plants")
+    list(g = g, dossier = dossier)
+  }
+  a <- cas("2026-06-16 10:00:00", "2026-06-15 22:30:00")
+  b <- sommier_importer_qfield_travaux(con, a$g$foret, a$dossier, depot, "agent-01")
+  expect_equal(c(b$plants, b$controles), c(1L, 1L))
+  expect_equal(DBI::dbGetQuery(con, "SELECT pointe_le::text AS d FROM v_plant
+    WHERE foret_id = $1", params = list(a$g$foret))$d, "2026-06-16")
+  z <- cas("2026-06-15 22:30:00", "2026-06-15 21:30:00")
+  n <- nb_entrees(con, z$g$foret)
+  expect_error(sommier_importer_qfield_travaux(con, z$g$foret, z$dossier, depot,
+                                               "agent-01"), "avant son pointage")
+  expect_equal(nb_entrees(con, z$g$foret), n)
+})
+
+test_that("l'import refuse un plant mort au passage 1 sans etat au passage 2, sans rien ecrire", {
+  skip_if_not_installed("sf"); skip_if_not_installed("xml2")
+  con <- base_plants()
+  depot <- file.path(withr::local_tempdir(), "photos")
+  # (1) Les deux passages dans la meme tournee.
+  g <- foret_plants(con)
+  dossier <- projet_tournee(con, g)
+  u <- c(uuid_v4(), uuid_v4()); k1 <- uuid_v4(); k2 <- uuid_v4()
+  ecrire_couche_g(dossier, couche_plants(g$placette, list(
+    list(uuid = u[1], numero = 1, dx = 1, dy = 1),
+    list(uuid = u[2], numero = 2, dx = 2, dy = 1))), "plants")
+  ecrire_couche_g(dossier, rbind(
+    ligne_controle(k1, g$placette, "2026-06-10", 2, 1),
+    ligne_controle(k2, g$placette, "2027-06-10", 1, 1)), "controles")
+  ecrire_couche_g(dossier, rbind(
+    couche_etats(k1, list(list(plant = u[1], etat = "sain"),
+                          list(plant = u[2], etat = "mort"))),
+    couche_etats(k2, list(list(plant = u[1], etat = "sain")))), "etats_plants")
+  n <- nb_entrees(con, g$foret)
+  expect_error(sommier_importer_qfield_travaux(con, g$foret, dossier, depot,
+                                               "agent-01"), "il en faut un")
+  expect_equal(nb_entrees(con, g$foret), n)
+  # (2) Le passage 1 est deja au registre ; la tournee ne porte que le 2.
+  h <- foret_plants(con)
+  p <- vapply(1:2, function(i) pointer(con, h$placette, i), "")
+  sommier_controler_placette(con, h$placette, auteur = "agent-01",
+    visite_le = "2025-06-10T09:00:00Z",
+    plants = list(etat(p[1], "sain"), etat(p[2], "mort")))
+  d2 <- projet_tournee(con, h)
+  k <- uuid_v4()
+  ecrire_couche_g(d2, ligne_controle(k, h$placette, "2026-06-10", 1, 1),
+                  "controles")
+  ecrire_couche_g(d2, couche_etats(k, list(list(plant = p[1], etat = "sain"))),
+                  "etats_plants")
+  n2 <- nb_entrees(con, h$foret)
+  expect_error(sommier_importer_qfield_travaux(con, h$foret, d2, depot,
+                                               "agent-01"), "il en faut un")
+  expect_equal(nb_entrees(con, h$foret), n2)
+})

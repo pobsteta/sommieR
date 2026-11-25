@@ -25,7 +25,7 @@ sommier_controler_placette(
 
 \item{auteur}{Compte qui ecrit.}
 
-\item{visite_le}{Instant du controle ; sa date est la date de l'entree.}
+\item{visite_le}{Instant du controle ; sa date civile, en Europe/Paris, est la date de l'entree.}
 
 \item{id}{UUID de l'entree.}
 
