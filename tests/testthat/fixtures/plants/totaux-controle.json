@@ -1,0 +1,792 @@
+{
+  "fichier": "totaux-controle.json",
+  "regle": "Totaux du contrôle = décompte des états des plants",
+  "format": "voir fixtures/README.md",
+  "cas": [
+    {
+      "id": "T1",
+      "description": "4 sains, 3 atteints, 2 morts, 1 absent.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s2",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s3",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s4",
+            "etat": "sain"
+          },
+          {
+            "uuid": "a1",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "a2",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "a3",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "m1",
+            "etat": "mort"
+          },
+          {
+            "uuid": "m2",
+            "etat": "mort"
+          },
+          {
+            "uuid": "x1",
+            "etat": "absent"
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 10,
+        "nb_vivants": 7,
+        "nb_abroutis": 0,
+        "h_moy_cm": null
+      },
+      "source": "docs/spec.md § 4.3 (totaux déduits des plants) et § 6"
+    },
+    {
+      "id": "T2",
+      "description": "Même placette plus 2 non observés : hors totaux.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s2",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s3",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s4",
+            "etat": "sain"
+          },
+          {
+            "uuid": "a1",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "a2",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "a3",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "m1",
+            "etat": "mort"
+          },
+          {
+            "uuid": "m2",
+            "etat": "mort"
+          },
+          {
+            "uuid": "x1",
+            "etat": "absent"
+          },
+          {
+            "uuid": "n1",
+            "etat": "non_observe"
+          },
+          {
+            "uuid": "n2",
+            "etat": "non_observe"
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 10,
+        "nb_vivants": 7,
+        "nb_abroutis": 0,
+        "h_moy_cm": null
+      },
+      "source": "docs/spec.md § 4.3 (totaux déduits des plants) et § 6 (non observé : hors totaux)"
+    },
+    {
+      "id": "T3",
+      "description": "Plant mort m1 remplacé par un regarni sain posé au contrôle 1 : dans le contrôle 1 où il est vu, m1 compte encore.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s2",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s3",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s4",
+            "etat": "sain"
+          },
+          {
+            "uuid": "a1",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "a2",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "a3",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "m1",
+            "etat": "mort"
+          },
+          {
+            "uuid": "m2",
+            "etat": "mort"
+          },
+          {
+            "uuid": "x1",
+            "etat": "absent"
+          },
+          {
+            "uuid": "r1",
+            "etat": "sain",
+            "regarni": true
+          }
+        ],
+        "regarnis": [
+          {
+            "uuid": "r1",
+            "remplace_uuid": "m1",
+            "pose_au_controle": 1
+          }
+        ],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 11,
+        "nb_vivants": 8,
+        "nb_abroutis": 0,
+        "h_moy_cm": null
+      },
+      "source": "docs/spec.md § 4.3 (totaux déduits des plants) et § 6 ; arbitrage de Pascal 2026-10-16 (Q13) : le mort remplacé compte dans le contrôle où il est vu"
+    },
+    {
+      "id": "T3b",
+      "description": "Même placette au contrôle suivant : m1 sort des totaux, le regarni compte.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s2",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s3",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s4",
+            "etat": "sain"
+          },
+          {
+            "uuid": "a1",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "a2",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "a3",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "m1",
+            "etat": "mort"
+          },
+          {
+            "uuid": "m2",
+            "etat": "mort"
+          },
+          {
+            "uuid": "x1",
+            "etat": "absent"
+          },
+          {
+            "uuid": "r1",
+            "etat": "sain",
+            "regarni": true
+          }
+        ],
+        "regarnis": [
+          {
+            "uuid": "r1",
+            "remplace_uuid": "m1",
+            "pose_au_controle": 1
+          }
+        ],
+        "controle_calcule": 2
+      },
+      "attendu": {
+        "nb_total": 10,
+        "nb_vivants": 8,
+        "nb_abroutis": 0,
+        "h_moy_cm": null
+      },
+      "source": "docs/spec.md § 4.3 (totaux déduits des plants) et § 6 ; spec § 4.3 : « sort des totaux des contrôles suivants » ; Q13"
+    },
+    {
+      "id": "T3c",
+      "description": "Plant absent x1 remplacé : sort au contrôle suivant.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s2",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s3",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s4",
+            "etat": "sain"
+          },
+          {
+            "uuid": "a1",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "a2",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "a3",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "m1",
+            "etat": "mort"
+          },
+          {
+            "uuid": "m2",
+            "etat": "mort"
+          },
+          {
+            "uuid": "x1",
+            "etat": "absent"
+          },
+          {
+            "uuid": "r2",
+            "etat": "atteint",
+            "regarni": true
+          }
+        ],
+        "regarnis": [
+          {
+            "uuid": "r2",
+            "remplace_uuid": "x1",
+            "pose_au_controle": 1
+          }
+        ],
+        "controle_calcule": 2
+      },
+      "attendu": {
+        "nb_total": 10,
+        "nb_vivants": 8,
+        "nb_abroutis": 0,
+        "h_moy_cm": null
+      },
+      "source": "docs/spec.md § 4.3 (totaux déduits des plants) et § 6 ; Q13"
+    },
+    {
+      "id": "T5",
+      "description": "Contrôle comptant des abroutis (sain abrouti, atteint abrouti, mort abrouti non compté) : totaux déduits, nb_abroutis ≤ nb_vivants.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain",
+            "cause_detail": "abroutissement"
+          },
+          {
+            "uuid": "a1",
+            "etat": "atteint",
+            "cause_groupe": "animaux",
+            "cause_detail": "abroutissement"
+          },
+          {
+            "uuid": "a2",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "m1",
+            "etat": "mort",
+            "cause_groupe": "animaux",
+            "cause_detail": "abroutissement"
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 4,
+        "nb_vivants": 3,
+        "nb_abroutis": 2,
+        "h_moy_cm": null
+      },
+      "source": "docs/spec.md § 6 (nb_abroutis ≤ nb_vivants) ; Pascal 2026-10-16 : les totaux sont toujours déduits des plants, aucun nombre n'est saisi",
+      "note": "Invariants à vérifier sur le résultat : nb_vivants <= nb_total et nb_abroutis <= nb_vivants."
+    },
+    {
+      "id": "T6",
+      "description": "Plant sain abrouti (détail « abroutissement » seul, sans groupe de cause).",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain",
+            "cause_detail": "abroutissement"
+          },
+          {
+            "uuid": "s2",
+            "etat": "sain"
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 2,
+        "nb_vivants": 2,
+        "nb_abroutis": 1,
+        "h_moy_cm": null
+      },
+      "source": "docs/spec.md § 4.3 (plant abrouti : sain ou atteint dont le détail porte l'abroutissement) ; Pascal 2026-10-16 : sur un sain, le détail « abroutissement » est permis, et lui seul"
+    },
+    {
+      "id": "T7",
+      "description": "Plant atteint abrouti.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "a1",
+            "etat": "atteint",
+            "cause_groupe": "animaux",
+            "cause_detail": "abroutissement"
+          },
+          {
+            "uuid": "s2",
+            "etat": "sain"
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 2,
+        "nb_vivants": 2,
+        "nb_abroutis": 1,
+        "h_moy_cm": null
+      },
+      "source": "docs/spec.md § 4.3"
+    },
+    {
+      "id": "T8",
+      "description": "Plant mort d'abroutissement : non compté dans nb_abroutis.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "m1",
+            "etat": "mort",
+            "cause_groupe": "animaux",
+            "cause_detail": "abroutissement"
+          },
+          {
+            "uuid": "s2",
+            "etat": "sain"
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 2,
+        "nb_vivants": 1,
+        "nb_abroutis": 0,
+        "h_moy_cm": null
+      },
+      "source": "docs/spec.md § 4.3, explicite"
+    },
+    {
+      "id": "T9",
+      "description": "Hauteurs de 40, 50 et 60 sur trois vivants (un sain, deux atteints) : moyenne 50.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain",
+            "hauteur_cm": 40
+          },
+          {
+            "uuid": "a1",
+            "etat": "atteint",
+            "hauteur_cm": 50
+          },
+          {
+            "uuid": "a2",
+            "etat": "atteint",
+            "hauteur_cm": 60
+          },
+          {
+            "uuid": "s2",
+            "etat": "sain"
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 4,
+        "nb_vivants": 4,
+        "nb_abroutis": 0,
+        "h_moy_cm": 50.0
+      },
+      "source": "arbitrage de Pascal 2026-10-16 (Q10) : plants vivants dont la hauteur est mesurée ; moyenne arithmétique"
+    },
+    {
+      "id": "T9b",
+      "description": "La hauteur d'un mort n'entre pas dans la moyenne, et un non observé (sans aucune mesure) n'y entre pas non plus.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain",
+            "hauteur_cm": 40
+          },
+          {
+            "uuid": "m1",
+            "etat": "mort",
+            "hauteur_cm": 200
+          },
+          {
+            "uuid": "n1",
+            "etat": "non_observe"
+          },
+          {
+            "uuid": "s2",
+            "etat": "sain",
+            "hauteur_cm": 60
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 3,
+        "nb_vivants": 2,
+        "nb_abroutis": 0,
+        "h_moy_cm": 50.0
+      },
+      "source": "Q10 : vivants seulement ; spec § 6, arbitrage de Pascal du 2026-10-16 (un non observé ne porte aucune mesure)"
+    },
+    {
+      "id": "T9c",
+      "description": "Arrondi de h_moy_cm au demi : 40 et 45 cm donnent 42,5, arrondi à 43 (demi vers le haut ; round() de R arrondirait au pair, donc 42).",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain",
+            "hauteur_cm": 40
+          },
+          {
+            "uuid": "a1",
+            "etat": "atteint",
+            "hauteur_cm": 45
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 2,
+        "nb_vivants": 2,
+        "nb_abroutis": 0,
+        "h_moy_cm": 43
+      },
+      "source": "spec § 6 (h_moy_cm arrondie à l'entier le plus proche) ; demi vers le haut (spec § 6, arbitrage de Pascal du 2026-10-16 sur le plan 004)"
+    },
+    {
+      "id": "T9d",
+      "description": "Arrondi au demi : 41 et 42 cm donnent 41,5, arrondi à 42 (demi vers le haut ; round() de R donnerait 42 aussi, cas témoin).",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain",
+            "hauteur_cm": 41
+          },
+          {
+            "uuid": "a1",
+            "etat": "atteint",
+            "hauteur_cm": 42
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 2,
+        "nb_vivants": 2,
+        "nb_abroutis": 0,
+        "h_moy_cm": 42
+      },
+      "source": "spec § 6 (h_moy_cm arrondie à l'entier le plus proche) ; demi vers le haut (spec § 6, arbitrage de Pascal du 2026-10-16 sur le plan 004)"
+    },
+    {
+      "id": "T9e",
+      "description": "Hors demi : 40, 41 et 41 cm donnent 40,67, arrondi à 41.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain",
+            "hauteur_cm": 40
+          },
+          {
+            "uuid": "s2",
+            "etat": "sain",
+            "hauteur_cm": 41
+          },
+          {
+            "uuid": "a1",
+            "etat": "atteint",
+            "hauteur_cm": 41
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 3,
+        "nb_vivants": 3,
+        "nb_abroutis": 0,
+        "h_moy_cm": 41
+      },
+      "source": "spec § 6 (h_moy_cm arrondie à l'entier le plus proche) ; 122 / 3 = 40,667"
+    },
+    {
+      "id": "T10",
+      "description": "Aucune hauteur mesurée : h_moy_cm absent (null).",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain"
+          },
+          {
+            "uuid": "a1",
+            "etat": "atteint"
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 2,
+        "nb_vivants": 2,
+        "nb_abroutis": 0,
+        "h_moy_cm": null
+      },
+      "source": "Q10 : sans aucune hauteur, absent (null)"
+    },
+    {
+      "id": "T11",
+      "description": "Placette sans plant.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 0,
+        "nb_vivants": 0,
+        "nb_abroutis": 0,
+        "h_moy_cm": null
+      },
+      "source": "cas limite ; docs/spec.md § 4.3"
+    },
+    {
+      "id": "T12",
+      "description": "Un non observé (n1) est observé sain au contrôle suivant : il entre dans les totaux.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "n1",
+            "etat": "sain"
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 2
+      },
+      "attendu": {
+        "nb_total": 1,
+        "nb_vivants": 1,
+        "nb_abroutis": 0,
+        "h_moy_cm": null
+      },
+      "source": "docs/spec.md § 4.3 (reste à chercher au passage suivant)"
+    },
+    {
+      "id": "T13",
+      "description": "non_observe est accepté dans etats_plants mais n'est pas un état : exclu du décompte.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "n1",
+            "etat": "non_observe"
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 0,
+        "nb_vivants": 0,
+        "nb_abroutis": 0,
+        "h_moy_cm": null,
+        "etat_accepte": true
+      },
+      "source": "docs/spec.md § 5 (etats_plants) ; non_observe n'est pas un état du DSF, donc hors etats-plants.yaml, mais accepté dans etats_plants (spec § 5)"
+    },
+    {
+      "id": "T14",
+      "description": "Invariant nb_vivants ≤ nb_total sur la placette complète.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s2",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s3",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s4",
+            "etat": "sain"
+          },
+          {
+            "uuid": "a1",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "a2",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "a3",
+            "etat": "atteint"
+          },
+          {
+            "uuid": "m1",
+            "etat": "mort"
+          },
+          {
+            "uuid": "m2",
+            "etat": "mort"
+          },
+          {
+            "uuid": "x1",
+            "etat": "absent"
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "nb_total": 10,
+        "nb_vivants": 7
+      },
+      "source": "docs/spec.md § 6 (nb_vivants ≤ nb_total)",
+      "note": "Invariant à vérifier sur le résultat : nb_vivants <= nb_total."
+    },
+    {
+      "id": "T15",
+      "description": "Même plant présent deux fois dans les états d'un contrôle : refusé.",
+      "entree": {
+        "placette": "P-001",
+        "plants": [
+          {
+            "uuid": "s1",
+            "etat": "sain"
+          },
+          {
+            "uuid": "s1",
+            "etat": "mort"
+          }
+        ],
+        "regarnis": [],
+        "controle_calcule": 1
+      },
+      "attendu": {
+        "refuse": true
+      },
+      "source": "spec § 6, arbitrage de Pascal du 2026-10-16 (un plant, un état par contrôle)"
+    }
+  ]
+}

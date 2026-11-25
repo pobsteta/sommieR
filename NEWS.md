@@ -35,6 +35,39 @@ facultatifs, colonnes de vue ajoutées à la fin.
   `payload->'geometrie'` alimente `entree_sommier.geom`) ; un contrôle sans position
   n'y figure pas.
 
+- **Plants pointes et suivis (mission 054 ; brief de Surculus du 2026-10-15, deposé
+  dans `specs/brief_travaux-2_plants.md`).** Registre 6 en `r6-1.3.0` ; les entrées
+  `r6-1.2.0` se relisent sans changement de hachage. Aucune rupture : un contrôle
+  sans plants (QField, anciens payloads) s'écrit et se lit comme avant.
+  - **Type d'entrée `plant`** : `registre6_plant()` et `sommier_pointer_plant()`
+    (placette inconnue et numéro déjà pris refusés ; essence préremplie par l'essence
+    objectif des travaux suivis). Observation brute relative au piquet (distance,
+    azimut et unité, déclinaison, convergence, azimut géographique, modèle) et
+    position dérivée. Un regarni (`regarni`, `remplace_uuid`) remplace un plant mort
+    ou absent de la même placette, une seule fois.
+  - **Le contrôle porte l'état de ses plants** : `registre6_controle(plants = )`
+    (`SOMMIER_ETATS_PLANT`, `SOMMIER_GROUPES_CAUSE_PLANT`). Les totaux en découlent
+    (`nb_total` hors non observés et plants remplacés, `nb_vivants` = sains + atteints,
+    `nb_abroutis`, `h_moy_cm` arrondie demi vers le haut) ; omis, ils sont déduits ;
+    contradictoires, le contrôle est refusé avant toute écriture. Un plant mort ou
+    absent le reste (un contrôle qui le dit vivant est refusé) ; un plant vivant au
+    passage précédent doit avoir un état. Le plant qu'un regarni d'un passage
+    antérieur remplace sort des totaux (`plants_remplaces`).
+  - **Vues** `v_plant` et `v_etat_plant` (un état par plant et par contrôle) ;
+    `v_controle_plantation` inchangée.
+  - **Import** : `sommier_importer_qfield_travaux()` lit `plants` et `etats_plants`,
+    écrit travaux, placettes, plants, contrôles ; rejouable ; fautes listées, rien
+    n'est écrit (plant sans placette, état d'un plant inconnu, deux états, totaux
+    discordants, vivant sans état, regarni invalide, numéro pris...). Une tournée
+    sans ces couches s'importe comme avant. Le bilan gagne `plants`.
+  - **Suivi** : `sommier_suivi_plantations()` gagne `mortalite_passage_pct` et
+    `nb_regarnis` (NA pour les contrôles sans états de plants).
+  - **Sommier imprimé** : pas de ligne par plant ; un décompte sous la placette et
+    sous le contrôle. La chaîne et le manifeste gardent tous les plants.
+  - **Non fait** : modèle QField (PyQGIS absent), versement des plants à l'aller,
+    `SOMMIER_METHODES_POINTAGE` (aucune source n'en nomme les valeurs), démo Couchey,
+    alignement du jour de contrôle sur Europe/Paris.
+
 # sommieR 2026.11.2 (2026-11-20)
 
 L'import de tournée QField des travaux lit les deux comptages de plants d'un

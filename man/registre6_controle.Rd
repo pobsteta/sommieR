@@ -6,8 +6,8 @@
 \usage{
 registre6_controle(
   placette_id,
-  nb_total,
-  nb_vivants,
+  nb_total = NULL,
+  nb_vivants = NULL,
   h_moy_cm = NULL,
   nb_abroutis = NULL,
   concurrence = NULL,
@@ -23,13 +23,17 @@ registre6_controle(
   geometrie = NULL,
   precision_m = NULL,
   rattache_par_identite = NULL,
-  sans_position_mesuree = NULL
+  sans_position_mesuree = NULL,
+  plants = NULL,
+  plants_remplaces = NULL
 )
 }
 \arguments{
 \item{placette_id}{UUID de la placette controlee.}
 
-\item{nb_total, nb_vivants}{Plants comptes, et vivants parmi eux.}
+\item{nb_total, nb_vivants}{Plants comptes, et vivants parmi eux. Obligatoires
+sans \code{plants} ; avec \code{plants}, ils se deduisent des etats et, s'ils sont
+donnes, doivent concorder (voir \code{plants}).}
 
 \item{h_moy_cm}{Hauteur moyenne des tiges objectif, en cm.}
 
@@ -55,7 +59,7 @@ registre6_controle(
 dont \code{concurrence} est tiree, pour qu'on puisse la verifier. Plants
 vivants sur lesquels le contact avec la vegetation a ete note (au plus
 \code{nb_vivants}), et parmi eux ceux au contact de la vegetation concurrente.
-\code{nb_plants_concurrences} peut arriver \strong{sans} \code{nb_plants_vivants} : il est
+\code{nb_plants_concurrences} peut arriver \strong{sans} \code{nb_plants_vivants} : il est
 alors garde tel quel, sans niveau deduit ni compare, et un avertissement le
 dit (rien ne se perd, rien n'est muet ; pas d'avertissement au rejeu).
 Ajout seul : \code{NULL} est accepte, et un controle sans ces champs se relit a
@@ -84,6 +88,31 @@ point (0, 0), jamais un point vide), et sa position est celle de la
 placette. Un point hors des bornes WGS 84 (par exemple des metres
 Lambert-93), ou une position donnee avec \code{sans_position_mesuree = TRUE},
 est refuse.}
+
+\item{plants}{Facultatif : l'etat de chaque plant a ce passage, une liste
+d'elements \code{list(plant_id, etat, cause_groupe, cause_detail, hauteur_cm)}
+(ou un \code{data.frame} a ces colonnes). \code{etat} : l'un de
+\link{SOMMIER_ETATS_PLANT} ; \code{cause_groupe} : l'un de
+\link{SOMMIER_GROUPES_CAUSE_PLANT}, admis pour un plant \code{atteint} ou \code{mort}
+seulement ; \code{cause_detail} : texte libre, admis pour un \code{atteint} ou un
+\code{mort}, et pour un \code{sain} seulement s'il vaut \code{"abroutissement"} (jamais
+pour un \code{absent} ni un \code{non_observe}) ; \code{hauteur_cm} : entier strictement
+positif, refuse pour un \code{absent} et un \code{non_observe}. Un meme plant ne
+porte qu'un etat par controle.
+
+\strong{Les totaux en decoulent} : \code{nb_total} = plants dont l'etat est sain,
+atteint, mort ou absent (hors \code{non_observe} et hors plants remplaces),
+\code{nb_vivants} = sains + atteints, \code{nb_abroutis} = vivants dont le detail
+est \code{"abroutissement"} (un plant mort d'abroutissement n'y compte pas),
+\code{h_moy_cm} = moyenne des hauteurs des vivants mesures, arrondie a l'entier
+le plus proche, demi vers le haut (42,5 donne 43 ; \code{round()} de R donnerait
+42). Totaux omis : ils sont deduits et inscrits. Totaux donnes qui
+contredisent les etats : refus, avant toute ecriture. Un controle sans
+\code{plants} s'ecrit comme avant.}
+
+\item{plants_remplaces}{Facultatif : ceux des \code{plants} qu'un regarni pose a
+un passage anterieur a remplaces ; ils sortent des totaux. Doit etre inclus
+dans \code{plants}. \code{\link[=sommier_controler_placette]{sommier_controler_placette()}} le calcule.}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.

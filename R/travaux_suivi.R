@@ -29,7 +29,11 @@ SOMMIER_SEUIL_REPRISE_PCT <- 80
 #'   `code_travaux`, `age_ans`, `annee_controle`, `n_placettes`,
 #'   `taux_reprise_pct`, `densite_ha`, `h_moy_cm`, `abroutis_pct`, `besoins`
 #'   (codes signales, hors `aucun`, separes par une virgule ; `NA` s'il n'y en
-#'   a pas).
+#'   a pas), `mortalite_passage_pct` (part des plants vivants au passage
+#'   precedent qui sont morts ou absents a celui-ci, moyenne des controles du
+#'   groupe) et `nb_regarnis` (regarnis poses depuis le passage precedent,
+#'   somme des controles du groupe). Ces deux colonnes ne se renseignent que
+#'   pour les controles qui portent l'etat de leurs plants ; `NA` sinon.
 #'
 #' @seealso [sommier_controler_placette()], [sommier_bilan_travaux()]
 #'
@@ -38,7 +42,33 @@ sommier_suivi_plantations <- function(con, foret_id) {
   foret_id <- valider_uuid(foret_id, "foret_id")
   DBI::dbGetQuery(
     con,
-    "SELECT u.numero_affichage AS ug, c.travaux_id::text AS travaux_id,
+    "WITH etat AS (
+       SELECT controle_id, vivant,
+              lag(vivant) OVER (PARTITION BY plant_id
+                                ORDER BY visite_le, seq) AS vivant_avant
+         FROM v_etat_plant WHERE foret_id = $1 AND compte
+     ), mortalite AS (
+       SELECT controle_id,
+              round(100.0 * count(*) FILTER (WHERE vivant_avant AND NOT vivant)
+                    / NULLIF(count(*) FILTER (WHERE vivant_avant), 0), 1)
+                AS mortalite_pct
+         FROM etat GROUP BY controle_id
+     ), passages AS (
+       SELECT c.id, c.placette_id, c.visite_le,
+              lag(c.visite_le) OVER (PARTITION BY c.placette_id
+                                     ORDER BY c.visite_le, c.seq) AS avant
+         FROM v_controle_plantation c WHERE c.foret_id = $1
+     ), regarnis AS (
+       SELECT ps.id AS controle_id, count(p.id) AS nb_regarnis
+         FROM passages ps
+         JOIN (SELECT DISTINCT controle_id FROM v_etat_plant
+                WHERE foret_id = $1) a ON a.controle_id = ps.id
+         LEFT JOIN v_plant p ON p.placette_id = ps.placette_id AND p.regarni
+              AND p.pointe_le <= ps.visite_le
+              AND (ps.avant IS NULL OR p.pointe_le > ps.avant)
+        GROUP BY ps.id
+     )
+     SELECT u.numero_affichage AS ug, c.travaux_id::text AS travaux_id,
             c.annee_travaux, c.code_travaux, c.age_ans,
             min(EXTRACT(YEAR FROM c.visite_le))::integer AS annee_controle,
             count(DISTINCT c.placette_id)::integer AS n_placettes,
@@ -47,9 +77,13 @@ sommier_suivi_plantations <- function(con, foret_id) {
             round(avg(c.h_moy_cm), 0)::float8 AS h_moy_cm,
             round(avg(c.abroutis_pct), 1)::float8 AS abroutis_pct,
             string_agg(DISTINCT c.besoin, ', ' ORDER BY c.besoin)
-              FILTER (WHERE c.besoin <> 'aucun') AS besoins
+              FILTER (WHERE c.besoin <> 'aucun') AS besoins,
+            round(avg(m.mortalite_pct), 1)::float8 AS mortalite_passage_pct,
+            sum(r.nb_regarnis)::integer AS nb_regarnis
        FROM v_controle_plantation c
        LEFT JOIN ug u ON u.uuid = c.ug_uuid
+       LEFT JOIN mortalite m ON m.controle_id = c.id
+       LEFT JOIN regarnis r ON r.controle_id = c.id
       WHERE c.foret_id = $1
       GROUP BY u.numero_affichage, c.travaux_id, c.annee_travaux,
                c.code_travaux, c.age_ans

@@ -95,6 +95,8 @@ reference:
     - registre6_travaux
     - registre6_placette
     - registre6_controle
+    - registre6_plant
+    - sommier_pointer_plant
     - registre6_depuis_payload
     - sommier_installer_placette
     - sommier_controler_placette
@@ -107,6 +109,8 @@ reference:
     - sommier_importer_qfield_travaux
     - SOMMIER_CODES_TRAVAUX
     - SOMMIER_TYPES_TRAVAUX
+    - SOMMIER_ETATS_PLANT
+    - SOMMIER_GROUPES_CAUSE_PLANT
     - SOMMIER_EXECUTIONS_TRAVAUX
     - SOMMIER_PREVUS_TRAVAUX
     - SOMMIER_CONCURRENCES

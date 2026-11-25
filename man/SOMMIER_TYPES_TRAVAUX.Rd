@@ -5,7 +5,7 @@
 \alias{SOMMIER_TYPES_TRAVAUX}
 \title{Types d'entree du registre 6}
 \format{
-An object of class \code{character} of length 3.
+An object of class \code{character} of length 4.
 }
 \usage{
 SOMMIER_TYPES_TRAVAUX
@@ -17,5 +17,7 @@ entree sans \code{type_entree} en est une.
 \item \code{placette} : une placette permanente de suivi d'une plantation ou d'une
 regeneration.
 \item \code{controle} : un passage sur une placette.
+\item \code{plant} : un plant pointe dans une placette, qu'on retrouve d'un passage
+a l'autre (voir \code{\link[=registre6_plant]{registre6_plant()}}).
 }
 }

@@ -150,9 +150,39 @@ sommier_niveau_concurrence <- function(nb_concurrences, nb_vivants) {
 #' * `placette` : une placette permanente de suivi d'une plantation ou d'une
 #'   regeneration.
 #' * `controle` : un passage sur une placette.
+#' * `plant` : un plant pointe dans une placette, qu'on retrouve d'un passage
+#'   a l'autre (voir [registre6_plant()]).
 #'
 #' @export
-SOMMIER_TYPES_TRAVAUX <- c("travaux", "placette", "controle")
+SOMMIER_TYPES_TRAVAUX <- c("travaux", "placette", "controle", "plant")
+
+#' Etats d'un plant a un controle
+#'
+#' @description
+#' La nomenclature du DSF (`etats-plants.yaml` de Surculus, DSF 2024 p. 8) :
+#' `sain`, `atteint`, `mort`, `absent` ; plus `non_observe`, qui n'est pas un
+#' etat mais une absence de mesure : le plant pointe n'a pas ete retrouve ce
+#' jour-la. Il sort des totaux du controle et reste a chercher au passage
+#' suivant. Un plant `atteint` compte comme vivant.
+#'
+#' @seealso [registre6_controle()]
+#' @export
+SOMMIER_ETATS_PLANT <- c("sain", "atteint", "mort", "absent", "non_observe")
+
+#' Groupes de causes d'une atteinte ou d'une mort de plant
+#'
+#' @description
+#' Les quatre groupes du bilan du DSF. Le detail (`abroutissement`, `gel`,
+#' `hylobe`...) est un texte libre a cote du groupe.
+#'
+#' @seealso [registre6_controle()]
+#' @export
+SOMMIER_GROUPES_CAUSE_PLANT <- c("entomologique", "pathologique", "animaux",
+                                 "abiotique_complexe_indetermine")
+
+#' Detail de cause qui fait d'un plant un plant abrouti
+#' @noRd
+DETAIL_ABROUTISSEMENT <- "abroutissement"
 
 #' Payload du registre 6 - placette de suivi
 #'
@@ -200,6 +230,126 @@ registre6_placette <- function(code_placette, travaux_id, geometrie,
   ))
 }
 
+#' Payload du registre 6 - plant pointe
+#'
+#' @description
+#' Un plant pointe dans une placette de suivi, par son observation brute
+#' relative au piquet (distance horizontale et azimut magnetique, comme
+#' Surculus les releve) ; sa position (`geometrie`) en est derivee. Il porte
+#' son identifiant (l'`id` de l'entree), qu'il garde d'un passage a l'autre,
+#' et son numero dans la placette, donne au premier pointage et jamais
+#' recalcule : sommieR le recoit tel quel. L'etat du plant a chaque passage
+#' est porte par le controle ([registre6_controle()]), pas par le plant.
+#'
+#' Un plant s'inscrit une fois, au passage ou il est pointe. Un regarni est un
+#' nouveau plant (`regarni = TRUE`), lie au plant mort ou absent qu'il remplace
+#' (`remplace_uuid`) : le plant remplace compte encore au controle ou le regarni
+#' est pose, puis sort des totaux des controles suivants.
+#'
+#' @param placette_id UUID de la placette ([registre6_placette()]).
+#' @param numero Numero du plant dans la placette (entier, au moins 1).
+#' @param geometrie La position du plant, un point en WGS84 ([geom_point()]).
+#' @param essence Essence du plant (code ONF, texte libre pour sommieR) ;
+#'   [sommier_pointer_plant()] la prerempli avec l'essence objectif des
+#'   travaux suivis.
+#' @param regarni,remplace_uuid `regarni = TRUE` exige `remplace_uuid`, l'UUID
+#'   du plant mort ou absent que ce plant remplace ; `remplace_uuid` exige
+#'   `regarni` vrai ou omis.
+#' @param distance_m Distance horizontale du piquet au plant, en metres.
+#' @param azimut_mag,unite_azimut Azimut magnetique tel que lu, et son unite
+#'   (`deg` : [0, 360[ ; `gr` : [0, 400[). L'un exige l'autre.
+#' @param declinaison_deg,convergence_deg,azimut_geo_deg Termes derives :
+#'   declinaison magnetique, convergence des meridiens, azimut geographique
+#'   dans [0, 360[ (nord geographique, sens horaire).
+#' @param modele_geomagnetique Modele de la declinaison (`WMM2025`).
+#' @param pointe_le Instant du pointage (UTC).
+#' @param observations Observations libres.
+#'
+#' @return Une liste nommee, prete a etre passee a [sommier_entree()].
+#'
+#' @seealso [sommier_pointer_plant()]
+#'
+#' @export
+registre6_plant <- function(placette_id, numero, geometrie, essence = NULL,
+                            regarni = NULL, remplace_uuid = NULL,
+                            distance_m = NULL, azimut_mag = NULL,
+                            unite_azimut = NULL, declinaison_deg = NULL,
+                            convergence_deg = NULL, azimut_geo_deg = NULL,
+                            modele_geomagnetique = NULL, pointe_le = NULL,
+                            observations = NULL) {
+  if (est_vide(geometrie)) {
+    stop("Un plant se retrouve par sa position : `geometrie` (un point) ",
+         "est obligatoire.", call. = FALSE)
+  }
+  point <- tryCatch(
+    valider_geometrie(geometrie, "Point"),
+    error = function(e) {
+      stop("`geometrie` du plant : un point WGS 84 (longitude, latitude en ",
+           "degres) est attendu : ", conditionMessage(e), call. = FALSE)
+    })
+  if (!est_vide(regarni) && (!is.logical(regarni) || length(regarni) != 1L)) {
+    stop("`regarni` doit valoir TRUE ou FALSE.", call. = FALSE)
+  }
+  remplace_uuid <- si_present(remplace_uuid, valider_uuid, "remplace_uuid")
+  regarni <- if (est_vide(regarni)) NULL else regarni
+  if (isTRUE(regarni) && is.null(remplace_uuid)) {
+    stop("Un regarni remplace exactement un plant mort ou absent : ",
+         "`remplace_uuid` est obligatoire.", call. = FALSE)
+  }
+  if (isFALSE(regarni) && !is.null(remplace_uuid)) {
+    stop("`remplace_uuid` n'a de sens que pour un regarni (`regarni = TRUE`).",
+         call. = FALSE)
+  }
+  unite_azimut <- si_present(unite_azimut, valider_choix, "unite_azimut",
+                             c("deg", "gr"))
+  if (!is.null(azimut_mag) && !est_vide(azimut_mag) && is.null(unite_azimut)) {
+    stop("`azimut_mag` exige `unite_azimut` (deg ou gr) : un azimut sans ",
+         "unite ne se relit pas.", call. = FALSE)
+  }
+  if (is.null(azimut_mag) || est_vide(azimut_mag)) {
+    if (!is.null(unite_azimut)) {
+      stop("`unite_azimut` sans `azimut_mag`.", call. = FALSE)
+    }
+    azimut_mag <- NULL
+  } else {
+    azimut_mag <- valider_nombre(azimut_mag, "azimut_mag", min = 0)
+    borne <- if (identical(unite_azimut, "gr")) 400 else 360
+    if (azimut_mag >= borne) {
+      stop("`azimut_mag` doit etre dans [0, ", borne, "[ (", unite_azimut,
+           "), recu : ", azimut_mag, ".", call. = FALSE)
+    }
+  }
+  compacter(list(
+    type_entree   = "plant",
+    placette_id   = valider_uuid(placette_id, "placette_id"),
+    numero        = valider_entier(numero, "numero", min = 1),
+    essence       = si_present(essence, valider_texte, "essence"),
+    regarni       = if (isTRUE(regarni)) TRUE,
+    remplace_uuid = remplace_uuid,
+    pointe_le     = si_present(pointe_le, format_instant, "pointe_le"),
+    distance_m    = si_present(distance_m, valider_nombre, "distance_m",
+                               min = 0),
+    azimut_mag    = azimut_mag,
+    unite_azimut  = unite_azimut,
+    declinaison_deg = si_present(declinaison_deg, valider_nombre,
+                                 "declinaison_deg", min = -180, max = 180),
+    convergence_deg = si_present(convergence_deg, valider_nombre,
+                                 "convergence_deg", min = -180, max = 180),
+    azimut_geo_deg = si_present(azimut_geo_deg, function(x, nom) {
+      x <- valider_nombre(x, nom, min = 0)
+      if (x >= 360) {
+        stop("`", nom, "` doit etre dans [0, 360[, recu : ", x, ".",
+             call. = FALSE)
+      }
+      x
+    }, "azimut_geo_deg"),
+    modele_geomagnetique = si_present(modele_geomagnetique, valider_texte,
+                                      "modele_geomagnetique"),
+    geometrie     = point,
+    observations  = si_present(observations, valider_texte, "observations")
+  ))
+}
+
 #' Payload du registre 6 - controle d'une placette
 #'
 #' @description
@@ -209,7 +359,9 @@ registre6_placette <- function(code_placette, travaux_id, geometrie,
 #' l'annee des travaux suivis.
 #'
 #' @param placette_id UUID de la placette controlee.
-#' @param nb_total,nb_vivants Plants comptes, et vivants parmi eux.
+#' @param nb_total,nb_vivants Plants comptes, et vivants parmi eux. Obligatoires
+#'   sans `plants` ; avec `plants`, ils se deduisent des etats et, s'ils sont
+#'   donnes, doivent concorder (voir `plants`).
 #' @param h_moy_cm Hauteur moyenne des tiges objectif, en cm.
 #' @param nb_abroutis Plants vivants abroutis.
 #' @param concurrence L'un de [SOMMIER_CONCURRENCES], defini dans
@@ -234,6 +386,29 @@ registre6_placette <- function(code_placette, travaux_id, geometrie,
 #'   [sommier_niveau_concurrence()] ; s'il est saisi et contredit les
 #'   comptages, il est **conserve tel que saisi**, un avertissement le dit et
 #'   le niveau calcule est inscrit au payload sous `concurrence_calculee`.
+#' @param plants Facultatif : l'etat de chaque plant a ce passage, une liste
+#'   d'elements `list(plant_id, etat, cause_groupe, cause_detail, hauteur_cm)`
+#'   (ou un `data.frame` a ces colonnes). `etat` : l'un de
+#'   [SOMMIER_ETATS_PLANT] ; `cause_groupe` : l'un de
+#'   [SOMMIER_GROUPES_CAUSE_PLANT], admis pour un plant `atteint` ou `mort`
+#'   seulement ; `cause_detail` : texte libre, admis pour un `atteint` ou un
+#'   `mort`, et pour un `sain` seulement s'il vaut `"abroutissement"` (jamais
+#'   pour un `absent` ni un `non_observe`) ; `hauteur_cm` : entier strictement
+#'   positif, refuse pour un `absent` et un `non_observe`. Un meme plant ne
+#'   porte qu'un etat par controle.
+#'
+#'   **Les totaux en decoulent** : `nb_total` = plants dont l'etat est sain,
+#'   atteint, mort ou absent (hors `non_observe` et hors plants remplaces),
+#'   `nb_vivants` = sains + atteints, `nb_abroutis` = vivants dont le detail
+#'   est `"abroutissement"` (un plant mort d'abroutissement n'y compte pas),
+#'   `h_moy_cm` = moyenne des hauteurs des vivants mesures, arrondie a l'entier
+#'   le plus proche, demi vers le haut (42,5 donne 43 ; `round()` de R donnerait
+#'   42). Totaux omis : ils sont deduits et inscrits. Totaux donnes qui
+#'   contredisent les etats : refus, avant toute ecriture. Un controle sans
+#'   `plants` s'ecrit comme avant.
+#' @param plants_remplaces Facultatif : ceux des `plants` qu'un regarni pose a
+#'   un passage anterieur a remplaces ; ils sortent des totaux. Doit etre inclus
+#'   dans `plants`. [sommier_controler_placette()] le calcule.
 #' @param concurrence_calculee Ne se saisit pas : c'est la trace que la
 #'   fonction inscrit quand le niveau saisi contredit les comptages. Accepte
 #'   pour que la relecture d'un payload ecrit se rejoue (il est recalcule).
@@ -259,8 +434,8 @@ registre6_placette <- function(code_placette, travaux_id, geometrie,
 #' @seealso [sommier_controler_placette()]
 #'
 #' @export
-registre6_controle <- function(placette_id, nb_total, nb_vivants,
-                               h_moy_cm = NULL, nb_abroutis = NULL,
+registre6_controle <- function(placette_id, nb_total = NULL,
+                               nb_vivants = NULL, h_moy_cm = NULL, nb_abroutis = NULL,
                                concurrence = NULL, besoin = NULL,
                                operateur = NULL, visite_le = NULL,
                                releve_uuid = NULL, photos = NULL,
@@ -270,7 +445,21 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
                                concurrence_calculee = NULL,
                                geometrie = NULL, precision_m = NULL,
                                rattache_par_identite = NULL,
-                               sans_position_mesuree = NULL) {
+                               sans_position_mesuree = NULL,
+                               plants = NULL, plants_remplaces = NULL) {
+  # Avec l'etat des plants, les totaux en decoulent : omis, ils sont deduits ;
+  # donnes, ils doivent concorder. Sans plants, tout est comme avant.
+  detail_plants <- normaliser_plants_controle(plants, plants_remplaces)
+  if (!is.null(detail_plants)) {
+    deduits <- totaux_des_plants(detail_plants$plants,
+                                 detail_plants$remplaces)
+    nb_total <- concorder_total(nb_total, deduits$nb_total, "nb_total")
+    nb_vivants <- concorder_total(nb_vivants, deduits$nb_vivants,
+                                  "nb_vivants")
+    nb_abroutis <- concorder_total(nb_abroutis, deduits$nb_abroutis,
+                                   "nb_abroutis")
+    h_moy_cm <- concorder_total(h_moy_cm, deduits$h_moy_cm, "h_moy_cm")
+  }
   nb_total <- valider_entier(nb_total, "nb_total", min = 0)
   nb_vivants <- valider_entier(nb_vivants, "nb_vivants", min = 0)
   if (nb_vivants > nb_total) {
@@ -352,8 +541,131 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
     geometrie = position$geometrie,
     precision_m = position$precision_m,
     rattache_par_identite = position$rattache_par_identite,
-    sans_position_mesuree = position$sans_position_mesuree
+    sans_position_mesuree = position$sans_position_mesuree,
+    plants = detail_plants$plants,
+    plants_remplaces = detail_plants$remplaces_ecrits
   ))
+}
+
+# L'etat des plants d'un controle, valide un par un. NULL quand le controle
+# n'en porte pas (une liste vide ne dit rien : elle vaut l'absence). Rend les
+# etats normalises, et les plants remplaces dans la liste. Accepte une liste de
+# listes nommees ou un data.frame (relecture par jsonlite).
+normaliser_plants_controle <- function(plants, plants_remplaces) {
+  if (is.data.frame(plants)) {
+    plants <- lapply(seq_len(nrow(plants)), function(i) {
+      x <- as.list(plants[i, , drop = FALSE])
+      x[!vapply(x, function(v) length(v) == 0L || is.na(v), logical(1))]
+    })
+  }
+  if (est_vide(plants)) {
+    if (!est_vide(plants_remplaces)) {
+      stop("`plants_remplaces` sans `plants`.", call. = FALSE)
+    }
+    return(NULL)
+  }
+  if (!is.list(plants) || !is.null(names(plants))) {
+    stop("`plants` doit etre une liste d'etats, chacun une liste nommee.",
+         call. = FALSE)
+  }
+  etats <- lapply(seq_along(plants), function(i) {
+    valider_etat_plant(plants[[i]], paste0("plants[[", i, "]]"))
+  })
+  ids <- vapply(etats, function(e) e$plant_id, character(1))
+  doubles <- unique(ids[duplicated(ids)])
+  if (length(doubles) > 0L) {
+    stop("Un plant n'a qu'un etat par controle : ",
+         paste(doubles, collapse = ", "), " en a plusieurs.", call. = FALSE)
+  }
+  remplaces <- character(0)
+  if (!est_vide(plants_remplaces)) {
+    remplaces <- vapply(unlist(plants_remplaces), valider_uuid, character(1),
+                        "plants_remplaces", USE.NAMES = FALSE)
+    hors <- setdiff(remplaces, ids)
+    if (length(hors) > 0L) {
+      stop("`plants_remplaces` ne nomme que des plants de `plants` : ",
+           paste(hors, collapse = ", "), " n'y est pas.", call. = FALSE)
+    }
+    remplaces <- unique(remplaces)
+  }
+  list(plants = etats, remplaces = remplaces,
+       remplaces_ecrits = if (length(remplaces) > 0L) as.list(remplaces))
+}
+
+# L'etat d'un plant a un controle : etat, cause, detail, hauteur, et ce que
+# chacun admet (spec de Surculus § 4.3 et § 6, cas de fixtures/regles/plants).
+valider_etat_plant <- function(e, nom) {
+  if (!is.list(e) || is.null(names(e))) {
+    stop("`", nom, "` doit etre une liste nommee.", call. = FALSE)
+  }
+  etat <- valider_choix(e$etat, paste0(nom, "$etat"), SOMMIER_ETATS_PLANT)
+  groupe <- si_present(e$cause_groupe, valider_choix,
+                       paste0(nom, "$cause_groupe"),
+                       SOMMIER_GROUPES_CAUSE_PLANT)
+  detail <- si_present(e$cause_detail, valider_texte,
+                       paste0(nom, "$cause_detail"))
+  hauteur <- si_present(e$hauteur_cm, valider_entier,
+                        paste0(nom, "$hauteur_cm"), min = 1)
+  if (!is.null(groupe) && !etat %in% c("atteint", "mort")) {
+    stop("`", nom, "` : un plant ", etat, " n'a pas de groupe de cause ",
+         "(seulement atteint ou mort).", call. = FALSE)
+  }
+  if (!is.null(detail) && etat %in% c("absent", "non_observe")) {
+    stop("`", nom, "` : un plant ", etat, " n'a pas de detail de cause.",
+         call. = FALSE)
+  }
+  if (!is.null(detail) && etat == "sain" && detail != DETAIL_ABROUTISSEMENT) {
+    stop("`", nom, "` : sur un plant sain, seul le detail \"",
+         DETAIL_ABROUTISSEMENT, "\" est permis, recu : ", detail, ".",
+         call. = FALSE)
+  }
+  if (!is.null(hauteur) && etat %in% c("absent", "non_observe")) {
+    stop("`", nom, "` : un plant ", etat, " ne porte aucune hauteur.",
+         call. = FALSE)
+  }
+  compacter(list(
+    plant_id = valider_uuid(e$plant_id, paste0(nom, "$plant_id")),
+    etat = etat, cause_groupe = groupe, cause_detail = detail,
+    hauteur_cm = hauteur
+  ))
+}
+
+# Les totaux qui decoulent des etats (spec de Surculus § 4.3 : non observes et
+# plants remplaces exclus ; un atteint compte vivant ; un mort d'abroutissement
+# n'est pas un abrouti ; h_moy_cm = moyenne des vivants mesures, demi vers le
+# haut).
+totaux_des_plants <- function(plants, remplaces = character(0)) {
+  comptes <- Filter(function(p) {
+    p$etat != "non_observe" && !p$plant_id %in% remplaces
+  }, plants)
+  vivants <- Filter(function(p) p$etat %in% c("sain", "atteint"), comptes)
+  hauteurs <- unlist(lapply(vivants, function(p) p$hauteur_cm))
+  list(
+    nb_total = length(comptes),
+    nb_vivants = length(vivants),
+    nb_abroutis = sum(vapply(vivants, function(p) {
+      identical(p$cause_detail, DETAIL_ABROUTISSEMENT)
+    }, logical(1))),
+    h_moy_cm = if (length(hauteurs) > 0L) floor(mean(hauteurs) + 0.5)
+  )
+}
+
+# Un total donne a cote des etats : omis, il prend la valeur deduite ; donne, il
+# doit l'egaler.
+concorder_total <- function(donne, deduit, nom) {
+  if (est_vide(donne)) {
+    return(deduit)
+  }
+  if (is.null(deduit)) {
+    stop("`", nom, "` = ", donne, " alors qu'aucun plant n'a de hauteur : ",
+         "les totaux decoulent des etats des plants.", call. = FALSE)
+  }
+  if (!is.numeric(donne) || length(donne) != 1L || donne != deduit) {
+    stop("`", nom, "` = ", paste(donne, collapse = ", "), " ne concorde ",
+         "pas avec les etats des plants (", deduit, ") : les totaux ",
+         "decoulent des etats.", call. = FALSE)
+  }
+  deduit
 }
 
 # La position mesuree d'un controle. Tout est facultatif ; une position et
@@ -426,7 +738,8 @@ registre6_depuis_payload <- function(payload) {
     type,
     travaux  = registre6_travaux,
     placette = registre6_placette,
-    controle = registre6_controle
+    controle = registre6_controle,
+    plant    = registre6_plant
   ), arguments))
 }
 
