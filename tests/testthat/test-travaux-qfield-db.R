@@ -794,3 +794,316 @@ test_that("concurrences > vivants : la regle de registre6_controle() refuse", {
   expect_match(erreur, "rien n'est ecrit")
   expect_match(erreur, "Plus de plants au contact")
 })
+
+# Mission 052 : la position mesuree du controle, du terrain au registre.
+# Un jour different a chaque appel (une placette ne se controle qu'une fois
+# par jour).
+jours_position <- new.env()
+jours_position$n <- 0L
+jour_position <- function() {
+  jours_position$n <- jours_position$n + 1L
+  sprintf("2026-08-%02d", jours_position$n)
+}
+
+lambert_vers_wgs84 <- function(x, y) {
+  m <- sf::st_coordinates(sf::st_transform(
+    sf::st_sfc(sf::st_point(c(x, y)), crs = 2154), 4326))
+  geom_point(m[1L, 1L], m[1L, 2L])
+}
+
+ligne_controle <- function(con, id) {
+  DBI::dbGetQuery(
+    con,
+    "SELECT a_position_mesuree, precision_position_m, rattache_par_identite,
+            sans_position_mesuree, position_mesuree IS NULL AS sans_point,
+            ST_X(ST_Transform(position_mesuree, 4326)) AS lon,
+            ST_Y(ST_Transform(position_mesuree, 4326)) AS lat,
+            ST_X(position_mesuree) AS x, ST_Y(position_mesuree) AS y,
+            ST_SRID(position_mesuree) AS srid
+       FROM v_controle_plantation WHERE id = $1", params = list(id))
+}
+
+test_that("un controle avec position mesuree : payload, geom et vue la rendent", {
+  skip_if_not_installed("sf")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  k <- uuid_v4()
+  e <- sommier_controler_placette(
+    con, f$placette, 20, 15, "agent-01", visite_le = "2026-08-20T09:00:00Z",
+    id = k, geometrie = lambert_vers_wgs84(600151.2, 6700099.6),
+    precision_m = 0.4, rattache_par_identite = FALSE)[[1L]]
+  expect_equal(e$payload$precision_m, 0.4)
+  expect_equal(e$payload$geometrie$type, "Point")
+  # entree_sommier.geom : la projection Lambert-93 du point du payload.
+  g <- DBI::dbGetQuery(con, "SELECT ST_X(geom) AS x, ST_Y(geom) AS y,
+                                    ST_SRID(geom) AS srid
+                               FROM entree_sommier WHERE id = $1",
+                       params = list(k))
+  expect_equal(g$srid, 2154L)
+  expect_lt(sqrt((g$x - 600151.2)^2 + (g$y - 6700099.6)^2), 0.05)
+  v <- ligne_controle(con, k)
+  expect_true(v$a_position_mesuree)
+  expect_equal(v$precision_position_m, 0.4)
+  expect_false(v$rattache_par_identite)
+  expect_true(is.na(v$sans_position_mesuree))
+  expect_equal(v$srid, 2154L)
+  expect_lt(sqrt((v$x - 600151.2)^2 + (v$y - 6700099.6)^2), 0.05)
+  # Un controle francais tombe en France.
+  expect_true(v$lon > -5.5 && v$lon < 10 && v$lat > 41 && v$lat < 51.5)
+  # La position mesuree n'est pas le centre de la placette.
+  expect_gt(DBI::dbGetQuery(
+    con, "SELECT ST_Distance(c.position_mesuree, p.geom) AS d
+            FROM v_controle_plantation c JOIN v_placette p ON p.id = c.placette_id
+           WHERE c.id = $1", params = list(k))$d, 1)
+  expect_true(sommier_verifier(con, f$foret)$valide)
+})
+
+test_that("un controle sans position mesuree : pas de geom, drapeau vrai, jamais (0, 0)", {
+  skip_if_not_installed("sf")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  k <- uuid_v4()
+  e <- sommier_controler_placette(
+    con, f$placette, 20, 15, "agent-01", visite_le = "2026-08-21T09:00:00Z",
+    id = k, sans_position_mesuree = TRUE, rattache_par_identite = TRUE)[[1L]]
+  expect_false("geometrie" %in% names(e$payload))
+  expect_true(DBI::dbGetQuery(
+    con, "SELECT geom IS NULL AS n FROM entree_sommier WHERE id = $1",
+    params = list(k))$n)
+  v <- ligne_controle(con, k)
+  expect_false(v$a_position_mesuree)
+  expect_true(v$sans_point)
+  expect_true(v$sans_position_mesuree)
+  expect_true(v$rattache_par_identite)
+  expect_true(is.na(v$precision_position_m))
+  # Aucun point a l'origine nulle part dans le registre.
+  expect_equal(DBI::dbGetQuery(
+    con, "SELECT count(*)::int AS n FROM v_controle_plantation
+           WHERE position_mesuree IS NOT NULL
+             AND ST_X(position_mesuree) = 0 AND ST_Y(position_mesuree) = 0")$n, 0L)
+  expect_true(sommier_verifier(con, f$foret)$valide)
+})
+
+test_that("un controle a l'ancienne : memes champs qu'avant, chaine verifiee", {
+  skip_if_not_installed("sf")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  k <- uuid_v4()
+  e <- sommier_controler_placette(
+    con, f$placette, 20, 15, "agent-01", visite_le = "2026-08-22T09:00:00Z",
+    id = k, besoin = "aucun")[[1L]]
+  expect_false(any(c("geometrie", "precision_m", "rattache_par_identite",
+                     "sans_position_mesuree") %in% names(e$payload)))
+  v <- ligne_controle(con, k)
+  expect_false(v$a_position_mesuree)
+  expect_true(is.na(v$sans_position_mesuree))
+  expect_true(is.na(v$rattache_par_identite))
+  # Les colonnes d'avant n'ont ni change de nom ni de place.
+  anciennes <- c("id", "foret_id", "ug_uuid", "seq", "visite_le", "auteur",
+                 "placette_id", "code_placette", "travaux_id", "annee_travaux",
+                 "code_travaux", "age_ans", "nb_total", "nb_vivants",
+                 "h_moy_cm", "nb_abroutis", "concurrence", "besoin",
+                 "operateur", "taux_reprise_pct", "densite_ha", "abroutis_pct")
+  colonnes <- names(DBI::dbGetQuery(
+    con, "SELECT * FROM v_controle_plantation LIMIT 0"))
+  expect_equal(colonnes[seq_along(anciennes)], anciennes)
+  expect_equal(colonnes[-seq_along(anciennes)],
+               c("position_mesuree", "a_position_mesuree",
+                 "precision_position_m", "rattache_par_identite",
+                 "sans_position_mesuree"))
+  expect_true(sommier_verifier(con, f$foret)$valide)
+})
+
+ecrire_positions <- function(dossier, uuids, x, y, precision, rattache, sans,
+                             crs = 2154) {
+  if (is.na(crs)) crs <- sf::NA_crs_
+  geometries <- Map(function(a, b) {
+    if (is.na(a)) sf::st_point() else sf::st_point(c(a, b))
+  }, x, y)
+  couche <- sf::st_sf(
+    controle_uuid = uuids, precision_m = precision,
+    rattache_par_identite = rattache, sans_position_mesuree = sans,
+    geometry = sf::st_sfc(geometries, crs = crs))
+  sf::st_write(couche, file.path(dossier, "travaux.gpkg"),
+               layer = "positions_controles", delete_layer = TRUE, quiet = TRUE)
+}
+
+test_that("l'import lit positions_controles : un point, une geometrie NULL", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  skip_if_not_installed("RSQLite")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.")
+  k1 <- uuid_v4()
+  k2 <- uuid_v4()
+  saisir(dossier, "controles", rbind(
+    controle(k1, f$placette, 18, "2026-09-01"),
+    controle(k2, f$placette, 17, "2026-09-02")))
+  ecrire_positions(dossier, c(k1, k2), c(600151.2, 600150), c(6700099.6, 6700100),
+                   c(0.4, NA), c(FALSE, TRUE), c(FALSE, TRUE))
+  # Surculus ecrit une vraie geometrie NULL (pas un POINT EMPTY) : on la pose.
+  db <- DBI::dbConnect(RSQLite::SQLite(), file.path(dossier, "travaux.gpkg"))
+  # Les declencheurs du GeoPackage appellent ST_IsEmpty, que SQLite seul n'a pas.
+  for (t in DBI::dbGetQuery(db, "SELECT name FROM sqlite_master
+                                  WHERE type = 'trigger'
+                                    AND tbl_name = 'positions_controles'")$name) {
+    DBI::dbExecute(db, paste0("DROP TRIGGER \"", t, "\""))
+  }
+  DBI::dbExecute(db, "UPDATE positions_controles SET geom = NULL
+                       WHERE controle_uuid = ?", params = list(k2))
+  DBI::dbDisconnect(db)
+  bilan <- sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                           withr::local_tempdir(),
+                                           auteur = "test")
+  expect_equal(bilan$controles, 2L)
+  expect_length(bilan$avertissements, 0L)
+  v1 <- ligne_controle(con, k1)
+  expect_true(v1$a_position_mesuree)
+  expect_equal(v1$precision_position_m, 0.4)
+  expect_false(v1$rattache_par_identite)
+  expect_lt(sqrt((v1$x - 600151.2)^2 + (v1$y - 6700099.6)^2), 0.05)
+  v2 <- ligne_controle(con, k2)
+  expect_false(v2$a_position_mesuree)
+  expect_true(v2$sans_position_mesuree)
+  expect_true(v2$rattache_par_identite)
+  expect_true(is.na(v2$precision_position_m))
+  p2 <- Filter(function(e) e$id == k2, bilan$entrees)[[1L]]$payload
+  expect_false("geometrie" %in% names(p2))
+  # Le rejeu n'ecrit rien de plus.
+  encore <- sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                            withr::local_tempdir(),
+                                            auteur = "test")
+  expect_equal(encore$controles, 0L)
+  expect_true(sommier_verifier(con, f$foret)$valide)
+})
+
+test_that("un POINT EMPTY de la couche vaut une absence de mesure, pas (0, 0)", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.")
+  k <- uuid_v4()
+  saisir(dossier, "controles", controle(k, f$placette, 18, "2026-09-03"))
+  # Le drapeau n'est pas rempli : la geometrie vide suffit a dire « sans ».
+  ecrire_positions(dossier, k, NA_real_, NA_real_, NA_real_, NA, NA)
+  bilan <- sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                           withr::local_tempdir(),
+                                           auteur = "test")
+  expect_equal(bilan$controles, 1L)
+  v <- ligne_controle(con, k)
+  expect_false(v$a_position_mesuree)
+  expect_true(v$sans_position_mesuree)
+  expect_true(v$sans_point)
+})
+
+test_that("une tournee sans la couche positions_controles s'importe comme avant", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.")
+  expect_false("positions_controles" %in% sf::st_layers(
+    file.path(dossier, "travaux.gpkg"))$name)
+  k <- uuid_v4()
+  saisir(dossier, "controles", controle(k, f$placette, 18, "2026-09-04"))
+  bilan <- sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                           withr::local_tempdir(),
+                                           auteur = "test")
+  expect_equal(bilan$controles, 1L)
+  expect_length(bilan$avertissements, 0L)
+  expect_false(any(c("geometrie", "precision_m", "rattache_par_identite",
+                     "sans_position_mesuree") %in%
+                     names(bilan$entrees[[1L]]$payload)))
+  v <- ligne_controle(con, k)
+  expect_false(v$a_position_mesuree)
+  expect_true(is.na(v$sans_position_mesuree))
+})
+
+test_that("une position invalide refuse la tournee, rien n'est ecrit", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  avant <- sommier_verifier(con, f$foret)$hash_tete
+  essayer <- function(motif, ...) {
+    dossier <- file.path(withr::local_tempdir(), "travaux")
+    sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.")
+    k <- uuid_v4()
+    saisir(dossier, "controles", controle(k, f$placette, 18, jour_position()))
+    ecrire_positions(dossier, k, ...)
+    expect_error(
+      sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                      withr::local_tempdir(),
+                                      auteur = "test"),
+      motif)
+    expect_equal(sommier_verifier(con, f$foret)$hash_tete, avant)
+    expect_equal(nrow(DBI::dbGetQuery(
+      con, "SELECT 1 FROM entree_sommier WHERE id = $1", params = list(k))), 0L)
+  }
+  # Des metres declares en degres : hors des bornes WGS 84.
+  essayer("rien n'est ecrit.*hors des bornes WGS 84",
+          600150, 6700100, 0.4, FALSE, FALSE, crs = 4326)
+  # Une position qui contredit son drapeau.
+  essayer("sans_position_mesuree.*geometrie",
+          600150, 6700100, 0.4, FALSE, TRUE)
+  # Une precision sans position.
+  essayer("precision_m", NA_real_, NA_real_, 3, TRUE, TRUE)
+})
+
+test_that("une position sans SCR, un doublon et un orphelin sont dits", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("xml2")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  # Sans SCR : refuse.
+  dossier <- file.path(withr::local_tempdir(), "travaux")
+  sommier_projet_qfield_travaux(con, f$foret, dossier, "P. O.")
+  k <- uuid_v4()
+  saisir(dossier, "controles", controle(k, f$placette, 18, "2026-09-10"))
+  ecrire_positions(dossier, k, 600150, 6700100, 0.4, FALSE, FALSE, crs = NA)
+  expect_error(sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                               withr::local_tempdir(),
+                                               auteur = "test"),
+               "pas de systeme de coordonnees")
+  # Deux lignes pour un meme controle : refuse.
+  ecrire_positions(dossier, c(k, k), c(600150, 600151), c(6700100, 6700100),
+                   c(0.4, 0.4), c(FALSE, FALSE), c(FALSE, FALSE))
+  expect_error(sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                               withr::local_tempdir(),
+                                               auteur = "test"),
+               "deux positions pour le controle")
+  # Une ligne pour un controle absent : ignoree, et dite.
+  orphelin <- uuid_v4()
+  ecrire_positions(dossier, c(k, orphelin), c(600150, 600151),
+                   c(6700100, 6700100), c(0.4, 0.4), c(FALSE, FALSE),
+                   c(FALSE, FALSE))
+  av <- character(0)
+  bilan <- withCallingHandlers(
+    sommier_importer_qfield_travaux(con, f$foret, dossier,
+                                    withr::local_tempdir(), auteur = "test"),
+    warning = function(w) {
+      av <<- c(av, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    })
+  expect_equal(bilan$controles, 1L)
+  expect_match(bilan$avertissements, orphelin, fixed = TRUE)
+  expect_match(av, "controle absent de la tournee")
+})
+
+test_that("une position hors WGS 84 par l'API R : refus clair, rien n'est ecrit", {
+  skip_if_not_installed("sf")
+  con <- base_travaux_qfield()
+  f <- foret_tournee(con)
+  avant <- sommier_verifier(con, f$foret)$hash_tete
+  expect_error(
+    sommier_controler_placette(
+      con, f$placette, 20, 15, "agent-01", visite_le = "2026-08-30T09:00:00Z",
+      geometrie = list(type = "Point", coordinates = c(600150, 6700100))),
+    "point WGS 84")
+  expect_equal(sommier_verifier(con, f$foret)$hash_tete, avant)
+})

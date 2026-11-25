@@ -19,7 +19,11 @@ registre6_controle(
   observations = NULL,
   nb_plants_vivants = NULL,
   nb_plants_concurrences = NULL,
-  concurrence_calculee = NULL
+  concurrence_calculee = NULL,
+  geometrie = NULL,
+  precision_m = NULL,
+  rattache_par_identite = NULL,
+  sans_position_mesuree = NULL
 )
 }
 \arguments{
@@ -64,6 +68,22 @@ le niveau calcule est inscrit au payload sous \code{concurrence_calculee}.}
 \item{concurrence_calculee}{Ne se saisit pas : c'est la trace que la
 fonction inscrit quand le niveau saisi contredit les comptages. Accepte
 pour que la relecture d'un payload ecrit se rejoue (il est recalcule).}
+
+\item{geometrie, precision_m, rattache_par_identite, sans_position_mesuree}{Facultatifs : la position \strong{mesuree} du controle (noms de Surculus). Ajout
+seul : un controle sans ces champs se relit a l'identique.
+\code{geometrie} est un point WGS 84 (voir \code{\link[=geom_point]{geom_point()}}) ; \code{entree_sommier.geom}
+la projette comme pour toute entree, et la vue \code{v_controle_plantation} la
+rend. \code{precision_m} est la precision de cette position, en metres (au
+moins 0 ; elle ne s'inscrit qu'avec une \code{geometrie}).
+\code{rattache_par_identite} (\code{TRUE}/\code{FALSE}) dit que le code lu du piquet a
+designe la placette, et non la position mesuree (piquet a plus de 15 m, ou
+controle sans position mesuree).
+\code{sans_position_mesuree = TRUE} dit que le controle a ete ouvert sans aucun
+fix : il n'a alors \strong{ni} \code{geometrie} \strong{ni} \code{precision_m} (jamais un
+point (0, 0), jamais un point vide), et sa position est celle de la
+placette. Un point hors des bornes WGS 84 (par exemple des metres
+Lambert-93), ou une position donnee avec \code{sans_position_mesuree = TRUE},
+est refuse.}
 }
 \value{
 Une liste nommee, prete a etre passee a \code{\link[=sommier_entree]{sommier_entree()}}.
