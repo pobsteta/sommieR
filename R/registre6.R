@@ -237,6 +237,22 @@ registre6_placette <- function(code_placette, travaux_id, geometrie,
 #' @param concurrence_calculee Ne se saisit pas : c'est la trace que la
 #'   fonction inscrit quand le niveau saisi contredit les comptages. Accepte
 #'   pour que la relecture d'un payload ecrit se rejoue (il est recalcule).
+#' @param geometrie,precision_m,rattache_par_identite,sans_position_mesuree
+#'   Facultatifs : la position **mesuree** du controle (noms de Surculus). Ajout
+#'   seul : un controle sans ces champs se relit a l'identique.
+#'   `geometrie` est un point WGS 84 (voir [geom_point()]) ; `entree_sommier.geom`
+#'   la projette comme pour toute entree, et la vue `v_controle_plantation` la
+#'   rend. `precision_m` est la precision de cette position, en metres
+#'   (strictement positive ; elle ne s'inscrit qu'avec une `geometrie`).
+#'   `rattache_par_identite` (`TRUE`/`FALSE`) dit que le code lu du piquet a
+#'   designe la placette, et non la position mesuree (piquet a plus de 15 m, ou
+#'   controle sans position mesuree).
+#'   `sans_position_mesuree = TRUE` dit que le controle a ete ouvert sans aucun
+#'   fix : il n'a alors **ni** `geometrie` **ni** `precision_m` (jamais un
+#'   point (0, 0), jamais un point vide), et sa position est celle de la
+#'   placette. Un point hors des bornes WGS 84 (par exemple des metres
+#'   Lambert-93), ou une position donnee avec `sans_position_mesuree = TRUE`,
+#'   est refuse.
 #'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].
 #'
@@ -251,7 +267,10 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
                                observations = NULL,
                                nb_plants_vivants = NULL,
                                nb_plants_concurrences = NULL,
-                               concurrence_calculee = NULL) {
+                               concurrence_calculee = NULL,
+                               geometrie = NULL, precision_m = NULL,
+                               rattache_par_identite = NULL,
+                               sans_position_mesuree = NULL) {
   nb_total <- valider_entier(nb_total, "nb_total", min = 0)
   nb_vivants <- valider_entier(nb_vivants, "nb_vivants", min = 0)
   if (nb_vivants > nb_total) {
@@ -309,6 +328,9 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
               call. = FALSE)
     }
   }
+  position <- valider_position_controle(geometrie, precision_m,
+                                        rattache_par_identite,
+                                        sans_position_mesuree)
   compacter(list(
     type_entree = "controle",
     placette_id = valider_uuid(placette_id, "placette_id"),
@@ -326,8 +348,55 @@ registre6_controle <- function(placette_id, nb_total, nb_vivants,
     observations = si_present(observations, valider_texte, "observations"),
     nb_plants_vivants = nb_plants_vivants,
     nb_plants_concurrences = nb_plants_concurrences,
-    concurrence_calculee = concurrence_calculee
+    concurrence_calculee = concurrence_calculee,
+    geometrie = position$geometrie,
+    precision_m = position$precision_m,
+    rattache_par_identite = position$rattache_par_identite,
+    sans_position_mesuree = position$sans_position_mesuree
   ))
+}
+
+# La position mesuree d'un controle. Tout est facultatif ; une position et
+# l'absence de position ne se melangent pas : `sans_position_mesuree` vrai
+# n'admet ni geometrie ni precision, et une precision n'a de sens qu'avec une
+# geometrie. Rien n'est devine, rien n'est ecrit a moitie.
+valider_position_controle <- function(geometrie, precision_m,
+                                      rattache_par_identite,
+                                      sans_position_mesuree) {
+  booleen <- function(x, nom) {
+    if (est_vide(x)) return(NULL)
+    if (!is.logical(x) || length(x) != 1L) {
+      stop("`", nom, "` doit valoir TRUE ou FALSE.", call. = FALSE)
+    }
+    x
+  }
+  rattache <- booleen(rattache_par_identite, "rattache_par_identite")
+  sans <- booleen(sans_position_mesuree, "sans_position_mesuree")
+  precision <- si_present(precision_m, valider_nombre, "precision_m")
+  if (!is.null(precision) && precision <= 0) {
+    stop("`precision_m` doit etre strictement positive (jamais 0 : un zero ",
+         "n'est pas une precision), recu : ", precision, ".", call. = FALSE)
+  }
+  point <- if (est_vide(geometrie)) NULL else tryCatch(
+    valider_geometrie(geometrie, "Point"),
+    error = function(e) {
+      stop("`geometrie` du controle : un point WGS 84 (longitude, latitude ",
+           "en degres) est attendu : ", conditionMessage(e), call. = FALSE)
+    })
+  if (isTRUE(sans) && !is.null(point)) {
+    stop("Un controle `sans_position_mesuree` ne porte pas de `geometrie` : ",
+         "sans mesure, pas de point (jamais (0, 0)).", call. = FALSE)
+  }
+  if (isTRUE(sans) && !is.null(precision)) {
+    stop("Un controle `sans_position_mesuree` ne porte pas de `precision_m` : ",
+         "il n'y a rien a mesurer.", call. = FALSE)
+  }
+  if (!is.null(precision) && is.null(point)) {
+    stop("`precision_m` est la precision d'une position mesuree : il faut ",
+         "une `geometrie`.", call. = FALSE)
+  }
+  list(geometrie = point, precision_m = precision,
+       rattache_par_identite = rattache, sans_position_mesuree = sans)
 }
 
 #' Relecture d'un payload du registre 6

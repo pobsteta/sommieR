@@ -30,7 +30,8 @@ sommier_controler_placette(
 
 \item{...}{Champs de \code{\link[=registre6_controle]{registre6_controle()}} : \code{h_moy_cm}, \code{nb_abroutis},
 \code{concurrence}, \code{besoin}, \code{operateur}, \code{releve_uuid}, \code{photos},
-\code{observations}.}
+\code{observations}, et la position mesuree (\code{geometrie}, \code{precision_m},
+\code{rattache_par_identite}, \code{sans_position_mesuree}).}
 }
 \value{
 Invisiblement, l'entree chainee (liste d'une entree).

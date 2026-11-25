@@ -42,6 +42,18 @@ transaction, dans cet ordre : travaux, placettes, controles - une placette
 peut suivre des travaux releves dans la meme tournee, un controle porter sur
 une placette qui vient d'etre installee.
 
+\strong{La position mesuree des controles.} Si la tournee porte la couche
+\code{positions_controles} de Surculus (cle \code{controle_uuid}, un point par
+controle), chaque position est inscrite au controle : \code{geometrie} (WGS 84,
+reprojetee depuis le SCR de la couche), \code{precision_m},
+\code{rattache_par_identite}, \code{sans_position_mesuree}. Une ligne a geometrie NULL
+(ou POINT EMPTY) donne un controle \strong{sans} geometrie et
+\code{sans_position_mesuree = TRUE} : jamais un point (0, 0). Une couche sans SCR,
+une position hors des bornes WGS 84, une position qui contredit son drapeau
+ou deux lignes pour un meme controle sont des fautes (rien n'est ecrit) ; une
+ligne pour un controle absent de la tournee est ignoree et dite aux
+avertissements. Sans la couche, la tournee s'importe comme avant.
+
 \strong{Rejouable.} L'UUID que QField a donne a chaque saisie devient celui de
 l'entree : reimporter le meme dossier n'ecrit rien de plus. Les placettes
 deja inscrites, versees dans le projet, ne se reinscrivent pas.

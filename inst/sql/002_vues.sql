@@ -394,7 +394,18 @@ SELECT
         / (pi() * p.rayon_m ^ 2)::NUMERIC, 0)   AS densite_ha,
   round(100 * (c.payload ->> 'nb_abroutis')::NUMERIC
         / NULLIF((c.payload ->> 'nb_vivants')::NUMERIC, 0), 1)
-                                                AS abroutis_pct
+                                                AS abroutis_pct,
+  -- La position mesuree du controle (colonnes ajoutees a la fin : CREATE OR
+  -- REPLACE n'admet pas d'autre place). `geom` du controle vient de
+  -- payload->'geometrie' ; elle est NULL sans position mesuree, et ne
+  -- reprend jamais le centre de la placette (v_placette.geom).
+  c.geom                                        AS position_mesuree,
+  (c.geom IS NOT NULL)                          AS a_position_mesuree,
+  (c.payload ->> 'precision_m')::NUMERIC        AS precision_position_m,
+  (c.payload ->> 'rattache_par_identite')::BOOLEAN
+                                                AS rattache_par_identite,
+  (c.payload ->> 'sans_position_mesuree')::BOOLEAN
+                                                AS sans_position_mesuree
 FROM v_entree_courante c
 JOIN v_placette p ON p.id = (c.payload ->> 'placette_id')::UUID
 WHERE c.registre = 6 AND c.payload ->> 'type_entree' = 'controle';
@@ -402,7 +413,10 @@ WHERE c.registre = 6 AND c.payload ->> 'type_entree' = 'controle';
 COMMENT ON VIEW v_controle_plantation IS
   'Controles des placettes de suivi. age_ans : annee du controle moins annee '
   'des travaux suivis. densite_ha : vivants rapportes a la surface de la '
-  'placette (pi r2).';
+  'placette (pi r2). position_mesuree : Lambert-93, la ou le controle a ete '
+  'fait (NULL sans mesure) ; a_position_mesuree dit si elle existe, '
+  'sans_position_mesuree et rattache_par_identite sont NULL pour un controle '
+  'qui ne les a pas inscrits.';
 
 -- ---------------------------------------------------------------------
 -- Etat de la chaine

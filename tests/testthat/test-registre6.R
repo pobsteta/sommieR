@@ -211,3 +211,77 @@ test_that("0 plant vivant note sur 0 : aucun niveau a deduire, l'entree s'ecrit 
                       ndp = 0L, payload = b)
   expect_equal(e$payload$nb_plants_vivants, 0)
 })
+
+# Mission 052 : la position mesuree du controle (brief surculus du 2026-10-22).
+test_that("un controle porte sa position mesuree, sa precision et son rattachement", {
+  id <- "11111111-1111-4111-8111-111111111111"
+  x <- registre6_controle(id, 10, 9, geometrie = geom_point(4.9325, 47.2591),
+                          precision_m = 0.4, rattache_par_identite = FALSE,
+                          sans_position_mesuree = FALSE)
+  expect_equal(x$geometrie$type, "Point")
+  expect_equal(x$geometrie$coordinates, c(4.9325, 47.2591))
+  expect_equal(x$precision_m, 0.4)
+  expect_false(x$rattache_par_identite)
+  expect_false(x$sans_position_mesuree)
+  # Un controle francais tombe en France.
+  expect_true(x$geometrie$coordinates[1] > -5.5 && x$geometrie$coordinates[1] < 10 &&
+                x$geometrie$coordinates[2] > 41 && x$geometrie$coordinates[2] < 51.5)
+  # Le rejeu du payload ecrit rend le meme payload.
+  expect_identical(jcs(registre6_depuis_payload(x)), jcs(x))
+  # Les noms sont ceux de Surculus.
+  expect_true(all(c("geometrie", "precision_m", "rattache_par_identite",
+                    "sans_position_mesuree") %in% names(x)))
+})
+
+test_that("un controle sans position mesuree n'a ni point ni precision, jamais (0, 0)", {
+  id <- "11111111-1111-4111-8111-111111111111"
+  x <- registre6_controle(id, 10, 9, sans_position_mesuree = TRUE,
+                          rattache_par_identite = TRUE)
+  expect_true(x$sans_position_mesuree)
+  expect_true(x$rattache_par_identite)
+  expect_false("geometrie" %in% names(x))
+  expect_false("precision_m" %in% names(x))
+  expect_error(registre6_controle(id, 10, 9, sans_position_mesuree = TRUE,
+                                  geometrie = geom_point(0, 0)),
+               "sans_position_mesuree.*geometrie")
+  expect_error(registre6_controle(id, 10, 9, sans_position_mesuree = TRUE,
+                                  precision_m = 3), "precision_m")
+  expect_error(registre6_controle(id, 10, 9, precision_m = 3),
+               "il faut une `geometrie`")
+  expect_error(registre6_controle(id, 10, 9, sans_position_mesuree = "oui"),
+               "TRUE ou FALSE")
+})
+
+test_that("un controle a l'ancienne s'ecrit comme avant", {
+  id <- "11111111-1111-4111-8111-111111111111"
+  x <- registre6_controle(id, 10, 9, h_moy_cm = 40)
+  expect_setequal(names(x), c("type_entree", "placette_id", "nb_total",
+                              "nb_vivants", "h_moy_cm"))
+})
+
+test_that("une position hors WGS 84 est refusee avec un message clair", {
+  id <- "11111111-1111-4111-8111-111111111111"
+  # Des metres Lambert-93 pris pour des degres.
+  lambert <- list(type = "Point", coordinates = c(600150, 6700100))
+  expect_error(registre6_controle(id, 10, 9, geometrie = lambert),
+               "point WGS 84.*longitude")
+  expect_error(registre6_controle(id, 10, 9,
+                                  geometrie = list(type = "Point",
+                                                   coordinates = c(4.9, 95))),
+               "point WGS 84.*latitude")
+  expect_error(registre6_controle(id, 10, 9,
+                                  geometrie = geom_ligne(rbind(c(4.9, 47), c(4.91, 47.01)))),
+               "point WGS 84")
+  expect_error(registre6_controle(id, 10, 9, geometrie = geom_point(4.9, 47),
+                                  precision_m = -1), "precision_m")
+})
+
+test_that("une precision de 0 ou negative est refusee (strictement positive)", {
+  id <- "11111111-1111-4111-8111-111111111111"
+  for (p in c(0, -1)) {
+    expect_error(registre6_controle(id, 10, 9, geometrie = geom_point(4.9, 47),
+                                    precision_m = p), "strictement positive")
+  }
+  expect_equal(registre6_controle(id, 10, 9, geometrie = geom_point(4.9, 47),
+                                  precision_m = 0.01)$precision_m, 0.01)
+})

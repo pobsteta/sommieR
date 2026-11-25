@@ -201,6 +201,18 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
 #' peut suivre des travaux releves dans la meme tournee, un controle porter sur
 #' une placette qui vient d'etre installee.
 #'
+#' **La position mesuree des controles.** Si la tournee porte la couche
+#' `positions_controles` de Surculus (cle `controle_uuid`, un point par
+#' controle), chaque position est inscrite au controle : `geometrie` (WGS 84,
+#' reprojetee depuis le SCR de la couche), `precision_m`,
+#' `rattache_par_identite`, `sans_position_mesuree`. Une ligne a geometrie NULL
+#' (ou POINT EMPTY) donne un controle **sans** geometrie et
+#' `sans_position_mesuree = TRUE` : jamais un point (0, 0). Une couche sans SCR,
+#' une position hors des bornes WGS 84, une position qui contredit son drapeau
+#' ou deux lignes pour un meme controle sont des fautes (rien n'est ecrit) ; une
+#' ligne pour un controle absent de la tournee est ignoree et dite aux
+#' avertissements. Sans la couche, la tournee s'importe comme avant.
+#'
 #' **Rejouable.** L'UUID que QField a donne a chaque saisie devient celui de
 #' l'entree : reimporter le meme dossier n'ecrit rien de plus. Les placettes
 #' deja inscrites, versees dans le projet, ne se reinscrivent pas.
@@ -262,9 +274,14 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
   # Couche ajoutee (brief du 2026-10-28) : un projet engendre avant elle n'en
   # porte pas, et la tournee s'importe comme avant.
   photos_terrain <- lire_photos_terrain(gpkg)
+  # Couche de Surculus (brief du 2026-10-22) : la position mesuree de chaque
+  # controle. Absente d'une tournee ancienne : elle s'importe comme avant.
+  positions <- lire_positions_controles(gpkg)
   bilan <- list(travaux = 0L, placettes = 0L, controles = 0L,
                 deja_presents = 0L, photos = 0L, entrees = list(),
-                avertissements = avertir_photos_terrain(photos_terrain))
+                avertissements = c(
+                  avertir_photos_terrain(photos_terrain),
+                  avertir_positions_orphelines(positions, controles$uuid)))
 
   ids <- tolower(c(if (!is.null(travaux)) travaux$uuid, placettes$uuid,
                    controles$uuid))
@@ -295,7 +312,8 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
   fautes <- controler_tournee_travaux(
     travaux, placettes, controles, photos, dossier,
     travaux_connus = connus$id, placettes_connues = placettes_connues,
-    programme = programme, photos_terrain = photos_terrain)
+    programme = programme, photos_terrain = photos_terrain,
+    positions = positions)
   if (length(fautes) > 0L) {
     stop("Import refuse, rien n'est ecrit :\n",
          paste0("- ", fautes, collapse = "\n"), call. = FALSE)
@@ -350,6 +368,7 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
       ecrites <- lapply(seq_len(nrow(controles)), function(i) {
         k <- controles[i, ]
         cpt <- comptages_concurrence(k)
+        pos <- position_du_controle(positions, k$uuid)
         # Tous les avertissements de sommier_controler_placette() (dont
         # l'ecart entre niveau saisi et comptages, un warning() de
         # registre6_controle()) vont au bilan, comme les autres.
@@ -366,7 +385,11 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
             operateur = texte_ou_null(k$operateur),
             releve_uuid = k$uuid,
             photos = photo(k$uuid),
-            observations = texte_ou_null(k$observations)
+            observations = texte_ou_null(k$observations),
+            geometrie = pos$geometrie,
+            precision_m = pos$precision_m,
+            rattache_par_identite = pos$rattache_par_identite,
+            sans_position_mesuree = pos$sans_position_mesuree
           ),
           warning = function(w) {
             bilan$avertissements <<- c(
@@ -447,8 +470,10 @@ placettes_du_projet <- function(con, foret_id) {
 controler_tournee_travaux <- function(travaux, placettes, controles, photos,
                                       dossier, travaux_connus,
                                       placettes_connues, programme = NULL,
-                                      photos_terrain = NULL) {
+                                      photos_terrain = NULL,
+                                      positions = NULL) {
   fautes <- controler_photos_terrain(photos_terrain, photos, dossier)
+  fautes <- c(fautes, positions$fautes)
   if (!is.null(travaux) && nrow(travaux) > 0L) {
     t <- as.data.frame(travaux)
     for (i in seq_len(nrow(t))) {
@@ -523,6 +548,7 @@ controler_tournee_travaux <- function(travaux, placettes, controles, photos,
       fautes <- c(fautes, paste0(nom, " : date de controle absente"))
     }
     cpt <- comptages_concurrence(x)
+    pos <- position_du_controle(positions, x$uuid)
     essai <- tryCatch(suppressWarnings({
       registre6_controle(
         uuid_v4(), x$nb_total, x$nb_vivants,
@@ -531,7 +557,11 @@ controler_tournee_travaux <- function(travaux, placettes, controles, photos,
         nb_plants_vivants = cpt$nb_plants_vivants,
         nb_plants_concurrences = cpt$nb_plants_concurrences,
         concurrence = texte_ou_null(x$concurrence),
-        besoin = texte_ou_null(x$besoin))
+        besoin = texte_ou_null(x$besoin),
+        geometrie = pos$geometrie,
+        precision_m = pos$precision_m,
+        rattache_par_identite = pos$rattache_par_identite,
+        sans_position_mesuree = pos$sans_position_mesuree)
       NULL
     }), error = function(e) conditionMessage(e))
     if (!is.null(essai)) fautes <- c(fautes, paste0(nom, " : ", essai))
@@ -660,6 +690,101 @@ COLONNES_GPKG <- c("fid", "geom", "geometry")
 
 # Les colonnes que sommieR ajoute a la lecture : la position du fix.
 COLONNES_FIX <- c("fix_x", "fix_y", "fix_scr")
+
+# La couche `positions_controles` de Surculus (brief du 2026-10-22, complete le
+# 2026-11-02) : une ligne par controle, cle `controle_uuid`, un POINT de la
+# position mesuree, ou une geometrie NULL quand le controle a ete ouvert sans
+# aucun fix. NULL si la couche est absente ; sinon `par_controle` (liste
+# nommee par uuid, chaque element avec `geometrie` WGS 84, `precision_m`,
+# `rattache_par_identite`, `sans_position_mesuree`, les champs inconnus
+# restant NULL) et `fautes`. Une geometrie vide (NULL, POINT EMPTY, NaN) donne
+# `sans_position_mesuree = TRUE` et aucune geometrie : jamais un point (0, 0).
+lire_positions_controles <- function(gpkg) {
+  if (!"positions_controles" %in% sf::st_layers(gpkg)$name) {
+    return(NULL)
+  }
+  x <- suppressWarnings(sf::read_sf(gpkg, layer = "positions_controles"))
+  n <- nrow(x)
+  par_controle <- list()
+  fautes <- character(0)
+  if (n == 0L) {
+    return(list(par_controle = par_controle, fautes = fautes, uuids = character(0)))
+  }
+  if (!"controle_uuid" %in% names(x)) {
+    return(list(par_controle = par_controle, uuids = character(0),
+                fautes = "positions_controles : colonne controle_uuid absente"))
+  }
+  g <- if (inherits(x, "sf")) sf::st_geometry(x) else NULL
+  # Un GeoPackage sans SCR relit un repere « Undefined Cartesian SRS » : il
+  # ne se transforme pas, il ne dit rien du lieu.
+  crs_connu <- !is.null(g) && !is.na(sf::st_crs(g)) &&
+    !grepl("Undefined", sf::st_crs(g)$wkt, fixed = TRUE)
+  colonne <- function(nom, i) {
+    if (!nom %in% names(x)) return(NA)
+    x[[nom]][[i]]
+  }
+  uuids <- tolower(as.character(x$controle_uuid))
+  for (i in seq_len(n)) {
+    u <- uuids[[i]]
+    nom <- paste0("positions_controles ligne ", i)
+    if (is.na(u) || !grepl(MOTIF_UUID, u)) {
+      fautes <- c(fautes, paste0(nom, " : controle_uuid absent ou invalide"))
+      next
+    }
+    if (!is.null(par_controle[[u]])) {
+      fautes <- c(fautes, paste0(nom, " : deux positions pour le controle ", u))
+      next
+    }
+    vide <- is.null(g) || sf::st_is_empty(g[[i]]) ||
+      any(!is.finite(sf::st_coordinates(g[[i]])[, 1:2]))
+    point <- NULL
+    if (!vide) {
+      if (!crs_connu) {
+        fautes <- c(fautes, paste0(nom, " : la couche n'a pas de systeme de ",
+                                   "coordonnees, la position ne se place pas"))
+        next
+      }
+      point <- tryCatch({
+        m <- sf::st_coordinates(sf::st_transform(g[i], 4326))[1L, 1:2]
+        geom_point(m[[1L]], m[[2L]])
+      }, error = function(e) {
+        fautes <<- c(fautes, paste0(nom, " : position hors des bornes WGS 84 (",
+                                    conditionMessage(e), ")"))
+        NULL
+      })
+      if (is.null(point)) next
+    }
+    booleen <- function(nom) {
+      v <- colonne(nom, i)
+      if (length(v) == 0L || is.na(v)) NULL else as.logical(v)
+    }
+    sans <- if (vide) TRUE else booleen("sans_position_mesuree")
+    par_controle[[u]] <- list(
+      geometrie = point,
+      precision_m = nombre_ou_null(colonne("precision_m", i)),
+      rattache_par_identite = booleen("rattache_par_identite"),
+      sans_position_mesuree = sans)
+  }
+  list(par_controle = par_controle, fautes = fautes, uuids = unique(uuids))
+}
+
+# Ce que la couche dit d'un controle ; NULL (aucun champ) s'il n'y figure pas :
+# le controle s'ecrit alors comme avant, sans position ni drapeau.
+position_du_controle <- function(positions, uuid) {
+  if (is.null(positions) || is.na(uuid)) return(NULL)
+  positions$par_controle[[tolower(uuid)]]
+}
+
+# Une ligne de la couche pour un controle absent de la tournee : gardee nulle
+# part, donc dite.
+avertir_positions_orphelines <- function(positions, uuids_controles) {
+  if (is.null(positions)) return(character(0))
+  orphelines <- setdiff(positions$uuids, tolower(uuids_controles))
+  if (length(orphelines) == 0L) return(character(0))
+  paste0("positions_controles : ", length(orphelines), " ligne(s) pour un ",
+         "controle absent de la tournee, ignoree(s) : ",
+         paste(orphelines, collapse = ", "))
+}
 
 # La couche, lue telle que Surculus l'ecrit. NULL si elle est absente (un
 # projet d'avant le brief) ; sinon une table sans geometrie.

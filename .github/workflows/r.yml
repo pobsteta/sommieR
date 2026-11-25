@@ -106,14 +106,14 @@ jobs:
         continue-on-error: true
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev libgdal34t64 libgeos-c1t64 libproj25 libudunits2-0
 
       - name: Install system dependencies (seconde tentative)
         if: steps.apt.outcome == 'failure'
         timeout-minutes: 8
         run: |
           sudo apt-get update
-          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev
+          sudo apt-get install -y libssl-dev libcurl4-openssl-dev libxml2-dev libpq-dev libgdal34t64 libgeos-c1t64 libproj25 libudunits2-0
 
       # Même parade que pour l'installation de R : l'étape pend elle aussi par
       # intermittence, et sans borne le job attendait ses trente minutes. Le

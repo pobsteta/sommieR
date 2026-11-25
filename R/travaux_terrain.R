@@ -56,7 +56,8 @@ sommier_installer_placette <- function(con, travaux_id, code_placette,
 #' @param id UUID de l'entree.
 #' @param ... Champs de [registre6_controle()] : `h_moy_cm`, `nb_abroutis`,
 #'   `concurrence`, `besoin`, `operateur`, `releve_uuid`, `photos`,
-#'   `observations`.
+#'   `observations`, et la position mesuree (`geometrie`, `precision_m`,
+#'   `rattache_par_identite`, `sans_position_mesuree`).
 #'
 #' @return Invisiblement, l'entree chainee (liste d'une entree).
 #'

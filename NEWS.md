@@ -1,3 +1,40 @@
+# sommieR 2026.11.2.9000 (en développement)
+
+La position mesurée de chaque contrôle de placette de Surculus est gardée au
+registre, lue à l'import de la tournée et exposée par `v_controle_plantation`
+(mission 052 ; brief de Surculus du 2026-10-22 et complément du 2026-11-02, déposé
+dans `specs/brief_travaux-2b_position_controle.md`). Aucune rupture : champs
+facultatifs, colonnes de vue ajoutées à la fin.
+
+- **Payload du contrôle** : `registre6_controle()` et `sommier_controler_placette()`
+  acceptent `geometrie` (point WGS 84, comme les autres entrées : `entree_sommier.geom`
+  la reprend sans règle nouvelle), `precision_m`, `rattache_par_identite` et
+  `sans_position_mesuree`, avec les noms de Surculus. Un contrôle sans ces champs
+  s'écrit et se relit à l'identique. `sans_position_mesuree = TRUE` n'admet ni
+  `geometrie` ni `precision_m` ; une `precision_m` exige une `geometrie` ; un point
+  hors des bornes WGS 84 (des mètres Lambert-93 pris pour des degrés) est refusé avec
+  un message clair, avant toute écriture.
+- **Import** : si la tournée porte la couche `positions_controles` (clé
+  `controle_uuid`), chaque position est inscrite au contrôle, reprojetée en WGS 84
+  depuis le SCR de la couche. Une ligne à géométrie NULL (ou POINT EMPTY) donne un
+  contrôle sans `geometrie` et `sans_position_mesuree = TRUE`, jamais un point
+  (0, 0). Fautes (rien n'est écrit) : couche sans SCR, position hors bornes, position
+  qui contredit son drapeau, deux lignes pour un même contrôle. Une ligne pour un
+  contrôle absent de la tournée est ignorée et dite au bilan. Sans la couche, la
+  tournée s'importe comme avant. `source_gnss`, `referentiel_source` et `simulee`
+  de la couche ne sont pas lues (hors du brief).
+- **Vue `v_controle_plantation`** : cinq colonnes à la fin, `position_mesuree`
+  (Lambert-93, NULL sans mesure), `a_position_mesuree`, `precision_position_m`,
+  `rattache_par_identite`, `sans_position_mesuree` (NULL pour un contrôle qui ne les a
+  pas inscrits). Aucune colonne existante ne change de nom, de type ni de place ;
+  `CREATE OR REPLACE VIEW` met à jour une base existante.
+- **Précision** : `precision_m` est strictement positive (jamais 0, comme dans
+  Surculus, ADR 0003) ; 0 ou négative est refusée, par l'API R comme à l'import.
+- **Conséquence voulue** : les contrôles qui portent une position mesurée
+  apparaissent désormais dans `v_objet_localise`, désignés « controle » (leur
+  `payload->'geometrie'` alimente `entree_sommier.geom`) ; un contrôle sans position
+  n'y figure pas.
+
 # sommieR 2026.11.2 (2026-11-20)
 
 L'import de tournée QField des travaux lit les deux comptages de plants d'un
