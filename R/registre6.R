@@ -169,6 +169,22 @@ SOMMIER_TYPES_TRAVAUX <- c("travaux", "placette", "controle", "plant")
 #' @export
 SOMMIER_ETATS_PLANT <- c("sain", "atteint", "mort", "absent", "non_observe")
 
+#' Methodes de pointage d'un plant
+#'
+#' @description
+#' Comment la position d'un plant a ete obtenue, en quatre valeurs fermees,
+#' reprises de Surculus : `relatif_boussole` et `relatif_saisie` (le plant est
+#' pointe **relativement au piquet** de la placette, ADR 0003 de Surculus ; l'azimut
+#' vient de la boussole du telephone ou est saisi : `source_azimut` =
+#' `boussole_telephone` ou `saisie` dans `docs/formats/journal-valeurs-v1.md`),
+#' `gnss_plant` (position GNSS prise sur le plant lui-meme) et `construit`
+#' (position de demonstration ou reconstituee, jamais mesuree).
+#'
+#' @seealso [registre6_plant()]
+#' @export
+SOMMIER_METHODES_POINTAGE <- c("relatif_boussole", "relatif_saisie",
+                               "gnss_plant", "construit")
+
 #' Groupes de causes d'une atteinte ou d'une mort de plant
 #'
 #' @description
@@ -262,6 +278,8 @@ registre6_placette <- function(code_placette, travaux_id, geometrie,
 #'   declinaison magnetique, convergence des meridiens, azimut geographique
 #'   dans [0, 360[ (nord geographique, sens horaire).
 #' @param modele_geomagnetique Modele de la declinaison (`WMM2025`).
+#' @param methode_pointage Comment la position a ete obtenue : l'une de
+#'   [SOMMIER_METHODES_POINTAGE] (facultatif ; omise, elle n'est pas inscrite).
 #' @param pointe_le Instant du pointage (UTC) ; sa date civile, en Europe/Paris, est celle du plant.
 #' @param observations Observations libres.
 #'
@@ -276,7 +294,7 @@ registre6_plant <- function(placette_id, numero, geometrie, essence = NULL,
                             unite_azimut = NULL, declinaison_deg = NULL,
                             convergence_deg = NULL, azimut_geo_deg = NULL,
                             modele_geomagnetique = NULL, pointe_le = NULL,
-                            observations = NULL) {
+                            observations = NULL, methode_pointage = NULL) {
   if (est_vide(geometrie)) {
     stop("Un plant se retrouve par sa position : `geometrie` (un point) ",
          "est obligatoire.", call. = FALSE)
@@ -345,6 +363,8 @@ registre6_plant <- function(placette_id, numero, geometrie, essence = NULL,
     }, "azimut_geo_deg"),
     modele_geomagnetique = si_present(modele_geomagnetique, valider_texte,
                                       "modele_geomagnetique"),
+    methode_pointage = si_present(methode_pointage, valider_choix,
+                                  "methode_pointage", SOMMIER_METHODES_POINTAGE),
     geometrie     = point,
     observations  = si_present(observations, valider_texte, "observations")
   ))

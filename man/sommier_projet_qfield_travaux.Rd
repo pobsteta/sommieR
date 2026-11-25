@@ -89,6 +89,19 @@ controle en ajoutant un controle a la placette ; on en installe une
 nouvelle en placant un point, rattache a des travaux de la liste des
 travaux suivis (ceux d'une unite de gestion).
 
+\strong{Les plants sont dans le projet} (couches \code{plants}, POINT en Lambert-93, et
+\code{etats_plants}, table, celles que Surculus lit) : tous les plants non remplaces
+par un regarni, vivants, morts, absents ou jamais controles, chacun avec son
+numero, sa position, son observation brute et son dernier etat s'il en a un
+(cause, detail, hauteur ; \code{non_observe} n'est pas un etat : le dernier etat
+mesure compte). Le forestier retrouve chaque plant et le renote au controle
+suivant : l'import exige un etat de chaque plant a chaque controle, il confirme
+\code{mort} ou \code{absent}, ou met \code{non_observe}. Seuls les plants remplaces par un
+regarni restent au registre sans partir ; un regarni part comme un plant. Sans
+plant a verser, aucune de ces couches n'est ecrite. A l'import, ces lignes ne se
+reinscrivent pas : le plant est deja au registre, et l'etat porte sur un
+controle deja inscrit.
+
 \strong{Le champ \code{action_id}} des trois couches de travaux est celui de l'action
 du programme que le travaux realise : l'operateur la choisit dans la liste
 tiree du programme (table \code{programme}). Elle passe telle quelle au registre 6.

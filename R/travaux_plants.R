@@ -34,7 +34,7 @@
 #' @param ... Champs de [registre6_plant()] : `essence`, `regarni`,
 #'   `remplace_uuid`, `distance_m`, `azimut_mag`, `unite_azimut`,
 #'   `declinaison_deg`, `convergence_deg`, `azimut_geo_deg`,
-#'   `modele_geomagnetique`, `pointe_le`, `observations`.
+#'   `modele_geomagnetique`, `methode_pointage`, `pointe_le`, `observations`.
 #'
 #' @return Invisiblement, l'entree chainee (liste d'une entree).
 #'
@@ -259,7 +259,8 @@ controler_plants_du_controle <- function(etats, placette_id, jour, plants,
 # `etats_plants` (table) de Surculus (docs/spec.md § 5). Absentes d'une tournee
 # ancienne : elle s'importe comme avant.
 
-COLONNES_PLANTS_TEXTE <- c("essence", "unite_azimut", "modele_geomagnetique")
+COLONNES_PLANTS_TEXTE <- c("essence", "unite_azimut", "modele_geomagnetique",
+                           "methode_pointage")
 COLONNES_PLANTS_NOMBRE <- c("distance_m", "azimut_mag", "declinaison_deg",
                             "convergence_deg", "azimut_geo_deg")
 
@@ -354,7 +355,7 @@ champs_plant <- function(x, i) {
 #    etats, prets pour registre6_controle) et `remplaces`.
 preparer_plants_tournee <- function(pl, controles, placettes_valides,
                                     controles_tournee, plants_db,
-                                    histoire_db) {
+                                    histoire_db, controles_db = character(0)) {
   vide <- list(fautes = character(0), nouveaux = integer(0),
                par_controle = list())
   if (is.null(pl)) return(vide)
@@ -455,6 +456,12 @@ preparer_plants_tournee <- function(pl, controles, placettes_valides,
     cle_vue <- character(0)
     for (i in seq_len(nrow(e))) {
       nom <- paste0("etat ", i, " (plant ", e_plant[[i]], ")")
+      # Un etat verse a l'aller (le dernier de chaque plant vivant) porte sur
+      # un controle deja au registre : il n'est pas rejoue.
+      if (!is.na(e_ctl[[i]]) && !e_ctl[[i]] %in% controles_tournee$uuid &&
+          e_ctl[[i]] %in% controles_db) {
+        next
+      }
       if (is.na(e_ctl[[i]]) || !e_ctl[[i]] %in% controles_tournee$uuid) {
         fautes <- c(fautes, paste0(nom, " : controle absent de la tournee"))
         next
@@ -530,4 +537,113 @@ texte_vec <- function(x) {
   x <- as.character(x)
   x[!is.na(x) & !nzchar(trimws(x))] <- NA_character_
   x
+}
+
+# ---------------------------------------------------------------------------
+# L'aller : tous les plants non remplaces d'un projet, avec leur dernier etat
+# s'ils en ont un, dans les couches que Surculus lit (`plants`, POINT en
+# Lambert-93 ; `etats_plants`, table), pour que le forestier retrouve et
+# renote chaque plant au controle suivant. Partent les vivants, les morts, les
+# absents et ceux jamais controles (sans etat) ; seuls les plants remplaces par
+# un regarni restent au registre sans partir. `non_observe` n'est pas un etat :
+# le dernier etat mesure compte. Sans plant a verser, aucune couche n'est
+# ecrite : le projet est celui d'avant.
+verser_plants_aller <- function(con, foret_id, gpkg) {
+  p <- DBI::dbGetQuery(
+    con,
+    "SELECT p.id::text AS uuid, p.placette_id::text AS placette_uuid,
+            p.numero, p.essence, p.regarni,
+            p.remplace_uuid::text AS remplace_uuid,
+            coalesce(e.payload ->> 'pointe_le',
+                     to_char(p.pointe_le, 'YYYY-MM-DD') || 'T00:00:00Z')
+              AS pointe_le,
+            p.distance_m::float8 AS distance_m,
+            p.azimut_mag::float8 AS azimut_mag, p.unite_azimut,
+            p.declinaison_deg::float8 AS declinaison_deg,
+            p.convergence_deg::float8 AS convergence_deg,
+            p.azimut_geo_deg::float8 AS azimut_geo_deg,
+            p.modele_geomagnetique, p.methode_pointage,
+            d.controle_id::text AS etat_controle_uuid, d.etat,
+            d.cause_groupe, d.cause_detail, d.hauteur_cm::int AS hauteur_cm,
+            ST_AsText(p.geom) AS wkt
+       FROM v_plant p
+       JOIN v_entree_courante e ON e.id = p.id
+       LEFT JOIN (SELECT DISTINCT ON (plant_id) plant_id, controle_id, etat,
+                    cause_groupe, cause_detail, hauteur_cm
+               FROM v_etat_plant
+              WHERE foret_id = $1 AND etat <> 'non_observe'
+              ORDER BY plant_id, visite_le DESC, seq DESC) d
+         ON d.plant_id = p.id
+      WHERE p.foret_id = $1 AND p.geom IS NOT NULL AND p.remplace_par IS NULL
+      ORDER BY p.code_placette, p.numero",
+    params = list(foret_id))
+  if (nrow(p) == 0L) return(invisible(0L))
+  champs <- c("uuid", "placette_uuid", "numero", "essence", "regarni",
+              "remplace_uuid", "pointe_le", "distance_m", "azimut_mag",
+              "unite_azimut", "declinaison_deg", "convergence_deg",
+              "azimut_geo_deg", "modele_geomagnetique")
+  # Colonne ajoutee a Surculus : seulement si un plant en porte une.
+  if (any(!is.na(p$methode_pointage))) champs <- c(champs, "methode_pointage")
+  couche <- p[, champs, drop = FALSE]
+  couche$pointe_le <- as.POSIXct(couche$pointe_le, format = "%Y-%m-%dT%H:%M:%SZ",
+                                 tz = "UTC")
+  ecrire_couche(sf::st_sf(couche, geometry = sf::st_as_sfc(p$wkt, crs = 2154)),
+                gpkg, "plants")
+  # Un etat par plant qui en a un, celui du dernier controle qui l'a mesure.
+  # Son identifiant de ligne se deduit de (controle, plant).
+  e <- p[!is.na(p$etat), , drop = FALSE]
+  h <- vapply(paste(e$etat_controle_uuid, e$uuid), function(x) {
+    as.character(openssl::md5(charToRaw(x)))
+  }, character(1), USE.NAMES = FALSE)
+  ecrire_table(data.frame(
+    uuid = sprintf("%s-%s-%s-%s-%s", substr(h, 1, 8), substr(h, 9, 12),
+                   substr(h, 13, 16), substr(h, 17, 20), substr(h, 21, 32)),
+    controle_uuid = e$etat_controle_uuid, plant_uuid = e$uuid, etat = e$etat,
+    cause_groupe = e$cause_groupe, cause_detail = e$cause_detail,
+    hauteur_cm = e$hauteur_cm, stringsAsFactors = FALSE),
+    gpkg, "etats_plants")
+  invisible(nrow(p))
+}
+
+# Les etats de la couche `etats_plants` qui portent sur un controle deja au
+# registre (ceux de l'aller) : leur nombre, et un avertissement pour chacun
+# dont le contenu differe de l'etat inscrit (ou dont le plant n'a pas d'etat a
+# ce controle). Ils ne sont jamais reecrits.
+etats_aller_ignores <- function(con, foret_id, etats, controles_tournee,
+                                controles_db) {
+  vide <- list(n = 0L, avertissements = character(0))
+  if (is.null(etats) || nrow(etats) == 0L) return(vide)
+  ctl <- tolower(as.character(colonne_ou_na(etats, "controle_uuid")))
+  plant <- tolower(as.character(colonne_ou_na(etats, "plant_uuid")))
+  deja <- which(!is.na(ctl) & !ctl %in% controles_tournee & ctl %in% controles_db)
+  if (length(deja) == 0L) return(vide)
+  reg <- DBI::dbGetQuery(
+    con, "SELECT controle_id::text AS controle, plant_id::text AS plant, etat,
+                 cause_groupe, cause_detail, hauteur_cm::float8 AS hauteur_cm
+            FROM v_etat_plant WHERE foret_id = $1", params = list(foret_id))
+  txt <- function(x) { x <- as.character(x); x[!nzchar(trimws(x))] <- NA; x }
+  eg <- function(a, b) (is.na(a) && is.na(b)) || (!is.na(a) && !is.na(b) && a == b)
+  av <- character(0)
+  for (i in deja) {
+    r <- reg[reg$controle == ctl[[i]] & reg$plant == plant[[i]], , drop = FALSE]
+    nom <- paste0("etat d'aller du plant ", plant[[i]], " au controle ", ctl[[i]])
+    if (nrow(r) == 0L) {
+      av <- c(av, paste0(nom, " : le registre n'a pas d'etat de ce plant a ce ",
+                         "controle ; ligne ignoree"))
+      next
+    }
+    champs <- c("etat", "cause_groupe", "cause_detail", "hauteur_cm")
+    diff <- champs[!vapply(champs, function(ch) {
+      v <- colonne_ou_na(etats, ch)[[i]]
+      if (ch == "hauteur_cm") {
+        eg(suppressWarnings(as.numeric(v)), r[[ch]][[1L]])
+      } else eg(txt(v), txt(r[[ch]][[1L]]))
+    }, logical(1))]
+    if (length(diff) > 0L) {
+      av <- c(av, paste0(nom, " : modifie sur le terrain (", paste(diff, collapse = ", "),
+                         " differe du registre) ; ligne ignoree, le registre est en ajout ",
+                         "seul : une correction s'ecrit par une nouvelle entree (corrige_id)"))
+    }
+  }
+  list(n = length(deja), avertissements = av)
 }

@@ -108,6 +108,35 @@ facultatifs, colonnes de vue ajoutées à la fin.
   comme telles. Reste hors périmètre : modèle QField, versement des plants à l'aller,
   `SOMMIER_METHODES_POINTAGE`.
 
+- **Plants à l'aller et méthode de pointage** (mission 065 ; restes « Non fait » de la
+  mission 054, brief de Surculus du 2026-10-15). Aucune rupture : une tournée sans
+  plant, ou un projet sans plant vivant, est celui d'avant ; aucun hachage existant
+  ne change (le champ nouveau n'est écrit que s'il est donné).
+  - **Versement à l'aller** (décision de Pascal, 2026-11-25 : « les morts partent
+    aussi ») : `sommier_projet_qfield_travaux()` écrit les couches `plants` (POINT,
+    Lambert-93) et `etats_plants` de Surculus pour **tous les plants non remplacés par
+    un regarni** (vivants, morts, absents, jamais contrôlés), avec leur numéro, leur
+    position, leur observation brute et leur dernier état s'ils en ont un (cause,
+    détail, hauteur). `non_observe` n'est pas un état (le dernier état mesuré compte).
+    Le forestier confirme `mort` ou `absent`, ou met `non_observe` : la règle de la
+    mission 054 (un état par plant pointé à chaque contrôle) reste entière. Seuls les
+    plants remplacés par un regarni ne partent pas ; un regarni part comme un plant.
+    Sans plant à verser, aucune des deux couches n'est écrite. Rien n'est écrit au
+    registre par la préparation.
+  - **Le bilan d'import dit ce qu'il ignore** : `etats_deja_au_registre` compte les états d'aller déjà au registre ; une ligne modifiée sur le terrain est signalée dans `avertissements` (jamais réécrite : le registre est en ajout seul, la correction passe par `corrige_id`).
+  - **Retour** : à l'import, les lignes de l'aller ne se réinscrivent pas (plant déjà
+    inscrit, même numéro, même placette) et un état qui porte sur un contrôle déjà au
+    registre est ignoré ; aucun plant dupliqué, aucun numéro changé.
+  - **`SOMMIER_METHODES_POINTAGE`** = `relatif_boussole`, `relatif_saisie`, `gnss_plant`,
+    `construit`, reprises de Surculus (`source_azimut` de `journal-valeurs-v1.md`,
+    ADR 0003). `registre6_plant()` et `sommier_pointer_plant()` gagnent
+    `methode_pointage` (facultatif, payload de plant) ; l'import lit la colonne
+    facultative `methode_pointage` de la couche `plants`. Hors liste : refusé, rien
+    n'est écrit. `v_plant` gagne `methode_pointage` en dernière colonne (NULL si non
+    dite ; `CREATE OR REPLACE VIEW` met à jour une base existante). La démo Couchey
+    pose `construit`. Aucune colonne SQL de table : la méthode vit dans le payload.
+  - **Non fait** : modèle QField (PyQGIS absent).
+
 # sommieR 2026.11.2 (2026-11-20)
 
 L'import de tournée QField des travaux lit les deux comptages de plants d'un
