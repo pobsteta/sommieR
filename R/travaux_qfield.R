@@ -320,7 +320,7 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
   controles_tournee <- data.frame(
     uuid = tolower(controles$uuid),
     jour = as.Date(vapply(seq_len(nrow(controles)), function(i) {
-      format(utc_jour(controles$visite_le[i]))
+      format(jour_paris(controles$visite_le[i]))
     }, character(1))), stringsAsFactors = FALSE)
   controles <- garder(controles)
   plants_a_ecrire <- if (length(uuids_plants) > 0L) {
@@ -410,7 +410,7 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
       pp <- plants_tournee$plants
       ecrites <- lapply(plants_prets$nouveaux, function(i) {
         champs <- champs_plant(pp, i)
-        jour <- format(utc_jour(pp$pointe_le[[i]]))
+        jour <- format(jour_paris(pp$pointe_le[[i]]))
         do.call(sommier_pointer_plant, c(
           list(con, tolower(pp$placette_uuid[[i]]),
                plants_tournee$geometries[[i]], pp$numero[[i]], auteur,
@@ -631,7 +631,9 @@ controler_tournee_travaux <- function(travaux, placettes, controles, photos,
   }
   avec <- !is.na(controles$placette_uuid)
   jours <- paste(tolower(controles$placette_uuid[avec]),
-                 substr(as.character(controles$visite_le[avec]), 1L, 10L))
+                 vapply(controles$visite_le[avec], function(v) {
+                   format(jour_paris(v))
+                 }, character(1)))
   if (any(duplicated(jours))) {
     fautes <- c(fautes, "deux controles d'une meme placette le meme jour")
   }

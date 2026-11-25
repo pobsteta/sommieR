@@ -198,3 +198,16 @@ test_that("identite.json : un plant garde son numero, un numero ne se prend qu'u
     expect_identical(ok, isTRUE(c$attendu$accepte), info = c$id)
   }
 })
+
+test_that("le jour civil se compte en heure de Paris (ete UTC+2, hiver UTC+1)", {
+  expect_equal(jour_paris("2026-06-15T21:30:00Z"), as.Date("2026-06-15"))
+  expect_equal(jour_paris("2026-06-15T22:00:00Z"), as.Date("2026-06-16"))
+  expect_equal(jour_paris("2026-01-15T22:59:59Z"), as.Date("2026-01-15"))
+  expect_equal(jour_paris("2026-01-15T23:00:00Z"), as.Date("2026-01-16"))
+  expect_equal(jour_paris(as.POSIXct("2026-06-15 22:30:00", tz = "UTC")),
+               as.Date("2026-06-16"))
+  # Un instant a la minute pres, sans Z : lu en UTC.
+  expect_equal(jour_paris("2026-06-15 22:30:00"), as.Date("2026-06-16"))
+  expect_true(is.na(jour_paris(NA)))
+  expect_true(is.na(jour_paris(NULL)))
+})

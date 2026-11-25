@@ -262,7 +262,7 @@ registre6_placette <- function(code_placette, travaux_id, geometrie,
 #'   declinaison magnetique, convergence des meridiens, azimut geographique
 #'   dans [0, 360[ (nord geographique, sens horaire).
 #' @param modele_geomagnetique Modele de la declinaison (`WMM2025`).
-#' @param pointe_le Instant du pointage (UTC).
+#' @param pointe_le Instant du pointage (UTC) ; sa date civile, en Europe/Paris, est celle du plant.
 #' @param observations Observations libres.
 #'
 #' @return Une liste nommee, prete a etre passee a [sommier_entree()].

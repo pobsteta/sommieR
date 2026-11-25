@@ -48,7 +48,7 @@ dans [0, 360[ (nord geographique, sens horaire).}
 
 \item{modele_geomagnetique}{Modele de la declinaison (\code{WMM2025}).}
 
-\item{pointe_le}{Instant du pointage (UTC).}
+\item{pointe_le}{Instant du pointage (UTC) ; sa date civile, en Europe/Paris, est celle du plant.}
 
 \item{observations}{Observations libres.}
 }

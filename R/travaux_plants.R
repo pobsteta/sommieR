@@ -90,9 +90,9 @@ entree_plant <- function(con, placette_id, geometrie, numero, auteur,
   jour <- if (!est_vide(date_evenement)) {
     format_date(date_evenement, "date_evenement")
   } else if (!is.null(payload$pointe_le)) {
-    substr(payload$pointe_le, 1L, 10L)
+    format(jour_paris(payload$pointe_le))
   } else {
-    format(Sys.Date(), "%Y-%m-%d")
+    format(jour_paris(Sys.time()))
   }
   if (isTRUE(verifier_regarni) && !is.null(payload$remplace_uuid)) {
     fautes <- fautes_regarni(
@@ -303,9 +303,21 @@ lire_plants_tournee <- function(gpkg) {
        fautes = fautes)
 }
 
-utc_jour <- function(x) {
+# Le jour civil d'un instant, compte en Europe/Paris comme dans Surculus : un
+# pointage ou un controle fait a 23 h 30 heure de Paris est de ce jour-la, pas
+# du lendemain UTC. NA si l'instant est absent.
+FUSEAU_JOUR <- "Europe/Paris"
+
+jour_paris <- function(x) {
   if (length(x) == 0L || is.na(x)) return(as.Date(NA))
-  as.Date(format(as.POSIXct(x, tz = "UTC"), "%Y-%m-%d", tz = "UTC"))
+  if (is.character(x) && grepl("Z$", x)) {
+    # Un instant UTC ISO-8601 (celui du payload) : parse en entier, pour que
+    # l'heure compte.
+    x <- as.POSIXct(x, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+  } else if (!inherits(x, "POSIXt")) {
+    x <- as.POSIXct(x, tz = "UTC")
+  }
+  as.Date(format(x, "%Y-%m-%d", tz = FUSEAU_JOUR))
 }
 
 colonne_ou_na <- function(df, nom) {
@@ -361,7 +373,7 @@ preparer_plants_tournee <- function(pl, controles, placettes_valides,
     placette <- tolower(as.character(colonne_ou_na(p, "placette_uuid")))
     numero <- suppressWarnings(as.numeric(colonne_ou_na(p, "numero")))
     pointe <- as.Date(vapply(seq_len(nrow(p)), function(i) {
-      format(utc_jour(colonne_ou_na(p, "pointe_le")[[i]]))
+      format(jour_paris(colonne_ou_na(p, "pointe_le")[[i]]))
     }, character(1)))
     remplace <- tolower(texte_vec(colonne_ou_na(p, "remplace_uuid")))
     vus <- character(0)
