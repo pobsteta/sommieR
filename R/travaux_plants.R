@@ -604,3 +604,46 @@ verser_plants_aller <- function(con, foret_id, gpkg) {
     gpkg, "etats_plants")
   invisible(nrow(p))
 }
+
+# Les etats de la couche `etats_plants` qui portent sur un controle deja au
+# registre (ceux de l'aller) : leur nombre, et un avertissement pour chacun
+# dont le contenu differe de l'etat inscrit (ou dont le plant n'a pas d'etat a
+# ce controle). Ils ne sont jamais reecrits.
+etats_aller_ignores <- function(con, foret_id, etats, controles_tournee,
+                                controles_db) {
+  vide <- list(n = 0L, avertissements = character(0))
+  if (is.null(etats) || nrow(etats) == 0L) return(vide)
+  ctl <- tolower(as.character(colonne_ou_na(etats, "controle_uuid")))
+  plant <- tolower(as.character(colonne_ou_na(etats, "plant_uuid")))
+  deja <- which(!is.na(ctl) & !ctl %in% controles_tournee & ctl %in% controles_db)
+  if (length(deja) == 0L) return(vide)
+  reg <- DBI::dbGetQuery(
+    con, "SELECT controle_id::text AS controle, plant_id::text AS plant, etat,
+                 cause_groupe, cause_detail, hauteur_cm::float8 AS hauteur_cm
+            FROM v_etat_plant WHERE foret_id = $1", params = list(foret_id))
+  txt <- function(x) { x <- as.character(x); x[!nzchar(trimws(x))] <- NA; x }
+  eg <- function(a, b) (is.na(a) && is.na(b)) || (!is.na(a) && !is.na(b) && a == b)
+  av <- character(0)
+  for (i in deja) {
+    r <- reg[reg$controle == ctl[[i]] & reg$plant == plant[[i]], , drop = FALSE]
+    nom <- paste0("etat d'aller du plant ", plant[[i]], " au controle ", ctl[[i]])
+    if (nrow(r) == 0L) {
+      av <- c(av, paste0(nom, " : le registre n'a pas d'etat de ce plant a ce ",
+                         "controle ; ligne ignoree"))
+      next
+    }
+    champs <- c("etat", "cause_groupe", "cause_detail", "hauteur_cm")
+    diff <- champs[!vapply(champs, function(ch) {
+      v <- colonne_ou_na(etats, ch)[[i]]
+      if (ch == "hauteur_cm") {
+        eg(suppressWarnings(as.numeric(v)), r[[ch]][[1L]])
+      } else eg(txt(v), txt(r[[ch]][[1L]]))
+    }, logical(1))]
+    if (length(diff) > 0L) {
+      av <- c(av, paste0(nom, " : modifie sur le terrain (", paste(diff, collapse = ", "),
+                         " differe du registre) ; ligne ignoree, le registre est en ajout ",
+                         "seul : une correction s'ecrit par une nouvelle entree (corrige_id)"))
+    }
+  }
+  list(n = length(deja), avertissements = av)
+}

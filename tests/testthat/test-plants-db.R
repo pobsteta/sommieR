@@ -937,3 +937,63 @@ test_that("non-regression 054 : un etat manquant au controle suivant refuse l'im
     "il en faut un a ce controle")
   expect_equal(nb_entrees(con, f$foret), n)
 })
+
+# Mission 065 (relecture) : l'import dit ce qu'il ignore.
+test_that("l'aller rapporte tel quel : les etats deja au registre sont comptes, aucun signalement", {
+  skip_if_not_installed("sf"); skip_if_not_installed("xml2")
+  con <- base_plants()
+  f <- foret_plants(con)
+  plants_suivis(con, f)
+  d <- projet_tournee(con, f)
+  nb <- nrow(sf::read_sf(file.path(d, "travaux.gpkg"), layer = "etats_plants"))
+  expect_gt(nb, 0L)
+  n <- nb_entrees(con, f$foret)
+  b <- sommier_importer_qfield_travaux(con, f$foret, d,
+                                       file.path(withr::local_tempdir(), "ph"),
+                                       "agent-01")
+  expect_equal(b$etats_deja_au_registre, nb)
+  expect_length(b$avertissements, 0L)
+  expect_equal(nb_entrees(con, f$foret), n)
+})
+
+test_that("une ligne d'aller modifiee sur le terrain est signalee, jamais reecrite", {
+  skip_if_not_installed("sf"); skip_if_not_installed("xml2")
+  con <- base_plants()
+  f <- foret_plants(con)
+  s <- plants_suivis(con, f)
+  d <- projet_tournee(con, f)
+  gpkg <- file.path(d, "travaux.gpkg")
+  et <- as.data.frame(sf::read_sf(gpkg, layer = "etats_plants"))
+  i <- which(et$plant_uuid == s$p[1])
+  et$etat[i] <- "mort"; et$hauteur_cm[i] <- 99L
+  suppressWarnings(sf::st_write(et, gpkg, layer = "etats_plants",
+                                delete_layer = TRUE, quiet = TRUE))
+  n <- nb_entrees(con, f$foret)
+  b <- sommier_importer_qfield_travaux(con, f$foret, d,
+                                       file.path(withr::local_tempdir(), "ph"),
+                                       "agent-01")
+  expect_equal(b$etats_deja_au_registre, nrow(et))
+  expect_length(b$avertissements, 1L)
+  expect_match(b$avertissements, s$p[1], fixed = TRUE)
+  expect_match(b$avertissements, "etat, hauteur_cm")
+  expect_match(b$avertissements, "corrige_id", fixed = TRUE)
+  expect_equal(nb_entrees(con, f$foret), n)   # rien d'ecrit pour elle
+  expect_equal(DBI::dbGetQuery(con, "SELECT etat FROM v_etat_plant
+    WHERE plant_id = $1 ORDER BY visite_le DESC LIMIT 1",
+    params = list(s$p[1]))$etat, "sain")
+})
+
+test_that("un plant qui porte methode_pointage la rend dans la couche plants de l'aller", {
+  skip_if_not_installed("sf"); skip_if_not_installed("xml2")
+  con <- base_plants()
+  f <- foret_plants(con)
+  a <- pointer(con, f$placette, 1, methode_pointage = "relatif_boussole")
+  b <- pointer(con, f$placette, 2)
+  sommier_controler_placette(con, f$placette, auteur = "agent-01",
+    visite_le = "2025-09-15T09:00:00Z", plants = list(etat(a, "sain"), etat(b, "sain")))
+  d <- projet_tournee(con, f)
+  pl <- sf::read_sf(file.path(d, "travaux.gpkg"), layer = "plants")
+  expect_true("methode_pointage" %in% names(pl))
+  expect_equal(pl$methode_pointage[match(c(a, b), pl$uuid)],
+               c("relatif_boussole", NA))
+})

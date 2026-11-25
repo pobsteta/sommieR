@@ -123,6 +123,7 @@ facultatifs, colonnes de vue ajoutées à la fin.
     plants remplacés par un regarni ne partent pas ; un regarni part comme un plant.
     Sans plant à verser, aucune des deux couches n'est écrite. Rien n'est écrit au
     registre par la préparation.
+  - **Le bilan d'import dit ce qu'il ignore** : `etats_deja_au_registre` compte les états d'aller déjà au registre ; une ligne modifiée sur le terrain est signalée dans `avertissements` (jamais réécrite : le registre est en ajout seul, la correction passe par `corrige_id`).
   - **Retour** : à l'import, les lignes de l'aller ne se réinscrivent pas (plant déjà
     inscrit, même numéro, même placette) et un état qui porte sur un contrôle déjà au
     registre est ignoré ; aucun plant dupliqué, aucun numéro changé.

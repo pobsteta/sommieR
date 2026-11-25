@@ -262,7 +262,9 @@ sommier_projet_qfield_travaux <- function(con, foret_id, dossier, operateur,
 #' @param auteur Compte qui importe. L'agent qui a releve est l'operateur.
 #'
 #' @return Invisiblement, un bilan : `travaux`, `placettes`, `plants`,
-#'   `controles` (nombres d'entrees ecrites), `deja_presents`, `photos`, `entrees` et
+#'   `controles` (nombres d'entrees ecrites), `etats_deja_au_registre` (etats
+#'   verses a l'aller, ignores a l'import ; un etat modifie est signale aux
+#'   `avertissements`), `deja_presents`, `photos`, `entrees` et
 #'   `avertissements` (ecarts de forme acceptes : colonnes en trop de
 #'   `photos_terrain`, empreinte vide, photo en double, niveau de concurrence
 #'   contredit par les comptages de plants ; chacun est aussi
@@ -313,7 +315,7 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
   # Absentes d'une tournee ancienne : elle s'importe comme avant.
   plants_tournee <- lire_plants_tournee(gpkg)
   bilan <- list(travaux = 0L, placettes = 0L, plants = 0L, controles = 0L,
-                deja_presents = 0L, photos = 0L, entrees = list(),
+                etats_deja_au_registre = 0L, deja_presents = 0L, photos = 0L, entrees = list(),
                 avertissements = c(
                   avertir_photos_terrain(photos_terrain),
                   avertir_positions_orphelines(positions, controles$uuid)))
@@ -341,6 +343,17 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
       format(jour_paris(controles$visite_le[i]))
     }, character(1))), stringsAsFactors = FALSE)
   controles <- garder(controles)
+  # Les etats verses a l'aller portent sur des controles deja au registre : ils
+  # ne se rejouent pas, mais on les compte et on signale ceux que le forestier a
+  # modifies (le registre est en ajout seul : une correction passe par une
+  # nouvelle entree `corrige_id`, pas par la couche d'aller).
+  controles_db <- DBI::dbGetQuery(
+    con, "SELECT id::text AS id FROM v_controle_plantation
+           WHERE foret_id = $1", params = list(foret_id))$id
+  aller <- etats_aller_ignores(con, foret_id, plants_tournee$etats,
+                               controles_tournee$uuid, controles_db)
+  bilan$etats_deja_au_registre <- aller$n
+  bilan$avertissements <- c(bilan$avertissements, aller$avertissements)
   plants_a_ecrire <- if (length(uuids_plants) > 0L) {
     which(!is.na(uuids_plants) & !uuids_plants %in% presents)
   } else integer(0)
@@ -364,11 +377,6 @@ sommier_importer_qfield_travaux <- function(con, foret_id, dossier, depot,
     con, "SELECT plant_id::text AS plant_id, visite_le AS jour, etat
             FROM v_etat_plant WHERE foret_id = $1", params = list(foret_id))
   histoire_db$jour <- as.Date(histoire_db$jour)
-  # Les controles deja au registre : les etats que l'aller a verses s'y
-  # rattachent et ne sont pas rejoues.
-  controles_db <- DBI::dbGetQuery(
-    con, "SELECT id::text AS id FROM v_controle_plantation
-           WHERE foret_id = $1", params = list(foret_id))$id
   plants_prets <- preparer_plants_tournee(
     plants_tournee, controles,
     placettes_valides = c(placettes_connues, tolower(placettes$uuid)),
