@@ -29,8 +29,8 @@ La colonne est lue au retour si elle existe (`COLONNES_PLANTS_TEXTE`, `R/travaux
 `placette_uuid`, `numero`, `essence`, `regarni`, `remplace_uuid`, `pointe_le`, `distance_m`,
 `azimut_mag`, `unite_azimut`, `declinaison_deg`, `convergence_deg`, `azimut_geo_deg`,
 `modele_geomagnetique`). `methode_pointage` ne figure nulle part dans ton dépôt (recherche
-sur tout le dépôt, sans résultat). Les quatre valeurs sont dites « reprises de Surculus »
-dans `R/registre6.R:176-181`, mais elles n'existent nulle part chez Surculus (recherche large, ADR 0003 compris) ; la seule trace
+sur tout le dépôt, sans résultat). Les quatre valeurs étaient dites « reprises de Surculus »
+dans `R/registre6.R:176-181` ; la doc est corrigée, elles sont propres à sommieR (définies le 2026-11-25, mission 065), et elles n'existent nulle part chez Surculus (recherche large, ADR 0003 compris) ; la seule trace
 voisine est `source_azimut` (`boussole_telephone` ou `saisie`),
 `docs/formats/journal-valeurs-v1.md:69`.
 
@@ -42,6 +42,7 @@ les colonnes manquantes, `ExportTravaux.kt:340-350`) mais n'y écrit rien pour t
 Surculus n'arrive donc jamais au registre.
 
 **Options.**
+- Décision de Pascal (2026-11-26) : sommieR **garde** ces quatre valeurs. Il propose à Surculus de les adopter s'il veut la colonne (option A) ; il ne tranche pas pour Surculus.
 - A. Surculus l'adopte (ce serait une création de vocabulaire côté Surculus, pas une reprise) : colonne ajoutée à `plants` (`docs/spec.md:494`), écrite par
   l'export (`relatif_boussole` ou `relatif_saisie` d'après `source_azimut`).
 - B. Surculus ne la veut pas : sommieR cesse de l'écrire à l'aller (ligne `R/travaux_plants.R:586`)
@@ -104,7 +105,7 @@ de ses lignes (`ExportTravaux.kt:254`). Ta spec ne dit pas ce qui est exigé d'u
 
 **Effet sur Surculus.** À ma lecture, aucun : je n'ai trouvé aucun contrôle de version
 d'UUID dans `core/src/main` (recherche de `v7`, `0x7`, `UuidV7`), et `EtatLu` prend le
-texte tel quel (`LecteurTournee.kt:217-222`). L'ordre « v7, croissant dans le temps » n'est
+texte tel quel (`LecteurTournee.kt:217-222`). Seul contrôle de forme : `ValidationExport.kt:35-41` (8-4-4-4-12 en minuscules), qui ne porte que sur les états écrits au retour. L'ordre « v7, croissant dans le temps » n'est
 pas disponible pour les états d'aller : trier par `uuid` n'y a pas de sens.
 
 **Options.**

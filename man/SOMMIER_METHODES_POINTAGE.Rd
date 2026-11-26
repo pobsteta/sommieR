@@ -12,12 +12,13 @@ SOMMIER_METHODES_POINTAGE
 }
 \description{
 Comment la position d'un plant a ete obtenue, en quatre valeurs fermees,
-reprises de Surculus : \code{relatif_boussole} et \code{relatif_saisie} (le plant est
-pointe \strong{relativement au piquet} de la placette, ADR 0003 de Surculus ; l'azimut
-vient de la boussole du telephone ou est saisi : \code{source_azimut} =
-\code{boussole_telephone} ou \code{saisie} dans \verb{docs/formats/journal-valeurs-v1.md}),
-\code{gnss_plant} (position GNSS prise sur le plant lui-meme) et \code{construit}
-(position de demonstration ou reconstituee, jamais mesuree).
+\strong{propres a sommieR} (definies le 2026-11-25, mission 065 ; Surculus n'a pas
+ce vocabulaire) : \code{relatif_boussole} et \code{relatif_saisie} (le plant est
+pointe \strong{relativement au piquet} de la placette ; l'azimut vient de la
+boussole du telephone ou est saisi), \code{gnss_plant} (position GNSS prise sur le
+plant lui-meme) et \code{construit} (position de demonstration ou reconstituee,
+jamais mesuree). La seule trace voisine chez Surculus est \code{source_azimut}
+(\code{boussole_telephone} ou \code{saisie}, \verb{docs/formats/journal-valeurs-v1.md}).
 }
 \seealso{
 \code{\link[=registre6_plant]{registre6_plant()}}
