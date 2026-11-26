@@ -86,6 +86,6 @@ sommier_verifier_chaine(entrees)
 #>   foret     : 3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d
 #>   entrees   : 1
 #>   seq tete  : 1
-#>   hash tete : 08c79be9935b05d1e1c6b31d1c8e32f5821e428cd97df7f653f2d903c917b994
+#>   hash tete : 956b221449019432efa4b657eaacd395ad3ea01e9402d9047179fb6ae02ecd97
 #>   etat      : chaine intacte
 ```
