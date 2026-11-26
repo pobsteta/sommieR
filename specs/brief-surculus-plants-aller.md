@@ -10,8 +10,8 @@ issue qui renvoie à ce fichier.*
 
 Depuis `a586121`, `sommier_projet_qfield_travaux()` verse à l'aller les couches `plants`
 (POINT, Lambert-93) et `etats_plants` (table) : tous les plants non remplacés par un
-regarni, chacun avec son dernier état s'il en a un (`R/travaux_qfield.R:65-77`, appel à
-`R/travaux_qfield.R:173`, fonction `verser_plants_aller`, `R/travaux_plants.R:551-606`).
+regarni, chacun avec son dernier état s'il en a un (doc roxygen `R/travaux_qfield.R:65-77` ; appel à
+`R/travaux_qfield.R:173` ; logique dans `verser_plants_aller`, `R/travaux_plants.R:551-606`).
 Les couches sont celles de ta spec (`docs/spec.md:494` et `:496`). Trois choses écrites à
 l'aller ne s'y retrouvent pas, ou pas telles.
 
@@ -21,17 +21,16 @@ l'aller ne s'y retrouvent pas, ou pas telles.
 porte une colonne de plus, `methode_pointage` (`R/travaux_plants.R:565` pour la lecture,
 `:586` pour l'ajout conditionnel). Valeurs fermées, `SOMMIER_METHODES_POINTAGE`
 (`R/registre6.R:185-186`) : `relatif_boussole`, `relatif_saisie`, `gnss_plant`,
-`construit`. Hors liste, sommieR refuse (`R/registre6.R:366-367`, import :
+`construit`. Hors liste, sommieR refuse (`R/registre6.R:366-367` ; documenté en
 `R/travaux_qfield.R:243-245`). La démo Couchey pose `construit` (`R/demo.R:395`, `:467`).
-La colonne est facultative au retour : un plant de Surculus sans elle est inscrit sans
-méthode (`R/travaux_plants.R:263`).
+La colonne est lue au retour si elle existe (`COLONNES_PLANTS_TEXTE`, `R/travaux_plants.R:263`) ; sans elle, rien n'est inscrit.
 
 **Ce que dit ta spec.** La couche `plants` n'a pas ce champ (`docs/spec.md:494` : `uuid`,
 `placette_uuid`, `numero`, `essence`, `regarni`, `remplace_uuid`, `pointe_le`, `distance_m`,
 `azimut_mag`, `unite_azimut`, `declinaison_deg`, `convergence_deg`, `azimut_geo_deg`,
 `modele_geomagnetique`). `methode_pointage` ne figure nulle part dans ton dépôt (recherche
 sur tout le dépôt, sans résultat). Les quatre valeurs sont dites « reprises de Surculus »
-dans `R/registre6.R:176-181`, mais je n'en trouve pas la source chez toi ; la seule trace
+dans `R/registre6.R:176-181`, mais elles n'existent nulle part chez Surculus (recherche large, ADR 0003 compris) ; la seule trace
 voisine est `source_azimut` (`boussole_telephone` ou `saisie`),
 `docs/formats/journal-valeurs-v1.md:69`.
 
@@ -43,7 +42,7 @@ les colonnes manquantes, `ExportTravaux.kt:340-350`) mais n'y écrit rien pour t
 Surculus n'arrive donc jamais au registre.
 
 **Options.**
-- A. Surculus l'adopte : colonne ajoutée à `plants` (`docs/spec.md:494`), écrite par
+- A. Surculus l'adopte (ce serait une création de vocabulaire côté Surculus, pas une reprise) : colonne ajoutée à `plants` (`docs/spec.md:494`), écrite par
   l'export (`relatif_boussole` ou `relatif_saisie` d'après `source_azimut`).
 - B. Surculus ne la veut pas : sommieR cesse de l'écrire à l'aller (ligne `R/travaux_plants.R:586`)
   ou la garde pour sa seule démo ; il ne la lira plus au retour.
@@ -73,7 +72,7 @@ plant n'a qu'un état, ce qui est le cas à l'aller (un seul état par plant,
 `R/travaux_plants.R:594-604`). Mais l'état de l'aller n'a aucune date lisible, et rien ne
 le départage d'un état saisi ensuite à un contrôle de la tournée. Côté sommieR, l'import ne
 réinscrit pas ces lignes : il vérifie qu'elles reprennent l'état déjà au registre, sinon il
-avertit (`etats_aller_ignores`, `R/travaux_plants.R:608-650`, `R/travaux_qfield.R:65-77`).
+avertit (`etats_aller_ignores`, `R/travaux_plants.R:608-650` ; doc : `R/travaux_qfield.R:65-77`).
 
 **Options.**
 - A. sommieR écrit à l'aller, dans `controles`, une ligne par contrôle cité (`uuid`,
@@ -98,9 +97,9 @@ variante ; le calcul md5 ne les force pas (essai : `0cc9cd4d-d26c-5137-b675-a0d8
 nibble de version `5`). Il a la forme 8-4-4-4-12, que `MOTIF_UUID` (`R/valider.R:10`)
 accepte.
 
-**Ce que dit ta spec.** Le journal de Surculus tire ses `uuid` en v7, ordonnés (`spec.md:46`
-et :100, RFC 9562 ; ADR 0005) ; les états que Surculus écrit au retour reprennent l'`uuid`
-de ses lignes (`ExportTravaux.kt:249-252`). Ta spec ne dit pas ce qui est exigé d'un
+**Ce que dit ta spec.** Le journal de Surculus tire ses `uuid` en v7, ordonnés (`docs/adr/0005-stockage-et-sauvegarde.md:46`
+et `:100`, RFC 9562) ; les états que Surculus écrit au retour reprennent l'`uuid`
+de ses lignes (`ExportTravaux.kt:254`). Ta spec ne dit pas ce qui est exigé d'un
 `uuid` d'`etats_plants` lu à l'aller.
 
 **Effet sur Surculus.** À ma lecture, aucun : je n'ai trouvé aucun contrôle de version
@@ -121,9 +120,9 @@ dépend-il d'un v7 (B) ?
 ## Ce que sommieR ne tranche pas, et ce qui n'est pas vérifié
 
 - Aucun écart n'est tranché ici ; sommieR attend les trois réponses avant de toucher au code.
-- Non vérifié : qu'aucun autre module de Surculus (app Android, `app/`) ne lit
-  `methode_pointage` ni ne contrôle la version d'un `uuid` ; ma recherche couvre
-  `core/src/main`, `gpkg/src/main`, `docs/`.
+- Constat du relecteur : recherche faite dans tout le dépôt Surculus, `app/` compris : aucune
+  lecture de `methode_pointage`, aucun contrôle de version d'UUID en lecture ; seule
+  `gpkg/.../ValidationExport.kt:35-41` contrôle la forme 8-4-4-4-12 des états écrits au retour.
 - Non vérifié : comportement de `LecteurTournee` sur une tournée réelle ; les lectures
   ci-dessus viennent du code, pas d'une exécution.
 - Non vérifié : QField sur une couche `etats_plants` dont `controle_uuid` ne mène à rien.
