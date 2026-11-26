@@ -173,12 +173,13 @@ SOMMIER_ETATS_PLANT <- c("sain", "atteint", "mort", "absent", "non_observe")
 #'
 #' @description
 #' Comment la position d'un plant a ete obtenue, en quatre valeurs fermees,
-#' reprises de Surculus : `relatif_boussole` et `relatif_saisie` (le plant est
-#' pointe **relativement au piquet** de la placette, ADR 0003 de Surculus ; l'azimut
-#' vient de la boussole du telephone ou est saisi : `source_azimut` =
-#' `boussole_telephone` ou `saisie` dans `docs/formats/journal-valeurs-v1.md`),
-#' `gnss_plant` (position GNSS prise sur le plant lui-meme) et `construit`
-#' (position de demonstration ou reconstituee, jamais mesuree).
+#' **propres a sommieR** (definies le 2026-11-25, mission 065 ; Surculus n'a pas
+#' ce vocabulaire) : `relatif_boussole` et `relatif_saisie` (le plant est
+#' pointe **relativement au piquet** de la placette ; l'azimut vient de la
+#' boussole du telephone ou est saisi), `gnss_plant` (position GNSS prise sur le
+#' plant lui-meme) et `construit` (position de demonstration ou reconstituee,
+#' jamais mesuree). La seule trace voisine chez Surculus est `source_azimut`
+#' (`boussole_telephone` ou `saisie`, `docs/formats/journal-valeurs-v1.md`).
 #'
 #' @seealso [registre6_plant()]
 #' @export
